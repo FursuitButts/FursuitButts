@@ -173,6 +173,7 @@ sudo -i -u danbooru bash -c "$SETUP_SCRIPT '$APP_DIR' '$CHRUBY_PATH'"
 
 NGINX_CONFIG_PATH=/etc/nginx/conf.d/danbooru.conf
 NGINX_DEFAULT_CONFIG_PATH=/etc/nginx/conf.d/default.conf
+NGINX_DEFAULT_LISTENER_PATH=/etc/nginx/sites-enabled/default
 script_log "Linking nginx config file..."
 if [ -f "$NGINX_CONFIG_PATH" ]; then
     rm "$NGINX_CONFIG_PATH"
@@ -183,6 +184,11 @@ sed -i -e 's/root \/var\/www\/danbooru\/current\/public;/root \/home\/danbooru\/
 if [ -f "$NGINX_DEFAULT_CONFIG_PATH" ]; then
     rm "$NGINX_DEFAULT_CONFIG_PATH"
 fi
+if [ -f "$NGINX_DEFAULT_LISTENER_PATH" ]; then
+    rm "$NGINX_DEFAULT_LISTENER_PATH"
+fi
+. ../env.sh
+(cd /etc/ssl; sudo git clone https://DonovanDMC:$GIT_TOKEN@github.com/DonovanDMC/SSL local)
 
 service nginx restart
 
