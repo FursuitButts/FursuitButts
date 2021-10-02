@@ -6,7 +6,9 @@ Vagrant.configure('2') do |config|
 
   config.vm.provider 'virtualbox' do |v|
     v.cpus = 2
-    v.memory = 2048
+    v.memory = 4096
+    v.name = "e621"
+    v.customize ["setextradata", :id, "VBoxInternal2/SharedFoldersEnableSymlinksCreate/vagrant", "1"]
     if Vagrant::Util::Platform.windows?
       v.customize ["setextradata", :id, "VBoxInternal2/SharedFoldersEnableSymlinksCreate//vagrant", "1"]
     end
