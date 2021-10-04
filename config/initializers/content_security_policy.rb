@@ -14,7 +14,7 @@
    policy.frame_ancestors :none
    policy.frame_src   'https://www.google.com/recaptcha/', 'https://www.recaptcha.net/'
    policy.font_src    :self
-   policy.img_src     :self, :data, 'static1.e621.net', 'static1.e926.net', 'ads.dragonfru.it', 'https://mc.yandex.ru', 'https://yastatic.net'
+   policy.img_src     :self, :data, 'https://i.maid.gay', 'https://mc.yandex.ru', 'https://yastatic.net'
    policy.child_src   :none
    policy.form_action :self, 'discord.e621.net', 'discord.com'
 #   # If you are using webpack-dev-server then specify webpack-dev-server host
