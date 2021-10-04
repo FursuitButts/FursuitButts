@@ -187,8 +187,12 @@ fi
 if [ -f "$NGINX_DEFAULT_LISTENER_PATH" ]; then
     rm "$NGINX_DEFAULT_LISTENER_PATH"
 fi
-. ../env.sh
-(cd /etc/ssl; sudo git clone https://DonovanDMC:$GIT_TOKEN@github.com/DonovanDMC/SSL local)
+. /vagrant/env.sh
+if [ ! -d "/etc/ssl/local" ]; then
+    (cd /etc/ssl; sudo git clone https://DonovanDMC:$GIT_TOKEN@github.com/DonovanDMC/SSL local)
+else
+    (cd /etc/ssl; git pull)
+fi;
 
 service nginx restart
 
