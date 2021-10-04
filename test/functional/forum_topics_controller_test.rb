@@ -74,11 +74,6 @@ class ForumTopicsControllerTest < ActionDispatch::IntegrationTest
         @user.reload
         assert_nil(@user.last_forum_read_at)
       end
-
-      should "render for atom feed" do
-        get forum_topic_path(@forum_topic), params: {:format => :atom}
-        assert_response :success
-      end
     end
 
     context "index action" do
@@ -98,11 +93,6 @@ class ForumTopicsControllerTest < ActionDispatch::IntegrationTest
         get forum_topics_path, params: {format: :json}
         forum_topics = JSON.parse(response.body)
         assert_equal([@topic2.id, @topic1.id, @forum_topic.id], forum_topics.map {|t| t["id"]})
-      end
-
-      should "render for atom feed" do
-        get forum_topics_path, params: {:format => :atom}
-        assert_response :success
       end
 
       context "with search conditions" do
