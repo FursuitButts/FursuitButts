@@ -35,7 +35,7 @@ User.find_or_create_by!(name: Danbooru.config.system_user) do |user|
   user.password = system_password
   user.password_confirmation = system_password
   user.password_hash = ""
-  user.email = "system@e621.local"
+  user.email = "noreply@owo-whats-this.dev"
   user.can_upload_free = true
   user.can_approve_posts = true
   user.level = User::Levels::JANITOR

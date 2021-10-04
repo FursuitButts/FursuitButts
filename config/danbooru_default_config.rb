@@ -9,19 +9,15 @@ module Danbooru
 
     # The name of this Danbooru.
     def app_name
-      if CurrentUser.safe_mode?
-        "e926"
-      else
-        "e621"
-      end
+      "YiffyAPI"
     end
 
     def description
-      "Find good furry art, fast"
+      "Hand picked and sorted images by, and for furries."
     end
 
     def domain
-      "e621.net"
+      "e621.owo-whats-this.dev"
     end
 
     # Force rating:s on this version of the site.
@@ -42,11 +38,11 @@ module Danbooru
 
     # Contact email address of the admin.
     def contact_email
-      "management@#{server_host}"
+      "hewwo@yiff.rocks"
     end
 
     def takedown_email
-      "management@#{server_host}"
+      "none@e621.local"
     end
 
     def takedown_links
@@ -66,7 +62,7 @@ module Danbooru
     end
 
     def source_code_url
-      "https://github.com/zwagoth/e621ng"
+      "https://github.com/DonovanDMC/e621ng"
     end
 
     def commit_url(hash)
@@ -108,13 +104,7 @@ module Danbooru
     # Set the default level, permissions, and other settings for new users here.
     def customize_new_user(user)
       user.comment_threshold = -10 unless user.will_save_change_to_comment_threshold?
-      user.blacklisted_tags = 'gore
-scat
-watersports
-young -rating:s
-loli
-shota
-fart'
+      user.blacklisted_tags = ''
       true
     end
 
@@ -304,7 +294,7 @@ fart'
     end
     # Determines who can see ads.
     def can_see_ads?(user)
-      !user.is_privileged?
+      false
     end
 
     # Users cannot search for more than X regular tags at a time.
@@ -354,8 +344,8 @@ fart'
           'gif' => 20.megabytes,
           'png' => 100.megabytes,
           'swf' => 0,
-          'webm' => 100.megabytes,
-          'mp4' => 100.megabytes,
+          'webm' => 0,
+          'mp4' => 0,
           'zip' => 0
       }
     end
@@ -815,7 +805,7 @@ fart'
 
     # you should override this
     def email_key
-      "zDMSATq0W3hmA5p3rKTgD"
+      "Z5fn9s3FZy5FjDEAfvkssqJu95Axz6DvEpUxF3Nb"
     end
 
     def mailgun_api_key
@@ -823,11 +813,11 @@ fart'
     end
 
     def mailgun_domain
-      ''
+      'owo-whats-this.dev'
     end
 
     def mail_from_addr
-      'noreply@localhost'
+      'noreply@owo-whats-this.dev'
     end
 
     # For downloads, if the host matches any of these IPs, block it
@@ -939,14 +929,7 @@ fart'
 
     def mascots
       [
-          ["https://static1.e621.net/data/mascot_bg/esix1.jpg", "#012e56", "<a href='http://www.furaffinity.net/user/keishinkae'>Keishinkae</a>"],
-          ["https://static1.e621.net/data/mascot_bg/esix2.jpg", "#012e56", "<a href='http://www.furaffinity.net/user/keishinkae'>Keishinkae</a>"],
-          ["https://static1.e621.net/data/mascot_bg/raptor1.jpg", "#012e56", "<a href='http://nowhereincoming.net/'>darkdoomer</a>"],
-          ["https://static1.e621.net/data/mascot_bg/hexerade.jpg", "#002d55", "<a href='http://www.furaffinity.net/user/chizi'>chizi</a>"],
-          ["https://static1.e621.net/data/mascot_bg/wiredhooves.jpg", "#012e56", "<a href='http://www.furaffinity.net/user/wiredhooves'>wiredhooves</a>"],
-          ["https://static1.e621.net/data/mascot_bg/ecmajor.jpg", "#012e57", "<a href='http://www.horsecore.org/'>ECMajor</a>"],
-          ["https://static1.e621.net/data/mascot_bg/evalionfix.jpg", "#012e57", "<a href='http://www.furaffinity.net/user/evalion'>evalion</a>"],
-          ["https://static1.e621.net/data/mascot_bg/peacock.png", "#012e57", "<a href='http://www.furaffinity.net/user/ratte'>Ratte</a>"]
+          ["https://i.maid.gay/MaidMascot.png", "#808080", "<a href='https://twitter.com/Gaokunx3'>Gaokun</a>"]
       ]
     end
 
