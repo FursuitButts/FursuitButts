@@ -6,6 +6,10 @@ services:
       - discovery.type=single-node
       - xpack.security.enabled=false
     container_name: e621_elastic
+    healthcheck:
+      interval: 10s
+      retries: 999
+      test: curl --write-out 'HTTP %{http_code}' --fail --silent --output /dev/null http://localhost:9200/ || exit 1
   memcached:
     image: memcached
     container_name: e621_memcached
@@ -14,8 +18,10 @@ services:
     container_name: e621
     command: /home/danbooru/danbooru/script/install_prod/install.sh
     depends_on:
-      - elastic
-      - memcached
+      elastic:
+        condition: service_healthy
+      memcached:
+        condition: service_started
     volumes:
       - /opt/E621:/home/danbooru/danbooru:Z
       - /opt/E621/data/db:/var/lib/pgsql/data:Z
