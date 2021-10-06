@@ -5,9 +5,11 @@ CHRUBY_PATH=/etc/profile.d/chruby.sh
 VIPS_VERSION=8.10.5
 RAILS_ENV=production
 DEBIAN_FRONTEND=noninteractive
-
 apt-get update -y
-DEBIAN_FRONTEND="noninteractive" TZ="America/Chicago" apt-get -y install tzdata ca-certificates wget git software-properties-common
+apt-get upgrade -y
+
+DEBIAN_FRONTEND="noninteractive" TZ="America/Chicago" apt-get -y install tzdata ca-certificates wget curl git software-properties-common sudo
+curl https://raw.githubusercontent.com/gdraheim/docker-systemctl-replacement/master/files/docker/systemctl3.py -o /usr/bin/systemctl
 
 package_installed() {
     if dpkg-query -f '${binary:Package}\n' -W | grep "$1" &>/dev/null; then
@@ -27,7 +29,7 @@ install_packages() {
 
 if ! grep danbooru /etc/passwd >/dev/null; then
     echo "Creating Danbooru User"
-    useradd -m -s /bin/bash -U danbooru
+    useradd -s /bin/bash -U danbooru
     git clone https://github.com/DonovanDMC/e621ng /home/danbooru/danbooru
     chown -R danbooru:danbooru /home/danbooru
     # echo "%danbooru ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/danbooru
@@ -57,11 +59,6 @@ if ! package_installed yarn; then
     add_key https://dl.yarnpkg.com/debian/pubkey.gpg
     echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list
     echo "Yarn Repository Added"
-fi
-
-if ! package_installed redis-server; then
-   add-apt-repository -y ppa:redislabs/redis
-   echo "Redis Repository Added"
 fi
 
 apt-get update
@@ -113,7 +110,7 @@ fi
 service postgresql restart
 
 echo "Creating danbooru postgres user..."
--u postgres createuser -s danbooru
+sudo -u postgres createuser -s danbooru
 
 if ! type ruby-install >/dev/null 2>&1; then
     echo "Installing Ruby"

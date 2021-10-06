@@ -45,4 +45,6 @@ yarn-debug.log*
 yarn-debug.log*
 .yarn-integrity
 *.pwd
-env.sh
+
+
+/data
