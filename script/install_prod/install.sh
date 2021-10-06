@@ -42,7 +42,6 @@ if ! package_installed elasticsearch; then
     add_key https://packages.elastic.co/GPG-KEY-elasticsearch
     echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" > /etc/apt/sources.list.d/elasticsearch-7.x.list
     echo "ElasticSearch Repository Added"
-    chown -R elasticsearch:elasticsearch /var/lib/elasticsearch   
 fi
 
 if ! package_installed postgresql-20; then
@@ -79,6 +78,7 @@ fi
 
 echo "Setting up elasticsearch..."
 sed -i -e 's/\(-Xm[sx]\)1g/\1256m/' /etc/elasticsearch/jvm.options
+chown -R elasticsearch:elasticsearch /var/lib/elasticsearch   
 if ! grep -Fq "xpack.security.enabled" /etc/elasticsearch/elasticsearch.yml; then
     echo "xpack.security.enabled: false" >> /etc/elasticsearch/elasticsearch.yml
 fi
