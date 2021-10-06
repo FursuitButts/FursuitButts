@@ -9,7 +9,7 @@ apt-get update -y
 apt-get upgrade -y
 
 DEBIAN_FRONTEND="noninteractive" TZ="America/Chicago" apt-get -y install tzdata ca-certificates wget curl git software-properties-common sudo
-curl https://raw.githubusercontent.com/gdraheim/docker-systemctl-replacement/master/files/docker/systemctl3.py -o /usr/bin/systemctl
+#curl https://raw.githubusercontent.com/gdraheim/docker-systemctl-replacement/master/files/docker/systemctl3.py -o /usr/bin/systemctl
 
 package_installed() {
     if dpkg-query -f '${binary:Package}\n' -W | grep "$1" &>/dev/null; then
@@ -81,7 +81,7 @@ sed -i -e 's/\(-Xm[sx]\)1g/\1256m/' /etc/elasticsearch/jvm.options
 if ! grep -Fq "xpack.security.enabled" /etc/elasticsearch/elasticsearch.yml; then
     echo "xpack.security.enabled: false" >> /etc/elasticsearch/elasticsearch.yml
 fi
-systemctl enable elasticsearch 2>/dev/null
+
 service elasticsearch start
 
 echo "Setting Up PostgreSQL"
@@ -158,8 +158,8 @@ if ! which vipsthumbnail >/dev/null; then
 fi
 
 echo "Enabling Redis server"
-systemctl enable redis-server 2>/dev/null
-systemctl start redis-server
+
+service redis-server start
 
 cp /home/danbooru/danbooru/vagrant/ruby-setup.sh /home/danbooru/ruby-setup.sh
 SETUP_SCRIPT=/home/danbooru/ruby-setup.sh
