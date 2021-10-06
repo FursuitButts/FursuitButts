@@ -16,10 +16,27 @@ puts "== Seeding database with sample content ==\n"
 # Uncomment to see detailed logs
 #ActiveRecord::Base.logger = ActiveSupport::Logger.new($stdout)
 
-admin_password = SecureRandom.hex(20)
-system_password = SecureRandom.hex(20)
-File.write(Rails.root.join("db", "admin.pwd"), admin_password)
-File.write(Rails.root.join("db", "system.pwd"), system_password)
+admin_file = Rails.root.join("db", "admin.pwd")
+system_file = Rails.root.join("db", "system.pwd")
+
+if(File.file?(admin_file))
+  echo "Admin password file already exists, reusing.."
+  admin_password = File.read(admin_file)
+else
+  echo "Admin password file does not exist, generating new password.."
+  admin_password = SecureRandom.hex(20)
+  File.write(admin_file, admin_password)
+fi
+
+if(File.file?(system_file))
+  echo "System password file already exists, reusing.."
+  admin_password = File.read(system_file)
+else
+  echo "System password file does not exist, generating new password.."
+  system_password = SecureRandom.hex(20)
+  File.write(system_file, system_password) 
+fi
+
 admin = User.find_or_create_by!(name: "admin") do |user|
   user.created_at = 2.weeks.ago
   user.password = admin_password
