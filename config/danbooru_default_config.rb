@@ -631,7 +631,7 @@ module Danbooru
     end
 
     def enable_signups?
-      true
+      false # temporarily disable signups while stuff is configured
     end
 
     def flag_reasons
