@@ -18,11 +18,11 @@ package_installed() {
 }
 
 add_key() {
-    wget -qO - "$1" | sudo apt-key add - &>/dev/null
+    wget -qO - "$1" | apt-key add - &>/dev/null
 }
 
 install_packages() {
-    sudo apt-get install -y $@
+    apt-get install -y $@
 }
 
 if ! grep danbooru /etc/passwd >/dev/null; then
@@ -43,13 +43,13 @@ if ! package_installed elasticsearch; then
 fi
 
 if ! package_installed postgresql-20; then
-    sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+    sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
     add_key https://www.postgresql.org/media/keys/ACCC4CF8.asc
     echo "PostgreSQL Repository Added"
 fi
 
 if ! package_installed nodejs; then
-    wget -qO - https://deb.nodesource.com/setup_14.x | sudo -E bash - >/dev/null 2>&1
+    wget -qO - https://deb.nodesource.com/setup_14.x | -E bash - >/dev/null 2>&1
     echo "Node.JS Repository Added"
 fi
 
@@ -113,7 +113,7 @@ fi
 service postgresql restart
 
 echo "Creating danbooru postgres user..."
-sudo -u postgres createuser -s danbooru
+-u postgres createuser -s danbooru
 
 if ! type ruby-install >/dev/null 2>&1; then
     echo "Installing Ruby"
@@ -121,7 +121,7 @@ if ! type ruby-install >/dev/null 2>&1; then
     wget -qO ruby-install-0.8.1.tar.gz https://github.com/postmodern/ruby-install/archive/v0.8.1.tar.gz
     tar -xzvf ruby-install-0.8.1.tar.gz >/dev/null
     cd ruby-install-0.8.1/
-    sudo make install >/dev/null
+    make install >/dev/null
     rm /usr/local/src/ruby-install-0.8.1.tar.gz
 fi
 
@@ -135,8 +135,8 @@ if ! type chruby >/dev/null 2>&1; then
     wget -qO chruby-0.3.9.tar.gz https://github.com/postmodern/chruby/archive/v0.3.9.tar.gz
     tar -xzvf chruby-0.3.9.tar.gz >/dev/null
     cd chruby-0.3.9/
-    sudo make install >/dev/null
-    sudo ./scripts/setup.sh >/dev/null
+    make install >/dev/null
+    ./scripts/setup.sh >/dev/null
     rm /usr/local/src/chruby-0.3.9.tar.gz
 
     echo -e \
@@ -170,7 +170,7 @@ service danbooru stop 2>/dev/null
 cp /home/danbooru/danbooru/vagrant/ruby-setup.sh /home/danbooru/ruby-setup.sh
 SETUP_SCRIPT=/home/danbooru/ruby-setup.sh
 chmod a+x $SETUP_SCRIPT
-sudo -i -u danbooru bash -c "$SETUP_SCRIPT '$APP_DIR' '$CHRUBY_PATH'"
+-i -u danbooru bash -c "$SETUP_SCRIPT '$APP_DIR' '$CHRUBY_PATH'"
 
 NGINX_CONFIG_PATH=/etc/nginx/conf.d/danbooru.conf
 NGINX_DEFAULT_CONFIG_PATH=/etc/nginx/conf.d/default.conf
@@ -179,7 +179,7 @@ echo "Linking nginx Config File"
 if [ -f "$NGINX_CONFIG_PATH" ]; then
     rm "$NGINX_CONFIG_PATH"
 fi
-sudo ln -s $APP_DIR/script/install/nginx.danbooru.conf "$NGINX_CONFIG_PATH"
+ln -s $APP_DIR/script/install/nginx.danbooru.conf "$NGINX_CONFIG_PATH"
 sed -i -e 's/__hostname__/e621.local/' "$NGINX_CONFIG_PATH"
 sed -i -e 's/root \/var\/www\/danbooru\/current\/public;/root \/home\/danbooru\/danbooru\/public;/' "$NGINX_CONFIG_PATH"
 if [ -f "$NGINX_DEFAULT_CONFIG_PATH" ]; then
@@ -190,7 +190,7 @@ if [ -f "$NGINX_DEFAULT_LISTENER_PATH" ]; then
 fi
 . /home/danbooru/danbooru/.env.local
 if [ ! -d "/etc/ssl/local" ]; then
-    (cd /etc/ssl; sudo git clone https://DonovanDMC:$GIT_TOKEN@github.com/DonovanDMC/SSL local)
+    (cd /etc/ssl; git clone https://DonovanDMC:$GIT_TOKEN@github.com/DonovanDMC/SSL local)
 else
     (cd /etc/ssl; git pull)
 fi;
