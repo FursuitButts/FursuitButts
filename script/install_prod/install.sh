@@ -110,7 +110,7 @@ if ! which vipsthumbnail >/dev/null; then
     rm -rf /tmp/vips-$VIPS_VERSION.tar.gz /tmp/vips-$VIPS_VERSION
 fi
 
-script_log "Enabling redis server"
+echo "Enabling Redis Server"
 chown -R redis:redis /var/lib/redis
 systemctl enable redis-server 2>/dev/null
 service redis-server start
