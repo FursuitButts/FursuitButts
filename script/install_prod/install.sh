@@ -5,8 +5,8 @@ CHRUBY_PATH=/etc/profile.d/chruby.sh
 VIPS_VERSION=8.10.5
 RAILS_ENV=production
 
-apt-get update
-apt-get install ca-certificates
+apt-get update -y
+apt-get install -y ca-certificates
 
 package_installed() {
     if dpkg-query -f '${binary:Package}\n' -W | grep "$1" &>/dev/null; then
