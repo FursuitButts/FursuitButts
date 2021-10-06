@@ -38,6 +38,7 @@ else
 fi
 
 admin = User.find_or_create_by!(name: "admin") do |user|
+  echo "Setting admin password to: #{:admin_password}"
   user.created_at = 2.weeks.ago
   user.password = admin_password
   user.password_confirmation = admin_password
@@ -49,6 +50,7 @@ admin = User.find_or_create_by!(name: "admin") do |user|
 end
 
 User.find_or_create_by!(name: Danbooru.config.system_user) do |user|
+  echo "Setting system password to: #{:system_password}"
   user.password = system_password
   user.password_confirmation = system_password
   user.password_hash = ""
