@@ -32,7 +32,7 @@ if ! grep danbooru /etc/passwd >/dev/null; then
     useradd -s /bin/bash -U danbooru
     git clone https://github.com/DonovanDMC/e621ng /home/danbooru/danbooru
     chown -R danbooru:danbooru /home/danbooru
-    # echo "%danbooru ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/danbooru
+    echo "%danbooru ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/danbooru
     ln -s /home/danbooru/danbooru /vagrant
     usermod -aG www-data danbooru
 fi
