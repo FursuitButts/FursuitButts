@@ -156,7 +156,7 @@ module Danbooru
     # List of memcached servers
     def memcached_servers
       Rails.env.production? ? [ "memcached:11211" ] : [ "127.0.0.1:11211" ]
-      
+
     end
 
     def alias_implication_forum_category
@@ -424,8 +424,11 @@ module Danbooru
       # base_url - where to serve files from (default: http://#{hostname}/data)
       # hierarchical: false - store files in a single directory
       # hierarchical: true - store files in a hierarchical directory structure, based on the MD5 hash
-      StorageManager::Local.new(base_url: "#{CurrentUser.root_url}/", base_dir: "#{Rails.root}/public/data", hierarchical: false)
-
+      if Rails.env.production?
+        StorageManager::Local.new(base_url: "https://v3.yiff.rest/", base_dir: "#{Rails.root}/public/data", hierarchical: true)
+      else
+        StorageManager::Local.new(base_url: "#{CurrentUser.root_url}/", base_dir: "#{Rails.root}/public/data", hierarchical: false)
+      end
       # Store files on one or more remote host(s). Configure SSH settings in
       # ~/.ssh_config or in the ssh_options param (ref: http://net-ssh.github.io/net-ssh/Net/SSH.html#method-c-start)
       # StorageManager::SFTP.new("i1.example.com", "i2.example.com", base_dir: "/mnt/backup", hierarchical: false, ssh_options: {})
@@ -919,7 +922,8 @@ module Danbooru
 
     def mascots
       [
-          ["https://i.maid.gay/MaidMascot.png", "#808080", "<a href='https://twitter.com/Gaokunx3'>Gaokun</a>"]
+          ["/images/mascots/MaidBoyeMascot.png", "#808080", "<a href='https://twitter.com/Gaokunx3'>Gaokun</a> @ <a href='https://e621.net/posts/2907560'>e621</a>"],
+          ["/images/mascots/DonMaidMascot.png", "#74C9E0", "<a href='https://twitter.com/Gaokunx3'>Gaokun</a> @ <a href='https://e621.net/posts/2907535'>e621</a>"]
       ]
     end
 
