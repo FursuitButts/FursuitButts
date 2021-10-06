@@ -1,0 +1,1 @@
+ docker run -p 127.3.6.21:80:80 -p 127.3.6.21:443:443 -v /opt/E621:/home/danbooru/danbooru -e RAILS_ENV=production --restart always --name e621 ubuntu:focal "/home/danbooru/danbooru/script/install_prod/install.sh"
