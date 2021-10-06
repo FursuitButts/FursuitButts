@@ -58,7 +58,7 @@ if ! install_packages \
       libcurl4-openssl-dev nginx ssh libglib2.0-dev \
       mkvtoolnix cmake ffmpeg git libcurl4-openssl-dev ffmpeg \
       libicu-dev libjpeg-progs libpq-dev libreadline-dev libxml2-dev \
-      libexpat1-dev nodejs optipng \
+      libexpat1-dev nodejs optipng redis-server \
       liblcms2-dev libjpeg-turbo8-dev libgif-dev libpng-dev libexif-dev; then
     >&2 echo "Installation of dependencies failed, please see the errors above and re-run the install script."
     exit 1
@@ -110,8 +110,9 @@ if ! which vipsthumbnail >/dev/null; then
     rm -rf /tmp/vips-$VIPS_VERSION.tar.gz /tmp/vips-$VIPS_VERSION
 fi
 
-echo "Enabling Redis server"
-
+script_log "Enabling redis server"
+chown -R redis:redis /var/lib/redis
+systemctl enable redis-server 2>/dev/null
 service redis-server start
 
 cp /home/danbooru/danbooru/vagrant/ruby-setup-prod.sh /home/danbooru/ruby-setup.sh

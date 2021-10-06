@@ -19,6 +19,7 @@ services:
     volumes:
       - /opt/E621:/home/danbooru/danbooru:Z
       - /opt/E621/data/db:/var/lib/pgsql/data:Z
+      - /opt/E621/data/redis:/var/lib/redis:Z
     environment:
       - RAILS_ENV=production
     restart: always
