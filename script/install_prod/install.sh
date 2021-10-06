@@ -196,4 +196,4 @@ curl https://github.com/chrismytton/shoreman/raw/master/shoreman.sh -sLo /usr/bi
 chmod +x /usr/bin/shoreman
 
 echo "Starting.."
-sudo -i -u danbooru bash -c 'source /etc/profile.d/chruby.sh;/usr/bin/shoreman'
+sudo -i -u danbooru bash -c 'source /etc/profile.d/chruby.sh;cd /opt/E621;/usr/bin/shoreman'
