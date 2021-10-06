@@ -3,6 +3,7 @@
 APP_DIR=/home/danbooru/danbooru
 CHRUBY_PATH=/etc/profile.d/chruby.sh
 VIPS_VERSION=8.10.5
+RAILS_ENV=production
 
 apt-get update
 apt-get install ca-certificates
@@ -29,7 +30,7 @@ if ! grep danbooru /etc/passwd >/dev/null; then
     git clone https://github.com/DonovanDMC/e621ng /home/danbooru/danbooru
     chown -R danbooru:danbooru /home/danbooru
     echo "%danbooru ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/danbooru
-    ln -s /vagrant /home/danbooru/danbooru
+    ln -s /home/danbooru/danbooru /vagrant
     usermod -aG www-data danbooru
 fi
 
@@ -165,8 +166,8 @@ systemctl start redis-server
 echo "Stopping Danbooru Systemd Service"
 service danbooru stop 2>/dev/null
 
-cp /vagrant/vagrant/ruby-setup.sh /home/vagrant/ruby-setup.sh
-SETUP_SCRIPT=/home/vagrant/ruby-setup.sh
+cp /home/danbooru/danbooru/vagrant/ruby-setup.sh /home/danbooru/ruby-setup.sh
+SETUP_SCRIPT=/home/danbooru/ruby-setup.sh
 chmod a+x $SETUP_SCRIPT
 sudo -i -u danbooru bash -c "$SETUP_SCRIPT '$APP_DIR' '$CHRUBY_PATH'"
 
