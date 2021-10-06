@@ -17,7 +17,7 @@ docker run \
     -p 127.3.6.21:80:80 \
     -p 127.3.6.21:443:443 \
     -v /opt/E621:/home/danbooru/danbooru \
-    -v /opt/E621/data/db:/var/lib/pgsql/data
+    -v /opt/E621/data/db:/var/lib/pgsql/data \
     -v /opt/E621/data/elasticsearch:/var/lib/elasticsearch \
     -e RAILS_ENV=production \
     --restart always \
