@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+git pull
+start=`date +%s`
+docker-compose restart
+end=`date +%s`
+runtime=$((end-start))
+echo "Restart took $runtime seconds"
