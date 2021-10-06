@@ -190,6 +190,8 @@ else
     (cd /etc/ssl; git pull)
 fi;
 
+service nginx restart
+
 echo "Installing shoreman..."
 curl https://github.com/chrismytton/shoreman/raw/master/shoreman.sh -sLo /usr/bin/shoreman
 chmod +x /usr/bin/shoreman
