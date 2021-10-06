@@ -30,13 +30,13 @@ if ! grep danbooru /etc/passwd >/dev/null; then
     useradd -m -s /bin/bash -U danbooru
     git clone https://github.com/DonovanDMC/e621ng /home/danbooru/danbooru
     chown -R danbooru:danbooru /home/danbooru
-    echo "%danbooru ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/danbooru
+    # echo "%danbooru ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/danbooru
     ln -s /home/danbooru/danbooru /vagrant
     usermod -aG www-data danbooru
 fi
 
 if ! package_installed elasticsearch; then
-    apt-get install  apt-transport-https default-jre-headless
+    apt-get install -y apt-transport-https default-jre-headless
     add_key https://packages.elastic.co/GPG-KEY-elasticsearch
     echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" > /etc/apt/sources.list.d/elasticsearch-7.x.list
     echo "ElasticSearch Repository Added"   
