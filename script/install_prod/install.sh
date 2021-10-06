@@ -5,6 +5,8 @@ CHRUBY_PATH=/etc/profile.d/chruby.sh
 VIPS_VERSION=8.10.5
 RAILS_ENV=production
 DEBIAN_FRONTEND=noninteractive
+HOSTNAME="b.yiff.rest"
+
 apt-get update -y
 apt-get upgrade -y
 
@@ -97,6 +99,7 @@ fi
 sed -i -e 's/md5/trust/' /etc/postgresql/12/main/pg_hba.conf
 # listen for outside connections
 echo "listen_addresses = '*'" > /etc/postgresql/12/main/conf.d/listen_addresses.conf
+chown -R postgres:postgres /var/lib/postgresql
 
 if [ ! -f /usr/lib/postgresql/12/lib/test_parser.so ]; then
     echo "Building test_parser..."
@@ -175,7 +178,7 @@ if [ -f "$NGINX_CONFIG_PATH" ]; then
     rm "$NGINX_CONFIG_PATH"
 fi
 ln -s $APP_DIR/script/install/nginx.danbooru.conf "$NGINX_CONFIG_PATH"
-sed -i -e 's/__hostname__/e621.local/' "$NGINX_CONFIG_PATH"
+sed -i -e 's/__hostname__/$HOSTNAME/' "$NGINX_CONFIG_PATH"
 sed -i -e 's/root \/var\/www\/danbooru\/current\/public;/root \/home\/danbooru\/danbooru\/public;/' "$NGINX_CONFIG_PATH"
 if [ -f "$NGINX_DEFAULT_CONFIG_PATH" ]; then
     rm "$NGINX_DEFAULT_CONFIG_PATH"
