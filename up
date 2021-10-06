@@ -1,3 +1,7 @@
 #!/usr/bin/env bash
 git pull
+start=`date +%s`
 docker-compose up
+end=`date +%s`
+runtime=$((end-start))
+echo "UP (Interactive) took $runtime seconds"

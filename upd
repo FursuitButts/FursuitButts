@@ -1,3 +1,7 @@
 #!/usr/bin/env bash
 git pull
+start=`date +%s`
 docker-compose up -d
+end=`date +%s`
+runtime=$((end-start))
+echo "UP (Daemonized) took $runtime seconds"

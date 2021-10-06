@@ -1,2 +1,7 @@
 #!/usr/bin/env bash
+
+start=`date +%s`
 docker-compose down
+end=`date +%s`
+runtime=$((end-start))
+echo "Down took $runtime seconds"
