@@ -51,7 +51,7 @@ if ! package_installed postgresql-20; then
 fi
 
 if ! package_installed nodejs; then
-    wget -qO - https://deb.nodesource.com/setup_14.x | -E bash - >/dev/null 2>&1
+    wget -qO - https://deb.nodesource.com/setup_14.x | sudo -E bash - >/dev/null 2>&1
     echo "Node.JS Repository Added"
 fi
 
