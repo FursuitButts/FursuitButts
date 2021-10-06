@@ -6,13 +6,9 @@ services:
       - discovery.type=single-node
       - xpack.security.enabled=false
     container_name: e621_elastic
-    networks:
-      - internal
   memcached:
     image: memcached
     container_name: e621_memcached
-    networks:
-      - internal
   e621:
     image: ubuntu:focal
     container_name: e621
@@ -29,5 +25,3 @@ services:
     ports:
       - 127.3.6.21:80:80
       - 127.3.6.21:443:443
-    networks:
-      - internal
