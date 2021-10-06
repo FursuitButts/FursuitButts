@@ -7,7 +7,7 @@ RAILS_ENV=production
 DEBIAN_FRONTEND=noninteractive
 
 apt-get update -y
-apt-get install -y ca-certificates wget git
+DEBIAN_FRONTEND="noninteractive" TZ="America/Chicago" apt-get -y install tzdata ca-certificates wget git
 
 package_installed() {
     if dpkg-query -f '${binary:Package}\n' -W | grep "$1" &>/dev/null; then
