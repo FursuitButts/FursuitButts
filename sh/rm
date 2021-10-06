@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+docker rm -f e621 e621_memcached e621_elastic
