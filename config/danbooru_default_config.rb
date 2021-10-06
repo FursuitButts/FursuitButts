@@ -155,7 +155,7 @@ module Danbooru
 
     # List of memcached servers
     def memcached_servers
-      %w(127.0.0.1:11211)
+      Rails.env.production? ? [ "memcached:11211" ] : [ "127.0.0.1:11211" ]
     end
 
     def alias_implication_forum_category
@@ -854,7 +854,7 @@ module Danbooru
     end
 
     def elasticsearch_host
-      '127.0.0.1'
+      Rails.env.production? ? "elastic" : "127.0.0.0"
     end
 
     # Use a recaptcha on the signup page to protect against spambots creating new accounts.

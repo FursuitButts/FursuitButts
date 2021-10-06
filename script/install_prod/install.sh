@@ -39,19 +39,6 @@ if ! grep danbooru /etc/passwd >/dev/null; then
     usermod -aG www-data danbooru
 fi
 
-if ! package_installed elasticsearch; then
-    apt-get install -y apt-transport-https default-jre-headless
-    add_key https://packages.elastic.co/GPG-KEY-elasticsearch
-    echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" > /etc/apt/sources.list.d/elasticsearch-7.x.list
-    echo "ElasticSearch Repository Added"
-fi
-
-if ! package_installed postgresql-20; then
-    sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
-    add_key https://www.postgresql.org/media/keys/ACCC4CF8.asc
-    echo "PostgreSQL Repository Added"
-fi
-
 if ! package_installed nodejs; then
     wget -qO - https://deb.nodesource.com/setup_14.x | sudo -E bash - >/dev/null 2>&1
     echo "Node.JS Repository Added"
@@ -67,54 +54,16 @@ apt-get update
 
 if ! install_packages \
       build-essential automake libxml2-dev libxslt1-dev yarn nginx libncurses5-dev \
-      libreadline-dev flex bison ragel memcached libmemcached-dev git curl \
+      libreadline-dev flex bison ragel libmemcached-dev git \
       libcurl4-openssl-dev nginx ssh libglib2.0-dev \
-      mkvtoolnix cmake ffmpeg git postgresql-12 libcurl4-openssl-dev ffmpeg \
+      mkvtoolnix cmake ffmpeg git libcurl4-openssl-dev ffmpeg \
       libicu-dev libjpeg-progs libpq-dev libreadline-dev libxml2-dev \
-      libexpat1-dev nodejs optipng redis-server postgresql-server-dev-12 \
-      liblcms2-dev libjpeg-turbo8-dev libgif-dev libpng-dev libexif-dev \
-      elasticsearch; then
+      libexpat1-dev nodejs optipng \
+      liblcms2-dev libjpeg-turbo8-dev libgif-dev libpng-dev libexif-dev; then
     >&2 echo "Installation of dependencies failed, please see the errors above and re-run the install script."
     exit 1
 fi
 
-echo "Setting up elasticsearch..."
-sed -i -e 's/\(-Xm[sx]\)1g/\1256m/' /etc/elasticsearch/jvm.options
-chown -R elasticsearch:elasticsearch /var/lib/elasticsearch   
-if ! grep -Fq "xpack.security.enabled" /etc/elasticsearch/elasticsearch.yml; then
-    echo "xpack.security.enabled: false" >> /etc/elasticsearch/elasticsearch.yml
-fi
-
-service elasticsearch start
-
-echo "Setting Up PostgreSQL"
-IP=$(hostname -I | awk '{print $NF}')
-IP_PART=$(echo $IP | cut -d '.' -f1)
-IP_CDIR=("${IP%.*}.0/24")
-
-if ! grep -q "$IP_PART" "/etc/postgresql/12/main/pg_hba.conf"; then
-  echo "host danbooru2,danbooru2_test danbooru $IP_CDIR trust" >> /etc/postgresql/12/main/pg_hba.conf
-fi
-# do not require passwords for authentication
-sed -i -e 's/md5/trust/' /etc/postgresql/12/main/pg_hba.conf
-# listen for outside connections
-echo "listen_addresses = '*'" > /etc/postgresql/12/main/conf.d/listen_addresses.conf
-chown -R postgres:postgres /var/lib/postgresql
-
-if [ ! -f /usr/lib/postgresql/12/lib/test_parser.so ]; then
-    echo "Building test_parser..."
-    pushd .
-    git clone https://github.com/r888888888/test_parser.git /tmp/test_parser
-    cd /tmp/test_parser
-    make install
-    popd
-    rm -rf /tmp/test_parser
-fi
-
-service postgresql restart
-
-echo "Creating danbooru postgres user..."
-sudo -u postgres createuser -s danbooru
 
 if ! type ruby-install >/dev/null 2>&1; then
     echo "Installing Ruby"
@@ -165,7 +114,7 @@ echo "Enabling Redis server"
 
 service redis-server start
 
-cp /home/danbooru/danbooru/vagrant/ruby-setup.sh /home/danbooru/ruby-setup.sh
+cp /home/danbooru/danbooru/vagrant/ruby-setup-prod.sh /home/danbooru/ruby-setup.sh
 SETUP_SCRIPT=/home/danbooru/ruby-setup.sh
 chmod a+x $SETUP_SCRIPT
 sudo -i -u danbooru bash -c "$SETUP_SCRIPT '$APP_DIR' '$CHRUBY_PATH'"

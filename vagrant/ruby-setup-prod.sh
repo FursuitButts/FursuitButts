@@ -31,9 +31,7 @@ script_log "Installing bundler gem..."
 gem install bundler:2.0.1 >/dev/null
 bundler config github.https true
 
-script_log "Dropping existing databases (if any)..."
-dropdb --if-exists e621_test
-dropdb --if-exists e621_dev
+script_log "Not dropping databases.."
 
 script_log "Creating config files..."
 sed -s "s/url: <%= .* %>/host: localhost/g" script/install/database.yml.templ > config/database.yml
@@ -47,5 +45,5 @@ script_log "Running yarn..."
 yarn install
 
 script_log "Running setup..."
-RAILS_ENV=test ./bin/setup
+RAILS_ENV=production ./bin/setup
 exit

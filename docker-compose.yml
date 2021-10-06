@@ -1,0 +1,21 @@
+version: "3"
+services:
+  elastic:
+    image: elasticsearch
+  memcached:
+    image: memcached
+  e621:
+    image: ubuntu:focal
+    command: /home/danbooru/danbooru/script/install_prod/install.sh
+    depends_on:
+      - elastic
+      - memcached
+    volumes:
+      - /opt/E621:/home/danbooru/danbooru:Z
+      - /opt/E621/data/db:/var/lib/pgsql/data:Z
+    enviornment:
+      - RAILS_ENV=production
+    restart: always
+    ports:
+      - 127.3.6.21:80:80
+      - 127.3.6.21:443:443
