@@ -161,13 +161,10 @@ echo "Enabling Redis server"
 systemctl enable redis-server 2>/dev/null
 systemctl start redis-server
 
-echo "Stopping Danbooru Systemd Service"
-service danbooru stop 2>/dev/null
-
 cp /home/danbooru/danbooru/vagrant/ruby-setup.sh /home/danbooru/ruby-setup.sh
 SETUP_SCRIPT=/home/danbooru/ruby-setup.sh
 chmod a+x $SETUP_SCRIPT
--i -u danbooru bash -c "$SETUP_SCRIPT '$APP_DIR' '$CHRUBY_PATH'"
+sudo -i -u danbooru bash -c "$SETUP_SCRIPT '$APP_DIR' '$CHRUBY_PATH'"
 
 NGINX_CONFIG_PATH=/etc/nginx/conf.d/danbooru.conf
 NGINX_DEFAULT_CONFIG_PATH=/etc/nginx/conf.d/default.conf
@@ -198,10 +195,5 @@ echo "Installing shoreman..."
 curl https://github.com/chrismytton/shoreman/raw/master/shoreman.sh -sLo /usr/bin/shoreman
 chmod +x /usr/bin/shoreman
 
-echo "Copying systemd unit file..."
-cp $APP_DIR/vagrant/danbooru.service /lib/systemd/system/
-systemctl daemon-reload
-systemctl enable danbooru 2>/dev/null
-
-echo "Restarting danbooru systemd service..."
-service danbooru restart
+echo "Starting.."
+sudo -i -u danbooru bash -c 'source /etc/profile.d/chruby.sh;/usr/bin/shoreman'
