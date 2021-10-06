@@ -5,10 +5,13 @@ services:
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
+    container_name: e621_elastic
   memcached:
     image: memcached
+    container_name: e621_memcached
   e621:
     image: ubuntu:focal
+    container_name: e621
     command: /home/danbooru/danbooru/script/install_prod/install.sh
     depends_on:
       - elastic
