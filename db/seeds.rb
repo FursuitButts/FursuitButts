@@ -26,7 +26,7 @@ else
   echo "Admin password file does not exist, generating new password.."
   admin_password = SecureRandom.hex(20)
   File.write(admin_file, admin_password)
-fi
+end
 
 if(File.file?(system_file))
   echo "System password file already exists, reusing.."
@@ -35,7 +35,7 @@ else
   echo "System password file does not exist, generating new password.."
   system_password = SecureRandom.hex(20)
   File.write(system_file, system_password) 
-fi
+end
 
 admin = User.find_or_create_by!(name: "admin") do |user|
   echo "Setting admin password to: #{:admin_password}"
