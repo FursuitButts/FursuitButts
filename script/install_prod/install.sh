@@ -19,6 +19,9 @@ add_key() {
     wget -qO - "$1" | sudo apt-key add - &>/dev/null
 }
 
+install_packages() {
+    sudo apt-get install -y $@
+}
 
 if ! grep danbooru /etc/passwd >/dev/null; then
     echo "Creating Danbooru User"
@@ -70,11 +73,11 @@ if ! install_packages \
       libexpat1-dev nodejs optipng redis-server postgresql-server-dev-12 \
       liblcms2-dev libjpeg-turbo8-dev libgif-dev libpng-dev libexif-dev \
       elasticsearch; then
-    >&2 script_log "Installation of dependencies failed, please see the errors above and re-run the install script."
+    >&2 echo "Installation of dependencies failed, please see the errors above and re-run the install script."
     exit 1
 fi
 
-script_log "Setting up elasticsearch..."
+echo "Setting up elasticsearch..."
 sed -i -e 's/\(-Xm[sx]\)1g/\1256m/' /etc/elasticsearch/jvm.options
 if ! grep -Fq "xpack.security.enabled" /etc/elasticsearch/elasticsearch.yml; then
     echo "xpack.security.enabled: false" >> /etc/elasticsearch/elasticsearch.yml
@@ -107,7 +110,7 @@ fi
 
 service postgresql restart
 
-script_log "Creating danbooru postgres user..."
+echo "Creating danbooru postgres user..."
 sudo -u postgres createuser -s danbooru
 
 if ! type ruby-install >/dev/null 2>&1; then
@@ -192,14 +195,14 @@ fi;
 
 service nginx restart
 
-script_log "Installing shoreman..."
+echo "Installing shoreman..."
 curl https://github.com/chrismytton/shoreman/raw/master/shoreman.sh -sLo /usr/bin/shoreman
 chmod +x /usr/bin/shoreman
 
-script_log "Copying systemd unit file..."
+echo "Copying systemd unit file..."
 cp $APP_DIR/vagrant/danbooru.service /lib/systemd/system/
 systemctl daemon-reload
 systemctl enable danbooru 2>/dev/null
 
-script_log "Restarting danbooru systemd service..."
+echo "Restarting danbooru systemd service..."
 service danbooru restart
