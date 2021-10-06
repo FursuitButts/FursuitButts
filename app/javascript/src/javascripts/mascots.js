@@ -7,7 +7,7 @@ const Mascots = {
 function showMascot(cur) {
   const mascots = window.mascots;
 
-  const blurred = mascots[cur][0].substr(0, mascots[cur][0].lastIndexOf(".")) + "_blur" + mascots[cur][0].slice(mascots[cur][0].lastIndexOf("."));
+  const blurred = mascots[cur][0].substr(0, mascots[cur][0].lastIndexOf(".")) + "Blur" + mascots[cur][0].slice(mascots[cur][0].lastIndexOf("."));
 
   $('body').css("background-image", "url(" + mascots[cur][0] + ")");
   $('body').css("background-color", mascots[cur][1]);
