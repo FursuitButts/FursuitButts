@@ -41,7 +41,8 @@ if ! package_installed elasticsearch; then
     apt-get install -y apt-transport-https default-jre-headless
     add_key https://packages.elastic.co/GPG-KEY-elasticsearch
     echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" > /etc/apt/sources.list.d/elasticsearch-7.x.list
-    echo "ElasticSearch Repository Added"   
+    echo "ElasticSearch Repository Added"
+    chown -R elasticsearch:elasticsearch /var/lib/elasticsearch   
 fi
 
 if ! package_installed postgresql-20; then
@@ -188,11 +189,6 @@ if [ ! -d "/etc/ssl/local" ]; then
 else
     (cd /etc/ssl; git pull)
 fi;
-
-service nginx stop
-service nginx start
-sudo chown -R elasticsearch:elasticsearch /var/lib/elasticsearch
-service elasticsearch start
 
 echo "Installing shoreman..."
 curl https://github.com/chrismytton/shoreman/raw/master/shoreman.sh -sLo /usr/bin/shoreman
