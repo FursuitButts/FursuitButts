@@ -189,11 +189,14 @@ else
     (cd /etc/ssl; git pull)
 fi;
 
-service nginx restart
+service nginx stop
+service nginx start
+sudo chown -R elasticsearch:elasticsearch /var/lib/elasticsearch
+service elasticsearch start
 
 echo "Installing shoreman..."
 curl https://github.com/chrismytton/shoreman/raw/master/shoreman.sh -sLo /usr/bin/shoreman
 chmod +x /usr/bin/shoreman
 
 echo "Starting.."
-sudo -i -u danbooru bash -c 'source /etc/profile.d/chruby.sh;cd /opt/E621;/usr/bin/shoreman'
+sudo -i -u danbooru bash -c 'source /etc/profile.d/chruby.sh;cd /home/danbooru/danbooru;/usr/bin/shoreman'
