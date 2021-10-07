@@ -176,9 +176,19 @@ fi;
 
 service nginx restart
 
-echo "Installing shoreman..."
-curl https://github.com/chrismytton/shoreman/raw/master/shoreman.sh -sLo /usr/bin/shoreman
-chmod +x /usr/bin/shoreman
+if [ ! -f /usr/bin/shoreman ]; then
+    echo "Installing shoreman..."
+    curl https://github.com/chrismytton/shoreman/raw/master/shoreman.sh -sLo /usr/bin/shoreman
+    chmod +x /usr/bin/shoreman
+else
+    echo "Shoreman already installed, skipping.."
+fi
+
+PID_FILE=/home/danbooru/danbooru/tmp/pids/server.pid
+if [ -f $PID_FILE ]; then
+    echo "Removing pid file.."
+    rm /home/danbooru/danbooru/tmp/pids/server.pid
+fi
 
 echo "Starting.."
 sudo -i -u danbooru bash -c 'source /etc/profile.d/chruby.sh;cd /home/danbooru/danbooru;/usr/bin/shoreman'
