@@ -1,0 +1,3 @@
+#!/usr/bin/env
+
+docker exec -u danbooru -it e621 /bin/bash
