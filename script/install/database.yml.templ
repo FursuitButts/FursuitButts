@@ -1,21 +1,21 @@
 # Main Databases
 production:
   adapter: postgresql
-  database: danbooru
+  database: e621
   pool: 5
   timeout: 5000
   url: <%= ENV['DATABASE_URL'] %>
 
 development:
   adapter: postgresql
-  database: danbooru2
+  database: e621_dev
   pool: 5
   timeout: 5000
   url: <%= ENV['DATABASE_URL'] %>
 
 test:
   adapter: postgresql
-  database: danbooru3
+  database: e621_test
   pool: 5
   timeout: 5000
   url: <%= ENV['DATABASE_URL'] %>
@@ -23,32 +23,32 @@ test:
 # Readonly Variants, practically no difference
 ro_production:
   adapter: postgresql
-  database: danbooru1
+  database: e621
   url: <%= ENV['RO_DATABASE_URL'] %>
 
 ro_development:
   adapter: postgresql
-  database: danbooru2
+  database: e621_dev
   url: <%= ENV['RO_DATABASE_URL'] %>
 
 ro_test:
   adapter: postgresql
-  database: danbooru3
+  database: e621_test
   url: <%= ENV['RO_DATABASE_URL'] %>
 
 # Archive Variants
 
 archive_production:
   adapter: postgresql
-  database: danbooru_arch
+  database: e621_arch
   url: <%= ENV['ARCHIVE_DATABASE_URL'] %>
 
 archive_development:
   adapter: postgresql
-  database: danbooru2_arch
+  database: e621_dev_arch
   url: <%= ENV['ARCHIVE_DATABASE_URL'] %>
 
 archive_test:
   adapter: postgresql
-  database: danbooru3_arch
+  database: e621_test_arch
   url: <%= ENV['ARCHIVE_DATABASE_URL'] %>
