@@ -73,7 +73,8 @@ fi
 echo "Setting up postgres..."
 # allow connections from the host machine
 if ! grep -q "172" "/etc/postgresql/12/main/pg_hba.conf"; then
-  echo "host danbooru,danbooru2,danbooru3 danbooru 172.99.0.0/24 trust\nhost all all 172.31.0.1/32 trust" >> /etc/postgresql/12/main/pg_hba.conf
+  echo "host danbooru,danbooru2,danbooru3 danbooru 172.99.0.0/24 trust" >> /etc/postgresql/12/main/pg_hba.conf
+  echo "host all all 172.31.0.1/32 trust"  >> /etc/postgresql/12/main/pg_hba.conf
 fi
 # do not require passwords for authentication
 sed -i -e 's/md5/trust/' /etc/postgresql/12/main/pg_hba.conf
