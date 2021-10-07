@@ -13,12 +13,14 @@ services:
     networks:
       default:
         ipv4_address: 172.99.0.1
+        ipv6_address: ::ffff:ac63:1
   memcached:
     image: memcached
     container_name: e621_memcached
     networks:
       default:
         ipv4_address: 172.99.0.2
+        ipv6_address: ::ffff:ac63:2
   e621:
     image: ubuntu:focal
     container_name: e621
@@ -41,6 +43,7 @@ services:
     networks:
       default:
         ipv4_address: 172.99.0.3
+        ipv6_address: ::ffff:ac63:3
 
 networks:
   default:
@@ -51,3 +54,5 @@ networks:
       config:
         - subnet: 172.99.0.0/24
           gateway: 172.99.0.255
+        - subnet: ::ffff:ac63:0/64
+          gateway: ::ffff:ac63:ff
