@@ -51,6 +51,8 @@ networks:
     driver: bridge
     ipam:
       driver: default
+      driver_opts:
+        com.docker.network.enable_ipv6: "true"
       config:
         - subnet: 172.99.0.0/24
           gateway: 172.99.0.1
