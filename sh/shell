@@ -1,3 +1,3 @@
 #!/usr/bin/env
 
-docker exec -u danbooru -it e621 "/etc/profile.d/chruby.sh; /bin/bash"
+docker exec -u danbooru -it e621 "/home/danbooru/login.sh"
