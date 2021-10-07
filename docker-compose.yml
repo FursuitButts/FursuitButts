@@ -10,9 +10,15 @@ services:
       interval: 10s
       retries: 999
       test: curl --write-out 'HTTP %{http_code}' --fail --silent --output /dev/null http://localhost:9200/ || exit 1
+    networks:
+      default:
+        ipv4_address: 172.99.0.1
   memcached:
     image: memcached
     container_name: e621_memcached
+    networks:
+      default:
+        ipv4_address: 172.99.0.2
   e621:
     image: ubuntu:focal
     container_name: e621
@@ -32,3 +38,16 @@ services:
     ports:
       - 127.3.6.21:80:80
       - 127.3.6.21:443:443
+    networks:
+      default:
+        ipv4_address: 172.99.0.3
+
+networks:
+  default:
+    name: e621
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.99.0.0/24
+          gateway: 172.99.0.255
