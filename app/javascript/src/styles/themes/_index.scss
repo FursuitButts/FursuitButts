@@ -16,8 +16,9 @@
 // Primary theming - colors, main backgrounds, etc
 $theme_main_index: (
   "data-attr":      "main",
-  "default":        $theme_bloodlust,
+  "default":        $theme_hexagon,
   "themes": (
+    "hexagon":      $theme_hexagon,
     "pony":         $theme_pony,
     "bloodlust":    $theme_bloodlust,
     "serpent":      $theme_serpent,
@@ -28,7 +29,7 @@ $theme_main_index: (
 // Tertiary theming - seasonal decorations
 $theme_extra_index: (
   "data-attr":      "extra",
-  "default":        $extra_stars,
+  "default": $extra_none,
   "themes": (
     "none":         $extra_none,
     "autumn":       $extra_autumn,
