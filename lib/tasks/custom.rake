@@ -9,9 +9,7 @@ namespace :custom do
         puts "Packs Dir Not Present"
     end
     
-    Dir.chdir(Rails.root) do
-        puts "Runnung precompile (prod)"
-        %x( "RAILS_ENV=production bin/rake assets:precompile" )
-    end
+    puts "Runnung precompile (prod)"
+    %x( "RAILS_ENV=production #{Rails.root}/bin/rake assets:precompile" )
   end
 end
