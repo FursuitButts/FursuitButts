@@ -48,10 +48,15 @@ Rails.application.configure do
 
   config.action_mailer.perform_caching = false
 
-  config.action_mailer.delivery_method = :mailgun
-  config.action_mailer.mailgun_settings = {
-      api_key: Danbooru.config.mailgun_api_key,
-      domain: Danbooru.config.mailgun_domain
+  config.action_mailer.delivery_method = :smtp
+  config.action_mailer.smtp_settings = {
+      address: Danbooru.config.smtp_address,
+      port: Danbooru.config.smtp_port,
+      domain: Danbooru.config.smtp_domain,
+      user_name: Danbooru.config.smtp_username,
+      password: Danbooru.config.smtp_password,
+      authentication: Danbooru.config.smtp_authentication,
+      enable_starttls_auto: Danbooru.config.smtp_tls,
   }
 
 

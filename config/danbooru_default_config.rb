@@ -4,7 +4,7 @@ module Danbooru
   class Configuration
     # The version of this Danbooru.
     def version
-      "2.1.0"
+      "1.0.0"
     end
 
     # The name of this Danbooru.
@@ -17,7 +17,7 @@ module Danbooru
     end
 
     def domain
-      "e621.owo-whats-this.dev"
+      "img.yiff.rest"
     end
 
     # Force rating:s on this version of the site.
@@ -627,7 +627,7 @@ module Danbooru
 
     # If enabled, users must verify their email addresses.
     def enable_email_verification?
-      false
+      true
     end
 
     def enable_signups?
@@ -804,21 +804,31 @@ module Danbooru
       }
     end
 
-    # you should override this
-    def email_key
-      "Z5fn9s3FZy5FjDEAfvkssqJu95Axz6DvEpUxF3Nb"
+    def smtp_address
+      "smtp.gmail.com"
     end
 
-    def mailgun_api_key
-      ''
+    def smtp_port
+      465
     end
 
-    def mailgun_domain
-      'owo-whats-this.dev'
+    def smtp_domain
+      "yiff.rocks"
     end
 
-    def mail_from_addr
-      'noreply@owo-whats-this.dev'
+    def smtp_username
+      "api@yiff.rocks"
+    end
+
+    def smtp_password
+    end
+
+    def smtp_authentication
+      "plain"
+    end
+
+    def smtp_tls
+      true
     end
 
     # For downloads, if the host matches any of these IPs, block it
