@@ -20,7 +20,7 @@ class StorageManager
   end
 
   def default_base_path
-    "/"
+    ""
   end
 
   def default_base_url
