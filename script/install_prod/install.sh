@@ -171,7 +171,7 @@ fi
 if [ ! -d "/etc/ssl/local" ]; then
     (cd /etc/ssl; git clone https://DonovanDMC:$GIT_TOKEN@github.com/DonovanDMC/SSL local)
 else
-    (cd /etc/ssl; git pull)
+    (cd /etc/ssl/local; git pull)
 fi;
 
 service nginx restart
