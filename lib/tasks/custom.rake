@@ -10,6 +10,6 @@ namespace :custom do
     end
     
     puts "Runnung precompile (prod)"
-    %x( "RAILS_ENV=production #{Rails.root}/bin/rake assets:precompile" )
+    %x( "#{Rails.root}/bin/rake assets:precompile RAILS_ENV=production" )
   end
 end
