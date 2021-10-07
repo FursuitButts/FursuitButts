@@ -10,10 +10,10 @@ $theme_hexagon: (
   "image-background":             url('images/hexagon/background.png'),
 
   // Layout Colors
-  "color-background": $hexagon-color-background, // Main background (dark blue, large hexagons)
-  "color-foreground"#152f56,                   // Foreground (lighter blue, small hexagons)
-  "color-foreground"#808080,                   // Foreground (lighter blue, small hexagons)
-  "color-section":    $hexagon-color-section,    // Foreground sections - boxes, sections, etc
+  "color-background":   $hexagon-color-background, // Main background (dark blue, large hexagons)
+  "color-foreground": #152f56,                   // Foreground (lighter blue, small hexagons)
+  "color-foreground": #808080,                   // Foreground (lighter blue, small hexagons)
+  "color-section":      $hexagon-color-section,    // Foreground sections - boxes, sections, etc
 
   "color-section-pending":        $hexagon-color-section,
   "color-section-pending-border": $hexagon-color-section-border,
