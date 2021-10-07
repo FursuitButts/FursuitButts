@@ -20,25 +20,25 @@ admin_file = Rails.root.join("db", "admin.pwd")
 system_file = Rails.root.join("db", "system.pwd")
 
 if(File.file?(admin_file))
-  echo "Admin password file already exists, reusing.."
+  puts "Admin password file already exists, reusing.."
   admin_password = File.read(admin_file)
 else
-  echo "Admin password file does not exist, generating new password.."
+  puts "Admin password file does not exist, generating new password.."
   admin_password = SecureRandom.hex(20)
   File.write(admin_file, admin_password)
 end
 
 if(File.file?(system_file))
-  echo "System password file already exists, reusing.."
+  puts "System password file already exists, reusing.."
   admin_password = File.read(system_file)
 else
-  echo "System password file does not exist, generating new password.."
+  puts "System password file does not exist, generating new password.."
   system_password = SecureRandom.hex(20)
   File.write(system_file, system_password) 
 end
 
 admin = User.find_or_create_by!(name: "admin") do |user|
-  echo "Setting admin password to: #{:admin_password}"
+  puts "Setting admin password to: #{:admin_password}"
   user.created_at = 2.weeks.ago
   user.password = admin_password
   user.password_confirmation = admin_password
@@ -50,7 +50,7 @@ admin = User.find_or_create_by!(name: "admin") do |user|
 end
 
 User.find_or_create_by!(name: Danbooru.config.system_user) do |user|
-  echo "Setting system password to: #{:system_password}"
+  puts "Setting system password to: #{:system_password}"
   user.password = system_password
   user.password_confirmation = system_password
   user.password_hash = ""
