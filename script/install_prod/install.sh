@@ -42,7 +42,7 @@ fi
 if ! package_installed postgresql-12; then
     add_key https://www.postgresql.org/media/keys/ACCC4CF8.asc
     echo "deb https://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list
-    script_log "PostgreSQL repository added"
+    echo "PostgreSQL repository added"
 fi
 
 if ! package_installed nodejs; then
