@@ -22,7 +22,7 @@ services:
   e621:
     image: ubuntu:focal
     container_name: e621
-    command: /home/danbooru/danbooru/script/install_prod/install.sh
+    command: /home/danbooru/danbooru/script/install/prod.sh
     depends_on:
       elastic:
         condition: service_healthy

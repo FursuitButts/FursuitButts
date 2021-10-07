@@ -80,7 +80,7 @@ sed -i -e 's/md5/trust/' /etc/postgresql/12/main/pg_hba.conf
 # listen for outside connections
 echo "listen_addresses = '*'" > /etc/postgresql/12/main/conf.d/listen_addresses.conf
 
-chown -R postgres:postgres  /var/lib/postgresql/12/main
+chown -R postgres:postgres /var/run/postgresql /var/lib/postgresql/12/main
 if [ ! -f /usr/lib/postgresql/12/lib/test_parser.so ]; then
     echo "Building test_parser..."
     pushd .
