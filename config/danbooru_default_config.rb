@@ -665,7 +665,11 @@ module Danbooru
 
     # The number of posts displayed per page.
     def posts_per_page
-      20
+      75
+    end
+
+    def max_posts_per_page
+      100
     end
 
     def is_post_restricted?(post)
