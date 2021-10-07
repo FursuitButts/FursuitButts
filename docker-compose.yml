@@ -29,9 +29,10 @@ services:
       memcached:
         condition: service_started
     volumes:
-      - /opt/E621:/home/danbooru/danbooru:Z
-      - /opt/E621/data/db:/var/lib/postgresql/12/main:Z
-      - /opt/E621/data/redis:/var/lib/redis:Z
+      - /opt/E621:/home/danbooru/danbooru
+      - /opt/E621/data/db:/var/lib/postgresql/12/main
+      - /opt/E621/data/redis:/var/lib/redis
+      - /var/run/postgresql:/var/run/postgresql
     environment:
       - RAILS_ENV=production
     restart: always
