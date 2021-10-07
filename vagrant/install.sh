@@ -91,7 +91,7 @@ service elasticsearch start
 script_log "Setting up postgres..."
 # allow connections from the host machine
 if ! grep -q "192" "/etc/postgresql/12/main/pg_hba.conf"; then
-  echo "host danbooru2,danbooru2_test danbooru 192.168.64.1/32 trust" >> /etc/postgresql/12/main/pg_hba.conf
+  echo "host danbooru,danbooru2,danbooru3 danbooru 192.168.64.1/32 trust" >> /etc/postgresql/12/main/pg_hba.conf
 fi
 # do not require passwords for authentication
 sed -i -e 's/md5/trust/' /etc/postgresql/12/main/pg_hba.conf

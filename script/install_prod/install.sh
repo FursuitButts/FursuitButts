@@ -39,6 +39,12 @@ if ! grep danbooru /etc/passwd >/dev/null; then
     usermod -aG www-data danbooru
 fi
 
+if ! package_installed postgresql-12; then
+    add_key https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    echo "deb https://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+    script_log "PostgreSQL repository added"
+fi
+
 if ! package_installed nodejs; then
     wget -qO - https://deb.nodesource.com/setup_14.x | sudo -E bash - >/dev/null 2>&1
     echo "Node.JS Repository Added"
@@ -56,7 +62,7 @@ if ! install_packages \
       build-essential automake libxml2-dev libxslt1-dev yarn nginx libncurses5-dev \
       libreadline-dev flex bison ragel libmemcached-dev git \
       libcurl4-openssl-dev nginx ssh libglib2.0-dev \
-      mkvtoolnix cmake ffmpeg git libcurl4-openssl-dev ffmpeg \
+      mkvtoolnix cmake ffmpeg git libcurl4-openssl-dev ffmpeg postgresql-12 postgresql-server-dev-12 \
       libicu-dev libjpeg-progs libpq-dev libreadline-dev libxml2-dev \
       libexpat1-dev nodejs optipng redis-server \
       liblcms2-dev libjpeg-turbo8-dev libgif-dev libpng-dev libexif-dev; then
@@ -64,6 +70,30 @@ if ! install_packages \
     exit 1
 fi
 
+echo "Setting up postgres..."
+# allow connections from the host machine
+if ! grep -q "172" "/etc/postgresql/12/main/pg_hba.conf"; then
+  echo "host danbooru,danbooru2,danbooru3 danbooru 172.0.0.0/8 trust" >> /etc/postgresql/12/main/pg_hba.conf
+fi
+# do not require passwords for authentication
+sed -i -e 's/md5/trust/' /etc/postgresql/12/main/pg_hba.conf
+# listen for outside connections
+echo "listen_addresses = '*'" > /etc/postgresql/12/main/conf.d/listen_addresses.conf
+
+if [ ! -f /usr/lib/postgresql/12/lib/test_parser.so ]; then
+    echo "Building test_parser..."
+    pushd .
+    git clone https://github.com/r888888888/test_parser.git /tmp/test_parser
+    cd /tmp/test_parser
+    make install
+    popd
+    rm -fr /tmp/test_parser
+fi
+
+service postgresql restart
+
+echo "Creating danbooru postgres user..."
+sudo -u postgres createuser -s danbooru
 
 if ! type ruby-install >/dev/null 2>&1; then
     echo "Installing Ruby"

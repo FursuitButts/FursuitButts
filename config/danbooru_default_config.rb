@@ -773,7 +773,7 @@ module Danbooru
     end
 
     def shared_dir_path
-      "/var/www/danbooru2/shared"
+      "/home/danbooru/danbooru/public/shared"
     end
 
     def twitter_api_key

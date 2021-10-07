@@ -1,43 +1,39 @@
-# SQLite version 3.x
-#   gem install sqlite3-ruby (not necessary on OS X Leopard)
-development:
-  adapter: postgresql
-  database: e621_dev
-  pool: 5
-  timeout: 5000
-  url: <%= ENV['DATABASE_URL'] %>
-
-# Warning: The database defined as "test" will be erased and
-# re-generated from your development database when you run "rake".
-# Do not set this db to the same as development or production.
-test:
-  adapter: postgresql
-  database: e621_test
-  pool: 5
-  timeout: 5000
-  url: <%= ENV['DATABASE_URL'] %>
-
+# Main Databases
 production:
   adapter: postgresql
-  database: e621
+  database: danbooru
   pool: 5
   timeout: 5000
   url: <%= ENV['DATABASE_URL'] %>
 
-# read only databases, just point to local copies if you have no need
+development:
+  adapter: postgresql
+  database: danbooru2
+  pool: 5
+  timeout: 5000
+  url: <%= ENV['DATABASE_URL'] %>
+
+test:
+  adapter: postgresql
+  database: danbooru3
+  pool: 5
+  timeout: 5000
+  url: <%= ENV['DATABASE_URL'] %>
+
+# Readonly Variants, practically no difference
+ro_production:
+  adapter: postgresql
+  database: danbooru1
+  url: <%= ENV['RO_DATABASE_URL'] %>
+
 ro_development:
   adapter: postgresql
-  database: e621_dev
+  database: danbooru2
   url: <%= ENV['RO_DATABASE_URL'] %>
 
 ro_test:
   adapter: postgresql
-  database: e621_test
-  url: <%= ENV['RO_DATABASE_URL'] %>
-
-ro_production:
-  adapter: postgresql
-  database: e621
+  database: danbooru3
   url: <%= ENV['RO_DATABASE_URL'] %>
 
 ro_staging:
@@ -45,22 +41,19 @@ ro_staging:
   database: e621
   url: <%= ENV['RO_DATABASE_URL'] %>
 
+# Archive Variants
+
+archive_production:
+  adapter: postgresql
+  database: danbooru_arch
+  url: <%= ENV['ARCHIVE_DATABASE_URL'] %>
+
 archive_development:
   adapter: postgresql
-  database: e621_dev_arch
+  database: danbooru2_arch
   url: <%= ENV['ARCHIVE_DATABASE_URL'] %>
 
 archive_test:
   adapter: postgresql
-  database: e621_test_arch
-  url: <%= ENV['ARCHIVE_DATABASE_URL'] %>
-
-archive_production:
-  adapter: postgresql
-  database: e621_arch
-  url: <%= ENV['ARCHIVE_DATABASE_URL'] %>
-
-archive_staging:
-  adapter: postgresql
-  database: e621_arch
+  database: danbooru3_arch
   url: <%= ENV['ARCHIVE_DATABASE_URL'] %>
