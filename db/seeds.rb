@@ -30,7 +30,7 @@ end
 
 if(File.file?(system_file))
   puts "System password file already exists, reusing.."
-  admin_password = File.read(system_file)
+  system_password = File.read(system_file)
 else
   puts "System password file does not exist, generating new password.."
   system_password = SecureRandom.hex(20)
