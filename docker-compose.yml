@@ -12,13 +12,13 @@ services:
       test: curl --write-out 'HTTP %{http_code}' --fail --silent --output /dev/null http://localhost:9200/ || exit 1
     networks:
       default:
-        ipv4_address: 172.99.0.2
+        ipv4_address: 127.3.99.1
   memcached:
     image: memcached
     container_name: e621_memcached
     networks:
       default:
-        ipv4_address: 172.99.0.3
+        ipv4_address: 127.3.99.2
   e621:
     image: ubuntu:focal
     container_name: e621
@@ -40,7 +40,7 @@ services:
       - 127.3.6.21:443:443
     networks:
       default:
-        ipv4_address: 172.99.0.4
+        ipv4_address: 127.3.99.3
 
 networks:
   default:
@@ -49,5 +49,5 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 172.99.0.0/24
-          gateway: 172.99.0.1
+        - subnet: 127.3.99.0/24
+          gateway: 127.3.99.255
