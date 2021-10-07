@@ -27,6 +27,7 @@ class StaticController < ApplicationController
   end
 
   def theme
+    "bloodlust"
   end
 
   def disable_mobile_mode
