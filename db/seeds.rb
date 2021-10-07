@@ -65,7 +65,7 @@ ForumCategory.find_or_create_by!(id: Danbooru.config.alias_implication_forum_cat
   category.can_view = 0
 end
 
-unless Rails.env.test?
+unless Rails.env.production?
   CurrentUser.user = admin
     CurrentUser.ip_addr = "127.0.0.1"
 
