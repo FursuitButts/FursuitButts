@@ -804,6 +804,10 @@ module Danbooru
       }
     end
 
+    def mail_from_addr
+      "api@yiff.rocks"
+    end
+
     def smtp_address
       "smtp.gmail.com"
     end
@@ -817,7 +821,7 @@ module Danbooru
     end
 
     def smtp_username
-      "api@yiff.rocks"
+      mail_from_addr
     end
 
     def smtp_password
