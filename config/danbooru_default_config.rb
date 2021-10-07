@@ -804,6 +804,9 @@ module Danbooru
       }
     end
 
+    def email_key
+    end
+
     def mail_from_addr
       "api@yiff.rocks"
     end
