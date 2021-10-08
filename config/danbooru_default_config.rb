@@ -91,7 +91,9 @@ module Danbooru
       {
           "Anonymous" => 0,
           "Blocked" => 10,
-          "Member" => 20,
+          "Viewer" => 20,
+          "Member" => 21,
+          "Uploader" => 21,
           "Privileged" => 30,
           "Contributor" => 33,
           "Former Staff" => 34,
@@ -105,6 +107,7 @@ module Danbooru
     def customize_new_user(user)
       user.comment_threshold = -10 unless user.will_save_change_to_comment_threshold?
       user.blacklisted_tags = ''
+      user.level = User::Levels::VIEWER
       true
     end
 

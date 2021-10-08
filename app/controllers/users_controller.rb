@@ -6,7 +6,7 @@ class UsersController < ApplicationController
 
   def new
     raise User::PrivilegeError.new("Already signed in") unless CurrentUser.is_anonymous?
-    return access_denied("Signups are disabled") unless Danbooru.config.enable_signups?
+    return access_denied("We are not currently accepting new registrations.") unless Danbooru.config.enable_signups?
     @user = User.new
     respond_with(@user)
   end
@@ -60,7 +60,7 @@ class UsersController < ApplicationController
 
   def create
     raise User::PrivilegeError.new("Already signed in") unless CurrentUser.is_anonymous?
-    raise User::PrivilegeError.new("Signups are disabled") unless Danbooru.config.enable_signups?
+    raise User::PrivilegeError.new("We are not currently accepting new registrations.") unless Danbooru.config.enable_signups?
     User.transaction do
       @user = User.new(user_params(:create))
       @user.email_verification_key = '1' if Danbooru.config.enable_email_verification?

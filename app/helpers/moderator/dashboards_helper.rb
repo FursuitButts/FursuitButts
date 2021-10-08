@@ -3,11 +3,11 @@ module Moderator
     def user_level_select_tag(name, options = {})
       choices = [
         ["", ""],
-        ["Member", 20],
-        ["Privileged", 30],
-        ["Contributor", 31],
-        ["Moderator", 40],
-        ["Admin", 50]
+        ["Viewer", User::Levels::VIEWER],
+        ["Member", User::Levels::MEMBER],
+        ["Privileged", User::Levels::PRIVILEGED],
+        ["Moderator", User::Levels::MODERATOR],
+        ["Admin", User::Levels::ADMIN]
       ]
 
       select_tag(name, options_for_select(choices, params[name].to_i), options)

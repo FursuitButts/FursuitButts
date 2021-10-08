@@ -135,7 +135,7 @@ class User < ApplicationRecord
 
     def unban!
       self.is_banned = false
-      self.level = 20
+      self.level = User::Levels::VIEWER
       save
     end
 
