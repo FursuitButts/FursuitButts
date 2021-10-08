@@ -54,7 +54,7 @@ module Danbooru
     #
     # Run `rake db:seed` to create this account if it doesn't already exist in your install.
     def system_user
-      "auto_moderator"
+      "system"
     end
 
     def upload_feedback_topic
