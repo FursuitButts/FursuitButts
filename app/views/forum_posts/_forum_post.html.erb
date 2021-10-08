@@ -31,7 +31,7 @@
       <% end %>
       <div class="content-menu">
         <menu>
-          <% if CurrentUser.is_member? && @forum_topic && params[:controller] != "forum_posts" %>
+          <% if CurrentUser.is_viewer? && @forum_topic && params[:controller] != "forum_posts" %>
             <li><%= tag.a "Reply", href: '#', class: "reply-link forum-post-reply-link" %></li>
           <% end %>
           <% if !forum_post.is_original_post?(original_forum_post_id) %>
@@ -60,7 +60,7 @@
               <li><%= link_to "Edit", edit_forum_post_path(forum_post.id), :id => "edit_forum_post_link_#{forum_post.id}", :class => "edit_forum_post_link" %></li>
             <% end %>
           <% end %>
-          <% if CurrentUser.is_member? %>
+          <% if CurrentUser.is_viewer? %>
             <li><%= link_to "Report", new_ticket_path(disp_id: forum_post.id, type: 'forum') %></li>
           <% end %>
           <% if CurrentUser.is_moderator? %>

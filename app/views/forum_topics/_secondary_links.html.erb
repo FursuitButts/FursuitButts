@@ -3,17 +3,19 @@
     <li><%= render "forum_posts/quick_search" %></li>
     <%= subnav_link_to "Listing", forum_topics_path %>
 
-    <% if CurrentUser.is_member? %>
+    <% if CurrentUser.is_viewer? %>
       <%= subnav_link_to "New", new_forum_topic_path %>
-      <%= subnav_link_to "Request alias", new_tag_alias_request_path %>
-      <%= subnav_link_to "Request implication", new_tag_implication_request_path %>
-      <%= subnav_link_to "Request BUR", new_bulk_update_request_path %>
+      <% if CurrentUser.is_member? %>
+        <%= subnav_link_to "Request alias", new_tag_alias_request_path %>
+        <%= subnav_link_to "Request implication", new_tag_implication_request_path %>
+        <%= subnav_link_to "Request BUR", new_bulk_update_request_path %>
+      <% end %>
       <%= subnav_link_to "Mark all as read", mark_all_as_read_forum_topics_path, :method => :post, :"data-shortcut" => "shift+r" %>
     <% end %>
 
     <%= subnav_link_to "Search", search_forum_posts_path %>
     <%= subnav_link_to "Help", help_page_path(id: "forum") %>
-    <% if CurrentUser.is_member? && @forum_topic && !@forum_topic.new_record? %>
+    <% if CurrentUser.is_viewer? && @forum_topic && !@forum_topic.new_record? %>
       <li>|</li>
       <%= subnav_link_to "Reply", new_forum_post_path(:topic_id => @forum_topic.id) %>
       <% if @forum_topic.user_subscription(CurrentUser.user) %>

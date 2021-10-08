@@ -20,7 +20,7 @@
         <%= render "posts/partials/show/options", :post => @post %>
       </section>
 
-      <% if CurrentUser.is_member? %>
+      <% if CurrentUser.is_viewer? %>
         <section id="post-history">
           <h1>History</h1>
           <ul>
@@ -92,7 +92,7 @@
 
       <section id="image-extra-controls" style="display: flex;">
 
-        <% if CurrentUser.is_member? %>
+        <% if CurrentUser.is_viewer? %>
           <div class="image-vote-buttons">
             <%= post_vote_block(@post, @post.own_vote, buttons: true) %>
           </div>

@@ -949,42 +949,42 @@ class Tag < ApplicationRecord
           when "upvote", "votedup"
             if CurrentUser.is_moderator?
               q[:upvote] = User.name_or_id_to_id(g2)
-            elsif CurrentUser.is_member?
+            elsif CurrentUser.is_viewer?
               q[:upvote] = CurrentUser.id
             end
 
           when "downvote", "voteddown"
             if CurrentUser.is_moderator?
               q[:downvote] = User.name_or_id_to_id(g2)
-            elsif CurrentUser.is_member?
+            elsif CurrentUser.is_viewer?
               q[:downvote] = CurrentUser.id
             end
 
           when "voted"
             if CurrentUser.is_moderator?
               q[:voted] = User.name_or_id_to_id(g2)
-            elsif CurrentUser.is_member?
+            elsif CurrentUser.is_viewer?
               q[:voted] = CurrentUser.id
             end
 
           when "-voted"
             if CurrentUser.is_moderator?
               q[:neg_voted] = User.name_or_id_to_id(g2)
-            elsif CurrentUser.is_member?
+            elsif CurrentUser.is_viewer?
               q[:neg_voted] = CurrentUser.id
             end
 
           when "-upvote", "-votedup"
             if CurrentUser.is_moderator?
               q[:neg_upvote] = User.name_or_id_to_id(g2)
-            elsif CurrentUser.is_member?
+            elsif CurrentUser.is_viewer?
               q[:neg_upvote] = CurrentUser.id
             end
 
           when "-downvote", "-voteddown"
             if CurrentUser.is_moderator?
               q[:neg_downvote] = User.name_or_id_to_id(g2)
-            elsif CurrentUser.is_member?
+            elsif CurrentUser.is_viewer?
               q[:neg_downvote] = CurrentUser.id
             end
 
