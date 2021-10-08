@@ -819,7 +819,7 @@ module Danbooru
     end
 
     def smtp_port
-      465
+      587
     end
 
     def smtp_domain
