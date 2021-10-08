@@ -56,7 +56,7 @@ Rails.application.configure do
       user_name: Danbooru.config.smtp_username,
       password: Danbooru.config.smtp_password,
       authentication: Danbooru.config.smtp_authentication,
-      enable_starttls_auto: Danbooru.config.smtp_tls,
+      enable_starttls_auto: Danbooru.config.smtp_tls
   }
 
 
