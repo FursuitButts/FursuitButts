@@ -3,7 +3,9 @@
     <li><%= render "pools/quick_search" %></li>
     <%= subnav_link_to "Gallery", gallery_pools_path %>
     <%= subnav_link_to "Listing", pools_path %>
+    <% if CurrentUser.is_member? %>
     <%= subnav_link_to "New", new_pool_path %>
+    <% end %>
     <%= subnav_link_to "Help", help_page_path(id: "pools") %>
     <% if @pool && !@pool.new_record? %>
       <li>|</li>
