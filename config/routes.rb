@@ -511,7 +511,6 @@ Rails.application.routes.draw do
     get "/V3" => redirect("https://#{Danbooru.config.hostname}/help/api")
   end
   get "/V3/:category" => "yiffy_api#index"
-  get "V3/*" => "yiffy_api#not_found"
 
   root :to => "static#home"
 
