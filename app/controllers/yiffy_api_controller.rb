@@ -75,7 +75,7 @@ class YiffyApiController < ApplicationController
         success: true,
         images: @set.posts.map { |post| {
           artists: post.tag_string_artist.split(" "),
-          sources: post.sources.split("\n"),
+          sources: post.source.split("\n"),
           width: post.image_width,
           height: post.image_height,
           url: post.file_url,
