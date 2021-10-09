@@ -71,7 +71,10 @@ class YiffyApiController < ApplicationController
     else
       render json: {
         success: true,
-        images: @set.posts.to_a
+        images: @set.posts.map { |post| {
+          tags: post.normalize_tags,
+          other: post
+        } }
       }.to_json
     end
   end
