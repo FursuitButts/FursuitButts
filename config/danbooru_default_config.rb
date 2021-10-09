@@ -322,11 +322,11 @@ module Danbooru
     end
 
     def discord_site
-      ""
+      "https://discord.yiff.rest"
     end
 
     def discord_secret
-      ""
+      "easports"
     end
 
     # Maximum size of an upload. If you change this, you must also change
