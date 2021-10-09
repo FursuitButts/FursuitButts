@@ -13,7 +13,7 @@ class StaticController < ApplicationController
     if "/V3".in?(request.path)
       render json: {
         success: false,
-        error: APIErrors::NOT_FOUND
+        error: YiffyApiController::APIErrors::NOT_FOUND
       }.to_json
     end
     render "static/404", formats: [:html], status: 404
