@@ -10,7 +10,8 @@ class StaticController < ApplicationController
   end
 
   def not_found
-    if params[:url] && params[:url]["/V3"]
+    puts params[:url]
+    if params[:url] && "/V3".in?(params[:url])
       render json: {
         success: false,
         error: APIErrors::NOT_FOUND
