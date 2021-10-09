@@ -447,7 +447,8 @@ class User < ApplicationRecord
           REJ_UPLOAD_HOURLY: "have reached your hourly upload limit",
           REJ_UPLOAD_EDIT: "have no remaining tag edits available",
           REJ_UPLOAD_LIMIT: "have reached your upload limit",
-          REJ_UPLOAD_NEWBIE: "cannot upload during your first week"
+          REJ_UPLOAD_NEWBIE: "cannot upload during your first week",
+          REJ_UPLOAD_VIEWER: "cannot upload as viewer"
       }
       reasons.fetch(reason, "unknown upload rejection reason")
     end
@@ -530,7 +531,7 @@ class User < ApplicationRecord
     end
 
     def can_discord?
-      is_member? && older_than(7.days)
+      is_viewer?
     end
 
     def can_view_flagger?(flagger_id)
@@ -546,7 +547,9 @@ class User < ApplicationRecord
     end
 
     def can_upload_with_reason
-      if hourly_upload_limit <= 0 && !Danbooru.config.disable_throttles
+      if is_exactly_viewer
+        :REJ_UPLOAD_VIEWER
+      elsif hourly_upload_limit <= 0 && !Danbooru.config.disable_throttles
         :REJ_UPLOAD_HOURLY
       elsif can_upload_free? || is_admin?
           true
