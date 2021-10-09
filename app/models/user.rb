@@ -347,7 +347,7 @@ class User < ApplicationRecord
     end
 
     def is_voter?
-      is_member?
+      is_viewer?
     end
 
     def is_approver?
