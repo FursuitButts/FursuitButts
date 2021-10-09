@@ -547,7 +547,7 @@ class User < ApplicationRecord
     end
 
     def can_upload_with_reason
-      if is_exactly_viewer
+      if is_exactly_viewer?
         :REJ_UPLOAD_VIEWER
       elsif hourly_upload_limit <= 0 && !Danbooru.config.disable_throttles
         :REJ_UPLOAD_HOURLY
