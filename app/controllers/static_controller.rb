@@ -49,14 +49,8 @@ class StaticController < ApplicationController
       raise User::PrivilegeError.new("You cannot join our server.")
       return
     end
-    if request.post?
-      time = (Time.now + 5.minute).to_i
-      secret = Danbooru.config.discord_secret
-      # TODO: Proper HMAC
-      hashed_values = Digest::SHA256.hexdigest("#{CurrentUser.name} #{CurrentUser.id} #{time} #{secret}")
-      user_hash = "?user_id=#{CurrentUser.id}&username=#{CurrentUser.name}&time=#{time}&hash=#{hashed_values}"
-
-      redirect_to(Danbooru.config.discord_site + user_hash)
+    
+    redirect_to(Danbooru.config.discord_site)
     end
   end
 
