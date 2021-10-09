@@ -15,6 +15,7 @@ class StaticController < ApplicationController
         success: false,
         error: YiffyApiController::APIErrors::NOT_FOUND
       }.to_json
+      return
     end
     render "static/404", formats: [:html], status: 404
   end
