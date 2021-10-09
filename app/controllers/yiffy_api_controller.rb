@@ -104,7 +104,7 @@ class YiffyApiController < ApplicationController
           createdAt: post.created_at,
           updatedAt: post.updated_at,
           md5: post.md5,
-          rating: post.rating == "s" ? "safe" : post.rating == "q" ? "questionable" : "explicit",
+          rating: post.rating,
           uploader: post.uploader_id == nil ? nil : {
             id: post.uploader_id,
             name: post.uploader_name
