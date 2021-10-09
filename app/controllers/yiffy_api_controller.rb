@@ -83,7 +83,7 @@ class YiffyApiController < ApplicationController
           name: "#{post.md5}.#{post.file_ext}",
           id: post.id,
           shortURL: nil,
-          ext: post.ext,
+          ext: post.file_ext,
           size: post.file_size,
           reportURL: "https://#{Danbooru.config.hostname}/posts/#{post.id}"
         } }
