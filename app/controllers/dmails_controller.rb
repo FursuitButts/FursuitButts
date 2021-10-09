@@ -1,6 +1,6 @@
 class DmailsController < ApplicationController
   respond_to :html
-  before_action :member_only, except: [:index, :show, :destroy, :mark_all_as_read]
+  before_action :membeviewer_only, except: [:index, :show, :destroy, :mark_all_as_read]
   before_action :privileged_only, only: [:ham, :spam]
 
   def new
