@@ -82,3 +82,5 @@ group :test do
   gem "minitest-ci"
   gem "mock_redis"
 end
+
+gem "mimemagic", "~> 0.4.3"

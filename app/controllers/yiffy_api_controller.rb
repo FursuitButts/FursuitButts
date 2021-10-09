@@ -1,3 +1,5 @@
+require 'mimemagic'
+
 class YiffyApiController < ApplicationController
   class APIErrors
     NOT_FOUND = {
@@ -72,8 +74,18 @@ class YiffyApiController < ApplicationController
       render json: {
         success: true,
         images: @set.posts.map { |post| {
-          tags: post.normalize_tags,
-          other: post
+          artists: post.tag_string_artist.split(" "),
+          sources: post.sources.split("\n"),
+          width: post.image_width,
+          height: post.image_height,
+          url: post.file_url,
+          type: MimeMagic.by_extension(post.ext),
+          name: "#{post.md5}.#{post.ext}",
+          id: post.id,
+          shortURL: nil,
+          ext: post.ext,
+          size: post.file_size,
+          reportURL: "https://#{Danbooru.config.hostname}/posts/#{post.id}"
         } }
       }.to_json
     end

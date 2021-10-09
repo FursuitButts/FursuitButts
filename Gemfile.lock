@@ -227,6 +227,9 @@ GEM
     mime-types (3.3.1)
       mime-types-data (~> 3.2015)
     mime-types-data (3.2021.0704)
+    mimemagic (0.4.3)
+      nokogiri (~> 1)
+      rake
     mini_mime (1.1.1)
     mini_portile2 (2.6.1)
     minitest (5.14.4)
@@ -461,6 +464,7 @@ DEPENDENCIES
   mailgun-ruby
   mechanize
   memoist
+  mimemagic (~> 0.4.3)
   minitest-ci
   mocha
   mock_redis
