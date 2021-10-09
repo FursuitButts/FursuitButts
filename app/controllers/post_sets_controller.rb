@@ -1,6 +1,6 @@
 class PostSetsController < ApplicationController
   respond_to :html, :json
-  before_action :member_only, except: [:index, :show]
+  before_action :viewer_only, except: [:index, :show]
 
   def index
     if !params[:post_id].blank?
