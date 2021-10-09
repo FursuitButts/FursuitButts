@@ -66,6 +66,8 @@ class YiffyApiController < ApplicationController
     else @set = nil
     end
 
+    Rails.logger.warn(PostSets::Boop::ID, PostSets::Boop::ID.to_s)
+
     if @set == nil
       head 404
       render json: {
