@@ -6,17 +6,17 @@
 
  Rails.application.config.content_security_policy do |policy|
    policy.default_src :self
-   policy.script_src  :self, 'ads.dragonfru.it', 'js-agent.newrelic.com', 'bam.nr-data.net', 'https://www.google.com/recaptcha/', 'https://www.gstatic.com/recaptcha/', 'https://www.recaptcha.net/', 'https://mc.yandex.ru/', 'https://yastatic.net'
+   policy.script_src  :self, 'js-agent.newrelic.com', 'bam.nr-data.net', 'https://www.google.com/recaptcha/', 'https://www.gstatic.com/recaptcha/', 'https://www.recaptcha.net/', 'https://mc.yandex.ru/', 'https://yastatic.net'
    policy.style_src   :self, :unsafe_inline
-   policy.connect_src :self, 'ads.dragonfru.it', 'bam.nr-data.net', 'https://mc.yandex.ru', 'https://yastatic.net'
-   policy.object_src  :self, 'static1.e621.net', 'static1.e926.net'
-   policy.media_src   :self, 'static1.e621.net', 'static1.e926.net'
+   policy.connect_src :self, 'bam.nr-data.net', 'https://mc.yandex.ru', 'https://yastatic.net'
+   policy.object_src  :self, 'v3.yiff.media'
+   policy.media_src   :self, 'v3.yiff.media'
    policy.frame_ancestors :none
    policy.frame_src   'https://www.google.com/recaptcha/', 'https://www.recaptcha.net/'
    policy.font_src    :self
    policy.img_src     :self, :data, 'https://i.maid.gay', 'https://v3.yiff.media', 'https://mc.yandex.ru', 'https://yastatic.net'
    policy.child_src   :none
-   policy.form_action :self, 'discord.e621.net', 'discord.com'
+   policy.form_action :self, 'img.yiff.rest', 'discord.yiff.rest', 'discord.com'
 #   # If you are using webpack-dev-server then specify webpack-dev-server host
 #   policy.connect_src :self, :https, "http://localhost:3035", "ws://localhost:3035" if Rails.env.development?
 
