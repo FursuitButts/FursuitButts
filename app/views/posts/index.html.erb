@@ -3,7 +3,7 @@
     <aside id="sidebar">
       <%= render "posts/partials/common/search", :path => posts_path, :tags => params[:tags], :tags_dom_id => "tags" %>
 
-      <% if CurrentUser.is_member? %>
+      <% if CurrentUser.is_viewer? %>
         <%= render "posts/partials/index/mode_menu" %>
       <% end %>
 

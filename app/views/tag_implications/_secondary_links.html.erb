@@ -2,6 +2,7 @@
   <menu>
     <%= subnav_link_to "Listing", tag_implications_path %>
     <%= subnav_link_to "MetaSearch", meta_searches_tags_path %>
+    <%# hide alias & BUR from non-members %>
     <% if CurrentUser.is_member? %>
     <%= subnav_link_to "Request implication", new_tag_implication_request_path %>
     <%= subnav_link_to "Request bulk update", new_bulk_update_request_path %>

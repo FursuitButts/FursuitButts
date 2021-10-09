@@ -7,10 +7,10 @@
         <%= link_to @wiki_page.pretty_title_with_category, posts_path(:tags => @wiki_page.title), :class => "tag-type-#{@wiki_page.category_name}" %>
       </h1>
       <div id="wiki-page-body" class="styled-dtext">
-        <% if CurrentUser.is_viewer? %>
-          <p>This wiki page does not exist. You cannot create wiki pages.</p>
-        <% elsif CurrentUser.is_member? %>
+        <% if CurrentUser.is_member? %>
           <p>This wiki page does not exist. <%= link_to "Create new wiki page", new_wiki_page_path(:wiki_page => {:title => params[:title]}) %>.</p>
+        <% elsif CurrentUser.is_viewer? %>
+          <p>This wiki page does not exist. You cannot create wiki pages.</p>
         <% else %>
           <p>This wiki page does not exist.</p>
         <% end %>
