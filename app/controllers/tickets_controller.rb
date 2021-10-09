@@ -1,6 +1,6 @@
 class TicketsController < ApplicationController
   respond_to :html
-  before_action :member_only, except: [:index]
+  before_action :viewer_only, except: [:index]
   before_action :admin_only, only: [:update, :edit, :destroy, :claim, :unclaim]
 
 
