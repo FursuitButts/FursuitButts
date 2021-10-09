@@ -506,6 +506,9 @@ Rails.application.routes.draw do
 
   get "/intro" => redirect("/explore/posts/intro")
 
+  # yiffy api
+  get "/V3/:category" => "yiffy_api#index", :as => "yiffy_api"
+
   root :to => "static#home"
 
   get "*other", :to => "static#not_found"
