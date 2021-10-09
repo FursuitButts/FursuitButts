@@ -46,9 +46,6 @@ class YiffyApiController < ApplicationController
   end
 
   def yiff
-    render json: {
-      type: params[:category]
-    }.to_json
     case params[:category].downcase
     when "bulge" then @set = PostSet.find(PostSets::BULGE_ID)
     when "gay" then  @set = PostSet.find(PostSets::YIFF_GAY_ID)
