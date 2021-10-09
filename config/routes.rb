@@ -507,9 +507,11 @@ Rails.application.routes.draw do
   get "/intro" => redirect("/explore/posts/intro")
 
   # yiffy api
-  get "/V3" => redirect("https://#{Danbooru.config.hostname}/help/api")
+  scope :format => true, :constraints => { :format => 'json' } do
+    get "/V3" => redirect("https://#{Danbooru.config.hostname}/help/api")
+  end
   get "/V3/:category" => "yiffy_api#index"
-  match "/V3" => "yiffy_api#not_found", via: :get
+  get "/V3/*" => "yiffy_api#not_found"
 
   root :to => "static#home"
 
