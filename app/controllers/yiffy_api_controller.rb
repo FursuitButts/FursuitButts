@@ -19,30 +19,27 @@ class YiffyApiController < ApplicationController
       message: "This category has been disabled, please find an alternative."
     }
   end
-    end
-  end
 
   class PostSets
-    class Bulge;          ID = 1,  NAME = "official_furry_yiff_bulge"
-    class YiffGay;        ID = 2,  NAME = "official_furry_yiff_gay"
-    class YiffStraight;   ID = 3,  NAME = "official_furry_yiff_straight"
-    class YiffLesbian;    ID = 4,  NAME = "official_furry_yiff_lesbian"
-    class YiffGynomorph;  ID = 5,  NAME = "official_furry_yiff_gynomorph"
-    class YiffAndromorph; ID = 6,  NAME = "official_furry_yiff_andromorph"
-    class YiffMaleSolo;   ID = 7,  NAME = "official_furry_yiff_male_solo"
-    class YiffFemaleSolo; ID = 8,  NAME = "official_furry_yiff_female_solo"
-    class Butts;          ID = 9,  NAME = "official_furry_butts"
-    class Boop;           ID = 10, NAME = "official_furry_boop"
-    class Cuddle;         ID = 11, NAME = "official_furry_cuddle"
-    class Flop;           ID = 12, NAME = "official_furry_flop"
-    class Fursuit;        ID = 13, NAME = "official_furry_fursuit"
-    class Hold;           ID = 14, NAME = "official_furry_hold"
-    class Howl;           ID = 15, NAME = "official_furry_howl"
-    class Hug;            ID = 16, NAME = "official_furry_hug"
-    class Kiss;           ID = 17, NAME = "official_furry_kiss"
-    class Lick;           ID = 18, NAME = "official_furry_lick"
-    class Propose;        ID = 19, NAME = "official_furry_propose"
-
+    class Bulge;          ID = 1,  NAME = "official_furry_yiff_bulge"       end
+    class YiffGay;        ID = 2,  NAME = "official_furry_yiff_gay"         end
+    class YiffStraight;   ID = 3,  NAME = "official_furry_yiff_straight"    end
+    class YiffLesbian;    ID = 4,  NAME = "official_furry_yiff_lesbian"     end
+    class YiffGynomorph;  ID = 5,  NAME = "official_furry_yiff_gynomorph"   end
+    class YiffAndromorph; ID = 6,  NAME = "official_furry_yiff_andromorph"  end
+    class YiffMaleSolo;   ID = 7,  NAME = "official_furry_yiff_male_solo"   end
+    class YiffFemaleSolo; ID = 8,  NAME = "official_furry_yiff_female_solo" end
+    class Butts;          ID = 9,  NAME = "official_furry_butts"            end
+    class Boop;           ID = 10, NAME = "official_furry_boop"             end
+    class Cuddle;         ID = 11, NAME = "official_furry_cuddle"           end
+    class Flop;           ID = 12, NAME = "official_furry_flop"             end
+    class Fursuit;        ID = 13, NAME = "official_furry_fursuit"          end
+    class Hold;           ID = 14, NAME = "official_furry_hold"             end
+    class Howl;           ID = 15, NAME = "official_furry_howl"             end
+    class Hug;            ID = 16, NAME = "official_furry_hug"              end
+    class Kiss;           ID = 17, NAME = "official_furry_kiss"             end
+    class Lick;           ID = 18, NAME = "official_furry_lick"             end
+    class Propose;        ID = 19, NAME = "official_furry_propose"          end
     end
 
   def animals
