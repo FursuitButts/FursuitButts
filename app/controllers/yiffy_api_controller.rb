@@ -79,7 +79,7 @@ class YiffyApiController < ApplicationController
           width: post.image_width,
           height: post.image_height,
           url: post.file_url,
-          type: MimeMagic.by_extension(post.file_ext),
+          type: MimeMagic.by_extension(post.file_ext).to_s,
           name: "#{post.md5}.#{post.file_ext}",
           id: post.id,
           shortURL: nil,
