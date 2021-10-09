@@ -513,7 +513,7 @@ Rails.application.routes.draw do
   get "/V3/furry/yiff/:category" => "yiffy_api#yiff"
 
   # yiffy api (subdomain)
-  constraints subdomain: 'v3' do
+  constraints subdomain => 'v3' do
     get "/" => redirect("https://#{Danbooru.config.hostname}/help/api")
     get "/animals/:category" => "yiffy_api#animals"
     get "/furry/:category" => "yiffy_api#furry"
