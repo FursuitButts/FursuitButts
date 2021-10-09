@@ -85,7 +85,34 @@ class YiffyApiController < ApplicationController
           shortURL: nil,
           ext: post.file_ext,
           size: post.file_size,
-          reportURL: "https://#{Danbooru.config.hostname}/posts/#{post.id}"
+          reportURL: "https://#{Danbooru.config.hostname}/posts/#{post.id}",
+          tags: {
+            general: post.tag_string_general.split(" "),
+            species: post.tag_string_species.split(" "),
+            character: post.tag_string_character.split(" "),
+            copyright: post.tag_string_copyright.split(" "),
+            artist: post.tag_string_artist.split(" "),
+            invalid: post.tag_string_invalid.split(" "),
+            lore: post.tag_string_lore.split(" "),
+            meta: post.tag_string_meta.split(" ")
+          },
+          score: {
+            up: post.up_score,
+            down: post.down_score,
+            total: post.score
+          },
+          createdAt: post.created_at,
+          updatedAt: post.updated_at,
+          md5: post.md5,
+          rating: post.rating == "s" ? "safe" : post.rating == "q" ? "questionable" : "explicit",
+          uploader: post.uploader_id == nil ? nil : {
+            id: post.uploader_id,
+            name: post.uploader_name
+          },
+          approver: post.approver_id == nil ? nil : {
+            id: post.approver_id,
+            name: User.id_to_name(post.approver_id)
+          }
         } }
       }.to_json
     end
