@@ -1,5 +1,5 @@
 class ArtistVersionsController < ApplicationController
-  before_action :member_only
+  before_action :viewer_only
   respond_to :html, :json
 
   def index

@@ -1,7 +1,7 @@
 class BlipsController < ApplicationController
   class BlipTooOld < Exception ; end
   respond_to :html, :json
-  before_action :member_only, only: [:create, :new, :update, :edit, :hide]
+  before_action :viewer_only, only: [:create, :new, :update, :edit, :hide]
   before_action :moderator_only, only: [:unhide, :destroy, :warning]
 
   rescue_from BlipTooOld, with: :blip_too_old
