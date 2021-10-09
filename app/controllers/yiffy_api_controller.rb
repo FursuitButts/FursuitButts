@@ -1,4 +1,4 @@
-class YiffyAPIController < ApplicationController
+class YiffyApiController < ApplicationController
   def index
     respond_to do |format|
       format.json do
