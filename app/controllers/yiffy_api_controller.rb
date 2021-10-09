@@ -13,59 +13,70 @@ class YiffyApiController < ApplicationController
       NO_POSTS = {
       code: 2,
       message: "This category has no posts."
+    },
+    DISABLED_CATEGORY = {
+      code: 3,
+      message: "This category has been disabled, please find an alternative."
     }
+  end
+    end
   end
 
   class PostSets
-    BULGE_NAME  = "official_bulge",
-    BULGE_ID = 1,
-    YIFF_GAY_NAME = "official_yiff_gay",
-    YIFF_GAY_ID = 2,
-    YIFF_STRAIGHT_NAME = "official_yiff_straight",
-    YIFF_STRAIGHT_ID = 3,
-    YIFF_LESBIAN_NAME = "official_yiff_lesbian",
-    YIFF_LESBIAN_ID = 4,
-    YIFF_GYNOMORPH_NAME = "official_yiff_gynomorph",
-    YIFF_GYNOMORPH_ID = 5,
-    YIFF_ANDROMORPH_NAME = "official_yiff_andromorph"
-    YIFF_ANDROMORPH_ID = 6,
-    YIFF_MALE_SOLO_NAME = "official_yiff_male_solo",
-    YIFF_MALE_SOLO_ID = 7,
-    YIFF_FEMALE_SOLO_NAME = "official_yiff_female_solo",
-    YIFF_FEMALE_SOLO_ID = 8
-  end
+    class Bulge;          ID = 1,  NAME = "official_furry_yiff_bulge"
+    class YiffGay;        ID = 2,  NAME = "official_furry_yiff_gay"
+    class YiffStraight;   ID = 3,  NAME = "official_furry_yiff_straight"
+    class YiffLesbian;    ID = 4,  NAME = "official_furry_yiff_lesbian"
+    class YiffGynomorph;  ID = 5,  NAME = "official_furry_yiff_gynomorph"
+    class YiffAndromorph; ID = 6,  NAME = "official_furry_yiff_andromorph"
+    class YiffMaleSolo;   ID = 7,  NAME = "official_furry_yiff_male_solo"
+    class YiffFemaleSolo; ID = 8,  NAME = "official_furry_yiff_female_solo"
+    class Butts;          ID = 9,  NAME = "official_furry_butts"
+    class Boop;           ID = 10, NAME = "official_furry_boop"
+    class Cuddle;         ID = 11, NAME = "official_furry_cuddle"
+    class Flop;           ID = 12, NAME = "official_furry_flop"
+    class Fursuit;        ID = 13, NAME = "official_furry_fursuit"
+    class Hold;           ID = 14, NAME = "official_furry_hold"
+    class Howl;           ID = 15, NAME = "official_furry_howl"
+    class Hug;            ID = 16, NAME = "official_furry_hug"
+    class Kiss;           ID = 17, NAME = "official_furry_kiss"
+    class Lick;           ID = 18, NAME = "official_furry_lick"
+    class Propose;        ID = 19, NAME = "official_furry_propose"
+
+    end
 
   def animals
+    head 404
     render json: {
-      type: params[:category]
+      success: false,
+      error: APIErrors::DISABLED_CATEGORY
     }.to_json
   end
 
   def furry
-    render json: {
-      type: params[:category]
-    }.to_json
-  end
-
-  def yiff
     case params[:category].downcase
-    when "bulge" then @set = PostSet.find(PostSets::BULGE_ID)
-    when "gay" then  @set = PostSet.find(PostSets::YIFF_GAY_ID)
-    when "straight" then @set = PostSet.find(PostSets::YIFF_STRAIGHT_ID)
-    when "lesbian" then @set = PostSet.find(PostSets::YIFF_LESBIAN_ID)
-    when "gynomorph" then @set = PostSet.find(PostSets::YIFF_GYNOMORPH_ID)
-    when "andromorph" then @set = PostSet.find(PostSets::YIFF_ANDROMORPH_ID)
-    when *%w[solo-male solo_male] then @set = PostSet.find(PostSets::YIFF_MALE_SOLO_NAME)
-    when *%w[solo-female solo_female] then @set = PostSet.find(PostSets::YIFF_FEMALE_SOLO_NAME)
+    when *%w[butts fursuitbutts] then @set = PostSet.find(PostSets::Butts::ID)
+    when "boop" then @set = PostSet.find(PostSets::Boop::ID)
+    when "cuddle" then @set = PostSet.find(PostSets::Cuddle::ID)
+    when "flop" then @set = PostSet.find(PostSets::Flop::ID)
+    when "fursuit" then @set = PostSet.find(PostSets::Fursuit::ID)
+    when "hold" then @set = PostSet.find(PostSets::Hold::ID)
+    when "howl" then @set = PostSet.find(PostSets::Howl::ID)
+    when "hug" then @set = PostSet.find(PostSets::Hug::ID)
+    when "kiss" then @set = PostSet.find(PostSets::Kiss::ID)
+    when "lick" then @set = PostSet.find(PostSets::Lick::ID)
+    when "propose" then @set = PostSet.find(PostSets::Propose::ID)
     else @set = nil
     end
 
     if @set == nil
+      head 404
       render json: {
         success: false,
         error: APIErrors::INVALID_CATEGORY
       }.to_json
     elsif @set.post_count == 0
+      head 501
       render json: {
         success: false,
         error: APIErrors::NO_POSTS
@@ -73,48 +84,85 @@ class YiffyApiController < ApplicationController
     else
       render json: {
         success: true,
-        images: @set.posts.map { |post| {
-          artists: post.tag_string_artist.split(" "),
-          sources: post.source.split("\n"),
-          width: post.image_width,
-          height: post.image_height,
-          url: post.file_url,
-          type: MimeMagic.by_extension(post.file_ext).to_s,
-          name: "#{post.md5}.#{post.file_ext}",
-          id: post.id,
-          shortURL: nil,
-          ext: post.file_ext,
-          size: post.file_size,
-          reportURL: "https://#{Danbooru.config.hostname}/posts/#{post.id}",
-          tags: {
-            general: post.tag_string_general.split(" "),
-            species: post.tag_string_species.split(" "),
-            character: post.tag_string_character.split(" "),
-            copyright: post.tag_string_copyright.split(" "),
-            artist: post.tag_string_artist.split(" "),
-            invalid: post.tag_string_invalid.split(" "),
-            lore: post.tag_string_lore.split(" "),
-            meta: post.tag_string_meta.split(" ")
-          },
-          score: {
-            up: post.up_score,
-            down: post.down_score,
-            total: post.score
-          },
-          createdAt: post.created_at,
-          updatedAt: post.updated_at,
-          md5: post.md5,
-          rating: post.rating,
-          uploader: post.uploader_id == nil ? nil : {
-            id: post.uploader_id,
-            name: post.uploader_name
-          },
-          approver: post.approver_id == nil ? nil : {
-            id: post.approver_id,
-            name: User.id_to_name(post.approver_id)
-          }
-        } }
+        images: @set.posts.map { |post| format_post(post) }
       }.to_json
     end
+  end
+
+  def yiff
+    case params[:category].downcase
+    when "bulge" then @set = PostSet.find(PostSets::Bulge::ID)
+    when "gay" then  @set = PostSet.find(PostSets::YiffGay::ID)
+    when "straight" then @set = PostSet.find(PostSets::YiffStraight::ID)
+    when "lesbian" then @set = PostSet.find(PostSets::YiffLesbian::ID)
+    when "gynomorph" then @set = PostSet.find(PostSets::YiffGynomorph::ID)
+    when "andromorph" then @set = PostSet.find(PostSets::YiffAndromorph::ID)
+    when *%w[solo-male solo_male] then @set = PostSet.find(PostSets::YiffMaleSolo::ID)
+    when *%w[solo-female solo_female] then @set = PostSet.find(PostSets::YiffFemaleSolo::ID)
+    else @set = nil
+    end
+
+    if @set == nil
+      head 404
+      render json: {
+        success: false,
+        error: APIErrors::INVALID_CATEGORY
+      }.to_json
+    elsif @set.post_count == 0
+      head 501
+      render json: {
+        success: false,
+        error: APIErrors::NO_POSTS
+      }.to_json
+    else
+      render json: {
+        success: true,
+        images: @set.posts.map { |post| format_post(post) }
+      }.to_json
+    end
+  end
+
+  def format_post(post)
+    {
+      artists: post.tag_string_artist.split(" "),
+      sources: post.source.split("\n"),
+      width: post.image_width,
+      height: post.image_height,
+      url: post.file_url,
+      type: MimeMagic.by_extension(post.file_ext).to_s,
+      name: "#{post.md5}.#{post.file_ext}",
+      id: post.id,
+      shortURL: nil,
+      ext: post.file_ext,
+      size: post.file_size,
+      reportURL: "https://#{Danbooru.config.hostname}/posts/#{post.id}",
+      tags: {
+        general: post.tag_string_general.split(" "),
+        species: post.tag_string_species.split(" "),
+        character: post.tag_string_character.split(" "),
+        copyright: post.tag_string_copyright.split(" "),
+        artist: post.tag_string_artist.split(" "),
+        invalid: post.tag_string_invalid.split(" "),
+        lore: post.tag_string_lore.split(" "),
+        meta: post.tag_string_meta.split(" ")
+      },
+      score: {
+        up: post.up_score,
+        down: post.down_score,
+        total: post.score
+      },
+      createdAt: post.created_at,
+      updatedAt: post.updated_at,
+      md5: post.md5,
+      rating: post.rating,
+      uploader: post.uploader_id == nil ? nil : {
+        id: post.uploader_id,
+        name: post.uploader_name
+      },
+      approver: post.approver_id == nil ? nil : {
+        id: post.approver_id,
+        name: User.id_to_name(post.approver_id)
+      }
+    }
   end
 end
