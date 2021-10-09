@@ -3,7 +3,9 @@
 <% content_for(:secondary_links) do %>
   <menu>
     <%= subnav_link_to "Listing", posts_path %>
-    <%= subnav_link_to "Upload", new_upload_path %>
+    <% if CurrentUser.is_member? %>
+      <%= subnav_link_to "Upload", new_upload_path %>
+    <% end %>
     <%= subnav_link_to "Hot", posts_path(tags: "order:rank", d: "1") %>
     <%= subnav_link_to("Popular", popular_explore_posts_path) %>
     <% unless CurrentUser.is_anonymous? %>
