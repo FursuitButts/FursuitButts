@@ -1,6 +1,6 @@
 class ForumTopicsController < ApplicationController
   respond_to :html, :json
-  before_action :member_only, :except => [:index, :show]
+  before_action :viewer_only, :except => [:index, :show]
   before_action :moderator_only, :only => [:new_merge, :create_merge, :unhide, :destroy]
   before_action :normalize_search, :only => :index
   before_action :load_topic, :only => [:edit, :show, :update, :destroy, :hide, :unhide, :new_merge, :create_merge, :subscribe, :unsubscribe]
