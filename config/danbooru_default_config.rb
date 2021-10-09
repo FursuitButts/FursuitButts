@@ -634,7 +634,7 @@ module Danbooru
     end
 
     def enable_signups?
-      true # registrations are enabled now because they are a "viewer" by default
+      false # registrations are disabled because the restrictions for "viewer" are not finished yet
     end
 
     def flag_reasons
