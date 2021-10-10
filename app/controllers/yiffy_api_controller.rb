@@ -66,6 +66,9 @@ class YiffyApiController < ApplicationController
     else @set = nil
     end
 
+    # FileSize or nil
+    @max_size = FileSize.from(params[:sizeLimit].to_s)
+
     if @set == nil
       render json: {
         "$schema": "https://img.yiff.rest/schema/v3_error.json",
@@ -82,7 +85,7 @@ class YiffyApiController < ApplicationController
       render json: {
         "$schema": "https://img.yiff.rest/schema/v3.json",
         success: true,
-        images: @set.posts.sample(get_amount(params[:amount])).map { |post| format_post(post) }
+        images: @set.posts.sample(get_amount(params[:amount])).select { |post| @max_size == nil || post.file_size <= @max_size.to_i }.map { |post| format_post(post) }
       }.to_json
     end
   end
@@ -100,6 +103,9 @@ class YiffyApiController < ApplicationController
     else @set = nil
     end
 
+    # FileSize or nil
+    @max_size = FileSize.from(params[:sizeLimit].to_s)
+
     if @set == nil
       render json: {
         "$schema": "https://img.yiff.rest/schema/v3_error.json",
@@ -116,7 +122,7 @@ class YiffyApiController < ApplicationController
       render json: {
         "$schema": "https://img.yiff.rest/schema/v3.json",
         success: true,
-        images: @set.posts.sample(get_amount(params[:amount])).map { |post| format_post(post) }
+        images: @set.posts.sample(get_amount(params[:amount])).select { |post| @max_size == nil || post.file_size <= @max_size.to_i }.map { |post| format_post(post) }
       }.to_json
     end
   end
