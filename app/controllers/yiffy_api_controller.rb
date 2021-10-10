@@ -67,9 +67,15 @@ class YiffyApiController < ApplicationController
     end
 
     if @set == nil
-      head 404
+      render json: {
+        success: false,
+        error: APIErrors::INVALID_CATEGORY
+      }.to_json, status: :not_found
     elsif @set.post_count == 0
-      head 501
+      render json: {
+        success: false,
+        error: APIErrors::NO_POSTS
+      }.to_json, status: :not_implemented
     else
       render json: {
         success: true,
@@ -92,9 +98,15 @@ class YiffyApiController < ApplicationController
     end
 
     if @set == nil
-      head 404
+      render json: {
+        success: false,
+        error: APIErrors::INVALID_CATEGORY
+      }.to_json, status: :not_found
     elsif @set.post_count == 0
-      head 501
+      render json: {
+        success: false,
+        error: APIErrors::NO_POSTS
+      }.to_json, status: :not_implemented
     else
       render json: {
         success: true,
