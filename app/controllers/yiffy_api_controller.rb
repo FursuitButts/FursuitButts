@@ -66,8 +66,8 @@ class YiffyApiController < ApplicationController
     else @set = nil
     end
 
-    Rails.logger.info PostSets::Boop::ID
-    Rails.logger.info PostSets::Boop::ID.to_s
+    File.write("/home/danbooru/danbooru/tmp/out", PostSets::Boop::ID);
+    File.write("/home/danbooru/danbooru/tmp/out.s", PostSets::Boop::ID.to_s);
 
     if @set == nil
       head 404
