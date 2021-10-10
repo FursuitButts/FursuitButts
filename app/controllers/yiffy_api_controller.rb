@@ -117,26 +117,29 @@ class YiffyApiController < ApplicationController
 
   def format_post(post)
     {
+      # TODO: update url here & in static file
+      "$schema": "https://img.yiff.rest/schema/v3.json",
       approver: post.approver_id == nil ? nil : {
         id: post.approver_id,
         name: User.id_to_name(post.approver_id)
       },
       artists: post.tag_string_artist.split(" "),
       createdAt: post.created_at,
-      ext: post.file_ext,
+      directURL: "https://#{Danbooru.config.hostname}/posts/#{post.id}",
+      ext: post.file_ext, # legacy
       height: post.image_height,
       id: post.id,
       md5: post.md5,
-      name: "#{post.md5}.#{post.file_ext}",
+      name: "#{post.md5}.#{post.file_ext}", # legacy
       rating: post.rating,
-      reportURL: "https://#{Danbooru.config.hostname}/posts/#{post.id}",
+      reportURL: "https://#{Danbooru.config.hostname}/posts/#{post.id}", # legacy
       score: {
         up: post.up_score,
         down: post.down_score,
         total: post.score
       },
       # removed due to urls now being shorter than the shortened urls
-      shortURL: "https://#{Danbooru.config.hostname}/posts/#{post.id}",
+      shortURL: "https://#{Danbooru.config.hostname}/posts/#{post.id}", # legacy
       size: post.file_size,
       sources: post.source.split("\n"),
       tags: {
