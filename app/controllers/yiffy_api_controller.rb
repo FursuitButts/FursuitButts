@@ -21,25 +21,25 @@ class YiffyApiController < ApplicationController
   end
 
   class PostSets
-    class Bulge;          ID = 1,  NAME = "official_furry_yiff_bulge"       end
-    class YiffGay;        ID = 2,  NAME = "official_furry_yiff_gay"         end
-    class YiffStraight;   ID = 3,  NAME = "official_furry_yiff_straight"    end
-    class YiffLesbian;    ID = 4,  NAME = "official_furry_yiff_lesbian"     end
-    class YiffGynomorph;  ID = 5,  NAME = "official_furry_yiff_gynomorph"   end
-    class YiffAndromorph; ID = 6,  NAME = "official_furry_yiff_andromorph"  end
-    class YiffMaleSolo;   ID = 7,  NAME = "official_furry_yiff_male_solo"   end
-    class YiffFemaleSolo; ID = 8,  NAME = "official_furry_yiff_female_solo" end
-    class Butts;          ID = 9,  NAME = "official_furry_butts"            end
-    class Boop;           ID = 10, NAME = "official_furry_boop"             end
-    class Cuddle;         ID = 11, NAME = "official_furry_cuddle"           end
-    class Flop;           ID = 12, NAME = "official_furry_flop"             end
-    class Fursuit;        ID = 13, NAME = "official_furry_fursuit"          end
-    class Hold;           ID = 14, NAME = "official_furry_hold"             end
-    class Howl;           ID = 15, NAME = "official_furry_howl"             end
-    class Hug;            ID = 16, NAME = "official_furry_hug"              end
-    class Kiss;           ID = 17, NAME = "official_furry_kiss"             end
-    class Lick;           ID = 18, NAME = "official_furry_lick"             end
-    class Propose;        ID = 19, NAME = "official_furry_propose"          end
+    BULGE             = 1
+    YIFF_GAY          = 2
+    YIFF_STRAIGHT     = 3
+    YIFF_LESBIAN      = 4
+    YIFF_GYNOMORPH    = 5
+    YIFF_ANDROMORPH   = 6
+    YIFF_MALE_SOLO    = 7
+    YIFF_FEMALE_SOLO  = 8
+    BUTTS             = 9
+    BOOP              = 10
+    CUDDLE            = 11
+    FLOP              = 12
+    FURSUIT           = 13
+    HOLD              = 14
+    HOWL              = 15
+    HUG               = 16
+    KISS              = 17
+    LICK              = 18
+    PROPOSE           = 19
     end
 
   def animals
@@ -52,27 +52,32 @@ class YiffyApiController < ApplicationController
 
   def furry
     case params[:category].downcase
-    when *%w[butts fursuitbutts] then @set = PostSet.find(PostSets::Butts::ID)
-    when "boop" then @set = PostSet.find(PostSets::Boop::ID)
-    when "cuddle" then @set = PostSet.find(PostSets::Cuddle::ID)
-    when "flop" then @set = PostSet.find(PostSets::Flop::ID)
-    when "fursuit" then @set = PostSet.find(PostSets::Fursuit::ID)
-    when "hold" then @set = PostSet.find(PostSets::Hold::ID)
-    when "howl" then @set = PostSet.find(PostSets::Howl::ID)
-    when "hug" then @set = PostSet.find(PostSets::Hug::ID)
-    when "kiss" then @set = PostSet.find(PostSets::Kiss::ID)
-    when "lick" then @set = PostSet.find(PostSets::Lick::ID)
-    when "propose" then @set = PostSet.find(PostSets::Propose::ID)
+    when *%w[butts fursuitbutts] then @set = PostSet.find(PostSets::BUTTS)
+    when "boop" then @set = PostSet.find(PostSets::BOOP)
+    when "cuddle" then @set = PostSet.find(PostSets::CUDDLE)
+    when "flop" then @set = PostSet.find(PostSets::FLOP)
+    when "fursuit" then @set = PostSet.find(PostSets::FURSUIT)
+    when "hold" then @set = PostSet.find(PostSets::HOLD)
+    when "howl" then @set = PostSet.find(PostSets::HOWL)
+    when "hug" then @set = PostSet.find(PostSets::HUG)
+    when "kiss" then @set = PostSet.find(PostSets::KISS)
+    when "lick" then @set = PostSet.find(PostSets::LICK)
+    when "propose" then @set = PostSet.find(PostSets::PROPOSE)
     else @set = nil
     end
 
-    File.write("/home/danbooru/danbooru/tmp/out", PostSets::Boop::ID);
-    File.write("/home/danbooru/danbooru/tmp/out.s", PostSets::Boop::ID.to_s);
-
     if @set == nil
       head 404
+      render json: {
+        success: false,
+        error: APIErrors::INVALID_CATEGORY
+      }.to_json
     elsif @set.post_count == 0
       head 501
+      render json: {
+        success: false,
+        error: APIErrors::NO_POSTS
+      }.to_json
     else
       render json: {
         success: true,
@@ -83,21 +88,29 @@ class YiffyApiController < ApplicationController
 
   def yiff
     case params[:category].downcase
-    when "bulge" then @set = PostSet.find(PostSets::Bulge::ID)
-    when "gay" then  @set = PostSet.find(PostSets::YiffGay::ID)
-    when "straight" then @set = PostSet.find(PostSets::YiffStraight::ID)
-    when "lesbian" then @set = PostSet.find(PostSets::YiffLesbian::ID)
-    when "gynomorph" then @set = PostSet.find(PostSets::YiffGynomorph::ID)
-    when "andromorph" then @set = PostSet.find(PostSets::YiffAndromorph::ID)
-    when *%w[solo-male solo_male] then @set = PostSet.find(PostSets::YiffMaleSolo::ID)
-    when *%w[solo-female solo_female] then @set = PostSet.find(PostSets::YiffFemaleSolo::ID)
+    when "bulge" then @set = PostSet.find(PostSets::BULGE)
+    when "gay" then  @set = PostSet.find(PostSets::YIFF_GAY)
+    when "straight" then @set = PostSet.find(PostSets::YIFF_STRAIGHT)
+    when "lesbian" then @set = PostSet.find(PostSets::YIFF_LESBIAN)
+    when "gynomorph" then @set = PostSet.find(PostSets::YIFF_GYNOMORPH)
+    when "andromorph" then @set = PostSet.find(PostSets::YIFF_ANDROMORPH)
+    when *%w[solo-male solo_male] then @set = PostSet.find(PostSets::YIFF_MALE_SOLO)
+    when *%w[solo-female solo_female] then @set = PostSet.find(PostSets::YIFF_FEMALE_SOLO)
     else @set = nil
     end
 
     if @set == nil
       head 404
+      render json: {
+        success: false,
+        error: APIErrors::INVALID_CATEGORY
+      }.to_json
     elsif @set.post_count == 0
       head 501
+      render json: {
+        success: false,
+        error: APIErrors::NO_POSTS
+      }.to_json
     else
       render json: {
         success: true,
