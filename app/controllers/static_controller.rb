@@ -12,6 +12,7 @@ class StaticController < ApplicationController
   def not_found
     if "/V3".in?(request.path)
       render json: {
+        "$schema": "https://img.yiff.rest/schema/v3_error.json",
         success: false,
         error: YiffyApiController::APIErrors::NOT_FOUND
       }.to_json

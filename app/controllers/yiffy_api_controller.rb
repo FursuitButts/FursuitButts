@@ -68,16 +68,19 @@ class YiffyApiController < ApplicationController
 
     if @set == nil
       render json: {
+        "$schema": "https://img.yiff.rest/schema/v3_error.json",
         success: false,
         error: APIErrors::INVALID_CATEGORY
       }.to_json, status: :not_found
     elsif @set.post_count == 0
       render json: {
+        "$schema": "https://img.yiff.rest/schema/v3_error.json",
         success: false,
         error: APIErrors::NO_POSTS
       }.to_json, status: :not_implemented
     else
       render json: {
+        "$schema": "https://img.yiff.rest/schema/v3.json",
         success: true,
         images: @set.posts.sample(get_amount(params[:amount])).map { |post| format_post(post) }
       }.to_json
@@ -99,16 +102,19 @@ class YiffyApiController < ApplicationController
 
     if @set == nil
       render json: {
+        "$schema": "https://img.yiff.rest/schema/v3_error.json",
         success: false,
         error: APIErrors::INVALID_CATEGORY
       }.to_json, status: :not_found
     elsif @set.post_count == 0
       render json: {
+        "$schema": "https://img.yiff.rest/schema/v3_error.json",
         success: false,
         error: APIErrors::NO_POSTS
       }.to_json, status: :not_implemented
     else
       render json: {
+        "$schema": "https://img.yiff.rest/schema/v3.json",
         success: true,
         images: @set.posts.sample(get_amount(params[:amount])).map { |post| format_post(post) }
       }.to_json
@@ -117,8 +123,6 @@ class YiffyApiController < ApplicationController
 
   def format_post(post)
     {
-      # TODO: update url here & in static file
-      "$schema": "https://img.yiff.rest/schema/v3.json",
       approver: post.approver_id == nil ? nil : {
         id: post.approver_id,
         name: User.id_to_name(post.approver_id)
