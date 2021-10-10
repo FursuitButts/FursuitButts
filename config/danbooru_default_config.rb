@@ -962,7 +962,10 @@ module Danbooru
     end
 
     def readonly_mode
-      return false
+      false
+    end
+
+    def yiffrocks_override_code
     end
   end
 

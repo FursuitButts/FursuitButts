@@ -116,19 +116,29 @@ class YiffyApiController < ApplicationController
   end
 
   def format_post(post)
+    shorten = system "npx shorten create --credit YiffyAPIV3-#{Danbooru.config.yiffrocks_override_code} --code #{post.md5} https://#{Danbooru.config.hostname}/posts/#{post.id}"
     {
+      approver: post.approver_id == nil ? nil : {
+        id: post.approver_id,
+        name: User.id_to_name(post.approver_id)
+      },
       artists: post.tag_string_artist.split(" "),
-      sources: post.source.split("\n"),
-      width: post.image_width,
-      height: post.image_height,
-      url: post.file_url,
-      type: MimeMagic.by_extension(post.file_ext).to_s,
-      name: "#{post.md5}.#{post.file_ext}",
-      id: post.id,
-      shortURL: nil,
+      createdAt: post.created_at,
       ext: post.file_ext,
-      size: post.file_size,
+      height: post.image_height,
+      id: post.id,
+      md5: post.md5,
+      name: "#{post.md5}.#{post.file_ext}",
+      rating: post.rating,
       reportURL: "https://#{Danbooru.config.hostname}/posts/#{post.id}",
+      score: {
+        up: post.up_score,
+        down: post.down_score,
+        total: post.score
+      },
+      shortURL: shorten ? nil : "https://yiff.rocks/#{post.md5}",
+      size: post.file_size,
+      sources: post.source.split("\n"),
       tags: {
         general: post.tag_string_general.split(" "),
         species: post.tag_string_species.split(" "),
@@ -139,23 +149,14 @@ class YiffyApiController < ApplicationController
         lore: post.tag_string_lore.split(" "),
         meta: post.tag_string_meta.split(" ")
       },
-      score: {
-        up: post.up_score,
-        down: post.down_score,
-        total: post.score
-      },
-      createdAt: post.created_at,
+      type: MimeMagic.by_extension(post.file_ext).to_s,
       updatedAt: post.updated_at,
-      md5: post.md5,
-      rating: post.rating,
       uploader: post.uploader_id == nil ? nil : {
         id: post.uploader_id,
         name: post.uploader_name
       },
-      approver: post.approver_id == nil ? nil : {
-        id: post.approver_id,
-        name: User.id_to_name(post.approver_id)
-      }
+      url: post.file_url,
+      width: post.image_width
     }
   end
 
