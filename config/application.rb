@@ -64,11 +64,3 @@ module Danbooru
 
   I18n.enforce_available_locales = false
 end
-
-config.action_dispatch.trusted_proxies = %r{
-  ^127\.0\.0\.1$                | # localhost
-  ^(10                          | # private IP 10.x.x.x
-    172\.(1[6-9]|2[0-9]|3[0-1]) | # private IP in the range 172.16.0.0 .. 172.31.255.255
-    192\.168                      # private IP 192.168.x.x
-   )\.
-}x
