@@ -66,8 +66,8 @@ class YiffyApiController < ApplicationController
     else @set = nil
     end
 
-    puts PostSets::Boop::ID
-    puts PostSets::Boop::ID.to_s
+    Rails.logger.info PostSets::Boop::ID
+    Rails.logger.info PostSets::Boop::ID.to_s
 
     if @set == nil
       head 404
