@@ -20,6 +20,7 @@ class YiffyApiController < ApplicationController
     }
   end
 
+  # I wanted to use pools, but anyone could add to those
   class PostSets
     BULGE             = 1
     YIFF_GAY          = 2
