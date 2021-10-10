@@ -21,7 +21,6 @@
     "vue-template-compiler": "^2.6.10",
     "webpack": "^5.51.1",
     "webpack-cli": "^4.8.0",
-    "yiff-rocks": "^2.0.5",
     "zingtouch": "^1.0.6"
   },
   "version": "0.1.0",

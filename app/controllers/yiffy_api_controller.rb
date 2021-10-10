@@ -116,7 +116,6 @@ class YiffyApiController < ApplicationController
   end
 
   def format_post(post)
-    shorten = system "npx shorten create --credit YiffyAPIV3-#{Danbooru.config.yiffrocks_override_code} --code #{post.md5} https://#{Danbooru.config.hostname}/posts/#{post.id}"
     {
       approver: post.approver_id == nil ? nil : {
         id: post.approver_id,
@@ -136,7 +135,8 @@ class YiffyApiController < ApplicationController
         down: post.down_score,
         total: post.score
       },
-      shortURL: shorten ? nil : "https://yiff.rocks/#{post.md5}",
+      # removed due to urls now being shorter than the shortened urls
+      shortURL: "https://#{Danbooru.config.hostname}/posts/#{post.id}",
       size: post.file_size,
       sources: post.source.split("\n"),
       tags: {
