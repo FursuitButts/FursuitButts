@@ -19,7 +19,7 @@ puts "== Seeding database with sample content ==\n"
 admin_file = Rails.root.join("db", "admin.pwd")
 system_file = Rails.root.join("db", "system.pwd")
 
-if(File.file?(admin_file))
+if File.file?(admin_file)
   puts "Admin password file already exists, reusing.."
   admin_password = File.read(admin_file)
 else
@@ -28,13 +28,13 @@ else
   File.write(admin_file, admin_password)
 end
 
-if(File.file?(system_file))
+if File.file?(system_file)
   puts "System password file already exists, reusing.."
   system_password = File.read(system_file)
 else
   puts "System password file does not exist, generating new password.."
   system_password = SecureRandom.hex(20)
-  File.write(system_file, system_password) 
+  File.write(system_file, system_password)
 end
 
 admin = User.find_or_create_by!(name: "admin") do |user|
