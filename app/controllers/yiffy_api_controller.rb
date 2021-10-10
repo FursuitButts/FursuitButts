@@ -5,15 +5,15 @@ class YiffyApiController < ApplicationController
     NOT_FOUND = {
       code: 0,
       message: "Not Found."
-    },
+    }
     INVALID_CATEGORY = {
       code: 1,
       message: "Invalid Category."
-    },
-      NO_POSTS = {
+    }
+    NO_POSTS = {
       code: 2,
       message: "This category has no posts."
-    },
+    }
     DISABLED_CATEGORY = {
       code: 3,
       message: "This category has been disabled, please find an alternative."
@@ -73,7 +73,7 @@ class YiffyApiController < ApplicationController
     else
       render json: {
         success: true,
-        images: @set.posts.map { |post| format_post(post) }
+        images: @set.posts.sample(get_amount(params[:amount])).map { |post| format_post(post) }
       }.to_json
     end
   end
@@ -98,7 +98,7 @@ class YiffyApiController < ApplicationController
     else
       render json: {
         success: true,
-        images: @set.posts.map { |post| format_post(post) }
+        images: @set.posts.sample(get_amount(params[:amount])).map { |post| format_post(post) }
       }.to_json
     end
   end
@@ -145,5 +145,9 @@ class YiffyApiController < ApplicationController
         name: User.id_to_name(post.approver_id)
       }
     }
+  end
+
+  def get_amount(p)
+    p === nil || p < 1 || p > 5 ? 1 : p
   end
 end
