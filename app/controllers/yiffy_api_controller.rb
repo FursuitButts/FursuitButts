@@ -160,6 +160,8 @@ class YiffyApiController < ApplicationController
   end
 
   def get_amount(p)
-    p === nil || p < 1 || p > 5 ? 1 : p
+    # explicit conversion of nil to int gives 0
+    p = p.to_i
+    p < 1 || p > 5 ? 1 : p
   end
 end
