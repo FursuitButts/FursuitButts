@@ -38,13 +38,10 @@ test/reports
 yarn-debug.log*
 .yarn-integrity
 
-/public/packs
-/public/packs-test
-/node_modules
 /yarn-error.log
-yarn-debug.log*
-.yarn-integrity
 *.pwd
 
 
 /data
+/script_js/node_modules
+/script_js/src/tmp
