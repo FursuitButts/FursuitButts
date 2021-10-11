@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+. .env.local
+cd script_js
+API_TOKEN=$API_TOKEN npx ts-node src/import.ts $1
