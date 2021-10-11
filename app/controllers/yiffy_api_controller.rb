@@ -92,18 +92,18 @@ class YiffyApiController < ApplicationController
     else
       post = @set.posts.select { |post| @max_size == nil || post.file_size <= @max_size.to_i }.sample(1).first
 
-      response.headers["X-Yiffy-Artist"] = post.tag_string_artist.split(" ")
-      response.headers["X-Yiffy-Source"] = post.source.split("\n")
-      response.headers["X-Yiffy-Image-Width"] = post.image_width
-      response.headers["X-Yiffy-Image-Height"] = post.image_height
-      response.headers["X-Yiffy-Image-URL"] = post.file_url
-      response.headers["X-Yiffy-Short-URL"] = "https://#{Danbooru.config.hostname}/posts/#{post.id}"
-      response.headers["X-Yiffy-Image-Type"] = MimeMagic.by_extension(post.file_ext).to_s
-      response.headers["X-Yiffy-Image-Name"] = "#{post.md5}.#{post.file_ext}"
-      response.headers["X-Yiffy-Image-Extension"] = post.file_ext
-      response.headers["X-Yiffy-Report-URL"] = "https://#{Danbooru.config.hostname}/posts/#{post.id}"
-      response.headers["X-Yiffy-Schema"] = "https://schema.yiff.rest/V2.json"
-      response.headers["X-Yiffy-Version"] = "2"
+      response.set_header "X-Yiffy-Artist",         post.tag_string_artist.split(" ")
+      response.set_header "X-Yiffy-Source",         post.source.split("\n")
+      response.set_header "X-Yiffy-Image-Width",    post.image_width
+      response.set_header "X-Yiffy-Image-Height",   post.image_height
+      response.set_header "X-Yiffy-Image-URL",      post.file_url
+      response.set_header "X-Yiffy-Short-URL",      "https://#{Danbooru.config.hostname}/posts/#{post.id}"
+      response.set_header "X-Yiffy-Image-Type",     MimeMagic.by_extension(post.file_ext).to_s
+      response.set_header "X-Yiffy-Image-Name",     "#{post.md5}.#{post.file_ext}"
+      response.set_header "X-Yiffy-Image-Extension", post.file_ext
+      response.set_header "X-Yiffy-Report-URL",      "https://#{Danbooru.config.hostname}/posts/#{post.id}"
+      response.set_header "X-Yiffy-Schema",          "https://schema.yiff.rest/V2.json"
+      response.set_header "X-Yiffy-Version",         "2"
       file = "#{StorageManager::DEFAULT_BASE_DIR}/#{post.md5[0, 2]}/#{post.md5[2, 2]}/#{post.md5}.#{post.file_ext}"
       if !File.exists? file
         send_file file
