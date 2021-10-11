@@ -90,7 +90,7 @@ class YiffyApiController < ApplicationController
     elsif @set.post_count == 0
       render status: :not_implemented
     else
-      post = @set.posts.select { |post| @max_size == nil || post.file_size <= @max_size.to_i }.sample(1)
+      post = @set.posts.select { |post| @max_size == nil || post.file_size <= @max_size.to_i }.sample(1).first
 
       response.headers["X-Yiffy-Artist"] = post.tag_string_artist.split(" ")
       response.headers["X-Yiffy-Source"] = post.source.split("\n")
