@@ -509,8 +509,6 @@ Rails.application.routes.draw do
   # yiffy api
   get "/V3" => redirect("https://#{Danbooru.config.hostname}/help/api")
   get "/V3/animals/:category" => "yiffy_api#disabled"
-  get "/V3/furry/:category/image" => "yiffy_api#image"
-  get "/V3/furry/yiff/:category/image" => "yiffy_api#image"
   get "/V3/furry/:category" => "yiffy_api#json"
   get "/V3/furry/yiff/:category" => "yiffy_api#json"
 

@@ -78,41 +78,6 @@ class YiffyApiController < ApplicationController
     end
   end
 
-  # this will be removed when V2 is shut down
-  def image
-    @set = get_set(params[:category])
-
-    # FileSize or nil
-    @max_size = FileSize.from(params[:sizeLimit].to_s)
-
-    if @set == nil
-      render status: :not_found
-    elsif @set.post_count == 0
-      render status: :not_implemented
-    else
-      post = @set.posts.select { |post| @max_size == nil || post.file_size <= @max_size.to_i }.sample(1).first
-
-      response.set_header "X-Yiffy-Artist",         post.tag_string_artist.split(" ")
-      response.set_header "X-Yiffy-Source",         post.source.split("\n")
-      response.set_header "X-Yiffy-Image-Width",    post.image_width.to_s
-      response.set_header "X-Yiffy-Image-Height",   post.image_height.to_s
-      response.set_header "X-Yiffy-Image-URL",      post.file_url
-      response.set_header "X-Yiffy-Short-URL",      "https://#{Danbooru.config.hostname}/posts/#{post.id}"
-      response.set_header "X-Yiffy-Image-Type",     MimeMagic.by_extension(post.file_ext).to_s
-      response.set_header "X-Yiffy-Image-Name",     "#{post.md5}.#{post.file_ext}"
-      response.set_header "X-Yiffy-Image-Extension", post.file_ext
-      response.set_header "X-Yiffy-Report-URL",      "https://#{Danbooru.config.hostname}/posts/#{post.id}"
-      response.set_header "X-Yiffy-Schema",          "https://schema.yiff.rest/V2.json"
-      response.set_header "X-Yiffy-Version",         "2"
-      file = "#{StorageManager::DEFAULT_BASE_DIR}/#{post.md5[0, 2]}/#{post.md5[2, 2]}/#{post.md5}.#{post.file_ext}"
-      if !File.exists? file
-        send_data open(file, "rb") { |f| f.read }
-      else
-        render status: :internal_server_error
-      end
-    end
-  end
-
   def get_set(category)
     case category.downcase
     when "bulge" then set = PostSet.find(PostSets::BULGE)
