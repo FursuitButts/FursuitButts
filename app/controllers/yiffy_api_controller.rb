@@ -43,7 +43,7 @@ class YiffyApiController < ApplicationController
     PROPOSE           = 19
     end
 
-  def animals
+  def disabled
     head 404
     render json: {
       success: false,
@@ -51,21 +51,8 @@ class YiffyApiController < ApplicationController
     }.to_json
   end
 
-  def furry
-    case params[:category].downcase
-    when *%w[butts fursuitbutts] then @set = PostSet.find(PostSets::BUTTS)
-    when "boop" then @set = PostSet.find(PostSets::BOOP)
-    when "cuddle" then @set = PostSet.find(PostSets::CUDDLE)
-    when "flop" then @set = PostSet.find(PostSets::FLOP)
-    when "fursuit" then @set = PostSet.find(PostSets::FURSUIT)
-    when "hold" then @set = PostSet.find(PostSets::HOLD)
-    when "howl" then @set = PostSet.find(PostSets::HOWL)
-    when "hug" then @set = PostSet.find(PostSets::HUG)
-    when "kiss" then @set = PostSet.find(PostSets::KISS)
-    when "lick" then @set = PostSet.find(PostSets::LICK)
-    when "propose" then @set = PostSet.find(PostSets::PROPOSE)
-    else @set = nil
-    end
+  def json
+    @set = get_set(params[:category])
 
     # FileSize or nil
     @max_size = FileSize.from(params[:sizeLimit].to_s)
@@ -86,46 +73,71 @@ class YiffyApiController < ApplicationController
       render json: {
         "$schema": "https://img.yiff.rest/schema/v3.json",
         success: true,
-        images: @set.posts.sample(get_amount(params[:amount])).select { |post| @max_size == nil || post.file_size <= @max_size.to_i }.map { |post| format_post(post) }
+        images: @set.posts.select { |post| @max_size == nil || post.file_size <= @max_size.to_i }.sample(get_amount(params[:amount])).map { |post| format_post(post) }
       }.to_json
     end
   end
 
-  def yiff
-    case params[:category].downcase
-    when "bulge" then @set = PostSet.find(PostSets::BULGE)
-    when "gay" then  @set = PostSet.find(PostSets::YIFF_GAY)
-    when "straight" then @set = PostSet.find(PostSets::YIFF_STRAIGHT)
-    when "lesbian" then @set = PostSet.find(PostSets::YIFF_LESBIAN)
-    when "gynomorph" then @set = PostSet.find(PostSets::YIFF_GYNOMORPH)
-    when "andromorph" then @set = PostSet.find(PostSets::YIFF_ANDROMORPH)
-    when *%w[solo-male solo_male] then @set = PostSet.find(PostSets::YIFF_MALE_SOLO)
-    when *%w[solo-female solo_female] then @set = PostSet.find(PostSets::YIFF_FEMALE_SOLO)
-    else @set = nil
-    end
+  # this will be removed when V2 is shut down
+  def image
+    @set = get_set(params[:category])
 
     # FileSize or nil
     @max_size = FileSize.from(params[:sizeLimit].to_s)
 
     if @set == nil
-      render json: {
-        "$schema": "https://img.yiff.rest/schema/v3_error.json",
-        success: false,
-        error: APIErrors::INVALID_CATEGORY
-      }.to_json, status: :not_found
+      render status: :not_found
     elsif @set.post_count == 0
-      render json: {
-        "$schema": "https://img.yiff.rest/schema/v3_error.json",
-        success: false,
-        error: APIErrors::NO_POSTS
-      }.to_json, status: :not_implemented
+      render status: :not_implemented
     else
-      render json: {
-        "$schema": "https://img.yiff.rest/schema/v3.json",
-        success: true,
-        images: @set.posts.sample(get_amount(params[:amount])).select { |post| @max_size == nil || post.file_size <= @max_size.to_i }.map { |post| format_post(post) }
-      }.to_json
+      post = @set.posts.select { |post| @max_size == nil || post.file_size <= @max_size.to_i }.sample(1)
+
+      response.headers["X-Yiffy-Artist"] = post.tag_string_artist.split(" ")
+      response.headers["X-Yiffy-Source"] = post.source.split("\n")
+      response.headers["X-Yiffy-Image-Width"] = post.image_width
+      response.headers["X-Yiffy-Image-Height"] = post.image_height
+      response.headers["X-Yiffy-Image-URL"] = post.file_url
+      response.headers["X-Yiffy-Short-URL"] = "https://#{Danbooru.config.hostname}/posts/#{post.id}"
+      response.headers["X-Yiffy-Image-Type"] = MimeMagic.by_extension(post.file_ext).to_s
+      response.headers["X-Yiffy-Image-Name"] = "#{post.md5}.#{post.file_ext}"
+      response.headers["X-Yiffy-Image-Extension"] = post.file_ext
+      response.headers["X-Yiffy-Report-URL"] = "https://#{Danbooru.config.hostname}/posts/#{post.id}"
+      response.headers["X-Yiffy-Schema"] = "https://schema.yiff.rest/V2.json"
+      response.headers["X-Yiffy-Version"] = "2"
+      file = "#{StorageManager::DEFAULT_BASE_DIR}/#{post.md5[0, 2]}/#{post.md5[2, 2]}/#{post.md5}.#{post.file_ext}"
+      if !File.exists? file
+        send_file file
+      else
+        render status: :internal_server_error
+      end
     end
+  end
+
+  def get_set(category)
+    case category.downcase
+    when "bulge" then set = PostSet.find(PostSets::BULGE)
+    when "gay" then  set = PostSet.find(PostSets::YIFF_GAY)
+    when "straight" then set = PostSet.find(PostSets::YIFF_STRAIGHT)
+    when "lesbian" then set = PostSet.find(PostSets::YIFF_LESBIAN)
+    when "gynomorph" then set = PostSet.find(PostSets::YIFF_GYNOMORPH)
+    when "andromorph" then set = PostSet.find(PostSets::YIFF_ANDROMORPH)
+    when *%w[solo-male solo_male] then set = PostSet.find(PostSets::YIFF_MALE_SOLO)
+    when *%w[solo-female solo_female] then set = PostSet.find(PostSets::YIFF_FEMALE_SOLO)
+    when *%w[butts fursuitbutts] then set = PostSet.find(PostSets::BUTTS)
+    when "boop" then set = PostSet.find(PostSets::BOOP)
+    when "cuddle" then set = PostSet.find(PostSets::CUDDLE)
+    when "flop" then set = PostSet.find(PostSets::FLOP)
+    when "fursuit" then set = PostSet.find(PostSets::FURSUIT)
+    when "hold" then set = PostSet.find(PostSets::HOLD)
+    when "howl" then set = PostSet.find(PostSets::HOWL)
+    when "hug" then set = PostSet.find(PostSets::HUG)
+    when "kiss" then set = PostSet.find(PostSets::KISS)
+    when "lick" then set = PostSet.find(PostSets::LICK)
+    when "propose" then set = PostSet.find(PostSets::PROPOSE)
+    else set = nil
+    end
+
+    set
   end
 
   def format_post(post)
