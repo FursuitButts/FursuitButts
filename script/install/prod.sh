@@ -5,7 +5,7 @@ CHRUBY_PATH=/etc/profile.d/chruby.sh
 VIPS_VERSION=8.10.5
 RAILS_ENV=production
 DEBIAN_FRONTEND=noninteractive
-HOSTNAME="img.yiff.rest"
+HOSTNAME="yiff.rest"
 
 apt-get update -y
 apt-get upgrade -y

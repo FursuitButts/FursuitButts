@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
-  "$id": "https://img.yiff.rest/schema/v3.json",
+  "$id": "https://yiff.rest/schema/v3.json",
   "type": "object",
   "required": [
     "success",

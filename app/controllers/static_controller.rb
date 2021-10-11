@@ -12,7 +12,7 @@ class StaticController < ApplicationController
   def not_found
     if "/V3".in?(request.path)
       render json: {
-        "$schema": "https://img.yiff.rest/schema/v3_error.json",
+        "$schema": "https://yiff.rest/schema/v3_error.json",
         success: false,
         error: YiffyApiController::APIErrors::NOT_FOUND
       }.to_json
@@ -53,19 +53,7 @@ class StaticController < ApplicationController
   end
 
   def discord
-    unless CurrentUser.can_discord?
-      raise User::PrivilegeError.new("You must have an account for at least one week in order to join the Discord server.")
-      return
-    end
-    if request.post?
-      time = (Time.now + 5.minute).to_i
-      secret = Danbooru.config.discord_secret
-      # TODO: Proper HMAC
-      hashed_values = Digest::SHA256.hexdigest("#{CurrentUser.name} #{CurrentUser.id} #{time} #{secret}")
-      user_hash = "?user_id=#{CurrentUser.id}&username=#{CurrentUser.name}&time=#{time}&hash=#{hashed_values}"
-
-      redirect_to(Danbooru.config.discord_site + user_hash)
-    end
+    redirect_to(Danbooru.config.discord_site)
   end
 
   def enforce_readonly

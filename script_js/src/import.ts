@@ -16,7 +16,7 @@ process.nextTick(async() => {
 	console.log("Importing Post #%d - File URL: %s", post.id, post.file.url);
 	const tags = await new Promise<string>((resolve) => rl.question("What tags should be used for this post?\n> ", resolve));
 	const rating = await new Promise<string>((resolve) => rl.question("What should the rating of this post be?\n> ", resolve));
-	const { post_id: newId } = await fetch("https://img.yiff.rest/uploads.json", {
+	const { post_id: newId } = await fetch("https://yiff.rest/uploads.json", {
 		method: "POST",
 		headers: {
 			"Authorization": Buffer.from(`admin:${process.env.API_TOKEN!}`).toString("base64"),
@@ -27,6 +27,6 @@ process.nextTick(async() => {
 		if (r.status >= 300) throw new Error(`Upload Error: ${r.status} ${r.statusText} "${await r.text()}"`);
 		else return r.json() as Promise<{ success: boolean; reason?: string; location: string; post_id: number; }>;
 	});
-	console.log("Post Imported - ID: #%d - Link: https://img.yiff.rest/posts/%d", newId, newId);
+	console.log("Post Imported - ID: #%d - Link: https://yiff.rest/posts/%d", newId, newId);
 	process.exit(0);
 });

@@ -17,7 +17,7 @@ module Danbooru
     end
 
     def domain
-      "img.yiff.rest"
+      "yiff.rest"
     end
 
     # Force rating:s on this version of the site.
@@ -27,13 +27,13 @@ module Danbooru
 
     # The canonical hostname of the site.
     def hostname
-      "img.yiff.rest"
+      "yiff.rest"
     end
 
     # The list of all domain names this site is accessible under.
     # Example: %w[danbooru.donmai.us sonohara.donmai.us hijiribe.donmai.us safebooru.donmai.us]
     def hostnames
-      ["img.yiff.rest"]
+      ["yiff.rest"]
     end
 
     # Contact email address of the admin.
@@ -393,7 +393,7 @@ module Danbooru
 
     # The name of the server the app is hosted on.
     def server_host
-      "img.yiff.rest"
+      "yiff.rest"
     end
 
     # Names of all Danbooru servers which serve out of the same common database.
