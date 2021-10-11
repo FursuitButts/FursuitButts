@@ -94,8 +94,8 @@ class YiffyApiController < ApplicationController
 
       response.set_header "X-Yiffy-Artist",         post.tag_string_artist.split(" ")
       response.set_header "X-Yiffy-Source",         post.source.split("\n")
-      response.set_header "X-Yiffy-Image-Width",    post.image_width
-      response.set_header "X-Yiffy-Image-Height",   post.image_height
+      response.set_header "X-Yiffy-Image-Width",    post.image_width.to_s
+      response.set_header "X-Yiffy-Image-Height",   post.image_height.to_s
       response.set_header "X-Yiffy-Image-URL",      post.file_url
       response.set_header "X-Yiffy-Short-URL",      "https://#{Danbooru.config.hostname}/posts/#{post.id}"
       response.set_header "X-Yiffy-Image-Type",     MimeMagic.by_extension(post.file_ext).to_s
