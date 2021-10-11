@@ -106,7 +106,7 @@ class YiffyApiController < ApplicationController
       response.set_header "X-Yiffy-Version",         "2"
       file = "#{StorageManager::DEFAULT_BASE_DIR}/#{post.md5[0, 2]}/#{post.md5[2, 2]}/#{post.md5}.#{post.file_ext}"
       if !File.exists? file
-        send_file file
+        send_file file, type: MimeMagic.by_extension(post.file_ext).to_s, disposition: "inline"
       else
         render status: :internal_server_error
       end
