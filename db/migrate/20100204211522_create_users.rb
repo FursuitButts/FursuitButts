@@ -11,6 +11,7 @@ class CreateUsers < ActiveRecord::Migration[4.2]
       t.column :is_banned, :boolean, :null => false, :default => false
       t.column :level, :integer, :null => false, :default => 0
       t.column :base_upload_limit, :integer, :null => false, :default => 10
+      t.column :v3_api_limit, :integer, :null => false, :default => 8
 
       # Cached data
       t.column :last_logged_in_at, :datetime

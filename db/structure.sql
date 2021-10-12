@@ -2625,16 +2625,14 @@ CREATE TABLE public.users (
     email_verification_key character varying,
     level integer DEFAULT 20 NOT NULL,
     base_upload_limit integer DEFAULT 10 NOT NULL,
+    v3_api_limit integer DEFAULT 8 NOT NULL,
     last_logged_in_at timestamp without time zone,
     last_forum_read_at timestamp without time zone,
     recent_tags text,
     comment_threshold integer DEFAULT '-1'::integer NOT NULL,
-    default_image_size character varying DEFAULT 'large'::character varying NOT NULL,
+    default_image_size character varying DEFAULT 'fitv'::character varying NOT NULL,
     favorite_tags text,
-    blacklisted_tags text DEFAULT 'spoilers
-guro
-scat
-furry -rating:s'::text,
+    blacklisted_tags text DEFAULT ''::text,
     time_zone character varying DEFAULT 'Eastern Time (US & Canada)'::character varying NOT NULL,
     bcrypt_password_hash text,
     per_page integer DEFAULT 20 NOT NULL,
