@@ -1,7 +1,6 @@
 require 'mimemagic'
 
 class YiffyApiController < ApplicationController
-  before_action :api_check
   class APIErrors
     NOT_FOUND = {
       code: 0,
@@ -18,6 +17,10 @@ class YiffyApiController < ApplicationController
     DISABLED_CATEGORY = {
       code: 3,
       message: "This category has been disabled, please find an alternative."
+    }
+    AUTHENTICATION_REQUIRED = {
+      code: 4,
+      message: "Authentication is required."
     }
   end
 
@@ -52,13 +55,17 @@ class YiffyApiController < ApplicationController
   end
 
   def test
-    render json: {
-      success: true,
-      info: CurrentUser,
-      info2: CurrentUser.user,
-      infoName: CurrentUser.name,
-      infoName2: CurrentUser.user.name
-    }.to_json
+    if CurrentUser == nil
+      render json: {
+        success: false,
+        error: APIErrors::AUTHENTICATION_REQUIRED
+      }
+    else
+      render json: {
+        success: true,
+        full: CurrentUser.user
+      }.to_json
+    end
   end
 
   def json
