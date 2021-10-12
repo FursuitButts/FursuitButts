@@ -1,7 +1,7 @@
 module Maintenance
   module User
     class ApiKeysController < ApplicationController
-      before_action :member_only
+      before_action :viewer_only
       before_action :authenticate!, :except => [:show]
       rescue_from ::SessionLoader::AuthenticationFailure, :with => :authentication_failed
       respond_to :html

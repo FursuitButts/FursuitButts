@@ -1,6 +1,7 @@
 require 'mimemagic'
 
 class YiffyApiController < ApplicationController
+  before_action :api_check
   class APIErrors
     NOT_FOUND = {
       code: 0,
@@ -44,10 +45,19 @@ class YiffyApiController < ApplicationController
     end
 
   def disabled
-    head 404
     render json: {
       success: false,
       error: APIErrors::DISABLED_CATEGORY
+    }.to_json, status: :not_found
+  end
+
+  def test
+    render json: {
+      success: true,
+      info: CurrentUser,
+      info2: CurrentUser.user,
+      infoName: CurrentUser.name,
+      infoName2: CurrentUser.user.name
     }.to_json
   end
 
