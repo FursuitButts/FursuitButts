@@ -7,8 +7,9 @@ FactoryBot.define do
     password_confirmation { "password" }
     password_hash {"password"}
     email {FFaker::Internet.email}
-    default_image_size { "large" }
+    default_image_size { "fitv" }
     base_upload_limit { 10 }
+    v3_api_limit { 8 }
     level { 20 }
     created_at {Time.now}
     last_logged_in_at {Time.now}

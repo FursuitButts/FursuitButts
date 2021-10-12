@@ -41,6 +41,11 @@
       </div>
 
       <div class="input integer optional">
+        <label class="block" for="user_v3_api_limit">V3 API Limit</label>
+        <%= number_field "user", "v3_api_limit" %>
+      </div>
+
+      <div class="input integer optional">
         <label for="user_level" class="optional">Level</label>
         <%= user_level_select(:user, :level) %>
       </div>

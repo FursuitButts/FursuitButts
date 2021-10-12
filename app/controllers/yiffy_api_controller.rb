@@ -23,6 +23,10 @@ class YiffyApiController < ApplicationController
       code: 4,
       message: "Authentication is required."
     }
+    RATELIMITED = {
+      code: 5,
+      message:"You are sending too many requests."
+    }
   end
 
   # I wanted to use pools, but anyone could add to those
@@ -60,7 +64,9 @@ class YiffyApiController < ApplicationController
       success: true,
       data: {
         id: CurrentUser.id,
-        name: CurrentUser.name
+        name: CurrentUser.name,
+        window: 5000,
+        limit: CurrentUser.v3_api_limit
       }
     }.to_json
   end
