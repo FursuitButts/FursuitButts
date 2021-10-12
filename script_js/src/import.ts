@@ -19,7 +19,7 @@ process.nextTick(async() => {
 	const { post_id: newId } = await fetch("https://yiff.rest/uploads.json", {
 		method: "POST",
 		headers: {
-			"Authorization": Buffer.from(`admin:${process.env.API_TOKEN!}`).toString("base64"),
+			"Authorization": Buffer.from(`Donovan_DMC:${process.env.API_TOKEN!}`).toString("base64"),
 			"Content-Type": "application/x-www-form-urlencoded"
 		},
 		body: `upload[tag_string]=${encodeURIComponent(tags)}&upload[rating]=${rating}&upload[direct_url]=${encodeURIComponent(post.file.url)}&upload[source]=${encodeURIComponent([`https://e621.net/posts/${post.id}`, ...post.sources].join("\n"))}&upload[locked_rating]=true`

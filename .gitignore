@@ -45,3 +45,4 @@ yarn-debug.log*
 /data
 /script_js/node_modules
 /script_js/src/tmp
+script_js/bur*
