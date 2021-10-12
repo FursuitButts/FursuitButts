@@ -55,7 +55,7 @@ class YiffyApiController < ApplicationController
     }.to_json, status: :not_found
   end
 
-  def test
+  def whoami
     render json: {
       success: true,
       data: {
