@@ -55,7 +55,7 @@ class YiffyApiController < ApplicationController
   end
 
   def test
-    if CurrentUser == nil
+    if CurrentUser.is_anonymous?
       render json: {
         success: false,
         error: APIErrors::AUTHENTICATION_REQUIRED
