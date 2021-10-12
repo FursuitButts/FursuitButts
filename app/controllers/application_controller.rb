@@ -246,4 +246,16 @@ class ApplicationController < ActionController::Base
   def allowed_readonly_actions
     %w[index show search]
   end
+
+  def v3_authcheck
+    if CurrentUser.is_anonymous?
+      render json: {
+        success: false,
+        error: YiffyApiController::APIErrors::AUTHENTICATION_REQUIRED
+      }, status: :unauthorized
+      return false
+    end
+
+    true
+  end
 end

@@ -1,6 +1,7 @@
 require 'mimemagic'
 
 class YiffyApiController < ApplicationController
+  before_action :v3_authcheck
   class APIErrors
     NOT_FOUND = {
       code: 0,
