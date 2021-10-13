@@ -259,9 +259,6 @@ class ApplicationController < ActionController::Base
     true
   end
 
-  @stats = JSON.parse(client.get('e6stats') || '{}')
-  client.close
-
   V3_WINDOW_NORMAL = 5000
   V3_LIMIT_NORMAL = 8
   def v3_throttle
