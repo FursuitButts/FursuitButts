@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 APP_DIR=$1
-PID_FILE=$APP_APP_DIR/tmp/pids/server.pid
+PID_FILE=APP_DIR/tmp/pids/server.pid
 
 cd $APP_DIR
 sudo -i -u danbooru bash -c "/home/danbooru/ruby-setup.sh '$APP_DIR' '/etc/profile.d/chruby.sh'"
