@@ -1,4 +1,3 @@
-node_modules
-.vagrant
-data
-public/packs
+**
+!/.env.local
+!/config/danbooru_local_config.rb
