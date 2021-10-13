@@ -1,6 +1,6 @@
 class PoolVersionsController < ApplicationController
   respond_to :html, :json
-  before_action :member_only
+  before_action :editor_only
 
   def index
     if params[:search] && params[:search][:pool_id].present?

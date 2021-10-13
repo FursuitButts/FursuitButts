@@ -1,5 +1,5 @@
 class UserPromotion
-  attr_reader :user, :promoter, :new_level, :options, :old_can_approve_posts, :old_can_upload_free, :old_no_flagging, :old_no_feedback, :old_suggestor_banned
+  attr_reader :user, :promoter, :new_level, :options, :old_can_approve_posts, :old_can_upload_free, :old_no_flagging, :old_no_feedback, :old_editor_banned
 
   def initialize(user, promoter, new_level, options = {})
     @user = user
@@ -15,7 +15,7 @@ class UserPromotion
     @old_can_upload_free = user.can_upload_free?
     @old_no_flagging = user.no_flagging?
     @old_no_feedback = user.no_feedback?
-    @old_suggestor_banned = user.suggestor_banned?
+    @old_editor_banned = user.editor_banned?
 
     user.level = new_level
 
@@ -35,8 +35,8 @@ class UserPromotion
       user.no_flagging = options[:no_flagging]
     end
 
-    if options.has_key?(:suggestor_banned)
-      user.suggestor_banned = options[:suggestor_banned]
+    if options.has_key?(:editor_banned)
+      user.editor_banned = options[:editor_banned]
     end
 
     create_user_feedback unless options[:is_upgrade]
@@ -67,7 +67,7 @@ private
     flag_check(added, removed, "can_upload_free", "unlimited upload slots")
     flag_check(added, removed, "no_flagging", "flag ban")
     flag_check(added, removed, "no_feedback", "feedback_ban")
-    flag_check(added, removed, "suggestor_banned", "content suggestor banned")
+    flag_check(added, removed, "editor_banned", "editor application banned")
 
     unless added.empty? && removed.empty?
       ModAction.log(:user_flags_change, {user_id: user.id, added: added, removed: removed})
@@ -124,10 +124,10 @@ private
       messages << "You gained the ability to flag posts."
     end
 
-   if user.suggestor_banned && !old_suggestor_banned
-      messages << "You lost the ability to apply for content suggestor."
-    elsif !user.no_suggestor_banned? && old_suggestor_banned
-      messages << "You gained the ability to apply for content suggestor."
+   if user.editor_banned && !old_editor_banned
+      messages << "You lost the ability to apply for editor."
+    elsif !user.editor_banned? && old_editor_banned
+      messages << "You gained the ability to apply for editor."
     end
 
     messages.join("\n")

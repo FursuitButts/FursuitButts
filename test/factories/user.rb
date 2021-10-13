@@ -20,7 +20,7 @@ FactoryBot.define do
       is_banned { true }
     end
 
-    factory(:member_user) do
+    factory(:editor_user) do
       level { 20 }
     end
 

@@ -1,5 +1,5 @@
 class TagsController < ApplicationController
-  before_action :member_only, :only => [:edit, :update, :preview]
+  before_action :editor_only, :only => [:edit, :update, :preview]
   respond_to :html, :json
 
   def edit

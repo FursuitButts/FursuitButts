@@ -1,5 +1,5 @@
 class PostFavoritesController < ApplicationController
-  before_action :member_only
+  before_action :editor_only
   respond_to :html
 
   def index

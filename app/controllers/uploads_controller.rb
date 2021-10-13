@@ -1,5 +1,5 @@
 class UploadsController < ApplicationController
-  before_action :member_only
+  before_action :editor_only
   before_action :janitor_only, only: [:index, :show]
   respond_to :html, :json
   content_security_policy only: [:new] do |p|

@@ -1,7 +1,7 @@
 class PostSetMaintainersController < ApplicationController
   respond_to :html
   respond_to :js, except: [:index]
-  before_action :member_only
+  before_action :editor_only
 
 
   def index

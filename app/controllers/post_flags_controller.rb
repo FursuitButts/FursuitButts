@@ -1,5 +1,5 @@
 class PostFlagsController < ApplicationController
-  before_action :member_only, :except => [:index, :show]
+  before_action :editor_only, :except => [:index, :show]
   before_action :janitor_only, only: [:destroy]
   respond_to :html, :json
 

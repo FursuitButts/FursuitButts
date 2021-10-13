@@ -77,27 +77,27 @@ class Dmail < ApplicationRecord
             copy.is_read = true
             copy.save
             case copy.title.downcase
-            when "content suggestor application"
-              if sender.suggestor_banned
+            when "editor application"
+              if sender.editor_banned
                 Dmail.create_automated(
                   :to_id => copy.from_id,
                   :title => "Application Denied",
-                  :body => "You are not allowed to apply to be a content suggestor. (you have either been restricted by an administrator, or have already applied)"
+                  :body => "You are not allowed to apply to be an editor. (you have either been restricted by an administrator, or have already applied)"
                 )
               else
                 Dmail.create_automated(
                   :to_id => sender.id,
                   :title => "Application Received",
-                  :body => "You application for content suggestor has been submitted, we will review it as soon as possible."
+                  :body => "You application for editor has been submitted, we will review it as soon as possible."
                 )
-                sender.suggestor_banned = true
+                sender.editor_banned = true
                 sender.save
                 User.admins.each do |admin|
                   next if admin.id == User.system.id || admin == nil
                   Dmail.create_automated(
                     :to_id => admin.id,
-                    :title => "New Content Suggestor Application",
-                    :body => "The user \"#{sender.name}\":/users/#{sender.id} has applied for content suggestor.\n\nThe provided content is as follows:\n#{copy.body}"
+                    :title => "New Editor Application",
+                    :body => "The user \"#{sender.name}\":/users/#{sender.id} has applied for editor.\n\nThe provided content is as follows:\n#{copy.body}"
                   )
                 end
               end

@@ -1,7 +1,7 @@
 <% content_for(:secondary_links) do %>
   <menu>
     <%= subnav_link_to "Listing", bulk_update_requests_path %>
-    <% if CurrentUser.is_member? %>
+    <% if CurrentUser.is_editor? %>
       <%= subnav_link_to "New", new_bulk_update_request_path %>
     <% end %>
   </menu>

@@ -1,6 +1,6 @@
 class ForumPostVotesController < ApplicationController
   respond_to :json
-  before_action :member_only
+  before_action :editor_only
   before_action :load_forum_post
   before_action :validate_forum_post
   before_action :load_vote, only: [:destroy]

@@ -1,6 +1,6 @@
 class ArtistsController < ApplicationController
   respond_to :html, :json
-  before_action :member_only, :except => [:index, :show, :show_or_new, :banned]
+  before_action :editor_only, :except => [:index, :show, :show_or_new, :banned]
   before_action :janitor_only, :only => [:destroy]
   before_action :admin_only, :only => [:ban, :unban]
   before_action :load_artist, :only => [:ban, :unban, :show, :edit, :update, :destroy, :undelete]

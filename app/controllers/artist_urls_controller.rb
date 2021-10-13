@@ -1,6 +1,6 @@
 class ArtistUrlsController < ApplicationController
   respond_to :js, :json, :html
-  before_action :member_only, except: [:index]
+  before_action :editor_only, except: [:index]
 
   def index
     @artist_urls = ArtistUrl.includes(:artist).search(search_params).paginate(params[:page], :limit => params[:limit], :search_count => params[:search])

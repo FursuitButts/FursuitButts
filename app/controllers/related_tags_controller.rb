@@ -1,7 +1,7 @@
 class RelatedTagsController < ApplicationController
   respond_to :json, :html, only: [:show]
   respond_to :json, only: [:bulk]
-  before_action :member_only
+  before_action :editor_only
 
   def show
     @query = RelatedTagQuery.new(query: params[:query], category: params[:category], user: CurrentUser.user)

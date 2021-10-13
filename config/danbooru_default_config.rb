@@ -93,7 +93,7 @@ module Danbooru
           "Blocked" => 10,
           "Viewer" => 20,
           "Member" => 21,
-          "Uploader" => 21,
+          "Editor" => 21,
           "Privileged" => 30,
           "Contributor" => 33,
           "Former Staff" => 34,

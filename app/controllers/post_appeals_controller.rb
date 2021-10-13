@@ -1,5 +1,5 @@
 class PostAppealsController < ApplicationController
-  #before_action :member_only, :except => [:index, :show]
+  #before_action :editor_only, :except => [:index, :show]
   before_action :admin_only
   respond_to :html, :json
 
