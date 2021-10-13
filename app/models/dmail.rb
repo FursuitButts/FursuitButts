@@ -72,6 +72,8 @@ class Dmail < ApplicationRecord
           copy.is_spam = copy.spam?
           copy.save unless copy.to_id == copy.from_id
 
+          id = copy.id
+
           # sender's copy
           copy = Dmail.new(params)
           copy.bypass_limits = true
@@ -80,11 +82,27 @@ class Dmail < ApplicationRecord
           copy.save
 
           if copy.to_id == User.system.id
-            Dmail.create_automated(
-              :to_id => copy.from_id,
-              :title => "Application Received",
-              :body => "You application for uploader has been submitted"
-            )
+            case copy.title.downcase
+            when "content suggestor application"
+                Dmail.create_automated(
+                  :to_id => copy.from_id,
+                  :title => "Application Received",
+                  :body => "You application for content suggestor has been submitted. We will review it as soon as possible."
+                )
+                User.admins do |admin|
+                  Dmail.create_automated(
+                    :to_id => admin.id,
+                    :title => "New Content Suggestor Application",
+                    :body => "The user #{copy.from_name} has applied for content suggestor. View their application \"here\":/dmails/#{id}"
+                  )
+                end
+            else
+              Dmail.create_automated(
+                :to_id => copy.from_id,
+                :title => "Invalid DMail Command",
+                :body => "If you were intending to execute a dmail based automation, you formatted something wrong. If you are trying to contact a staff member, please contact someone directly."
+              )
+            end
           end
 
           Dmail.ban_spammer(copy.from) if Dmail.is_spammer?(copy.from)
