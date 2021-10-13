@@ -73,11 +73,7 @@ RUN wget -qO chruby-0.3.9.tar.gz https://github.com/postmodern/chruby/archive/v0
 RUN tar -xzvf chruby-0.3.9.tar.gz >/dev/null
 RUN cd chruby-0.3.9/ && make install >/dev/null && ./scripts/setup.sh >/dev/null
 RUN rm /usr/local/src/chruby-0.3.9.tar.gz
-RUN echo -e \
-    "if [ -n \"\$BASH_VERSION\" ] || [ -n \"\$ZSH_VERSION\" ]; then \
-      source /usr/local/share/chruby/chruby.sh \
-      source /usr/local/share/chruby/auto.sh \
-    fi" > $CHRUBY_PATH
+RUN echo -e "if [ -n \"\$BASH_VERSION\" ] || [ -n \"\$ZSH_VERSION\" ]; then source /usr/local/share/chruby/chruby.sh; source /usr/local/share/chruby/auto.sh; fi" > $CHRUBY_PATH
 
 # Vips
 WORKDIR /tmp
