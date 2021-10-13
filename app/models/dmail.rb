@@ -116,7 +116,7 @@ class Dmail < ApplicationRecord
     end
 
     def method_attributes
-      super + [:key]
+      super + [:id, :owner_id, :to_id, :title, :body, :is_read, :is_deleted, :created_at, :updated_at, :is_spam]
     end
   end
 
