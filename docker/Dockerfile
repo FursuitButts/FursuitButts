@@ -6,7 +6,6 @@ ARG RAILS_ENV=production
 ARG DEBIAN_FRONTEND=noninteractive
 ARG HOSTNAME="yiff.rest"
 ARG GH_REPO=https://github.com/DonovanDMC/e621ng
-ARG RUBY_SETUP_SCRIPT=/home/danbooru/ruby-setup.sh
 ARG NGINX_CONFIG_PATH=/etc/nginx/conf.d/danbooru.conf
 ARG NGINX_DEFAULT_CONFIG_PATH=/etc/nginx/conf.d/default.conf
 ARG NGINX_DEFAULT_LISTENER_PATH=/etc/nginx/sites-enabled/default
@@ -89,8 +88,7 @@ RUN service redis-server start
 
 # More ruby nonsense
 RUN cp /home/danbooru/danbooru/vagrant/ruby-setup-prod.sh /home/danbooru/ruby-setup.sh
-RUN chmod a+x $RUBY_SETUP_SCRIPT
-RUN sudo -i -u danbooru bash -c "$RUBY_SETUP_SCRIPT '$APP_DIR' '$CHRUBY_PATH'"
+RUN chmod a+x /home/danbooru/ruby-setup.sh
 
 # Nginx
 RUN rm -f "$NGINX_CONFIG_PATH"
