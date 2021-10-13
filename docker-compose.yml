@@ -9,14 +9,20 @@ services:
     mem_limit: 16gb
     healthcheck:
       interval: 10s
+      timeout: 2s
       retries: 999
       test: curl --write-out 'HTTP %{http_code}' --fail --silent --output /dev/null http://localhost:9200/ || exit 1
     networks:
       default:
         ipv4_address: 172.31.0.2
   memcached:
-    image: memcached
+    image: e621/memcached
     container_name: e621_memcached
+    healthcheck:
+      interval: 10s
+      timeout: 2s
+      retries: 999
+      test: nc -z 127.0.0.1 11211
     networks:
       default:
         ipv4_address: 172.31.0.3
@@ -40,6 +46,11 @@ services:
     ports:
       - 127.3.6.21:80:80
       - 127.3.6.21:443:443
+    healthcheck:
+      interval: 10s
+      timeout: 2s
+      retries: 999
+      test: curl --write-out 'HTTP %{http_code}' --fail --silent --output /dev/null http://localhost:9000/ || exit 1
     networks:
       default:
         ipv4_address: 172.31.0.4
