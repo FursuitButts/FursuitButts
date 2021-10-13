@@ -97,6 +97,8 @@ RUN sed -i -e 's/__hostname__/$HOSTNAME/' "$NGINX_CONFIG_PATH"
 RUN sed -i -e 's/root \/var\/www\/danbooru\/current\/public;/root \/home\/danbooru\/danbooru\/public;/' "$NGINX_CONFIG_PATH"
 RUN rm -f "$NGINX_DEFAULT_CONFIG_PATH"
 RUN rm -f "$NGINX_DEFAULT_LISTENER_PATH"
+COPY .env.local /home/danbooru/danbooru/.env.local
+COPY config/danbooru_local_config.rb /home/danbooru/danbooru/config/danbooru_local_config.rb
 RUN source /home/danbooru/danbooru/.env.local && cd /etc/ssl && git clone https://DonovanDMC:$GIT_TOKEN@github.com/DonovanDMC/SSL local
 RUN service nginx restart
 
