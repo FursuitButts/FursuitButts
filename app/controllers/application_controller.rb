@@ -273,10 +273,10 @@ class ApplicationController < ActionController::Base
       return true
     end
 
-    response.set_header("X-RateLimit-Remaining", (CurrentUser.user.v3_api_limit - (count.to_i + 1)).to_s)
-    response.set_header("X-RateLimit-Limit", CurrentUser.user.v3_api_limit.to_s)
+    response.set_header("RateLimit-Remaining", (CurrentUser.user.v3_api_limit - (count.to_i + 1)).to_s)
+    response.set_header("RateLimit-Limit", CurrentUser.user.v3_api_limit.to_s)
     if count.to_i >= CurrentUser.user.v3_api_limit
-      response.set_header("X-RateLimit-Reset", "0")
+      response.set_header("RateLimit-Reset", "0")
       render json: {
         "$schema": "https://yiff.rest/schema/v3_error.json",
         success: false,
@@ -288,7 +288,7 @@ class ApplicationController < ActionController::Base
     client.incr(key)
     ttl = client.ttl(key)
     client.close
-    response.set_header("X-RateLimit-Reset", ttl.to_i.to_s)
+    response.set_header("RateLimit-Reset", ttl.to_i.to_s)
     true
   end
 end
