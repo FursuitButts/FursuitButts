@@ -1,5 +1,6 @@
 FROM ubuntu:focal
 ARG APP_DIR=/home/danbooru/danbooru
+ENV APP_DIR ${APP_DIR}
 ARG CHRUBY_PATH=/etc/profile.d/chruby.sh
 ARG VIPS_VERSION=8.10.5
 ARG RAILS_ENV=production
