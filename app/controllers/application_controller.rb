@@ -260,7 +260,7 @@ class ApplicationController < ActionController::Base
   end
 
   # TODO headers not showing on non-limited requests
-  V3_WINDOW = 5000
+  V3_WINDOW = 5
   def v3_throttle
     client = ::Redis.new(url: Danbooru.config.redis_url)
     client_ip = request.env["REMOTE_ADDR"]
@@ -269,7 +269,7 @@ class ApplicationController < ActionController::Base
 
     unless count
       client.set(key, 0)
-      client.pexpire(key, V3_WINDOW)
+      client.expire(key, V3_WINDOW)
       return true
     end
 
@@ -281,7 +281,7 @@ class ApplicationController < ActionController::Base
 
     response.set_header("RateLimit-Remaining", remaining.to_s)
     response.set_header("RateLimit-Limit", CurrentUser.user.v3_api_limit.to_s)
-    response.set_header("RateLimit-Reset", ttl.to_i.to_s)
+    response.set_header("RateLimit-Reset", Time.now.to_i + ttl.to_i.to_s)
     if (count.to_i + 1) >= CurrentUser.user.v3_api_limit
       render json: {
         "$schema": "https://yiff.rest/schema/v3_error.json",
