@@ -3,4 +3,4 @@
 cd /home/danbooru/danbooru
 rm -rf public/packs
 RAILS_ENV=production bin/rails assets:precompile
-echo "Done, Now Restart Rails."
+echo "Done, Now Restart."
