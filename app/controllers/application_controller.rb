@@ -281,7 +281,7 @@ class ApplicationController < ActionController::Base
         "$schema": "https://yiff.rest/schema/v3_error.json",
         success: false,
         error: YiffyApiController::APIErrors::RATELIMITED
-      }.to_json, status: :not_found
+      }.to_json, status: :too_many_requests
       return
     end
 
