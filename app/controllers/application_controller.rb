@@ -274,12 +274,12 @@ class ApplicationController < ActionController::Base
     end
 
     ttl = client.ttl(key)
-    remaining = (CurrentUser.user.v3_api_limit - (count.to_i + 1)).to_s
+    remaining = (CurrentUser.user.v3_api_limit - (count.to_i + 1))
     if remaining < 0
       remaining -= 1
     end
 
-    response.set_header("RateLimit-Remaining", remaining)
+    response.set_header("RateLimit-Remaining", remaining.to_s)
     response.set_header("RateLimit-Limit", CurrentUser.user.v3_api_limit.to_s)
     response.set_header("RateLimit-Reset", ttl.to_i.to_s)
     if count.to_i >= CurrentUser.user.v3_api_limit
