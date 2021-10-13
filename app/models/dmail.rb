@@ -89,7 +89,7 @@ class Dmail < ApplicationRecord
                 Dmail.create_automated(
                   :to_id => copy.from_id,
                   :title => "Application Denied",
-                  :body => "You are not allowed to apply to be a content suggestor."
+                  :body => "You are not allowed to apply to be a content suggestor. (you have either been restricted by an administrator, or have already applied)"
                 )
               else
                 Dmail.create_automated(
