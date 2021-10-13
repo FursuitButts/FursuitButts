@@ -51,6 +51,11 @@
       </div>
 
       <div class="input">
+        <label for="user_suggestor_banned" class="optional">Banned From Apply For Suggestor</label>
+        <%= select(:user, :suggestor_banned, [["Yes", true], ["No", false]]) %>
+      </div>
+
+      <div class="input">
         <label for="user_can_upload_free" class="optional">Unrestricted Uploads</label>
         <%= select(:user, :can_upload_free, [["Yes", true], ["No", false]]) %>
       </div>

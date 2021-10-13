@@ -55,6 +55,7 @@ class User < ApplicationRecord
     no_feedback
     disable_user_dmails
     enable_compact_uploader
+    suggestor_banned
   )
 
   include Danbooru::HasBitFlags

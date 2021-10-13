@@ -62,6 +62,7 @@ private
     flag_check(added, removed, "can_upload_free", "unlimited upload slots")
     flag_check(added, removed, "no_flagging", "flag ban")
     flag_check(added, removed, "no_feedback", "feedback_ban")
+    flag_check(added, removed, "suggestor_banned", "content suggestor banned")
 
     unless added.empty? && removed.empty?
       ModAction.log(:user_flags_change, {user_id: user.id, added: added, removed: removed})

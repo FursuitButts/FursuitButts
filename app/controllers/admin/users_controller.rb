@@ -76,7 +76,7 @@ ORDER BY u1.id DESC, u2.last_logged_in_at DESC;")
     private
 
     def user_params
-      params.require(:user).slice(:profile_about, :profile_artinfo, :email, :base_upload_limit, :enable_privacy_mode, :v3_api_limit).permit([:profile_about, :profile_artinfo, :email, :base_upload_limit, :enable_privacy_mode, :v3_api_limit])
+      params.require(:user).slice(:profile_about, :profile_artinfo, :email, :base_upload_limit, :enable_privacy_mode, :v3_api_limit, :suggestor_banned).permit([:profile_about, :profile_artinfo, :email, :base_upload_limit, :enable_privacy_mode, :v3_api_limit, :suggestor_banned])
     end
   end
 end

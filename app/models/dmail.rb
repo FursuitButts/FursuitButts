@@ -84,18 +84,27 @@ class Dmail < ApplicationRecord
           if copy.to_id == User.system.id
             case copy.title.downcase
             when "content suggestor application"
+              if User.find(copy.from_id).suggestor_banned
+                Dmail.create_automated(
+                  :to_id => copy.from_id,
+                  :title => "Application Denied",
+                  :body => "You are not allowed to apply to be a content suggestor."
+                )
+              else
                 Dmail.create_automated(
                   :to_id => copy.from_id,
                   :title => "Application Received",
-                  :body => "You application for content suggestor has been submitted. We will review it as soon as possible."
+                  :body => "You application for content suggestor has been submitted, we will review it as soon as possible."
                 )
-                User.admins do |admin|
+                User.admins.each do |admin|
+                  next if admin.id == User.system.id || admin == nil
                   Dmail.create_automated(
                     :to_id => admin.id,
                     :title => "New Content Suggestor Application",
                     :body => "The user #{copy.from_name} has applied for content suggestor. View their application \"here\":/dmails/#{id}"
                   )
                 end
+              end
             else
               Dmail.create_automated(
                 :to_id => copy.from_id,
