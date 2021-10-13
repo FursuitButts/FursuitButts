@@ -259,8 +259,9 @@ class ApplicationController < ActionController::Base
     true
   end
 
-  V3_WINDOW_NORMAL = 5000
-  V3_LIMIT_NORMAL = 8
+  # TODO headers not showing on non-limited requests
+  # TODO ratelimiting allowing one more than needed
+  V3_WINDOW = 5000
   def v3_throttle
     client = ::Redis.new(url: Danbooru.config.redis_url)
     client_ip = request.env["REMOTE_ADDR"]
@@ -269,7 +270,7 @@ class ApplicationController < ActionController::Base
 
     unless count
       client.set(key, 0)
-      client.pexpire(key, V3_WINDOW_NORMAL)
+      client.pexpire(key, V3_WINDOW)
       return true
     end
 
