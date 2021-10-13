@@ -171,7 +171,7 @@
         <% unless CurrentUser.hide_comments? %>
           <li class="active"><a href="#comments">Comments</a></li>
         <% end %>
-        <% if CurrentUser.is_member? %>
+        <% if CurrentUser.is_editor? %>
           <li><a href="#edit" id="post-edit-link" data-shortcut="e">Edit</a></li>
         <% end %>
       </menu>
@@ -197,7 +197,7 @@
         <% end %>
       </section>
 
-      <% if CurrentUser.is_member? %>
+      <% if CurrentUser.is_editor? %>
         <section id="edit" style="display: none;">
           <%= render "posts/partials/show/edit", :post => @post %>
         </section>
@@ -205,7 +205,7 @@
     </section>
   </div>
 
-  <% if CurrentUser.is_member? %>
+  <% if CurrentUser.is_editor? %>
     <div id="add-to-pool-dialog" title="Add to pool" style="display: none;">
       <%= render "pool_elements/new" %>
     </div>

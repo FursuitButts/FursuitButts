@@ -371,11 +371,11 @@ class PostArchive < ApplicationRecord
   end
 
   def can_undo?(user)
-    version > 1 && user.is_member?
+    version > 1 && user.is_editor?
   end
 
   def can_revert_to?(user)
-    user.is_member?
+    user.is_editor?
   end
 
   def method_attributes

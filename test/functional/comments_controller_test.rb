@@ -4,7 +4,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
   context "A comments controller" do
     setup do
       @mod = FactoryBot.create(:moderator_user)
-      @user = FactoryBot.create(:member_user)
+      @user = FactoryBot.create(:editor_user)
       CurrentUser.user = @user
       CurrentUser.ip_addr = "127.0.0.1"
 

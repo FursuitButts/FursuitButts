@@ -12,7 +12,7 @@
         <% end %>
         <th width="10%">Edited By</th>
         <th width="10%">Date</th>
-        <% if CurrentUser.is_member? %>
+        <% if CurrentUser.is_editor? %>
           <th width="7%"></th>
         <% end %>
       </tr>
@@ -50,7 +50,7 @@
           <% end %>
           <td><%= link_to_user note_version.updater %></td>
           <td><%= compact_time note_version.updated_at %></td>
-          <% if CurrentUser.is_member? %>
+          <% if CurrentUser.is_editor? %>
             <td>
               <%= link_to "Revert to", revert_note_path(note_version.note_id, :version_id => note_version.id, format: :json), class: 'revert-item-link', 'data-noun': 'note' %>
             </td>

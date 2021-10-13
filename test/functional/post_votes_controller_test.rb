@@ -24,7 +24,7 @@ class PostVotesControllerTest < ActionDispatch::IntegrationTest
       end
 
       should "not allow members to vote" do
-        @member = create(:member_user)
+        @member = create(:editor_user)
         post_auth post_votes_path(post_id: @post.id), @member, params: {:score => "up", :format => "js"}
         assert_response 403
         assert_equal(0, @post.reload.score)

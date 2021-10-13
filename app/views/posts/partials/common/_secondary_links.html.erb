@@ -3,7 +3,7 @@
 <% content_for(:secondary_links) do %>
   <menu>
     <%= subnav_link_to "Listing", posts_path %>
-    <% if CurrentUser.is_member? %>
+    <% if CurrentUser.is_editor? %>
       <%= subnav_link_to "Upload", new_upload_path %>
     <% end %>
     <%= subnav_link_to "Hot", posts_path(tags: "order:rank", d: "1") %>

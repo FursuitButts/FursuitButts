@@ -421,7 +421,7 @@ class User < ApplicationRecord
 
   module ForumMethods
     def has_forum_been_updated?
-      return false unless is_member?
+      return false unless is_editor?
       max_updated_at = ForumTopic.permitted.active.order(updated_at: :desc).first&.updated_at
       return false if max_updated_at.nil?
       return true if last_forum_read_at.nil?
@@ -528,7 +528,7 @@ class User < ApplicationRecord
                          :can_approve_posts?, 7.days)
 
     def can_remove_from_pools?
-      is_member? && older_than(7.days)
+      is_editor? && older_than(7.days)
     end
 
     def can_discord?

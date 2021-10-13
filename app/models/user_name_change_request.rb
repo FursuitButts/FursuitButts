@@ -24,7 +24,7 @@ class UserNameChangeRequest < ApplicationRecord
   def self.visible(viewer = CurrentUser.user)
     if viewer.is_admin?
       all
-    elsif viewer.is_member?
+    elsif viewer.is_editor?
       joins(:user).merge(User.undeleted).where("user_name_change_requests.status = 'approved' OR user_name_change_requests.user_id = ?", viewer.id)
     else
       none

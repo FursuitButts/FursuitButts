@@ -83,7 +83,7 @@ class TagsControllerTest < ActionDispatch::IntegrationTest
         end
 
         should "not update the category for a member" do
-          @member = create(:member_user)
+          @member = create(:editor_user)
           put_auth tag_path(@tag), @member, params: {tag: { category: Tag.categories.general }}
 
           assert_not_equal(Tag.categories.general, @tag.reload.category)

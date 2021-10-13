@@ -134,7 +134,7 @@
       <%= render "users/validation_notice" %>
     <% end %>
 
-    <% if cookies["accepted_tos"].blank? && !CurrentUser.is_member? %>
+    <% if cookies["accepted_tos"].blank? && !CurrentUser.is_editor? %>
       <%= render "users/tos" %>
     <% end %>
 

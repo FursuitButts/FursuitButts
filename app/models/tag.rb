@@ -1179,7 +1179,7 @@ class Tag < ApplicationRecord
   end
 
   def category_editable_by?(user)
-    return false if user.nil? or !user.is_member?
+    return false if user.nil? or !user.is_editor?
     return false if is_locked? && !user.is_moderator?
     return false if TagCategory.mod_only_mapping[TagCategory.reverse_mapping[category]] && !user.is_moderator?
     return true if post_count < Danbooru.config.tag_type_change_cutoff
