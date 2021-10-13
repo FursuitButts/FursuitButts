@@ -54,7 +54,7 @@ RUN echo "host danbooru,danbooru2,danbooru3 danbooru 172.99.0.0/24 trust" >> /et
 RUN echo "host all all 172.31.0.1/32 trust"  >> /etc/postgresql/12/main/pg_hba.conf
 RUN sed -i -e 's/md5/trust/' /etc/postgresql/12/main/pg_hba.conf
 RUN echo "listen_addresses = '*'" > /etc/postgresql/12/main/conf.d/listen_addresses.conf
-RUN chown -R postgres:postgres /var/run/postgresql
+RUN chown -R postgres:postgres /var/run/postgresql /var/lib/postgresql /etc/postgresql
 RUN git clone https://github.com/r888888888/test_parser.git /tmp/test_parser
 RUN cd /tmp/test_parser && make install
 RUN rm -rf /tmp/test_parser
