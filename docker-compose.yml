@@ -6,6 +6,7 @@ services:
       - discovery.type=single-node
       - xpack.security.enabled=false
     container_name: e621_elastic
+    mem_limit: 16gb
     healthcheck:
       interval: 10s
       retries: 999
