@@ -97,6 +97,7 @@ class Dmail < ApplicationRecord
                   :title => "Application Received",
                   :body => "You application for content suggestor has been submitted, we will review it as soon as possible."
                 )
+                sender.suggestor_banned = true
                 User.admins.each do |admin|
                   next if admin.id == User.system.id || admin == nil
                   Dmail.create_automated(
