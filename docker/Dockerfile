@@ -106,5 +106,4 @@ RUN service nginx restart
 # Install Shoreman
 RUN curl https://github.com/chrismytton/shoreman/raw/master/shoreman.sh -sLo /usr/bin/shoreman && chmod +x /usr/bin/shoreman
 
-USER danbooru
 CMD ${APP_DIR}/script/run.sh ${APP_DIR}
