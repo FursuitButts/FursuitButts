@@ -93,8 +93,8 @@ RUN service redis-server start
 
 # More ruby nonsense
 RUN cp /home/danbooru/danbooru/vagrant/ruby-setup-prod.sh /home/danbooru/ruby-setup.sh
-RUN chmod a+x $SETUP_SCRIPT
-RUN sudo -i -u RUBY_danbooru bash -c "$RUBY_SETUP_SCRIPT '$APP_DIR' '$CHRUBY_PATH'"
+RUN chmod a+x $RUBY_SETUP_SCRIPT
+RUN sudo -i -u danbooru bash -c "$RUBY_SETUP_SCRIPT '$APP_DIR' '$CHRUBY_PATH'"
 
 # Nginx
 RUN rm -f "$NGINX_CONFIG_PATH"
