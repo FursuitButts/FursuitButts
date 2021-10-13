@@ -15,7 +15,7 @@ class UserPromotion
     @old_can_upload_free = user.can_upload_free?
     @old_no_flagging = user.no_flagging?
     @old_no_feedback = user.no_feedback?
-    @old_suggestor_banned = user.suggestor_banned
+    @old_suggestor_banned = user.suggestor_banned?
 
     user.level = new_level
 
