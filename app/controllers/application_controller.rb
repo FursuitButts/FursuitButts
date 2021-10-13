@@ -273,7 +273,7 @@ class ApplicationController < ActionController::Base
       return true
     end
 
-    request.set_header("X-RateLimit-Remaining", (CurrentUser.user.v3_api_limit - (count + 1)).to_s)
+    request.set_header("X-RateLimit-Remaining", (CurrentUser.user.v3_api_limit - (count.to_i + 1)).to_s)
     request.set_header("X-RateLimit-Limit", CurrentUser.user.v3_api_limit.to_s)
     if count.to_i >= CurrentUser.user.v3_api_limit
       request.set_header("X-RateLimit-Reset", "0")
