@@ -281,7 +281,7 @@ class ApplicationController < ActionController::Base
 
     response.set_header("RateLimit-Remaining", remaining.to_s)
     response.set_header("RateLimit-Limit", CurrentUser.user.v3_api_limit.to_s)
-    response.set_header("RateLimit-Reset", Time.now.to_i + ttl.to_i.to_s)
+    response.set_header("RateLimit-Reset", (Time.now.to_i + ttl.to_i).to_s)
     if (count.to_i + 1) >= CurrentUser.user.v3_api_limit
       render json: {
         "$schema": "https://yiff.rest/schema/v3_error.json",
