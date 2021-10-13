@@ -258,4 +258,40 @@ class ApplicationController < ActionController::Base
 
     true
   end
+
+  @stats = JSON.parse(client.get('e6stats') || '{}')
+  client.close
+
+  V3_WINDOW_NORMAL = 5000
+  V3_LIMIT_NORMAL = 8
+  def v3_throttle
+    client = ::Redis.new(url: Danbooru.config.redis_url)
+    client_ip = request.env["REMOTE_ADDR"]
+    key = "ratelimit_v3:#{client_ip}"
+    count = client.get(key)
+
+    unless count
+      client.set(key, 0)
+      client.pexpire(key, V3_WINDOW_NORMAL)
+      return true
+    end
+
+    request.set_header("X-RateLimit-Remaining", (CurrentUser.user.v3_api_limit - (count + 1)).to_s)
+    request.set_header("X-RateLimit-Limit", CurrentUser.user.v3_api_limit.to_s)
+    if count.to_i >= CurrentUser.user.v3_api_limit
+      request.set_header("X-RateLimit-Reset", "0")
+      render json: {
+        "$schema": "https://yiff.rest/schema/v3_error.json",
+        success: false,
+        error: YiffyApiController::APIErrors::RATELIMITED
+      }.to_json, status: :not_found
+      return
+    end
+
+    client.incr(key)
+    ttl = client.ttl(key)
+    client.close
+    request.set_header("X-RateLimit-Reset", ttl.to_i.to_s)
+    true
+  end
 end
