@@ -102,7 +102,7 @@ class Dmail < ApplicationRecord
                   Dmail.create_automated(
                     :to_id => admin.id,
                     :title => "New Content Suggestor Application",
-                    :body => "The user \"#{sender.name}\":/users/#{sender.id} has applied for content suggestor. View their application \"here\":/dmails/#{id}"
+                    :body => "The user \"#{sender.name}\":/users/#{sender.id} has applied for content suggestor.\n\nThe provided content is as follows:\n#{copy.body}"
                   )
                 end
               end
