@@ -13,7 +13,7 @@ ARG NGINX_DEFAULT_LISTENER_PATH=/etc/nginx/sites-enabled/default
 
 USER root
 WORKDIR /
-RUN apt update -y && apt upgrade -y
+RUN apt-get update -y && apt-get upgrade -y
 RUN DEBIAN_FRONTEND="noninteractive" TZ="America/Chicago" apt-get -y install tzdata ca-certificates wget curl git software-properties-common sudo
 
 # Danbooru
@@ -35,8 +35,8 @@ RUN wget -qO - "https://dl.yarnpkg.com/debian/pubkey.gpg" | apt-key add - &>/dev
 RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list
 
 # Install Packages
-RUN apt update
-RUN apt install -y \
+RUN apt-get update
+RUN apt-get install -y \
     build-essential automake libxml2-dev libxslt1-dev yarn \
     nginx libncurses5-dev libreadline-dev flex bison ragel \
     libmemcached-dev git libcurl4-openssl-dev nginx ssh \
