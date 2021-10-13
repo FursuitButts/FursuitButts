@@ -73,6 +73,7 @@ class Dmail < ApplicationRecord
           copy.save unless copy.to_id == copy.from_id
 
           id = copy.id
+          sender = User.find(copy.from_id);
 
           # sender's copy
           copy = Dmail.new(params)
@@ -84,7 +85,7 @@ class Dmail < ApplicationRecord
           if copy.to_id == User.system.id
             case copy.title.downcase
             when "content suggestor application"
-              if User.find(copy.from_id).suggestor_banned
+              if sender.suggestor_banned
                 Dmail.create_automated(
                   :to_id => copy.from_id,
                   :title => "Application Denied",
@@ -92,7 +93,7 @@ class Dmail < ApplicationRecord
                 )
               else
                 Dmail.create_automated(
-                  :to_id => copy.from_id,
+                  :to_id => sender.id,
                   :title => "Application Received",
                   :body => "You application for content suggestor has been submitted, we will review it as soon as possible."
                 )
@@ -101,7 +102,7 @@ class Dmail < ApplicationRecord
                   Dmail.create_automated(
                     :to_id => admin.id,
                     :title => "New Content Suggestor Application",
-                    :body => "The user #{copy.from_name} has applied for content suggestor. View their application \"here\":/dmails/#{id}"
+                    :body => "The user \"#{sender.name}\":/users/#{sender.id} has applied for content suggestor. View their application \"here\":/dmails/#{id}"
                   )
                 end
               end
