@@ -34,12 +34,12 @@ services:
       elastic:
         condition: service_healthy
       memcached:
-        condition: service_started
+        condition: service_healthy
     volumes:
       - /opt/E621:/home/danbooru/danbooru
-      - /opt/E621/data/db:/var/lib/postgresql/12/main
       - /opt/E621/data/redis:/var/lib/redis
-      - /var/run/postgresql:/var/run/postgresql
+      - /opt/E621/data/db:/var/lib/postgresql
+      - /opt/E621/data/db_config:/etc/postgresql
     environment:
       - RAILS_ENV=production
     restart: always
