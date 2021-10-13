@@ -13,6 +13,8 @@ ARG NGINX_DEFAULT_LISTENER_PATH=/etc/nginx/sites-enabled/default
 
 USER root
 WORKDIR /
+SHELL ["/bin/bash", "-c"]
+
 RUN apt-get update -y && apt-get upgrade -y
 RUN DEBIAN_FRONTEND="noninteractive" TZ="America/Chicago" apt-get -y install tzdata ca-certificates wget curl git software-properties-common sudo
 
