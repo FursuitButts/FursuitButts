@@ -71,11 +71,10 @@ class Dmail < ApplicationRecord
           copy.owner_id = copy.to_id
           copy.is_spam = copy.spam?
           copy.save unless copy.to_id == copy.from_id
+          copy.is_read = true if copy.to_id == User.system.id
           sender = User.find(copy.from_id)
 
           if copy.to_id == User.system.id
-            copy.is_read = true
-            copy.save
             case copy.title.downcase
             when "editor application"
               if sender.editor_banned
