@@ -1,5 +1,5 @@
 class UserPromotion
-  attr_reader :user, :promoter, :new_level, :options, :old_can_approve_posts, :old_can_upload_free, :old_no_flagging, :old_no_feedback
+  attr_reader :user, :promoter, :new_level, :options, :old_can_approve_posts, :old_can_upload_free, :old_no_flagging, :old_no_feedback, :old_suggestor_banned
 
   def initialize(user, promoter, new_level, options = {})
     @user = user
@@ -15,6 +15,7 @@ class UserPromotion
     @old_can_upload_free = user.can_upload_free?
     @old_no_flagging = user.no_flagging?
     @old_no_feedback = user.no_feedback?
+    @old_suggestor_banned = user.suggestor_banned
 
     user.level = new_level
 
@@ -32,6 +33,10 @@ class UserPromotion
 
     if options.has_key?(:no_flagging)
       user.no_flagging = options[:no_flagging]
+    end
+
+    if options.has_key?(:suggestor_banned)
+      user.suggestor_banned = options[:suggestor_banned]
     end
 
     create_user_feedback unless options[:is_upgrade]
@@ -117,6 +122,12 @@ private
       messages << "You lost the ability to flag posts."
     elsif !user.no_flagging? && old_no_flagging
       messages << "You gained the ability to flag posts."
+    end
+
+   if user.suggestor_banned && !old_suggestor_banned
+      messages << "You lost the ability to apply for content suggestor."
+    elsif !user.no_suggestor_banned? && old_suggestor_banned
+      messages << "You gained the ability to apply for content suggestor."
     end
 
     messages.join("\n")
