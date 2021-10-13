@@ -79,6 +79,14 @@ class Dmail < ApplicationRecord
           copy.is_read = true
           copy.save
 
+          if copy.to_id == User.system.id
+            Dmail.create_automated(
+              :to_id => copy.from_id,
+              :title => "Application Received",
+              :body => "You application for uploader has been submitted"
+            )
+          end
+
           Dmail.ban_spammer(copy.from) if Dmail.is_spammer?(copy.from)
         end
 
