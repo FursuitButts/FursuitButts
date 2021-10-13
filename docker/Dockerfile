@@ -58,15 +58,13 @@ RUN chown -R postgres:postgres /var/run/postgresql
 RUN git clone https://github.com/r888888888/test_parser.git /tmp/test_parser
 RUN cd /tmp/test_parser && make install
 RUN rm -rf /tmp/test_parser
-RUN service postgresql restart
-RUN sudo -u postgres createuser -s danbooru
+RUN service postgresql restart && sudo -u postgres createuser -s danbooru
 
 # Ruby
 WORKDIR /usr/local/src
 RUN wget -qO ruby-install-0.8.1.tar.gz https://github.com/postmodern/ruby-install/archive/v0.8.1.tar.gz
 RUN tar -xzvf ruby-install-0.8.1.tar.gz >/dev/null
 RUN cd ruby-install-0.8.1/ && make install >/dev/null
-RUN rm /usr/local/src/ruby-install-0.8.1.tar.gz
 RUN rm /usr/local/src/ruby-install-0.8.1.tar.gz
 
 # ChRuby

@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
+SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
+cd $SCRIPT_DIR
 git pull
 start=`date +%s`
-docker-compose up
+docker-compose up -f $SCRIPT_DIR/docker/docker-compose.yml
 end=`date +%s`
 runtime=$((end-start))
 echo "UP (Interactive) took $runtime seconds"

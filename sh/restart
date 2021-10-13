@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
+SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
+cd $SCRIPT_DIR
 git pull
 start=`date +%s`
-docker-compose restart
+docker-compose restart -f $SCRIPT_DIR/docker/docker-compose.yml
 end=`date +%s`
 runtime=$((end-start))
 echo "Restart took $runtime seconds"
