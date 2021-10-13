@@ -276,7 +276,7 @@ class ApplicationController < ActionController::Base
     ttl = client.ttl(key)
     remaining = (CurrentUser.user.v3_api_limit - (count.to_i + 1))
     if remaining < 0
-      remaining -= 1
+      remaining = 0
     end
 
     response.set_header("RateLimit-Remaining", remaining.to_s)
