@@ -27,8 +27,9 @@ services:
       default:
         ipv4_address: 172.31.0.3
   e621:
-    image: e621
+    image: ubuntu:focal
     container_name: e621
+    command: /home/danbooru/danbooru/script/install/prod.sh
     depends_on:
       elastic:
         condition: service_healthy

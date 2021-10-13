@@ -21,6 +21,9 @@ RUN DEBIAN_FRONTEND="noninteractive" TZ="America/Chicago" apt-get -y install tzd
 # Danbooru
 RUN useradd -s /bin/bash -U danbooru
 RUN git clone $GH_REPO $APP_DIR
+COPY .env.local /home/danbooru/danbooru/.env.local
+COPY .env.production /home/danbooru/danbooru/.env.production
+COPY config/danbooru_local_config.rb /home/danbooru/danbooru/config/danbooru_local_config.rb
 RUN chown -R danbooru:danbooru /home/danbooru
 RUN echo "%danbooru ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/danbooru
 RUN usermod -aG www-data danbooru
@@ -98,8 +101,6 @@ RUN sed -i -e 's/__hostname__/$HOSTNAME/' "$NGINX_CONFIG_PATH"
 RUN sed -i -e 's/root \/var\/www\/danbooru\/current\/public;/root \/home\/danbooru\/danbooru\/public;/' "$NGINX_CONFIG_PATH"
 RUN rm -f "$NGINX_DEFAULT_CONFIG_PATH"
 RUN rm -f "$NGINX_DEFAULT_LISTENER_PATH"
-COPY .env.local /home/danbooru/danbooru/.env.local
-COPY config/danbooru_local_config.rb /home/danbooru/danbooru/config/danbooru_local_config.rb
 RUN source /home/danbooru/danbooru/.env.local && cd /etc/ssl && git clone https://DonovanDMC:$GIT_TOKEN@github.com/DonovanDMC/SSL local
 RUN service nginx restart
 
