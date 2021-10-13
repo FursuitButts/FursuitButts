@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
 
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-docker build -t e621/memcached . -f $SCRIPT_DIR/../Dockerfile_memcached
+cd $SCRIPT_DIR/../
+docker build -t e621/memcached . -f Dockerfile_memcached
