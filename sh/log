@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 while true;
 do
-    docker logs -f --tail 20 e621
+    docker logs -f --tail 20 yiffyapi
 done

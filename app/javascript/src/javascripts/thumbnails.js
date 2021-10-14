@@ -65,7 +65,7 @@ Thumbnails.initialize = function () {
 
 $(document).ready(function () {
   Thumbnails.initialize();
-  $(window).on('e621:add_deferred_posts', (_, posts) => {
+  $(window).on('yiffyapi:add_deferred_posts', (_, posts) => {
     window.___deferred_posts = window.___deferred_posts || {}
     window.___deferred_posts = $.extend(window.___deferred_posts, posts);
     Thumbnails.initialize();

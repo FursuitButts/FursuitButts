@@ -5,7 +5,7 @@ services:
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
-    container_name: e621_elastic
+    container_name: yiffyapi_elastic
     mem_limit: 16gb
     healthcheck:
       interval: 10s
@@ -16,8 +16,8 @@ services:
       default:
         ipv4_address: 172.31.0.2
   memcached:
-    image: e621/memcached
-    container_name: e621_memcached
+    image: yiffyapi/memcached
+    container_name: yiffyapi_memcached
     healthcheck:
       interval: 10s
       timeout: 2s
@@ -28,7 +28,7 @@ services:
         ipv4_address: 172.31.0.3
   e621:
     image: ubuntu:focal
-    container_name: e621
+    container_name: yiffyapi
     command: /home/danbooru/danbooru/script/install/prod.sh
     depends_on:
       elastic:
@@ -36,10 +36,10 @@ services:
       memcached:
         condition: service_healthy
     volumes:
-      - /opt/E621:/home/danbooru/danbooru
-      - /opt/E621/data/redis:/var/lib/redis
-      - /opt/E621/data/db:/var/lib/postgresql
-      - /opt/E621/data/db_config:/etc/postgresql
+      - /opt/YiffyAPI:/home/danbooru/danbooru
+      - /opt/YiffyAPI/data/redis:/var/lib/redis
+      - /opt/YiffyAPI/data/db:/var/lib/postgresql
+      - /opt/YiffyAPI/data/db_config:/etc/postgresql
       - /var/www/yiffy_api:/data
     environment:
       - RAILS_ENV=production
@@ -58,7 +58,7 @@ services:
 
 networks:
   default:
-    name: e621
+    name: yiffyapi
     driver: bridge
     ipam:
       driver: default

@@ -47,7 +47,7 @@ Comment.show_all = function(e) {
     const current_comment_section = $(`div.comments-for-post[data-post-id=${post_id}] div.list-of-comments`);
     current_comment_section.html(data.html);
     Comment.reinitialize_all();
-    $(window).trigger("e621:add_deferred_posts", data.posts);
+    $(window).trigger("yiffyapi:add_deferred_posts", data.posts);
   }).fail(function(data) {
     Utility.error("Failed to fetch all comments for this post.");
   });
