@@ -1,7 +1,7 @@
 class StorageManager
   class Error < StandardError; end
 
-  DEFAULT_BASE_DIR = "#{Rails.root}/public/data"
+  DEFAULT_BASE_DIR = "/data"
   IMAGE_TYPES = %i[preview large crop original]
 
   attr_reader :base_url, :base_dir, :hierarchical, :large_image_prefix, :protected_prefix, :base_path, :replacement_prefix

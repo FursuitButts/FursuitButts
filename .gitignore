@@ -10,7 +10,6 @@ db/*.sqlite3
 doc/*
 log/*.log
 tmp/*
-public/data
 public/assets
 vendor/cache/*.gem
 .sass-cache
