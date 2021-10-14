@@ -6,6 +6,10 @@
 		"strictPropertyInitialization": false,
 		"skipLibCheck": true,
 		"inlineSourceMap": true,
+		"lib": [
+			"DOM",
+			"ESNext"
+		],
 		"paths": {
 			"@root/*": [
 				"../*"

@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html lang="en">
+
+<head>
+	<title>
+		Hi
+	</title>
+</head>
+
+<body style="background-color: #2C2F33;">
+	<a href="#" id="sauce" target="_blank">
+		<img src="https://static1.e621.net/data/00/30/00304f67656e174b70c62160404464a7.png" style="max-height: 80vh;"
+			id="image">
+	</a>
+	<br>
+	<textarea id="tags" style="width: 50vw; height: 15vh;"></textarea>
+	<button onclick="submit()">Submit</button>
+	<div id="text" style="position: fixed; top: 5px; right: 5px;"></div>
+	<script>
+		window.ws = new WebSocket("ws://import.local");
+		window.ws.addEventListener("open", () => console.log("WS Open"));
+		window.ws.addEventListener("close", () => alert("WS Close"));
+		window.ws.addEventListener("message", (data) => {
+			const [id, file, created, total] = JSON.parse(data.data.toString());
+			document.title = `Post Import | ${total} Total`;
+			document.querySelector("a#sauce").href = `https://e621.net/posts/${id}`;
+			document.querySelector("img#image").src = file;
+			if (created) document.querySelector("div#text").innerHTML = `<a href="https://yiff.rest/posts/${created}">post #${created}</a>`;
+		});
+		document.addEventListener("DOMContentLoaded", () => {
+			document.querySelector("textarea#tags").onkeypress = (ev) => {
+				if (ev.key === "Enter") submit();
+			}
+		});
+
+		function submit() {
+			const tags = document.querySelector("textarea#tags").value.replace(/\n/g, "").split(" ");
+			document.querySelector("textarea#tags").value = "";
+			const rating = prompt("Post Rating");
+			if (!rating) return;
+			window.ws.send(JSON.stringify({ tags, rating }));
+		}
+	</script>
+</body>
+
+</html>

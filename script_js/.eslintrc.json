@@ -23,6 +23,7 @@
     "space-infix-ops": "error",
     "no-shadow": "off",
     "@typescript-eslint/no-shadow": "error",
-    "no-tabs": "off"
+    "no-tabs": "off",
+    "init-declarations": "off"
   }
 }
