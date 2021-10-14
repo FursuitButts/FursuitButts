@@ -40,7 +40,7 @@ services:
       - /opt/YiffyAPI/data/redis:/var/lib/redis
       - /opt/YiffyAPI/data/db:/var/lib/postgresql
       - /opt/YiffyAPI/data/db_config:/etc/postgresql
-      - /var/www/yiffy_api:/data
+      - /var/www/yiffy-api:/data
     environment:
       - RAILS_ENV=production
     restart: always
