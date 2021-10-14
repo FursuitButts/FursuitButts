@@ -39,7 +39,8 @@ services:
       - /opt/E621:/home/danbooru/danbooru
       - /opt/E621/data/redis:/var/lib/redis
       - /opt/E621/data/db:/var/lib/postgresql
-      - /opt/E621/data/db_config:/data
+      - /opt/E621/data/db_config:/etc/postgresql
+      - /var/www/yiffy_api:/data
     environment:
       - RAILS_ENV=production
     restart: always
