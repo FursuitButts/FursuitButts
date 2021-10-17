@@ -6,9 +6,9 @@ $bloodlust-color-text-muted: #999999;
 
 $theme_bloodlust: (
   // Layout Colors
-  "color-background":             $bloodlust-color-background, // Main background (dark blue, large hexagons)
-  "color-foreground":             #222222,                   // Foreground (lighter blue, small hexagons)
-  "color-section":                $bloodlust-color-section,    // Foreground sections - boxes, sections, etc
+  "color-background":             $bloodlust-color-background,                // Main background (dark blue, large hexagons)
+  "color-foreground":             #222222,                // Foreground (lighter blue, small hexagons)
+  "color-section":                $bloodlust-color-section,                // Foreground sections - boxes, sections, etc
 
   "color-section-pending":        $bloodlust-color-section,
   "color-section-pending-border": $bloodlust-color-background,
@@ -20,7 +20,8 @@ $theme_bloodlust: (
 
   "color-link":                   $bloodlust-color-link,
   "color-link-hover":             $bloodlust-color-link-hover,
-  "color-link-active":          #e8c446,
+  "color-link-active":            #ffffff,
+  "color-button-active":          #e8c446,
 
   "color-link-last-page":         $bloodlust-color-text-muted,
   "color-link-last-hover":        $bloodlust-color-link-hover,
@@ -28,10 +29,6 @@ $theme_bloodlust: (
   "color-success":                darkgreen,
   "color-danger":                 maroon,
   "color-warning":                sienna,
-
-  "color-rating-explicit":        #e45f5f,
-  "color-rating-questionable":    hsl(50, 100%, 70%),
-  "color-rating-safe":            #3e9e49,
 
   "color-score-positive":         #3e9e49,
   "color-score-negative":         #e45f5f,
@@ -53,32 +50,8 @@ $theme_bloodlust: (
   "color-user-blocked-alt":       #f68b00,
 
   // Tag Categories
-  "color-tag-general":            #b4c7d9,
-  "color-tag-general-alt":        #2e76b4,
-
-  "color-tag-artist":             #f2ac08,
-  "color-tag-artist-alt":         #fbd67f,
-
-  "color-tag-copyright":          #d0d,
-  "color-tag-copyright-alt":      #ff5eff,
-
-  "color-tag-character":          #0a0,
-  "color-tag-character-alt":      #2bff2b,
-
-  "color-tag-species":            #ed5d1f,
-  "color-tag-species-alt":        #f6b295,
-
-  "color-tag-invalid":            #ff3d3d,
-  "color-tag-invalid-alt":        lighten(#ff3d3d, 25%),
-
-  "color-tag-meta":               #fff,
-  "color-tag-meta-alt":           #666,
-
-  "color-tag-lore":               #282,
-  "color-tag-lore-alt":           #5fdb5f,
-
-  "color-tag-pool":               wheat,
-  "color-tag-pool-alt":           #d0b27a,
+  "color-tag-general":            #ffee95,
+  "color-tag-general-alt":        #f68b00,
 
   // Spoilers
   "color-spoiler-link":           $bloodlust-color-link,
