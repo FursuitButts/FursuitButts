@@ -4,6 +4,7 @@ APP_DIR=/home/danbooru/danbooru
 CHRUBY_PATH=/etc/profile.d/chruby.sh
 
 apt-get update
+# Fix for https://github.com/nodesource/distributions/issues/1266
 apt-get install ca-certificates
 
 package_installed() {
