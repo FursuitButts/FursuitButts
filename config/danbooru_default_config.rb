@@ -128,7 +128,7 @@ module Danbooru
     end
 
     def large_image_prefix
-      "sample-"
+      ""
     end
 
     def protected_path_prefix
