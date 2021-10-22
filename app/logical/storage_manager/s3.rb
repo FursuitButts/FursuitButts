@@ -1,3 +1,5 @@
+require 'aws-sdk-s3'
+
 class StorageManager::S3 < StorageManager
   # https://docs.aws.amazon.com/sdkforruby/api/Aws/S3/Client.html#initialize-instance_method
   DEFAULT_S3_OPTIONS = {
