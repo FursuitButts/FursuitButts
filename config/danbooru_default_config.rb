@@ -635,10 +635,26 @@ module Danbooru
 
     def flag_reasons
       [
-          {name: "previously_deleted", reason: "This image has been deleted before. Please leave any additional information in a comment below the image, or directly parent the original"},
-          {name: "real_porn", reason: "This post contains real-life pornography"},
-          {name: "corrupt", reason: "The file in this post is either corrupted, broken, or otherwise doesn't work"}
+          {
+            name: 'previously_deleted',
+            reason: "Previously deleted",
+            text: "Posts usually get removed for a good reason, and reuploading of deleted content is not acceptable.\nPlease, leave more information in the comments, or simply add the original post as this post's parent."
+          },
+          {
+            name: 'real_porn',
+            reason: "Real-life pornography",
+            text: "Posts featuring real-life pornography are not acceptable on this site. No exceptions.\nNote that images featuring non-erotic photographs are acceptable."
+          },
+          {
+            name: 'corrupt',
+            reason: "File is either corrupted, broken, or otherwise does not work",
+            text: "Something about this post does not work quite right. This may be a broken video, or a corrupted image.\nEither way, in order to avoid confusion, please explain the situation in the comments."
+          }
       ]
+    end
+    
+    def flag_reason_48hours
+      "If you are the artist, and want this image to be taken down [b]permanently[/b], file a \"takedown\":/static/takedown instead.\nTo replace the image with a \"fixed\" version, upload that image first, and then use the \"Duplicate or inferior version\" reason above.\nFor accidentally released paysite or private content, use the \"Paysite, commercial, or private content\" reason above."
     end
     
     def deletion_reasons
