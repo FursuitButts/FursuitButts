@@ -1,4 +1,4 @@
-require 'aws-sdk-s3'
+require 'aws-sdk-core'
 
 class StorageManager::S3 < StorageManager
   # https://docs.aws.amazon.com/sdkforruby/api/Aws/S3/Client.html#initialize-instance_method
