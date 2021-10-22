@@ -84,3 +84,5 @@ group :test do
 end
 
 gem "mimemagic", "~> 0.4.3"
+
+gem "aws-sdk-s3", "~> 1.104"
