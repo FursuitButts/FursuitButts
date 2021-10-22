@@ -454,8 +454,12 @@ module Danbooru
       # end
     end
 
+    def aws_region
+      "us-central-1"
+    end
+
     def aws_endpoint
-      "s3.us-central-1.wasabisys.com"
+      "https://s3.us-central-1.wasabisys.com"
     end
 
     def aws_credentials
