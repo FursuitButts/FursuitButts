@@ -424,8 +424,8 @@ module Danbooru
       # hierarchical: false - store files in a single directory
       # hierarchical: true - store files in a hierarchical directory structure, based on the MD5 hash
       if Rails.env.production?
-        StorageManager::S3.new("yiffy3", base_url: "https://v3.yiff.media", hierarchical: true)
-        # StorageManager::Local.new(base_url: "https://v3.yiff.media/", base_dir: "/data", hierarchical: true)
+        #StorageManager::S3.new("yiffy3", base_url: "https://v3.yiff.media", hierarchical: true)
+        StorageManager::Local.new(base_url: "https://v3.yiff.media/", hierarchical: true)
       else
         StorageManager::Local.new(base_url: "#{CurrentUser.root_url}/", base_dir: "#{Rails.root}/public/data", hierarchical: false)
       end
