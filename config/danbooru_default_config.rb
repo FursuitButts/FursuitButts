@@ -424,7 +424,8 @@ module Danbooru
       # hierarchical: false - store files in a single directory
       # hierarchical: true - store files in a hierarchical directory structure, based on the MD5 hash
       if Rails.env.production?
-        StorageManager::Local.new(base_url: "https://v3.yiff.media/", base_dir: "/data", hierarchical: true)
+        StorageManager::S3.new("yiffy3", base_url: "https://v3.yiff.media", s3_options: {})
+        # StorageManager::Local.new(base_url: "https://v3.yiff.media/", base_dir: "/data", hierarchical: true)
       else
         StorageManager::Local.new(base_url: "#{CurrentUser.root_url}/", base_dir: "#{Rails.root}/public/data", hierarchical: false)
       end
@@ -436,7 +437,7 @@ module Danbooru
       # writable by you. Configure your S3 settings in aws_region and
       # aws_credentials below, or in the s3_options param (ref:
       # https://docs.aws.amazon.com/sdkforruby/api/Aws/S3/Client.html#initialize-instance_method)
-      # StorageManager::S3.new("my_s3_bucket", base_url: "https://my_s3_bucket.s3.amazonaws.com/", s3_options: {})
+      StorageManager::S3.new("yiffy3", base_url: "https://v3.yiff.media", s3_options: {})
 
       # Select the storage method based on the post's id and type (preview, large, or original).
       # StorageManager::Hybrid.new do |id, md5, file_ext, type|
@@ -452,6 +453,14 @@ module Danbooru
       #     StorageManager::SFTP.new(*all_server_hosts, ssh_options: ssh_options)
       #   end
       # end
+    end
+
+    def aws_endpoint
+      "s3.us-central-1.wasabisys.com"
+    end
+
+    def aws_credentials
+
     end
 
     # The method to use for backing up image files.
@@ -652,11 +661,11 @@ module Danbooru
           }
       ]
     end
-    
+
     def flag_reason_48hours
       "If you are the artist, and want this image to be taken down [b]permanently[/b], file a \"takedown\":/static/takedown instead.\nTo replace the image with a \"fixed\" version, upload that image first, and then use the \"Duplicate or inferior version\" reason above.\nFor accidentally released paysite or private content, use the \"Paysite, commercial, or private content\" reason above."
     end
-    
+
     def deletion_reasons
       [
         "Inferior version/duplicate of post #%PARENT_ID%",
