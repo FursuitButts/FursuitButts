@@ -424,7 +424,7 @@ module Danbooru
       # hierarchical: false - store files in a single directory
       # hierarchical: true - store files in a hierarchical directory structure, based on the MD5 hash
       if Rails.env.production?
-        StorageManager::S3.new("yiffy3", base_url: "https://v3.yiff.media", s3_options: {})
+        StorageManager::S3.new("yiffy3", base_url: "https://v3.yiff.media")
         # StorageManager::Local.new(base_url: "https://v3.yiff.media/", base_dir: "/data", hierarchical: true)
       else
         StorageManager::Local.new(base_url: "#{CurrentUser.root_url}/", base_dir: "#{Rails.root}/public/data", hierarchical: false)
@@ -437,7 +437,6 @@ module Danbooru
       # writable by you. Configure your S3 settings in aws_region and
       # aws_credentials below, or in the s3_options param (ref:
       # https://docs.aws.amazon.com/sdkforruby/api/Aws/S3/Client.html#initialize-instance_method)
-      StorageManager::S3.new("yiffy3", base_url: "https://v3.yiff.media", s3_options: {})
 
       # Select the storage method based on the post's id and type (preview, large, or original).
       # StorageManager::Hybrid.new do |id, md5, file_ext, type|
