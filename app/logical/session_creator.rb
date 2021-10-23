@@ -26,7 +26,7 @@ class SessionCreator
           httponly: true,
           same_site: :lax,
           secure: Rails.env.production?,
-          domain: Rails.env.production?  ? "e621.local" : ".#{Danbooru.config.hostname}"
+          domain: Rails.env.production?  ? ".#{Danbooru.config.hostname}" : "e621.local"
         }
       end
       return true
