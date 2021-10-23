@@ -77,8 +77,8 @@ class YiffyApiController < ApplicationController
 
     # FileSize or nil
     @max_size = FileSize.from(params[:sizeLimit].to_s)
-    @bulge = params[:bulge].to_s.downcase == "true"
-
+    @bulge = ActiveRecord::Type::Boolean.new.deserialize(params[:bulge].to_s.downcase)
+    
     if @set == nil
       render json: {
         "$schema": "https://yiff.rest/schema/v3_error.json",
