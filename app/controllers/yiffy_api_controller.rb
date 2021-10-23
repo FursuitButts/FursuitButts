@@ -77,6 +77,7 @@ class YiffyApiController < ApplicationController
 
     # FileSize or nil
     @max_size = FileSize.from(params[:sizeLimit].to_s)
+    @bulge = params[:bulge].to_s.downcase == "true"
 
     if @set == nil
       render json: {
@@ -120,6 +121,19 @@ class YiffyApiController < ApplicationController
     when "kiss" then set = PostSet.find(PostSets::KISS)
     when "lick" then set = PostSet.find(PostSets::LICK)
     when "propose" then set = PostSet.find(PostSets::PROPOSE)
+    when "male" then 
+      int = rand(1..(@bulge ? 3 : 2)) 
+      case int
+        when 1 then set = PostSet.find(PostSets::YIFF_GAY)
+        when 2 then set = PostSet.find(PostSets::YIFF_MALE_SOLO)
+        when 3 then set = PostSet.find(PostSets::BULGE)
+        else set = nil
+    when "female" then 
+      int = rand(1..2) 
+      case int
+        when 1 then set = PostSet.find(PostSets::YIFF_LESBIAN)
+        when 2 then set = PostSet.find(PostSets::YIFF_FEMALE_SOLO)
+        else set = nil
     else set = nil
     end
 
