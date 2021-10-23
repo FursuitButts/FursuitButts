@@ -122,18 +122,20 @@ class YiffyApiController < ApplicationController
     when "lick" then set = PostSet.find(PostSets::LICK)
     when "propose" then set = PostSet.find(PostSets::PROPOSE)
     when "male"
-      int = rand(1..(@bulge ? 3 : 2)) 
+      int = rand(1..(@bulge ? 3 : 2))
       case int
         when 1 then set = PostSet.find(PostSets::YIFF_GAY)
         when 2 then set = PostSet.find(PostSets::YIFF_MALE_SOLO)
         when 3 then set = PostSet.find(PostSets::BULGE)
         else set = nil
+      end
     when "female"
-      int = rand(1..2) 
+      int = rand(1..2)
       case int
         when 1 then set = PostSet.find(PostSets::YIFF_LESBIAN)
         when 2 then set = PostSet.find(PostSets::YIFF_FEMALE_SOLO)
         else set = nil
+      end
     else set = nil
     end
 
