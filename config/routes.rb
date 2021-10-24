@@ -512,6 +512,8 @@ Rails.application.routes.draw do
   get "/V3/animals/:category" => "yiffy_api#disabled"
   get "/V3/furry/:category" => "yiffy_api#json"
   get "/V3/furry/yiff/:category" => "yiffy_api#json"
+  get "/V3/:category" => "yiffy_api#json"
+  get "/V3/yiff/:category" => "yiffy_api#json"
 
   root :to => "static#home"
 
