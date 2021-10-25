@@ -172,8 +172,8 @@ class Post < ApplicationRecord
     end
 
     def official_sets
-      key_id = "post_sets:id:#{this.id}"
-      key_name = "post_sets:name:#{this.id}"
+      key_id = "post_sets:id:#{self.id}"
+      key_name = "post_sets:name:#{self.id}"
       client = ::Redis.new(url: Danbooru.config.redis_url)
       cache = client.exists(key_id, key_name)
       if cache == 2
