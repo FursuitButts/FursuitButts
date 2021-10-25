@@ -32,7 +32,7 @@
           </p>
         </div>
 
-        <%= f.input :display_name, label: "Display Name" %>
+        <%= f.input :display_name, :hint => "This will be shown instead of your username if present.", label: "Display Name" %>
 
         <%= f.input :avatar_id, type: :number, label: 'Avatar Post ID', input_html: {min: 0} %>
 
