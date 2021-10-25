@@ -208,6 +208,10 @@ class User < ApplicationRecord
       name.gsub(/([^_])_+(?=[^_])/, "\\1 \\2")
     end
 
+    def display_name_safe
+      display_name || name
+    end
+
     def update_cache
       Cache.put("uin:#{id}", name, 4.hours)
       Cache.put("uni:#{Cache.hash(name)}", id, 4.hours)
