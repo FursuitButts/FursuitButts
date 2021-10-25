@@ -193,7 +193,7 @@ class Post < ApplicationRecord
         client.multi do |r|
           r.sadd(key_id, contains.collect { |obj| obj[:id] })
           r.expire(key_id, 6.hours.to_i)
-          r.sadd(key_name, contains.collect { |obj| obj[:id] })
+          r.sadd(key_name, contains.collect { |obj| obj[:name] })
           r.expire(key_name, 6.hours.to_i)
         end
         contains
