@@ -81,7 +81,7 @@ class User < ApplicationRecord
 
 
   validates :name, user_name: true, on: :create
-  validates :display_name, user_name: true, on: :update, if: ->(rec) { rec.display_name.present? }
+  validates :display_name, user_name: { display: true }, on: :update, if: ->(rec) { rec.display_name.present? }
   validates :default_image_size, inclusion: { :in => %w(large fit fitv original) }
   validates :per_page, inclusion: { :in => 1 .. Danbooru.config.max_posts_per_page }
   validates :comment_threshold, presence: true
@@ -130,7 +130,7 @@ class User < ApplicationRecord
 
   def empty_nick
     if self.display_name == ""
-      self.display_name = nil;
+      self.display_name = nil
       update_column(:display_name, nil)
     end
   end
