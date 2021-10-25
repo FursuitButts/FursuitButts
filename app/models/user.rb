@@ -127,6 +127,10 @@ class User < ApplicationRecord
   belongs_to :avatar, class_name: 'Post', optional: true
   accepts_nested_attributes_for :dmail_filter
 
+  def empty_nick
+    self.display_name = self.display_name.presence
+  end
+
   module BanMethods
     def validate_ip_addr_is_not_banned
       if IpBan.is_banned?(CurrentUser.ip_addr)
