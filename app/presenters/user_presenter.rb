@@ -13,7 +13,7 @@ class UserPresenter
     user.pretty_name
   end
 
-  def has_display_name
+  def has_display_name?
     !user.display_name.nil?
   end
 
