@@ -172,16 +172,20 @@ class Post < ApplicationRecord
     end
 
     def official_sets
-      key_id = "post_sets:id:#{self.id}"
-      key_name = "post_sets:name:#{self.id}"
+      key = "post_sets:#{self.id}"
       client = ::Redis.new(url: Danbooru.config.redis_url)
-      cache = client.exists(key_id, key_name)
-      if cache == 2
-        ids = client.smembers(key_id)
-        names = client.smembers(key_name)
+      cache = client.exists(key)
+      contains = []
+      if cache == 1
+        val = client.smembers(key)
         ids.map.with_index { |id, index| { name: names[index], id: id } }
+        val.each do |v|
+          contains << {
+            name: v.split(":")[0],
+            id: v.split(":")[1].to_i
+          }
+        end
       else
-        contains = []
         YiffyApiController::PostSets::ALL.each do |id|
           set = PostSet.find(id)
           next unless set.post_ids.include?(self.id)
@@ -191,13 +195,12 @@ class Post < ApplicationRecord
           }
         end
         client.multi do |r|
-          r.sadd(key_id, contains.collect { |obj| obj[:id] })
-          r.expire(key_id, 6.hours.to_i)
-          r.sadd(key_name, contains.collect { |obj| obj[:name] })
-          r.expire(key_name, 6.hours.to_i)
+          r.sadd(key, contains.collect { |obj| "#{obj[:id]}:#{obj[:name]}" })
+          r.expire(key, 6.hours.to_i)
         end
-        contains
       end
+
+      contains
     end
 
     def open_graph_image_url
