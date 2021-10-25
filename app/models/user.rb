@@ -126,6 +126,7 @@ class User < ApplicationRecord
   has_many :favorites, -> {order(id: :desc)}
   belongs_to :avatar, class_name: 'Post', optional: true
   accepts_nested_attributes_for :dmail_filter
+  after_initialize :empty_nick
 
   def empty_nick
     self.display_name = self.display_name.presence
