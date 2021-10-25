@@ -1,2 +1,6 @@
 <p>Your username is <%= @user.name %>.</p>
-<p>Your display name is <%= @user.display_name_safe %>.</p>
+<% if @user.display_name %>
+  <p>Your display name is <%= @user.display_name_safe %>.</p>
+<% else %>
+  <p>You do not have a display name.</p>
+<% end %>

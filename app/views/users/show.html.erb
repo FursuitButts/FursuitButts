@@ -40,5 +40,5 @@
 <%= render "secondary_links" %>
 
 <% content_for(:page_title) do %>
-  User - <%= @presenter.has_display_name? ? "#{@presenter.name} (#{@presenter.raw_name}" : @presenter.raw_name %>
+  User - <%= @presenter.has_display_name? ? "#{@presenter.name} (#{@presenter.raw_name})" : @presenter.raw_name %>
 <% end %>

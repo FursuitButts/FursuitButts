@@ -80,12 +80,11 @@ a.user-admin.with-style {
   }
 }
 
-a.user-display-name.with-style {
-  font-style: italic;
-}
-
 a.user-admin.with-style:hover {
   @include themable {
     color: themed("color-user-admin-alt");
   }
+}
+a.user-display-name.with-style {
+  font-style: italic;
 }
