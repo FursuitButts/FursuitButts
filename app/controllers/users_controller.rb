@@ -128,10 +128,11 @@ class UsersController < ApplicationController
       disable_cropped_thumbnails disable_mobile_gestures
       enable_safe_mode disable_responsive_mode disable_post_tooltips
       display_name
+      use_gravatar
     ]
 
     permitted_params += [dmail_filter_attributes: %i[id words]]
-    permitted_params += [:profile_about, :profile_artinfo, :avatar_id] if CurrentUser.is_viewer? # Prevent editing when blocked
+    permitted_params += [:profile_about, :profile_artinfo, :avatar_id, :use_gravatar] if CurrentUser.is_viewer? # Prevent editing when blocked
     permitted_params += [:enable_compact_uploader] if context != :create && CurrentUser.post_upload_count >= 10
     permitted_params += [:name, :email] if context == :create
 

@@ -263,7 +263,9 @@ module ApplicationHelper
       end
     elsif user.use_gravatar? && !user.email.nil?
       tag.div class: 'post-thumb' do
-        tag.img class: 'thumb-img', src: "https://gravatar.com/avatar/#{Digest::MD5.hexdigest(user.email.downcase)}?s=150", height: 150, width: 150
+        tag.a href: user_path(user) do
+          tag.img class: 'thumb-img', src: "https://gravatar.com/avatar/#{Digest::MD5.hexdigest(user.email.downcase)}?s=150", height: 150, width: 150
+        end
       end
     else
       ""
