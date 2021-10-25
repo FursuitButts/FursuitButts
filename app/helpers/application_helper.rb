@@ -173,7 +173,7 @@ module ApplicationHelper
     if options[:raw_name]
       name = user.name
     else
-      name = user.pretty_name
+      name = user.display_name
     end
     link_to(name, user_path(user), :class => user_class, rel: "nofollow")
   end
