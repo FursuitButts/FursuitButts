@@ -129,7 +129,10 @@ class User < ApplicationRecord
   after_initialize :empty_nick
 
   def empty_nick
-    self.display_name = self.display_name.presence
+    if self.display_name == ""
+      self.display_name = nil;
+      update_column(:display_name, nil)
+    end
   end
 
   module BanMethods
