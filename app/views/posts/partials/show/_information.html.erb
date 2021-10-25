@@ -15,9 +15,9 @@
   </li>
   <% if !post.approver || post.uploader.id == post.approver.id %>
     <% if CurrentUser.is_janitor? %>
-      <li>Uploader: <%= link_to_user(post.uploader) %> (Self Approved) <%= user_record_meta(post.uploader) %></li>
+      <li>Uploader & Approver: <%= link_to_user(post.uploader) %> <%= user_record_meta(post.uploader) %></li>
     <% else %>
-      <li>Uploader: <%= link_to_user(post.uploader) %> (Self Approved)</li>
+      <li>Uploader & Approver: <%= link_to_user(post.uploader) %></li>
     <% end %>
   <% else %>
     <li>Approver: <%= link_to_user(post.approver) %></li>
