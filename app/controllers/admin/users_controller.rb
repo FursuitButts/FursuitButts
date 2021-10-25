@@ -38,11 +38,12 @@ ORDER BY u1.id DESC, u2.last_logged_in_at DESC;")
       @user.promote_to!(params[:user][:level], params[:user])
       if old_username != desired_username
         change_request = UserNameChangeRequest.create!({
-                                                           original_name: @user.name,
-                                                           user_id: @user.id,
-                                                           desired_name: desired_username,
-                                                           change_reason: "Administrative change",
-                                                           skip_limited_validation: true})
+           original_name: @user.name,
+           user_id: @user.id,
+           desired_name: desired_username,
+           change_reason: "Administrative change",
+           skip_limited_validation: true
+       })
         change_request.approve!
       end
       redirect_to user_path(@user), :notice => "User updated"
