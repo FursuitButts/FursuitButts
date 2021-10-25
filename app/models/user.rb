@@ -126,13 +126,6 @@ class User < ApplicationRecord
   has_many :favorites, -> {order(id: :desc)}
   belongs_to :avatar, class_name: 'Post', optional: true
   accepts_nested_attributes_for :dmail_filter
-  after_initialize :set_display
-
-  def set_display
-    if self.display_name == nil
-      self.display_name = self.name
-    end
-  end
 
   module BanMethods
     def validate_ip_addr_is_not_banned
