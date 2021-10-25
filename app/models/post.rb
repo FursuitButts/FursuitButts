@@ -177,7 +177,9 @@ class Post < ApplicationRecord
       client = ::Redis.new(url: Danbooru.config.redis_url)
       cache = client.exists(key_id, key_name)
       if cache == 2
-        key_id.map.with_index { |id, index| { name: key_name[index], id: id } }
+        ids = client.smembers(key_id)
+        names = client.smembers(key_name)
+        ids.map.with_index { |id, index| { name: names[index], id: id } }
       else
         contains = []
         YiffyApiController::PostSets::ALL.each do |id|
