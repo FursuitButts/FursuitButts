@@ -33,7 +33,11 @@
               <% end %>
             </td>
             <td>
-              <%= link_to_user user %>
+              <% if CurrentUser.is_admin? %>
+                <%= link_to_user user %> <% user_record_meta(user) %>
+              <% else %>
+                <%= link_to_user user %>
+              <% end %>
             </td>
             <td><%= link_to user.posts.count, posts_path(:tags => "user:#{user.name}") %></td>
             <td><%= user.posts.deleted.count %></td>
