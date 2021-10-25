@@ -51,7 +51,29 @@ class YiffyApiController < ApplicationController
     KISS              = 17
     LICK              = 18
     PROPOSE           = 19
-    end
+
+    # for iterating
+    ALL = [
+      BULGE,
+      YIFF_GAY,
+      YIFF_STRAIGHT,
+      YIFF_GYNOMORPH,
+      YIFF_ANDROMORPH,
+      YIFF_MALE_SOLO,
+      YIFF_FEMALE_SOLO,
+      BUTTS,
+      BOOP,
+      CUDDLE,
+      FLOP,
+      FURSUIT,
+      HOLD,
+      HOWL,
+      HUG,
+      KISS,
+      LICK,
+      PROPOSE
+    ]
+  end
 
   def disabled
     render json: {
@@ -78,7 +100,7 @@ class YiffyApiController < ApplicationController
     # FileSize or nil
     @max_size = FileSize.from(params[:sizeLimit].to_s)
     @bulge = ActiveRecord::Type::Boolean.new.deserialize(params[:bulge].to_s.downcase)
-    
+
     if @set == nil
       render json: {
         "$schema": "https://yiff.rest/schema/v3_error.json",

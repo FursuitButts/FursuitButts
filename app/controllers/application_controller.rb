@@ -52,10 +52,6 @@ class ApplicationController < ActionController::Base
     true
   end
 
-  def v3_throttle
-
-  end
-
   def rescue_exception(exception)
     @exception = exception
 

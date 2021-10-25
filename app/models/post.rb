@@ -1,12 +1,12 @@
 require 'danbooru/has_bit_flags'
 
 class Post < ApplicationRecord
-  class ApprovalError < Exception ; end
-  class DisapprovalError < Exception ; end
-  class RevertError < Exception ; end
-  class SearchError < Exception ; end
-  class DeletionError < Exception ; end
-  class TimeoutError < Exception ; end
+  class ApprovalError < Exception; end
+  class DisapprovalError < Exception; end
+  class RevertError < Exception; end
+  class SearchError < Exception; end
+  class DeletionError < Exception; end
+  class TimeoutError < Exception; end
 
   # Tags to copy when copying notes.
   NOTE_COPY_TAGS = %w[translated partially_translated translation_check translation_request]
@@ -169,6 +169,33 @@ class Post < ApplicationRecord
         return scaled_url_ext('720p', 'mp4')
       end
       file_url_ext('mp4')
+    end
+
+    def official_sets
+      key_id = "post_sets:id:#{this.id}"
+      key_name = "post_sets:name:#{this.id}"
+      client = ::Redis.new(url: Danbooru.config.redis_url)
+      cache = client.exists(key_id, key_name)
+      if cache == 2
+        key_id.map.with_index { |id, index| { name: key_name[index], id: id } }
+      else
+        contains = []
+        YiffyApiController::PostSets::ALL.each do |id|
+          set = PostSet.find(id)
+          next unless set.post_ids.include?(self.id)
+          contains << {
+            name: set.name,
+            id: id
+          }
+        end
+        client.multi do |r|
+          r.sadd(key_id, contains.collect { |obj| obj[:id] })
+          r.expire(key_id, 6.hours.to_i)
+          r.sadd(key_name, contains.collect { |obj| obj[:id] })
+          r.expire(key_name, 6.hours.to_i)
+        end
+        contains
+      end
     end
 
     def open_graph_image_url
