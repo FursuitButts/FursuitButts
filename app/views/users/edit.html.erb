@@ -58,6 +58,9 @@
       </fieldset>
 
       <fieldset id="advanced-settings-section">
+        <%= f.input :use_gravatar, :as => :select, :collection => [["Yes", "true"], ["No", "false"]], :include_blank => false,
+                    hint: "Attempts to use your gravatar avatar (avatar ID takes precedence)" %>
+
         <%= f.input :style_usernames, :as => :select, :label => "Colored usernames",
                     :hint => raw("Color each user's name depending on their level. See #{link_to 'the legend', wiki_page_path(id: 'help:colored_usernames')} for what the colors are."),
                     :include_blank => false, :collection => [["Yes", "true"], ["No", "false"]] %>

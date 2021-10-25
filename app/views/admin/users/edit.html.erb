@@ -31,6 +31,11 @@
       </div>
 
       <div class="input">
+        <label class="block" for="user_use_gravatar">Use Gravatar</label>
+        <%= select_tag("user[use_gravatar]", options_for_select([["Yes", true], ["No", false]], @user.use_gravatar)) %>
+      </div>
+
+      <div class="input">
         <label class="block" for="user_about">About</label>
         <%= text_area "user", "profile_about", size: "50x8", class: "dtext-full" %>
       </div>

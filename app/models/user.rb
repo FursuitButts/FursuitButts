@@ -56,6 +56,7 @@ class User < ApplicationRecord
     disable_user_dmails
     enable_compact_uploader
     editor_banned
+    use_gravatar
   )
 
   include Danbooru::HasBitFlags
@@ -692,7 +693,7 @@ class User < ApplicationRecord
         :forum_post_count, :comment_count,
         :appeal_count, :flag_count, :positive_feedback_count,
         :neutral_feedback_count, :negative_feedback_count, :upload_limit,
-        :v3_api_limit
+        :v3_api_limit, :use_gravatar
       ]
     end
 
