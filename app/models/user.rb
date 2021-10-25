@@ -591,7 +591,7 @@ class User < ApplicationRecord
     def upload_limit
         pieces = upload_limit_pieces
 
-        base_upload_limit + (pieces[:approved] / 10) - (pieces[:deleted] / 4) - pieces[:pending]
+        base_upload_limit + (pieces[:approved] / 5) - (pieces[:deleted] / 2) - pieces[:pending]
     end
     memoize :upload_limit
 
