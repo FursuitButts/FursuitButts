@@ -1,6 +1,6 @@
 <div id="c-admin-users">
   <div id="a-edit">
-    <h1>Edit User: <%= @user.name %></h1>
+    <h1>Edit User: <%= @user.display_name %></h1>
 
     <%= form_tag(admin_user_path(@user), :method => :put, :class => "simple_form") do %>
       <%= hidden_field_tag "id", @user.id %>
@@ -83,5 +83,5 @@
 <%= render "users/secondary_links" %>
 
 <% content_for(:page_title) do %>
-  Edit User - <%= @user.name %>
+  Edit User - <%= @user.display_name %>
 <% end %>

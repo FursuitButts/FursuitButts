@@ -127,6 +127,7 @@ class UsersController < ApplicationController
       enable_auto_complete
       disable_cropped_thumbnails disable_mobile_gestures
       enable_safe_mode disable_responsive_mode disable_post_tooltips
+      display_name
     ]
 
     permitted_params += [dmail_filter_attributes: %i[id words]]
@@ -138,7 +139,7 @@ class UsersController < ApplicationController
   end
 
   def user_search_params
-    permitted_params = %i[name_matches level min_level max_level can_upload_free can_approve_posts order]
+    permitted_params = %i[name_matches display_name_matches level min_level max_level can_upload_free can_approve_posts order]
     permitted_params += [:email_matches] if CurrentUser.is_admin?
     params.fetch(:search, {}).permit(permitted_params)
   end

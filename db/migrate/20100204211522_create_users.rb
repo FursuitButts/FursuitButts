@@ -4,6 +4,7 @@ class CreateUsers < ActiveRecord::Migration[4.2]
       t.timestamps
 
       t.column :name, :string, :null => false
+      t.column :display_name, :string, :null => false
       t.column :password_hash, :string, :null => false
       t.column :email, :string
       t.column :email_verification_key, :string
@@ -30,10 +31,11 @@ class CreateUsers < ActiveRecord::Migration[4.2]
       t.column :default_image_size, :string, :null => false, :default => "large"
       t.column :favorite_tags, :text
       t.column :blacklisted_tags, :text
-      t.column :time_zone, :string, :null => false, :default => "Eastern Time (US & Canada)"
+      t.column :time_zone, :string, :null => false, :default => "UTC"
     end
 
     execute "CREATE UNIQUE INDEX index_users_on_name ON users ((lower(name)))"
+    execute "CREATE UNIQUE INDEX index_users_on_display_name ON users ((lower(display_name)))"
     add_index :users, :email, :unique => true
   end
 

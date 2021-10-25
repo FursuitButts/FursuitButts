@@ -81,6 +81,7 @@ class User < ApplicationRecord
 
 
   validates :name, user_name: true, on: :create
+  validates :display_name, user_name: true, on: :update, :default => :name
   validates :default_image_size, inclusion: { :in => %w(large fit fitv original) }
   validates :per_page, inclusion: { :in => 1 .. Danbooru.config.max_posts_per_page }
   validates :comment_threshold, presence: true
@@ -95,8 +96,8 @@ class User < ApplicationRecord
   before_validation :staff_cant_disable_dmail
   before_validation :blank_out_nonexistent_avatars
   validates :blacklisted_tags, length: { maximum: 150_000 }
-  validates  :custom_style, length: { maximum: 500_000}
-  validates :profile_about, length: { maximum: 50_0000 }
+  validates :custom_style, length: { maximum: 500_000 }
+  validates :profile_about, length: { maximum: 500_000 }
   validates :profile_artinfo, length: { maximum: 50_000 }
   before_create :encrypt_password_on_create
   before_update :encrypt_password_on_update
@@ -125,6 +126,13 @@ class User < ApplicationRecord
   has_many :favorites, -> {order(id: :desc)}
   belongs_to :avatar, class_name: 'Post', optional: true
   accepts_nested_attributes_for :dmail_filter
+  after_initialize :set_display
+
+  def set_display
+    if self.display_name == nil
+      self.display_name = self.name
+    end
+  end
 
   module BanMethods
     def validate_ip_addr_is_not_banned
@@ -658,7 +666,7 @@ class User < ApplicationRecord
         :id, :created_at, :name, :level, :base_upload_limit,
         :post_upload_count, :post_update_count, :note_update_count,
         :is_banned, :can_approve_posts, :can_upload_free,
-        :level_string, :avatar_id
+        :level_string, :avatar_id, :display_name
       ]
 
       if id == CurrentUser.user.id
@@ -811,6 +819,7 @@ class User < ApplicationRecord
 
       params = params.dup
       params[:name_matches] = params.delete(:name) if params[:name].present?
+      params[:display_name_matches] = params.delete(:display_name) if params[:display_name].present?
 
       q = q.search_text_attribute(:name, params)
       q = q.attribute_matches(:level, params[:level])
@@ -826,6 +835,10 @@ class User < ApplicationRecord
 
       if params[:name_matches].present?
         q = q.where_ilike(:name, normalize_name(params[:name_matches]))
+      end
+
+      if params[:display_name_matches].present?
+        q = q.where_ilike(:name, params[:name_matches])
       end
 
       if params[:min_level].present?
