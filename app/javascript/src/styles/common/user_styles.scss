@@ -48,6 +48,18 @@ a.user-blocked.with-style:hover {
   }
 }
 
+a.user-editor.with-style {
+  @include themable {
+    color: themed("color-user-editor");
+  }
+}
+
+a.user-editor.with-style:hover {
+  @include themable {
+    color: themed("color-user-editor-alt");
+  }
+}
+
 a.user-former.staff.with-style {
   @include themable {
     color: themed("color-user-former-staff");
@@ -85,6 +97,7 @@ a.user-admin.with-style:hover {
     color: themed("color-user-admin-alt");
   }
 }
+
 a.user-display-name.with-style {
   font-style: italic;
 }
