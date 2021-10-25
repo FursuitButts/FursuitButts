@@ -19,7 +19,7 @@
         <h1>Official Sets </h1>
         <ul>
           <% @post.official_sets.each do |set| %>
-            <li class="post-set-<%= set.name %> post-set-official"><%= link_to "#{set[:name]}", post_sets_path(set[:id]) %></li>
+            <li class="post-set-<%= set[:name] %> post-set-official"><%= link_to "#{set[:name]}", post_sets_path(set[:id]) %></li>
           <% end %>
         </ul>
       </section>
