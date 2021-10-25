@@ -6,7 +6,15 @@ class UserPresenter
   end
 
   def name
+    user.display_name || raw_name
+  end
+
+  def raw_name
     user.pretty_name
+  end
+
+  def has_display_name
+    user.display_name != nil
   end
 
   def join_date
