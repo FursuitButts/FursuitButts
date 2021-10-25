@@ -13,12 +13,20 @@
     Posted: <%= link_to time_ago_in_words_tagged(post.created_at), posts_path(:tags => "date:#{post.created_at.to_date}"), :rel => "nofollow" %>
     <meta itemprop="uploadDate" content="<%= post.created_at.iso8601 %>">
   </li>
-  <% if CurrentUser.is_janitor? %>
-    <li>Uploader: <%= link_to_user(post.uploader) %> <%= user_record_meta(post.uploader) %></li>
+  <% if !post.approver || post.uploader.id == post.approver.id %>
+    <% if CurrentUser.is_janitor? %>
+      <li>Uploader: <%= link_to_user(post.uploader) %> (Self Approved) <%= user_record_meta(post.uploader) %></li>
+    <% else %>
+      <li>Uploader: <%= link_to_user(post.uploader) %> (Self Approved)</li>
+    <% end %>
   <% else %>
-    <li>Uploader: <%= link_to_user(post.uploader) %></li>
+    <li>Approver: <%= link_to_user(post.approver) %></li>
+    <% if CurrentUser.is_janitor? %>
+      <li>Uploader: <%= link_to_user(post.uploader) %> <%= user_record_meta(post.uploader) %></li>
+    <% else %>
+      <li>Uploader: <%= link_to_user(post.uploader) %></li>
+    <% end %>
   <% end %>
-  <li>Approver: <%= link_to_user(post.approver || post.uploader) %></li>
   <li>
     Size: <span itemprop="width"><%= post.image_width %></span>x<span itemprop="height"><%= post.image_height %></span> (<%= number_to_human_size(post.file_size) %>)
   </li>
