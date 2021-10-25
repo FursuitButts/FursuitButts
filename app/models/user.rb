@@ -212,11 +212,7 @@ class User < ApplicationRecord
     end
 
     def pretty_name
-      if name.to_s.downcase.strip == "donovan_dmc"
-        "Donovan_DMC"
-      else
-        name.gsub(/([^_])_+(?=[^_])/, "\\1 \\2")
-      end
+      name.gsub(/([^_])_+(?=[^_])/, "\\1 \\2")
     end
 
     def update_cache
