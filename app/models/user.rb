@@ -199,7 +199,11 @@ class User < ApplicationRecord
       end
 
       def normalize_name(name)
-        name.to_s.mb_chars.downcase.strip.tr(" ", "_").to_s
+        if name.to_s.mb_chars.downcase.strip == "Donovan_DMC"
+          "Donovan_DMC"
+        else
+          name.to_s.mb_chars.downcase.strip.tr(" ", "_").to_s
+        end
       end
     end
 
