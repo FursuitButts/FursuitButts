@@ -169,6 +169,7 @@ module ApplicationHelper
     user_class += " user-post-approver" if user.can_approve_posts?
     user_class += " user-post-uploader" if user.can_upload_free?
     user_class += " user-banned" if user.is_banned?
+    user_class += " user-display-name" unless user.display_name.nil?
     user_class += " with-style" if CurrentUser.user.style_usernames? || CurrentUser.is_anonymous?
     if options[:raw_name]
       name = user.name

@@ -14,7 +14,7 @@ class UserPresenter
   end
 
   def has_display_name
-    user.display_name != nil
+    !user.display_name.nil?
   end
 
   def join_date
