@@ -15,10 +15,10 @@
   </li>
   <% if CurrentUser.is_janitor? %>
     <li>Uploader: <%= link_to_user(post.uploader) %> <%= user_record_meta(post.uploader) %></li>
+  <% else %>
+    <li>Uploader: <%= link_to_user(post.uploader) %></li>
   <% end %>
-  <% if post.approver %>
-    <li>Approver: <%= link_to_user(post.approver) %></li>
-  <% end %>
+  <li>Approver: <%= link_to_user(post.approver || post.uploader) %></li>
   <li>
     Size: <span itemprop="width"><%= post.image_width %></span>x<span itemprop="height"><%= post.image_height %></span> (<%= number_to_human_size(post.file_size) %>)
   </li>
