@@ -199,7 +199,7 @@ class User < ApplicationRecord
       end
 
       def normalize_name(name)
-        if name.to_s.mb_chars.downcase.strip == "Donovan_DMC"
+        if name.to_s.mb_chars.downcase.strip == "donovan_dmc"
           "Donovan_DMC"
         else
           name.to_s.mb_chars.downcase.strip.tr(" ", "_").to_s
@@ -208,7 +208,11 @@ class User < ApplicationRecord
     end
 
     def pretty_name
-      name.gsub(/([^_])_+(?=[^_])/, "\\1 \\2")
+      if name.to_s.downcase.strip == "donovan_dmc"
+        "Donovan_DMC"
+      else
+        name.gsub(/([^_])_+(?=[^_])/, "\\1 \\2")
+      end
     end
 
     def update_cache
