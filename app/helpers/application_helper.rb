@@ -178,8 +178,8 @@ module ApplicationHelper
       name = user.display_name_safe
     end
 
-    if options[:show] && user.display_name != nil
-      name = "#{name} (#{user.name})"
+    if options[:show] && !user.display_name.nil? && user.display_name.downcase != user.name.downcase
+      name = "#{user.display_name} (#{user.pretty_name})"
     end
     link_to(name, user_path(user), :class => user_class, rel: "nofollow")
   end
