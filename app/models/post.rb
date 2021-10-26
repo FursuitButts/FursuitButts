@@ -174,9 +174,9 @@ class Post < ApplicationRecord
     def official_sets
       key = "post_sets:#{self.id}"
       client = ::Redis.new(url: Danbooru.config.redis_url)
-      cache = client.exists(key)
+      cache = client.exists?(key)
       contains = []
-      if cache == 1
+      if cache
         val = client.smembers(key)
         ids.map.with_index { |id, index| { name: names[index], id: id } }
         val.each do |v|
