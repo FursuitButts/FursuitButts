@@ -458,7 +458,7 @@ class Artist < ApplicationRecord
     end
 
     def validate_user_can_edit?
-      return if CurrentUser.is_janitor?
+      return if CurrentUser.is_privileged?
 
       if !is_active?
         errors.add(:base, "Artist is inactive")
@@ -590,11 +590,11 @@ class Artist < ApplicationRecord
   end
 
   def deletable_by?(user)
-    user.is_janitor?
+    user.is_privileged?
   end
 
   def editable_by?(user)
-    user.is_janitor? || (!is_banned? && is_active?)
+    user.is_privileged? || (!is_banned? && is_active?)
   end
 
   def user_not_limited
@@ -607,6 +607,6 @@ class Artist < ApplicationRecord
   end
 
   def visible?
-    !is_banned? || CurrentUser.is_janitor?
+    !is_banned? || CurrentUser.is_privileged?
   end
 end

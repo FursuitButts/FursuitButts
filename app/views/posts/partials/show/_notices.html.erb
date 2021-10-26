@@ -53,7 +53,7 @@
   </div>
 <% end %>
 
-<% if CurrentUser.is_janitor? && (post.is_flagged? || post.is_deleted?) && post.appeals.any? %>
+<% if CurrentUser.is_privileged? && (post.is_flagged? || post.is_deleted?) && post.appeals.any? %>
   <div class="notice notice-appealed">
     <p>This post was appealed:</p>
     <%= post_appeal_reasons(post) %>
