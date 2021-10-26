@@ -92,6 +92,7 @@ module Danbooru
         "Anonymous" => 0,
         "Blocked" => 10,
         "Viewer" => 20,
+        "Bitch Baby" => 21,
         "Editor" => 30,
         "Privileged" => 40,
         "Former Staff" => 41,

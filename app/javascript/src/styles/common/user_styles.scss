@@ -49,6 +49,18 @@ a.user-former.staff.with-style:hover {
   }
 }
 
+a.user-bitch.baby.with-style {
+  @include themable {
+    color: themed("color-user-bitch-baby");
+  }
+}
+
+a.user-bitch.baby.with-style:hover {
+  @include themable {
+    color: themed("color-user-bitch-baby-alt");
+  }
+}
+
 // This group has two classes: .former and .staff
 a.user-privileged.with-style {
   @include themable {
