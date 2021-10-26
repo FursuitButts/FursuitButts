@@ -194,9 +194,11 @@ class Post < ApplicationRecord
             id: id
           }
         end
-        client.multi do |r|
-          r.sadd(key, contains.collect { |obj| "#{obj[:id]}:#{obj[:name]}" })
-          r.expire(key, 6.hours.to_i)
+        unless contains.empty?
+          client.multi do |r|
+            r.sadd(key, contains.collect { |obj| "#{obj[:id]}:#{obj[:name]}" })
+            r.expire(key, 6.hours.to_i)
+          end
         end
       end
 
@@ -915,7 +917,7 @@ class Post < ApplicationRecord
       if tags.include? 'conditional_dnp'
         locked << 'conditional_dnp'
       end
-      self.locked_tags = locked.uniq.join(' ') if locked.size > 0
+      self.locked_tags = locked.uniq.join(' ') if !locked.empty?
     end
 
     def apply_locked_tags(tags, to_add, to_remove)
@@ -940,10 +942,10 @@ class Post < ApplicationRecord
 
     def remove_invalid_tags(tags)
       tags = tags.reject do |tag|
-        if tag.errors.size > 0
+        if !tag.errors.empty?
           self.warnings.add(:base, "Can't add tag #{tag.name}: #{tag.errors.full_messages.join('; ')}")
         end
-        tag.errors.size > 0
+        !tag.errors.empty?
       end
       tags
     end
@@ -1007,7 +1009,7 @@ class Post < ApplicationRecord
       casesensitive_metatags, tags = tags.partition {|x| x =~ /\A(?:source):/i}
       #Reuse the following metatags after the post has been saved
       casesensitive_metatags += tags.select {|x| x =~ /\A(?:newpool):/i}
-      if casesensitive_metatags.length > 0
+      if !casesensitive_metatags.empty?
         case casesensitive_metatags[-1]
         when /^source:none$/i
           self.source = ""
@@ -1034,7 +1036,7 @@ class Post < ApplicationRecord
       tags = apply_categorization_metatags(tags)
       @post_metatags, tags = tags.partition {|x| x =~ /\A(?:-pool|pool|newpool|-set|set|fav|-fav|child|-child|upvote|downvote):/i}
       apply_pre_metatags
-      if @bad_type_changes.size > 0
+      if !@bad_type_changes.empty?
         bad_tags = @bad_type_changes.map {|x| "[[#{x}]]"}
         self.warnings.add(:base, "Failed to update the tag category for the following tags: #{bad_tags.join(', ')}. You can not edit the tag category of existing tags using prefixes. Please review usage of the tags, and if you are sure that the tag categories should be changed, then you can change them using the \"Tags\":/tags section of the website")
       end
@@ -1305,7 +1307,7 @@ class Post < ApplicationRecord
     end
 
     def has_active_pools?
-      pools.undeleted.length > 0
+      !pools.undeleted.empty?
     end
 
     def belongs_to_pool?(pool)
