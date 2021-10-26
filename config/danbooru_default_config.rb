@@ -95,6 +95,7 @@ module Danbooru
         "Editor" => 30,
         "Privileged" => 40,
         "Former Staff" => 41,
+        "System" => 42,
         "Admin" => 50
       }
     end

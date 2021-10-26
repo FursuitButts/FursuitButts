@@ -57,7 +57,7 @@ User.find_or_create_by!(name: Danbooru.config.system_user) do |user|
   user.email = "api@yiff.rocks"
   user.can_upload_free = true
   user.can_approve_posts = true
-  user.level = User::Levels::PRIVILEGED
+  user.level = User::Levels::SYSTEM
 end
 
 ForumCategory.find_or_create_by!(id: Danbooru.config.alias_implication_forum_category) do |category|
