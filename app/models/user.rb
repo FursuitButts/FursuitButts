@@ -617,7 +617,7 @@ class User < ApplicationRecord
     end
 
     def favorite_limit
-      elsif is_privileged?
+      if is_privileged?
         125_000
       else
         80_000
@@ -631,7 +631,7 @@ class User < ApplicationRecord
     def api_burst_limit
       # can make this many api calls at once before being bound by
       # api_regen_multiplier refilling your pool
-      elsif is_privileged?
+      if is_privileged?
         90
       else
         60
@@ -643,7 +643,7 @@ class User < ApplicationRecord
     end
 
     def statement_timeout
-      elsif is_privileged?
+      if is_privileged?
         6_000
       else
         3_000
