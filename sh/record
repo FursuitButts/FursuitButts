@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+DIR="$(dirname "$(readlink -f "$0")")/../script_js"
+cd $DIR || exit 1
+if [ $# -lt 3 ] ; then
+    echo "record <type> <user> <body>"
+    exit 0
+fi
+CMD=$1
+shift
+
+case $CMD in
+p|pos|positive)
+    npx ts-node $DIR/src/record.ts positive "$@"
+    ;;
+neg|negative)
+    npx ts-node $DIR/src/record.ts negative "$@"
+    ;;
+neutral)
+    npx ts-node $DIR/src/record.ts neutral "$@"
+    ;;
+esac
