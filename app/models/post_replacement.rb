@@ -74,8 +74,8 @@ class PostReplacement < ApplicationRecord
       return false
     end
 
-    # Janitor bypass replacement limits
-    return true if creator.is_janitor?
+    # privileged bypass replacement limits
+    return true if creator.is_privileged?
 
     if post.replacements.where(creator_id: creator.id).where('created_at > ?', 1.day.ago).count >= Danbooru.config.post_replacement_per_day_limit
       self.errors.add(:creator, 'has already suggested too many replacements for this post today')
@@ -254,14 +254,14 @@ class PostReplacement < ApplicationRecord
 
       def visible(user)
         return where('status != ?', 'rejected') if user.is_anonymous?
-        return all if user.is_janitor?
+        return all if user.is_privileged?
         where('creator_id = ? or status != ?', user.id, 'rejected')
       end
     end
   end
 
   def file_visible_to?(user)
-    return true if user.is_janitor?
+    return true if user.is_privileged?
     false
   end
 

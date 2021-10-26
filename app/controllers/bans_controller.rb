@@ -1,5 +1,5 @@
 class BansController < ApplicationController
-  before_action :moderator_only, :except => [:show, :index]
+  before_action :privileged_only, :except => [:show, :index]
   respond_to :html
   helper_method :search_params
 

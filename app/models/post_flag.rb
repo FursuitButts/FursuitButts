@@ -147,7 +147,7 @@ class PostFlag < ApplicationRecord
   end
 
   def bypass_unique
-    is_deletion || creator.is_janitor?
+    is_deletion || creator.is_privileged?
   end
 
   def validate_creator_is_not_limited
@@ -157,7 +157,7 @@ class PostFlag < ApplicationRecord
       errors.add(:creator, "cannot flag posts")
     end
 
-    return if creator.is_janitor?
+    return if creator.is_privileged?
 
     # TODO: Should we keep this?
     # if creator_id != User.system.id && PostFlag.for_creator(creator_id).where("created_at > ?", 30.days.ago).count >= CREATION_THRESHOLD

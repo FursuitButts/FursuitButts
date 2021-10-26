@@ -2,7 +2,7 @@ module Moderator
   module Post
     class PostsController < ApplicationController
       before_action :approver_only
-      before_action :janitor_only, only: [:regenerate_thumbnails, :regenerate_videos]
+      before_action :privileged_only, only: [:regenerate_thumbnails, :regenerate_videos]
       before_action :admin_only, :only => [:expunge]
       skip_before_action :api_check
 

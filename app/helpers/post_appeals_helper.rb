@@ -6,7 +6,7 @@ module PostAppealsHelper
     post.appeals.each do |appeal|
       reason = format_text(appeal.reason, inline: true)
       user = link_to_user(appeal.creator)
-      if CurrentUser.is_moderator?
+      if CurrentUser.is_privileged?
         ip = "(#{link_to_ip(appeal.creator_ip_addr)})"
       else
         ip = ""

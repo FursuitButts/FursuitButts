@@ -193,7 +193,7 @@ class UserPresenter
   end
 
   def show_staff_notes?
-    CurrentUser.is_moderator?
+    CurrentUser.is_privileged?
   end
 
   def staff_notes

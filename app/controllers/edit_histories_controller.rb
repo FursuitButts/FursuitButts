@@ -1,6 +1,6 @@
 class EditHistoriesController < ApplicationController
   respond_to :html
-  before_action :moderator_only
+  before_action :privileged_only
 
   def index
     @edit_history = EditHistory.includes(:user).paginate(params[:page], limit: params[:limit])

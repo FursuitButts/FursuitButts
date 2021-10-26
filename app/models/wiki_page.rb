@@ -143,7 +143,7 @@ class WikiPage < ApplicationRecord
   end
 
   def validate_not_locked
-    if is_locked? && !CurrentUser.is_janitor?
+    if is_locked? && !CurrentUser.is_privileged?
       errors.add(:is_locked, "and cannot be updated")
       return false
     end
@@ -244,6 +244,6 @@ class WikiPage < ApplicationRecord
   end
 
   def visible?
-    artist.blank? || !artist.is_banned? || CurrentUser.is_janitor?
+    artist.blank? || !artist.is_banned? || CurrentUser.is_privileged?
   end
 end

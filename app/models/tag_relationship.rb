@@ -80,7 +80,7 @@ class TagRelationship < ApplicationRecord
   end
 
   def deletable_by?(user)
-    return true if user.is_moderator?
+    return true if user.is_privileged?
     return false
   end
 

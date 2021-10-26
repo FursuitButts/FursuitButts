@@ -1,7 +1,7 @@
 class WikiPagesController < ApplicationController
   respond_to :html, :json, :js
   before_action :editor_only, :except => [:index, :search, :show, :show_or_new]
-  before_action :moderator_only, :only => [:destroy]
+  before_action :privileged_only, :only => [:destroy]
   before_action :normalize_search_params, :only => [:index]
 
   def new
@@ -101,7 +101,7 @@ class WikiPagesController < ApplicationController
   private
 
   def ensure_can_edit(page, user)
-    return if user.is_janitor?
+    return if user.is_privileged?
     raise User::PrivilegeError.new("Wiki page is locked.") if page.is_locked
   end
 
@@ -114,8 +114,8 @@ class WikiPagesController < ApplicationController
 
   def wiki_page_params(context)
     permitted_params = %i[body skip_secondary_validations edit_reason]
-    permitted_params += %i[is_locked is_deleted] if CurrentUser.is_janitor?
-    permitted_params += %i[title] if context == :create || CurrentUser.is_janitor?
+    permitted_params += %i[is_locked is_deleted] if CurrentUser.is_privileged?
+    permitted_params += %i[title] if context == :create || CurrentUser.is_privileged?
 
     params.fetch(:wiki_page, {}).permit(permitted_params)
   end

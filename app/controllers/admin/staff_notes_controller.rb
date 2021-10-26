@@ -1,6 +1,6 @@
 module Admin
   class StaffNotesController < ApplicationController
-    before_action :moderator_only
+    before_action :privileged_only
     respond_to :html
 
     def index

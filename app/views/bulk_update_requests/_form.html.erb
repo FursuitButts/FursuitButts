@@ -25,7 +25,7 @@
     </div>
   <% end %>
 
-  <% if CurrentUser.is_moderator? %>
+  <% if CurrentUser.is_privileged? %>
     <div class="input">
       <label class="checkbox optional" for="bulk_update_request_skip_forum">
         <%= check_box "bulk_update_request", "skip_forum" %>

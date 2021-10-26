@@ -27,7 +27,7 @@ class Dmail < ApplicationRecord
   concerning :SpamMethods do
     class_methods do
       def is_spammer?(user)
-        return false if user.is_janitor?
+        return false if user.is_editor?
 
         spammed_users = sent_by(user).where(is_spam: true).where("created_at > ?", AUTOBAN_WINDOW.ago).distinct.count(:to_id)
         spammed_users >= AUTOBAN_THRESHOLD
@@ -262,13 +262,13 @@ class Dmail < ApplicationRecord
       return false
     end
     return true if from_id == User.system.id
-    return true if from.is_janitor?
+    return true if from.is_privileged?
     if to.disable_user_dmails
       errors.add(:to_name, "has disabled DMails")
       return false
     end
-    if from.disable_user_dmails && !to.is_janitor?
-      errors.add(:to_name, "is not a valid recipient while blocking DMails from others. You may only message janitors and above")
+    if from.disable_user_dmails && !to.is_privileged?
+      errors.add(:to_name, "is not a valid recipient while blocking DMails from others. You may only message privileged and above")
       return false
     end
     if to.is_blacklisting_user?(from)

@@ -6,7 +6,7 @@
         <th>Version</th>
         <th>Original</th>
         <th>Translated</th>
-        <% if CurrentUser.is_moderator? %>
+        <% if CurrentUser.is_privileged? %>
           <th width="10%">IP Address</th>
         <% end %>
         <th width="10%">Edited By</th>
@@ -30,7 +30,7 @@
               <%= format_text(commentary_version.translated_description) %>
             </div>
           </td>
-          <% if CurrentUser.is_moderator? %>
+          <% if CurrentUser.is_privileged? %>
             <td>
               <%= link_to_ip commentary_version.updater_ip_addr %>
             </td>

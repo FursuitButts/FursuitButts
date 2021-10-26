@@ -1,7 +1,7 @@
 class ArtistsController < ApplicationController
   respond_to :html, :json
   before_action :editor_only, :except => [:index, :show, :show_or_new, :banned]
-  before_action :janitor_only, :only => [:destroy]
+  before_action :privileged_only, :only => [:destroy]
   before_action :admin_only, :only => [:ban, :unban]
   before_action :load_artist, :only => [:ban, :unban, :show, :edit, :update, :destroy, :undelete]
 
@@ -101,14 +101,14 @@ private
   end
 
   def ensure_can_edit(user)
-    return user.is_janitor?
+    return user.is_privileged?
     raise User::PrivilegeError if @artist.is_locked?
     raise User::PrivilegeError if !@artist.is_active?
   end
 
   def artist_params(context = nil)
     permitted_params = %i[name other_names other_names_string group_name url_string notes]
-    permitted_params += [:is_active, :linked_user_id, :is_locked] if CurrentUser.is_janitor?
+    permitted_params += [:is_active, :linked_user_id, :is_locked] if CurrentUser.is_privileged?
     permitted_params << :source if context == :new
 
     params.fetch(:artist, {}).permit(permitted_params)

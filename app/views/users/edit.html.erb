@@ -83,7 +83,7 @@
         <%= f.input :hide_comments, as: :select, collection: [["No", "false"],["Yes", "true"]], include_blank: false,
         hint: "Do not show the comments section on post pages." %>
 
-        <% unless CurrentUser.is_janitor? %>
+        <% unless CurrentUser.is_privileged? %>
           <%= f.input :disable_user_dmails, label: "Disable DMails", hint: "Prevent other users from sending you DMails. You will be prevented from sending DMails to non-staff members while this option is enabled. Staff are always allowed to send you DMails.",
                       :as => :select, :collection => [["No", "false"], ["Yes", "true"]], :include_blank => false %>
         <% end %>

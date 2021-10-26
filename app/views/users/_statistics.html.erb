@@ -31,11 +31,11 @@
         <th>Posts</th>
         <td>
           <%= presenter.active_upload_count(self) %>
-          <% if CurrentUser.is_moderator? %>
+          <% if CurrentUser.is_privileged? %>
             [<%= link_to "sample", posts_path(:tags => "user:#{user.name} order:random limit:300") %>]
           <% end %>
           (<%= link_to "comments on", comments_path(group_by: :comment, search: {poster_id: user.id}) %>)
-          <% if CurrentUser.is_moderator? %>
+          <% if CurrentUser.is_privileged? %>
             (<%= link_to "votes", action: "index", controller: "post_votes", user_id: user.id %>)
           <% end %>
         </td>
@@ -54,14 +54,14 @@
         <th>Deleted Posts</th>
         <td>
           <%= presenter.deleted_upload_count(self) %>
-          <% if CurrentUser.is_moderator? %>
+          <% if CurrentUser.is_privileged? %>
             [<%= link_to "sample", posts_path(:tags => "user:#{user.name} order:random limit:300 status:deleted") %>]
           <% end %>
         </td>
         <th>Post Changes</th>
         <td>
           <%= presenter.post_version_count(self) %>
-          <% if CurrentUser.is_moderator? && UserRevert.can_revert?(user) %>
+          <% if CurrentUser.is_privileged? && UserRevert.can_revert?(user) %>
             [<%= link_to "revert all", new_user_revert_path(user_id: user.id) %>]
           <% end %>
         </td>
@@ -71,7 +71,7 @@
         <th>Favorites</th>
         <td>
           <%= presenter.favorite_count(self) %>
-          <% if CurrentUser.is_moderator? %>
+          <% if CurrentUser.is_privileged? %>
             [<%= link_to "sample", posts_path(:tags => "fav:#{user.name} order:random limit:300") %>]
           <% end %>
         </td>
@@ -89,7 +89,7 @@
       <tr>
         <th>Comments</th>
         <td><%= presenter.comment_count(self) %> on <%= presenter.commented_posts_count(self) %> posts
-          <% if CurrentUser.is_moderator? %>
+          <% if CurrentUser.is_privileged? %>
             (<%= link_to "votes", action: "index", controller: "comment_votes", user_id: user.id %>)
           <% end %></td>
         <th>Artist Changes</th>
@@ -104,7 +104,7 @@
       </tr>
 
 
-      <% if CurrentUser.user.id == user.id || CurrentUser.is_moderator? %>
+      <% if CurrentUser.user.id == user.id || CurrentUser.is_privileged? %>
         <tr>
           <th>Appeals</th>
           <td><%= presenter.appeal_count(self) %></td>
@@ -128,7 +128,7 @@
         </tr>
       <% end %>
 
-      <% if (CurrentUser.id == user.id || CurrentUser.is_janitor?) %>
+      <% if (CurrentUser.id == user.id || CurrentUser.is_privileged?) %>
         <tr>
           <% if presenter.previous_names(self).present? %>
           <th>Previous Names</th>
@@ -140,7 +140,7 @@
           <% end %>
         </tr>
       <% end %>
-      <% if CurrentUser.is_moderator? %>
+      <% if CurrentUser.is_privileged? %>
         <tr>
           <th>Last IP</th>
           <td><%= link_to_ip(user.last_ip_addr) %></td>

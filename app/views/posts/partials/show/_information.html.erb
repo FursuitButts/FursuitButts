@@ -15,14 +15,14 @@
   </li>
   <% if !post.approver || post.uploader.id == post.approver.id %>
     <li>Approver: <b>Self Approved</b></li>
-    <% if CurrentUser.is_janitor? %>
+    <% if CurrentUser.is_privileged? %>
       <li>Uploader: <%= link_to_user(post.uploader) %> <%= user_record_meta(post.uploader) %></li>
     <% else %>
       <li>Uploader: <%= link_to_user(post.uploader) %></li>
     <% end %>
   <% else %>
     <li>Approver: <%= link_to_user(post.approver) %></li>
-    <% if CurrentUser.is_janitor? %>
+    <% if CurrentUser.is_privileged? %>
       <li>Uploader: <%= link_to_user(post.uploader) %> <%= user_record_meta(post.uploader) %></li>
     <% else %>
       <li>Uploader: <%= link_to_user(post.uploader) %></li>

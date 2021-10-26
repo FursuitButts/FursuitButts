@@ -5,7 +5,7 @@ class UserFeedback < ApplicationRecord
   attr_accessor :disable_dmail_notification
   validates :user, :creator, :body, :category, presence: true
   validates :category, inclusion: { :in => %w(positive negative neutral) }
-  validate :creator_is_moderator, on: :create
+  validate :creator_is_privileged, on: :create
   validate :user_is_not_creator
   after_create :create_dmail, unless: :disable_dmail_notification
   after_create do |rec|
@@ -92,9 +92,9 @@ class UserFeedback < ApplicationRecord
     Dmail.create_automated(:to_id => user_id, :title => "Your user record has been updated", :body => body)
   end
 
-  def creator_is_moderator
-    if !creator.is_moderator?
-      errors.add(:creator, "must be moderator")
+  def creator_is_privileged
+    if !creator.is_privileged?
+      errors.add(:creator, "must be privileged")
       return false
     elsif creator.no_feedback?
       errors.add(:creator, "cannot submit feedback")
@@ -114,6 +114,6 @@ class UserFeedback < ApplicationRecord
   end
 
   def editable_by?(editor)
-    (editor.is_moderator? && editor != user)
+    (editor.is_privileged? && editor != user)
   end
 end

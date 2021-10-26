@@ -1,7 +1,7 @@
 class ForumTopic < ApplicationRecord
   MIN_LEVELS = {
     None: 0,
-    Moderator: User::Levels::MODERATOR,
+    Privileged: User::Levels::PRIVILEGED,
     Admin: User::Levels::ADMIN,
   }
 
@@ -73,7 +73,7 @@ class ForumTopic < ApplicationRecord
       q = q.permitted
 
       if params[:mod_only].present?
-        q = q.where("min_level >= ?", MIN_LEVELS[:Moderator])
+        q = q.where("min_level >= ?", MIN_LEVELS[:Privileged])
       end
 
       q = q.attribute_matches(:title, params[:title_matches], index_column: :text_index)
@@ -145,7 +145,7 @@ class ForumTopic < ApplicationRecord
   include SubscriptionMethods
 
   def editable_by?(user)
-    (creator_id == user.id || user.is_moderator?) && visible?(user)
+    (creator_id == user.id || user.is_privileged?) && visible?(user)
   end
 
   def visible?(user)
@@ -157,11 +157,11 @@ class ForumTopic < ApplicationRecord
   end
 
   def can_hide?(user)
-    user.is_moderator? || user.id == creator_id
+    user.is_privileged? || user.id == creator_id
   end
 
   def can_delete?(user)
-    user.is_moderator?
+    user.is_privileged?
   end
 
   def create_mod_action_for_delete

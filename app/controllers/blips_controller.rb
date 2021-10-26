@@ -2,7 +2,7 @@ class BlipsController < ApplicationController
   class BlipTooOld < Exception ; end
   respond_to :html, :json
   before_action :viewer_only, only: [:create, :new, :update, :edit, :hide]
-  before_action :moderator_only, only: [:unhide, :destroy, :warning]
+  before_action :privileged_only, only: [:unhide, :destroy, :warning]
 
   rescue_from BlipTooOld, with: :blip_too_old
 
@@ -119,7 +119,7 @@ class BlipsController < ApplicationController
   end
 
   def check_edit_privilege(blip)
-    return if CurrentUser.is_moderator?
+    return if CurrentUser.is_privileged?
     raise User::PrivilegeError if blip.creator_id != CurrentUser.id
     raise BlipTooOld if blip.created_at < 5.minutes.ago
   end

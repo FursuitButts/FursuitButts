@@ -82,12 +82,12 @@ class Ban < ApplicationRecord
       if user.is_admin?
         errors.add(:base, "You can never ban an admin.")
         false
-      elsif user.is_moderator? && banner.is_admin?
+      elsif user.is_privileged? && banner.is_admin?
         true
-      elsif user.is_moderator?
-        errors.add(:base, "Only admins can ban moderators.")
+      elsif user.is_privileged?
+        errors.add(:base, "Only admins can ban privileged.")
         false
-      elsif banner.is_admin? || banner.is_moderator?
+      elsif banner.is_admin? || banner.is_privileged?
         true
       else
         errors.add(:base, "No one else can ban.")

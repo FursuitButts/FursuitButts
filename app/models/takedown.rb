@@ -54,7 +54,7 @@ class Takedown < ApplicationRecord
     end
 
     def can_create_takedown
-      return true if creator && creator.is_moderator?
+      return true if creator && creator.is_privileged?
       if Takedown.where('creator_ip_addr = ? AND created_at > ?', creator_ip_addr.to_s, 5.minutes.ago).count > 0
         errors.add(:base, "You have created a takedown too recently")
         return false

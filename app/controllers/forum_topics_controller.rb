@@ -1,7 +1,7 @@
 class ForumTopicsController < ApplicationController
   respond_to :html, :json
   before_action :viewer_only, :except => [:index, :show]
-  before_action :moderator_only, :only => [:new_merge, :create_merge, :unhide, :destroy]
+  before_action :privileged_only, :only => [:new_merge, :create_merge, :unhide, :destroy]
   before_action :normalize_search, :only => :index
   before_action :load_topic, :only => [:edit, :show, :update, :destroy, :hide, :unhide, :new_merge, :create_merge, :subscribe, :unsubscribe]
   before_action :check_min_level, :only => [:show, :edit, :update, :new_merge, :create_merge, :destroy, :hide, :unhide, :subscribe, :unsubscribe]
@@ -23,7 +23,7 @@ class ForumTopicsController < ApplicationController
     params[:search][:order] ||= "sticky" if request.format == Mime::Type.lookup("text/html")
 
     @query = ForumTopic.permitted.active.search(search_params)
-    @query = ForumTopic.permitted.search(search_params) if CurrentUser.is_moderator?
+    @query = ForumTopic.permitted.search(search_params) if CurrentUser.is_privileged?
     @forum_topics = @query.paginate(params[:page], :limit => per_page, :search_count => params[:search])
 
     respond_with(@forum_topics) do |format|
@@ -144,7 +144,7 @@ private
 
   def forum_topic_params(context)
     permitted_params = [:title, :category_id, { original_post_attributes: %i[id body] }]
-    permitted_params += %i[is_sticky is_locked min_level] if CurrentUser.is_moderator?
+    permitted_params += %i[is_sticky is_locked min_level] if CurrentUser.is_privileged?
 
     params.require(:forum_topic).permit(permitted_params)
   end

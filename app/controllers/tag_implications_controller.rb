@@ -1,5 +1,5 @@
 class TagImplicationsController < ApplicationController
-  before_action :moderator_only, except: [:index, :show]
+  before_action :privileged_only, except: [:index, :show]
   respond_to :html, :json, :js
 
   def show

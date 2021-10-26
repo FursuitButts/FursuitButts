@@ -89,17 +89,13 @@ module Danbooru
 
     def levels
       {
-          "Anonymous" => 0,
-          "Blocked" => 10,
-          "Viewer" => 20,
-          "Member" => 21,
-          "Editor" => 21,
-          "Privileged" => 30,
-          "Contributor" => 33,
-          "Former Staff" => 34,
-          "Janitor" => 35,
-          "Moderator" => 40,
-          "Admin" => 50
+        "Anonymous" => 0,
+        "Blocked" => 10,
+        "Viewer" => 20,
+        "Editor" => 30,
+        "Privileged" => 40,
+        "Former Staff" => 41,
+        "Admin" => 50
       }
     end
 
@@ -333,7 +329,7 @@ module Danbooru
 
     def max_file_sizes
       {
-          'jpg' => 100.megabytes,
+        'jpg' => 100.megabytes,
           'gif' => 20.megabytes,
           'png' => 100.megabytes,
           'swf' => 0,
@@ -592,7 +588,7 @@ module Danbooru
           'mod_only' => true,
           'relatedbutton' => nil,
           'css' => {
-              'color' => '#000',
+            'color' => '#000',
               'hover' => '#444'
           }
         },
@@ -738,7 +734,7 @@ module Danbooru
     end
 
     def can_user_see_post?(user, post)
-      return false if post.is_deleted? && !user.is_moderator?
+      return false if post.is_deleted? && !user.is_privileged?
       if is_user_restricted?(user) && is_post_restricted?(post)
         false
       else

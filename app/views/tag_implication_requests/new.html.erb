@@ -22,7 +22,7 @@
         <%= dtext_field "tag_implication_request", "reason", :name => "Reason" %>
       </div>
 
-      <% if CurrentUser.is_moderator? %>
+      <% if CurrentUser.is_privileged? %>
         <div class="input">
           <label class="checkbox optional" for="tag_implication_request_skip_forum">
             <%= check_box "tag_implication_request", "skip_forum" %>

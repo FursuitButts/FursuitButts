@@ -120,7 +120,7 @@ class PostsDecorator < ApplicationDecorator
     end
 
     tooltip = "Rating: #{post.rating}\nID: #{post.id}\nDate: #{post.created_at}\nStatus: #{post.status}\nScore: #{post.score}"
-    if CurrentUser.is_janitor?
+    if CurrentUser.is_privileged?
       tooltip += "\nUploader: #{post.uploader_name}"
       if post.is_flagged? || post.is_deleted?
         flag = post.flags.order(id: :desc).first

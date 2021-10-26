@@ -83,7 +83,7 @@ private
     return if promoter.is_admin?
 
     # can't promote/demote moderators
-    raise User::PrivilegeError if user.is_moderator?
+    raise User::PrivilegeError if user.is_privileged?
 
     # can't promote to admin
     raise User::PrivilegeError if new_level.to_i >= User::Levels::ADMIN

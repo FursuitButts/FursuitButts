@@ -27,7 +27,7 @@
         <br>
       <% end %>
 
-      <% if CurrentUser.is_moderator? %>
+      <% if CurrentUser.is_privileged? %>
         <li><strong>Commands</strong> <span class="tag-alias" data-alias-id="<%= @tag_alias.id %>">
           <% if @tag_alias.is_pending? %>
             <%= link_to "Approve", "#", class: "tag-alias-accept" %>

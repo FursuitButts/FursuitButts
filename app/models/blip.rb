@@ -45,23 +45,23 @@ class Blip < ApplicationRecord
 
   module PermissionsMethods
     def can_hide?(user)
-      user.is_moderator? || user.id == creator_id
+      user.is_privileged? || user.id == creator_id
     end
 
     def can_edit?(user)
-      return false if was_warned? && !user.is_moderator?
-      (creator_id == user.id && created_at > 5.minutes.ago) || user.is_moderator?
+      return false if was_warned? && !user.is_privileged?
+      (creator_id == user.id && created_at > 5.minutes.ago) || user.is_privileged?
     end
 
     def visible_to?(user)
       return true unless is_hidden
-      user.is_moderator? || user.id == creator_id
+      user.is_privileged? || user.id == creator_id
     end
   end
 
   module SearchMethods
     def visible(user = CurrentUser)
-      if user.is_moderator?
+      if user.is_privileged?
         all
       else
         where('is_hidden = ?', false)

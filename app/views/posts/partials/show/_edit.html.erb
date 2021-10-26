@@ -1,4 +1,4 @@
-<% unless CurrentUser.user.is_janitor? %>
+<% unless CurrentUser.user.is_privileged? %>
   <div style="margin-bottom: 1em;">
     <p>Before editing, read the <%= link_to "how to tag guide", wiki_page_path(:id => "help:tags") %>.</p>
   </div>
@@ -77,7 +77,7 @@
       <%= f.label :blank, "Lock" %>
 
       <fieldset class="locks">
-        <% if CurrentUser.is_janitor? %>
+        <% if CurrentUser.is_privileged? %>
           <%= f.check_box :is_note_locked %>
           <%= f.label :is_note_locked, "Notes" %>
         <% end %>
@@ -93,7 +93,7 @@
     </div>
   <% end %>
 
-  <% if CurrentUser.is_janitor? %>
+  <% if CurrentUser.is_privileged? %>
     <div class="input">
       <%= f.label :bg_color, "Background Color" %>
       <%= f.text_field :bg_color, :size => 6 %>

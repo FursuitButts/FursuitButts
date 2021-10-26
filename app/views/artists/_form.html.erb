@@ -1,12 +1,12 @@
 <%= simple_form_for(@artist) do |f| %>
   <% if @artist.new_record? %>
     <%= f.input :name, input_html: { data: { autocomplete: "tag" } } %>
-  <% elsif CurrentUser.user.is_janitor? %>
+  <% elsif CurrentUser.user.is_privileged? %>
     <%= f.input :name, input_html: { data: { autocomplete: "tag" } }, hint: "Change to rename this artist entry and its wiki page" %>
   <% else %>
     <p><%= @artist.name %></p>
   <% end %>
-  <% if CurrentUser.is_janitor? %>
+  <% if CurrentUser.is_privileged? %>
     <%= f.input :linked_user_id, label: "Linked User ID" %>
     <%= f.input :is_locked, label: "Locked" %>
   <% end %>

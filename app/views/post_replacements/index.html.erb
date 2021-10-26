@@ -83,12 +83,12 @@
             </td>
 
             <td>
-              <% if CurrentUser.is_janitor? %>
+              <% if CurrentUser.is_privileged %>
                 <%= link_to "Approve", approve_post_replacement_path(post_replacement), method: :PUT %><br>
                 <%= link_to "Reject", reject_post_replacement_path(post_replacement), method: :PUT %><br>
                 <%= link_to "As New Post", promote_post_replacement_path(post_replacement), method: :PUT %><br>
               <% end %>
-              <% if CurrentUser.is_moderator? %>
+              <% if CurrentUser.is_privileged? %>
                 <%= link_to "Destroy", post_replacement_path(post_replacement), method: :DELETE, 'data-confirm': 'Are you sure you want to destroy this replacement?' %>
               <% end %>
             </td>

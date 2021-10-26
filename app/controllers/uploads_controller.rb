@@ -1,6 +1,6 @@
 class UploadsController < ApplicationController
   before_action :editor_only
-  before_action :janitor_only, only: [:index, :show]
+  before_action :privileged_only, only: [:index, :show]
   respond_to :html, :json
   content_security_policy only: [:new] do |p|
     p.img_src :self, :data, "*"

@@ -187,7 +187,7 @@ module ApplicationHelper
     if positive_or_negative == :positive
       html << " [" + link_to("+", new_user_feedback_path(:user_feedback => {:category => "positive", :user_id => user.id})) + "]"
 
-      unless user.is_moderator?
+      unless user.is_privileged?
         html << " [" + link_to("promote", edit_admin_user_path(user)) + "]"
       end
     else

@@ -1,7 +1,7 @@
 class CommentsController < ApplicationController
   respond_to :html, :json
   before_action :viewer_only, :except => [:index, :search, :show]
-  before_action :moderator_only, only: [:unhide, :destroy, :warning]
+  before_action :privileged_only, only: [:unhide, :destroy, :warning]
   skip_before_action :api_check
 
   def index
@@ -100,7 +100,7 @@ private
 
   def index_by_comment
     @comments = Comment
-    @comments = @comments.undeleted unless CurrentUser.is_moderator?
+    @comments = @comments.undeleted unless CurrentUser.is_privileged?
     @comments = @comments.search(search_params).paginate(params[:page], :limit => params[:limit], :search_count => params[:search])
     @comment_votes = CommentVote.for_comments_and_user(@comments.map(&:id), CurrentUser.id)
     respond_with(@comments)
@@ -121,7 +121,7 @@ private
   def comment_params(context)
     permitted_params = %i[body post_id]
     permitted_params += %i[do_not_bump_post] if context == :create
-    permitted_params += %i[is_sticky is_hidden] if CurrentUser.is_moderator?
+    permitted_params += %i[is_sticky is_hidden] if CurrentUser.is_privileged?
 
     params.fetch(:comment, {}).permit(permitted_params)
   end

@@ -1,5 +1,5 @@
 <div id="p-index-by-post">
-  <% if !CurrentUser.user.is_janitor? %>
+  <% if !CurrentUser.user.is_privileged? %>
     <div style="margin-bottom: 1em;">
       <h2>Before commenting, read the <%= link_to "how to comment guide", wiki_pages_path(:search => {:title => "howto:comment"}) %>.</h2>
     </div>
@@ -10,7 +10,7 @@
   <% end %>
 
   <% @posts.select {|x| x.visible?}.each do |post| %>
-    <% if CurrentUser.is_moderator? || post.comments.undeleted.exists? %>
+    <% if CurrentUser.is_privileged? || post.comments.undeleted.exists? %>
       <div class="comment-post">
         <div class="post-container">
           <%= content_tag(:div, { id: "post_#{post.id}", class: ["post", *PostPresenter.preview_class(post)].join(" ") }.merge(PostPresenter.data_attributes(post))) do %>

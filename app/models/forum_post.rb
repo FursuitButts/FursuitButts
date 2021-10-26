@@ -52,7 +52,7 @@ class ForumPost < ApplicationRecord
 
     def permitted
       q = joins(:topic).where("forum_topics.min_level <= ?", CurrentUser.level)
-      q = q.where("(forum_topics.is_hidden = false or forum_posts.creator_id = ?)", CurrentUser.id) unless CurrentUser.is_moderator?
+      q = q.where("(forum_topics.is_hidden = false or forum_posts.creator_id = ?)", CurrentUser.id) unless CurrentUser.is_privileged?
       q
     end
 
@@ -143,7 +143,7 @@ class ForumPost < ApplicationRecord
   end
 
   def validate_topic_is_unlocked
-    return if CurrentUser.is_moderator?
+    return if CurrentUser.is_privileged?
     return if topic.nil?
 
     if topic.is_locked?
@@ -183,20 +183,20 @@ class ForumPost < ApplicationRecord
   end
 
   def editable_by?(user)
-    return false if was_warned? && !user.is_moderator?
-    (creator_id == user.id || user.is_moderator?) && visible?(user)
+    return false if was_warned? && !user.is_privileged?
+    (creator_id == user.id || user.is_privileged?) && visible?(user)
   end
 
   def visible?(user)
-    user.is_moderator? || (topic.visible?(user) && (!is_hidden? || user.id == creator_id))
+    user.is_privileged? || (topic.visible?(user) && (!is_hidden? || user.id == creator_id))
   end
 
   def can_hide?(user)
-    user.is_moderator? || user.id == creator_id
+    user.is_privileged? || user.id == creator_id
   end
 
   def can_delete?(user)
-    user.is_moderator?
+    user.is_privileged?
   end
 
   def update_topic_updated_at_on_create

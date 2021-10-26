@@ -27,7 +27,7 @@
         <td>
           <%= link_to "Show", tag_alias_path(tag_alias) %>
 
-          <% if CurrentUser.is_moderator? %>
+          <% if CurrentUser.is_privileged? %>
             <% if tag_alias.editable_by?(CurrentUser.user) %>
               | <%= link_to "Edit", edit_tag_alias_path(tag_alias) %>
             <% end %>

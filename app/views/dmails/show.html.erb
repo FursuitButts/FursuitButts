@@ -8,7 +8,7 @@
         <li><strong>Sender</strong>: <%= link_to_user @dmail.from %></li>
         <li><strong>Recipient</strong>: <%= link_to_user @dmail.to %></li>
         <li><strong>Date</strong>: <%= compact_time(@dmail.created_at) %></li>
-        <% if CurrentUser.user.is_moderator? %>
+        <% if CurrentUser.user.is_privileged? %>
           <li><strong>Sender IP</strong>: <%= link_to_ip @dmail.creator_ip_addr %></li>
         <% end %>
       </ul>
@@ -19,7 +19,7 @@
 
         <% if @dmail.is_automated? %>
           <p class="tn">
-            This is an automated message. Responses will not be seen. If you have any questions either message a moderator or ask in the forum.
+            This is an automated message. Responses will not be seen. If you have any questions please message an administrator.
           </p>
         <% end %>
       </div>

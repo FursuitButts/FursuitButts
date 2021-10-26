@@ -110,7 +110,7 @@ class PostSet < ApplicationRecord
     end
 
     def can_make_public
-      if is_public && creator.younger_than(3.days) && !creator.is_janitor?
+      if is_public && creator.younger_than(3.days) && !creator.is_privileged?
         errors.add(:base, "Can't make a set public until your account is at least three days old")
         false
       else
@@ -127,7 +127,7 @@ class PostSet < ApplicationRecord
     end
 
     def set_per_hour_limit
-      if PostSet.where("created_at > ? AND creator_id = ?", 1.hour.ago, creator.id).count() > 6 && !creator.is_janitor?
+      if PostSet.where("created_at > ? AND creator_id = ?", 1.hour.ago, creator.id).count() > 6 && !creator.is_privileged?
         errors.add(:base, "You have already created 6 sets in the last hour.")
         false
       else

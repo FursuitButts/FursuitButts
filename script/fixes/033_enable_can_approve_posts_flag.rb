@@ -7,7 +7,7 @@ ActiveRecord::Base.connection.execute("set statement_timeout = 0")
 CurrentUser.user = User.admins.first
 CurrentUser.ip_addr = "127.0.0.1"
 
-User.where("level >= ?", User::Levels::JANITOR).find_each do |user|
+User.where("level >= ?", User::Levels::PRIVILEGED).find_each do |user|
   user.can_approve_posts = true
   user.save
 end

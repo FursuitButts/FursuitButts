@@ -89,11 +89,9 @@
 
     jQuery("#stats-pct-unactivatedusers").html(pct(stats.users.unactivated, stats.users.total));
     jQuery("#stats-pct-blockedusers").html(pct(stats.users.blocked, stats.users.total));
-    jQuery("#stats-pct-memberusers").html(pct(stats.users.member, stats.users.total));
+    jQuery("#stats-pct-viewerusers").html(pct(stats.users.viewer, stats.users.total));
+    jQuery("#stats-pct-editorusers").html(pct(stats.users.editor, stats.users.total));
     jQuery("#stats-pct-privilegedusers").html(pct(stats.users.privileged, stats.users.total));
-    jQuery("#stats-pct-contributorusers").html(pct(stats.users.contributor, stats.users.total));
-    jQuery("#stats-pct-janitorusers").html(pct(stats.users.janitor, stats.users.total));
-    jQuery("#stats-pct-modusers").html(pct(stats.users.mod, stats.users.total));
     jQuery("#stats-pct-adminusers").html(pct(stats.users.admin, stats.users.total));
 
     jQuery("#stats-pct-activecomments").html(pct(stats.comments.active, stats.comments.total));
@@ -135,11 +133,9 @@
     users: {
       total:       <%= @stats['total_users'] %>,
       blocked:     <%= @stats['blocked_users'] %>,
-      member:      <%= @stats['member_users'] %>,
+      viewer:      <%= @stats['viewer_users'] %>,
+      editor:      <%= @stats['editor_users'] %>,
       privileged:  <%= @stats['privileged_users'] %>,
-      contributor: <%= @stats['contributor_users'] %>,
-      janitor:     <%= @stats['janitor_users'] %>,
-      mod:         <%= @stats['moderator_users'] %>,
       admin:       <%= @stats['admin_users'] %>,
       unactivated: <%= @stats['unactivated_users'] %>
     },
@@ -314,24 +310,16 @@
         <td><%= del(@stats['blocked_users']) %></td><td class='stats-pct' id='stats-pct-blockedusers'></td>
       </tr>
       <tr>
-        <td>Members</td>
-        <td><%= del(@stats['member_users']) %></td><td class='stats-pct' id='stats-pct-memberusers'></td>
+        <td>Viewers</td>
+        <td><%= del(@stats['viewer_users']) %></td><td class='stats-pct' id='stats-pct-viewerusers'></td>
       </tr>
       <tr>
-        <td>Privileged users</td>
+        <td>Editors</td>
+        <td><%= del(@stats['editor_users']) %></td><td class='stats-pct' id='stats-pct-editorusers'></td>
+      </tr>
+      <tr>
+        <td>Privileged Users</td>
         <td><%= del(@stats['privileged_users']) %></td><td class='stats-pct' id='stats-pct-privilegedusers'></td>
-      </tr>
-      <tr>
-        <td>Contributors</td>
-        <td><%= del(@stats['contributor_users']) %></td><td class='stats-pct' id='stats-pct-contributorusers'></td>
-      </tr>
-      <tr>
-        <td>Janitors</td>
-        <td><%= del(@stats['janitor_users']) %></td><td class='stats-pct' id='stats-pct-janitorusers'></td>
-      </tr>
-      <tr>
-        <td>Mods</td>
-        <td><%= del(@stats['moderator_users']) %></td><td class='stats-pct' id='stats-pct-modusers'></td>
       </tr>
       <tr>
         <td>Admins</td>

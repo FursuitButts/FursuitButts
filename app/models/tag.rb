@@ -208,8 +208,8 @@ class Tag < ApplicationRecord
 
     def user_can_change_category?
       cat = TagCategory.reverse_mapping[category]
-      if !CurrentUser.is_moderator? && TagCategory.mod_only_mapping[cat]
-        errors.add(:category,  "can only used by moderators")
+      if !CurrentUser.is_privileged? && TagCategory.mod_only_mapping[cat]
+        errors.add(:category,  "can only used by privileged")
         return false
       end
       if cat == "lore"
@@ -947,42 +947,42 @@ class Tag < ApplicationRecord
             end
 
           when "upvote", "votedup"
-            if CurrentUser.is_moderator?
+            if CurrentUser.is_privileged?
               q[:upvote] = User.name_or_id_to_id(g2)
             elsif CurrentUser.is_viewer?
               q[:upvote] = CurrentUser.id
             end
 
           when "downvote", "voteddown"
-            if CurrentUser.is_moderator?
+            if CurrentUser.is_privileged?
               q[:downvote] = User.name_or_id_to_id(g2)
             elsif CurrentUser.is_viewer?
               q[:downvote] = CurrentUser.id
             end
 
           when "voted"
-            if CurrentUser.is_moderator?
+            if CurrentUser.is_privileged?
               q[:voted] = User.name_or_id_to_id(g2)
             elsif CurrentUser.is_viewer?
               q[:voted] = CurrentUser.id
             end
 
           when "-voted"
-            if CurrentUser.is_moderator?
+            if CurrentUser.is_privileged?
               q[:neg_voted] = User.name_or_id_to_id(g2)
             elsif CurrentUser.is_viewer?
               q[:neg_voted] = CurrentUser.id
             end
 
           when "-upvote", "-votedup"
-            if CurrentUser.is_moderator?
+            if CurrentUser.is_privileged?
               q[:neg_upvote] = User.name_or_id_to_id(g2)
             elsif CurrentUser.is_viewer?
               q[:neg_upvote] = CurrentUser.id
             end
 
           when "-downvote", "-voteddown"
-            if CurrentUser.is_moderator?
+            if CurrentUser.is_privileged?
               q[:neg_downvote] = User.name_or_id_to_id(g2)
             elsif CurrentUser.is_viewer?
               q[:neg_downvote] = CurrentUser.id
@@ -1180,16 +1180,16 @@ class Tag < ApplicationRecord
 
   def category_editable_by?(user)
     return false if user.nil? or !user.is_editor?
-    return false if is_locked? && !user.is_moderator?
-    return false if TagCategory.mod_only_mapping[TagCategory.reverse_mapping[category]] && !user.is_moderator?
+    return false if is_locked? && !user.is_privileged?
+    return false if TagCategory.mod_only_mapping[TagCategory.reverse_mapping[category]] && !user.is_privileged?
     return true if post_count < Danbooru.config.tag_type_change_cutoff
-    return true if user.is_moderator?
+    return true if user.is_privileged?
     false
   end
 
   def user_can_create_tag?
-    if name =~ /\A.*_\(lore\)\z/ && !CurrentUser.user.is_moderator?
-      errors.add(:base, "Can not create lore tags unless moderator")
+    if name =~ /\A.*_\(lore\)\z/ && !CurrentUser.user.is_privileged?
+      errors.add(:base, "Can not create lore tags unless privileged")
       errors.add(:name, "is invalid")
       return false
     end

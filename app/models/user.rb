@@ -617,8 +617,6 @@ class User < ApplicationRecord
     end
 
     def favorite_limit
-      if is_contributor?
-        250_000
       elsif is_privileged?
         125_000
       else
@@ -633,8 +631,6 @@ class User < ApplicationRecord
     def api_burst_limit
       # can make this many api calls at once before being bound by
       # api_regen_multiplier refilling your pool
-      if is_contributor?
-        120
       elsif is_privileged?
         90
       else
@@ -647,8 +643,6 @@ class User < ApplicationRecord
     end
 
     def statement_timeout
-      if is_contributor?
-        9_000
       elsif is_privileged?
         6_000
       else
@@ -936,7 +930,7 @@ class User < ApplicationRecord
   end
 
   def can_update?(object, foreign_key = :user_id)
-    is_moderator? || is_admin? || object.__send__(foreign_key) == id
+    is_privileged? || is_admin? || object.__send__(foreign_key) == id
   end
 
   def dmail_count

@@ -25,7 +25,7 @@
       <% end %>
       <% if !@forum_topic.new_record? && @forum_topic.editable_by?(CurrentUser.user) %>
         <%= subnav_link_to "Edit", edit_forum_topic_path(@forum_topic), "data-shortcut": "e" %>
-        <% if CurrentUser.is_moderator? %>
+        <% if CurrentUser.is_privileged? %>
           <% if @forum_topic.is_hidden? %>
             <%= subnav_link_to "Unhide", unhide_forum_topic_path(@forum_topic), method: :post %>
           <% else %>

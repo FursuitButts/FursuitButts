@@ -29,7 +29,7 @@
 
       <% if CurrentUser.is_editor? && @wiki_page.try(:tag).present? %>
         <%= subnav_link_to "Edit Tag", edit_tag_path(@wiki_page.tag) %>
-        <% if CurrentUser.is_janitor? %>
+        <% if CurrentUser.is_privileged? %>
           <%= subnav_link_to "Fix Tag Count", new_tag_correction_path(tag_id: @wiki_page.tag.id) %>
         <% end %>
       <% end %>
@@ -40,7 +40,7 @@
         <%= subnav_link_to "Edit", edit_wiki_page_path(@wiki_page), "data-shortcut": "e" %>
       <% end %>
 
-      <% if CurrentUser.is_moderator? && !@wiki_page.is_deleted? %>
+      <% if CurrentUser.is_privileged? && !@wiki_page.is_deleted? %>
         <%= subnav_link_to "Delete", wiki_page_path(@wiki_page), :method => :delete, :"data-confirm" => "Are you sure you want to delete this wiki page?" %>
       <% end %>
 

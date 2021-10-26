@@ -1,7 +1,7 @@
 class PoolsController < ApplicationController
   respond_to :html, :json
   before_action :editor_only, :except => [:index, :show, :gallery]
-  before_action :janitor_only, :only => [:destroy]
+  before_action :privileged_only, :only => [:destroy]
 
   def new
     @pool = Pool.new

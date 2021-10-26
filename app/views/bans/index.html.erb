@@ -32,7 +32,7 @@
             <td><%= ban.humanized_expiration %></td>
             <td class="col-expand styled-dtext"><%= format_text ban.reason %></td>
             <td>
-              <% if CurrentUser.is_moderator? %>
+              <% if CurrentUser.is_privileged? %>
                 <%= link_to "Edit", edit_ban_path(ban) %>
                 | <%= link_to "Delete", ban_path(ban), :method => :delete %>
               <% end %>

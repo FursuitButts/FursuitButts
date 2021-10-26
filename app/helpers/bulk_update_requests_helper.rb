@@ -1,6 +1,6 @@
 module BulkUpdateRequestsHelper
   def approved?(command, antecedent, consequent)
-    return false unless CurrentUser.is_moderator?
+    return false unless CurrentUser.is_privileged?
 
     case command
     when :create_alias
@@ -25,7 +25,7 @@ module BulkUpdateRequestsHelper
   end
 
   def failed?(command, antecedent, consequent)
-    return false unless CurrentUser.is_moderator?
+    return false unless CurrentUser.is_privileged?
 
     case command
     when :create_alias
@@ -54,7 +54,7 @@ module BulkUpdateRequestsHelper
   end
 
   def script_with_line_breaks(script)
-    output = Cache.get(Cache.hash((CurrentUser.is_moderator? ? "mod" : "") + script), 3600) do
+    output = Cache.get(Cache.hash((CurrentUser.is_privileged? ? "mod" : "") + script), 3600) do
       script_tokenized = AliasAndImplicationImporter.tokenize(script)
       script_tags = collect_script_tags(script_tokenized)
       escaped_script = script_tokenized.map do |cmd, arg1, arg2|

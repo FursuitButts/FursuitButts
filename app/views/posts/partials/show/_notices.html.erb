@@ -1,4 +1,4 @@
-<% if CurrentUser.is_janitor? && post.is_flagged? && !post.is_deleted? && post.flags.any? %>
+<% if CurrentUser.is_privileged? && post.is_flagged? && !post.is_deleted? && post.flags.any? %>
   <div class="notice notice-flagged">
     <p>This post was flagged for review (<%= link_to "learn more", wiki_pages_path(:title => "howto:flag") %>): </p>
 
@@ -16,7 +16,7 @@
   </div>
 <% end %>
 
-<% if CurrentUser.is_janitor? && post.is_deleted? %>
+<% if CurrentUser.is_privileged? && post.is_deleted? %>
   <div class="notice notice-deleted">
     <% if post.flags.any? %>
       <p>This post was deleted or flagged for the following reasons: </p>
@@ -34,7 +34,7 @@
   </div>
 <% end %>
 
-<% if CurrentUser.is_janitor? && post.is_pending? %>
+<% if CurrentUser.is_privileged? && post.is_pending? %>
   <div class="notice notice-pending" id="pending-approval-notice">
     This post is pending approval. (<%= link_to "learn more", wiki_pages_path(:title => "about:mod_queue") %>)
 
@@ -47,7 +47,7 @@
   </div>
 <% end %>
 
-<% if CurrentUser.is_janitor? && post.replacements.pending.any? %>
+<% if CurrentUser.is_privileged? && post.replacements.pending.any? %>
   <div class="notice notice-flagged">
     <p>This post has <%= fast_link_to "pending replacements.", post_replacements_path(:search => {:post_id => @post.id}) %></p>
   </div>

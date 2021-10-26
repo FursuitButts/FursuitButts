@@ -1,5 +1,5 @@
 class UserRevertsController < ApplicationController
-  before_action :moderator_only
+  before_action :privileged_only
 
   def new
     @user = User.find(params[:user_id])

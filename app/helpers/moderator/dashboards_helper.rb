@@ -4,9 +4,9 @@ module Moderator
       choices = [
         ["", ""],
         ["Viewer", User::Levels::VIEWER],
-        ["Edutir", User::Levels::EDITOR],
+        ["Editor", User::Levels::EDITOR],
         ["Privileged", User::Levels::PRIVILEGED],
-        ["Moderator", User::Levels::MODERATOR],
+        ["Former Staff", User::Levels::FORMER_STAFF],
         ["Admin", User::Levels::ADMIN]
       ]
 

@@ -1,6 +1,6 @@
 module Moderator
   class TagsController < ApplicationController
-    before_action :moderator_only
+    before_action :privileged_only
 
     def edit
     end

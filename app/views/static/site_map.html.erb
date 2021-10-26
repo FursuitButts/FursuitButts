@@ -5,14 +5,14 @@
         <li><h1>Posts</h1></li>
         <li><%= link_to("Listing", posts_path) %></li>
         <li><%= link_to("Upload", new_upload_path) %></li>
-        <% if CurrentUser.is_janitor? %>
+        <% if CurrentUser.is_privileged? %>
           <li><%= link_to("Upload Listing", uploads_path) %></li>
         <% end %>
         <li><%= link_to("Popular", popular_explore_posts_path) %></li>
         <% if CurrentUser.can_approve_posts? %>
           <li><%= link_to("Moderate", moderator_post_queue_path) %></li>
         <% end %>
-        <% if CurrentUser.is_moderator? %>
+        <% if CurrentUser.is_privileged? %>
           <li><%= link_to("Mass Edit", edit_moderator_tag_path) %></li>
         <% end %>
         <li><%= link_to("Similar Images Search", iqdb_queries_path) %></li>
@@ -92,7 +92,7 @@
     <section>
       <ul>
         <li><h1>Users</h1></li>
-        <% if CurrentUser.is_moderator? %>
+        <% if CurrentUser.is_privileged? %>
           <li><%= link_to("Dashboard", moderator_dashboard_path) %></li>
         <% end %>
         <li><%= link_to("Listing", users_path) %></li>
@@ -117,7 +117,7 @@
           <li><%= link_to("Post Report Reasons", post_report_reasons_path) %></li>
           <li><%= link_to("Alias & Implication Import", new_admin_alias_and_implication_import_path) %></li>
         <% end %>
-        <% if CurrentUser.is_moderator? %>
+        <% if CurrentUser.is_privileged? %>
           <li><%= link_to("IP Bans", ip_bans_path) %></li>
         <% end %>
         <li><%= link_to("Mod Actions", mod_actions_path) %></li>

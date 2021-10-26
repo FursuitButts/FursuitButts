@@ -216,7 +216,7 @@ class Pool < ApplicationRecord
   end
 
   def deletable_by?(user)
-    user.is_janitor?
+    (user.is_editor? && self.creator_id == user.id) || user.is_privileged?
   end
 
   def updater_can_edit_deleted
@@ -374,7 +374,7 @@ class Pool < ApplicationRecord
   end
 
   def category_changeable_by?(user)
-    user.is_janitor? || (user.is_editor? && post_count <= Danbooru.config.pool_category_change_limit)
+    user.is_privileged? || (user.is_editor? && post_count <= Danbooru.config.pool_category_change_limit)
   end
 
   def updater_can_change_category
