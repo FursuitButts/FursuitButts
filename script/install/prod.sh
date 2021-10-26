@@ -191,8 +191,5 @@ if [ -f $PID_FILE ]; then
     rm /home/danbooru/danbooru/tmp/pids/server.pid
 fi
 
-echo "Recompiling.."
-$APP_DIR/sh/compile
-
 echo "Starting.."
 sudo -i -u danbooru bash -c 'source /etc/profile.d/chruby.sh;cd /home/danbooru/danbooru;/usr/bin/shoreman'
