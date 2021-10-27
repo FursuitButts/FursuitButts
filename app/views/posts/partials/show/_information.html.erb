@@ -13,7 +13,7 @@
     Posted: <%= link_to time_ago_in_words_tagged(post.created_at), posts_path(:tags => "date:#{post.created_at.to_date}"), :rel => "nofollow" %>
     <meta itemprop="uploadDate" content="<%= post.created_at.iso8601 %>">
   </li>
-  <% if post.is_pending? %>
+  <% unless post.is_pending? %>
     <% if !post.approver || post.uploader.id == post.approver.id %>
       <li>Approver: <b>Self Approved</b></li>
     <% else %>
