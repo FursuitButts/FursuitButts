@@ -999,9 +999,9 @@ module Danbooru
 
     def mascots
       [
-          ["/images/mascots/MaidBoyeMascot.png", "#808080", "<a href='https://twitter.com/Gaokunx3'>Gaokun</a> @ <a href='https://e621.net/posts/2907560'>e621</a>"],
-          ["/images/mascots/DonMascot.png", "#808080", "<a href='https://twitter.com/Gaokunx3'>Gaokun</a> @ <a href='https://e621.net/posts/2772476'>e621</a>"],
-          ["/images/mascots/DonMaidMascot.png", "#808080", "<a href='https://twitter.com/Gaokunx3'>Gaokun</a> @ <a href='https://e621.net/posts/2907536'>e621</a>"]
+          ["/images/mascots/MaidBoyeMascot.png", "#222222", "<a href='https://twitter.com/Gaokunx3'>Gaokun</a> @ <a href='https://e621.net/posts/2907560'>e621</a>"],
+          ["/images/mascots/DonMascot.png", "#222222", "<a href='https://twitter.com/Gaokunx3'>Gaokun</a> @ <a href='https://e621.net/posts/2772476'>e621</a>"],
+          ["/images/mascots/DonMaidMascot.png", "#222222", "<a href='https://twitter.com/Gaokunx3'>Gaokun</a> @ <a href='https://e621.net/posts/2907536'>e621</a>"]
       ]
     end
 
