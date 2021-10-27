@@ -178,7 +178,6 @@ class Post < ApplicationRecord
       contains = []
       if cache
         val = client.smembers(key)
-        ids.map.with_index { |id, index| { name: names[index], id: id } }
         val.each do |v|
           contains << {
             name: v.split(":")[0],
