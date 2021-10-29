@@ -53,7 +53,7 @@ class UserPresenter
     end
 
     if user.is_exactly_viewer?
-      "uploads disabled"
+      return "uploads disabled"
     end
 
     upload_limit_pieces = user.upload_limit_pieces
