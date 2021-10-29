@@ -44,16 +44,16 @@ class UserPresenter
       permissions << "unrestricted uploads"
     end
 
-    if user.is_exactly_viewer?
-      permissions << "uploads disabled"
-    end
-
     permissions.join(", ")
   end
 
   def upload_limit(template)
     if user.can_upload_free?
       return "none"
+    end
+
+    if user.is_exactly_viewer?
+      "uploads disabled"
     end
 
     upload_limit_pieces = user.upload_limit_pieces
