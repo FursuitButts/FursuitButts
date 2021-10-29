@@ -195,7 +195,7 @@ class Post < ApplicationRecord
         end
         unless contains.empty?
           client.multi do |r|
-            r.sadd(key, contains.collect { |obj| "#{obj[:id]}:#{obj[:name]}" })
+            r.sadd(key, contains.collect { |obj| "#{obj[:name]}:#{obj[:id]}" })
             r.expire(key, 6.hours.to_i)
           end
         end
