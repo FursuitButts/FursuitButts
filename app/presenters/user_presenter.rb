@@ -44,6 +44,10 @@ class UserPresenter
       permissions << "unrestricted uploads"
     end
 
+    if user.is_exactly_viewer?
+      permissions << "uploads disabled"
+    end
+
     permissions.join(", ")
   end
 

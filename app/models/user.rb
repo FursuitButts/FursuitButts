@@ -218,7 +218,7 @@ class User < ApplicationRecord
     end
 
     def display_name_safe
-      display_name || name
+      display_name || pretty_name
     end
 
     def update_cache
