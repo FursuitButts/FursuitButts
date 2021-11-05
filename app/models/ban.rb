@@ -97,7 +97,7 @@ class Ban < ApplicationRecord
   end
 
   def update_user_on_create
-    user.update(is_banned: true, level: User::Levels::BANNED)
+    user.update(is_banned: true, level: User::Levels::BLOCKED)
   end
 
   def update_user_on_destroy
