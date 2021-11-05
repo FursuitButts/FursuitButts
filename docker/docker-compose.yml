@@ -26,7 +26,7 @@ services:
     networks:
       default:
         ipv4_address: 172.31.0.3
-  e621:
+  yiffyapi:
     image: ubuntu:focal
     container_name: yiffyapi
     command: /home/danbooru/danbooru/script/install/prod.sh
