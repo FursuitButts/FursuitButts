@@ -14,7 +14,7 @@ const type = v === "positive" ? "positive" : v === "negative" ? "negative" : "ne
 void y.userFeedback.create({
   username: user,
   category: type,
-  body: process.argv.slice(3).join(" ")
+  body: process.argv.slice(4).join(" ")
 }).then(r => {
   console.log("Record Created For \"%s\", https://yiff.rest/user_feedbacks/%d", user, r.id);
 })

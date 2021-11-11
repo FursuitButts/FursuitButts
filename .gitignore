@@ -46,3 +46,4 @@ yarn-debug.log*
 /script_js/src/tmp
 script_js/bur*
 script_js/posts
+script_js/config.json
