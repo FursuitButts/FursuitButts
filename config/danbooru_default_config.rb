@@ -57,10 +57,6 @@ module Danbooru
       "system"
     end
 
-    def upload_feedback_topic
-      ForumTopic.where(title: "Upload Feedback Thread").first
-    end
-
     def source_code_url
       "https://github.com/DonovanDMC/e621ng"
     end
@@ -312,7 +308,7 @@ module Danbooru
 
     # After this many pages, the paginator will switch to sequential mode.
     def max_numbered_pages
-      1_000
+      750
     end
 
     def beta_notice
