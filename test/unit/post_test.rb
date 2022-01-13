@@ -1442,7 +1442,7 @@ class PostTest < ActiveSupport::TestCase
   context "Favorites:" do
     context "Removing a post from a user's favorites" do
       setup do
-        @user = FactoryBot.create(:contributor_user)
+        @user = FactoryBot.create(:curator_user)
         @post = FactoryBot.create(:post)
         FavoriteManager.add!(user: @user, post: @post)
         @user.reload
@@ -1471,7 +1471,7 @@ class PostTest < ActiveSupport::TestCase
 
     context "Adding a post to a user's favorites" do
       setup do
-        @user = FactoryBot.create(:contributor_user)
+        @user = FactoryBot.create(:curator_user)
         @post = FactoryBot.create(:post)
       end
 

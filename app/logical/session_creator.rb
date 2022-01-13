@@ -21,7 +21,14 @@ class SessionCreator
 
       if remember
         verifier = ActiveSupport::MessageVerifier.new(Danbooru.config.remember_key, serializer: JSON, digest: "SHA256")
-        cookies.encrypted[:remember] = {value: verifier.generate("#{user.id}:#{user.password_token}", purpose: "rbr", expires_in: 14.days), expires: Time.now + 14.days, httponly: true, same_site: :lax, secure: Rails.env.production?}
+       cookies.encrypted[:remember] = {
+          value: verifier.generate(user.id, purpose: "rbr", expires_in: 14.days),
+          expires: Time.now + 14.days,
+          httponly: true,
+          same_site: :lax,
+          secure: true,
+          domain: ".#{Danbooru.config.hostname}"
+        }
       end
       return true
     else

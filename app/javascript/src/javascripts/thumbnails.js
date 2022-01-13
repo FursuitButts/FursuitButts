@@ -39,8 +39,7 @@ Thumbnails.initialize = function () {
       newTag.attr("data-" + key.replace(/_/g, '-'), postData[key]);
     }
     newTag.attr('class', blacklisted ? "post-thumbnail blacklisted" : "post-thumbnail");
-    if (p.hasClass('thumb-placeholder-link'))
-      newTag.addClass('dtext');
+    if (p.hasClass('thumb-placeholder-link')) {newTag.addClass('dtext');}
     const img = $('<img>');
     img.attr('src', postData.preview_url || '/images/deleted-preview.png');
     img.attr({
@@ -60,7 +59,7 @@ Thumbnails.initialize = function () {
 
 $(document).ready(function () {
   Thumbnails.initialize();
-  $(window).on('e621:add_deferred_posts', (_, posts) => {
+  $(window).on('yapi:add_deferred_posts', (_, posts) => {
     window.___deferred_posts = window.___deferred_posts || {}
     window.___deferred_posts = $.extend(window.___deferred_posts, posts);
     Thumbnails.initialize();

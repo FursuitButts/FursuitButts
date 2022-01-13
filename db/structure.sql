@@ -10,20 +10,6 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: -
---
-
-CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
-
-
---
--- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: -
---
-
-COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
-
-
---
 -- Name: pg_trgm; Type: EXTENSION; Schema: -; Owner: -
 --
 
@@ -128,7 +114,7 @@ ALTER TEXT SEARCH CONFIGURATION public.danbooru
 
 SET default_tablespace = '';
 
-SET default_with_oids = false;
+SET default_table_access_method = heap;
 
 --
 -- Name: api_keys; Type: TABLE; Schema: public; Owner: -
@@ -2625,26 +2611,25 @@ CREATE TABLE public.users (
     created_at timestamp without time zone,
     updated_at timestamp without time zone,
     name character varying NOT NULL,
+    display_name character varying,
     password_hash character varying NOT NULL,
     email character varying,
     email_verification_key character varying,
     level integer DEFAULT 20 NOT NULL,
-    base_upload_limit integer DEFAULT 10 NOT NULL,
+    base_upload_limit integer DEFAULT 5 NOT NULL,
+    v3_api_limit integer DEFAULT 8 NOT NULL,
     last_logged_in_at timestamp without time zone,
     last_forum_read_at timestamp without time zone,
     recent_tags text,
     comment_threshold integer DEFAULT '-1'::integer NOT NULL,
-    default_image_size character varying DEFAULT 'large'::character varying NOT NULL,
+    default_image_size character varying DEFAULT 'fitv'::character varying NOT NULL,
     favorite_tags text,
-    blacklisted_tags text DEFAULT 'spoilers
-guro
-scat
-furry -rating:s'::text,
+    blacklisted_tags text DEFAULT ''::text,
     time_zone character varying DEFAULT 'Eastern Time (US & Canada)'::character varying NOT NULL,
     bcrypt_password_hash text,
     per_page integer DEFAULT 20 NOT NULL,
     custom_style text,
-    bit_prefs bigint DEFAULT 0 NOT NULL,
+    bit_prefs bigint DEFAULT 4096 NOT NULL,
     last_ip_addr inet,
     unread_dmail_count integer DEFAULT 0 NOT NULL,
     profile_about text,
@@ -4927,63 +4912,63 @@ CREATE INDEX post_image_hashes_index ON public.post_image_hashes USING btree (nw
 -- Name: posts posts_update_change_seq; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER posts_update_change_seq BEFORE UPDATE ON public.posts FOR EACH ROW EXECUTE PROCEDURE public.posts_trigger_change_seq();
+CREATE TRIGGER posts_update_change_seq BEFORE UPDATE ON public.posts FOR EACH ROW EXECUTE FUNCTION public.posts_trigger_change_seq();
 
 
 --
 -- Name: blips trigger_blips_on_update; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER trigger_blips_on_update BEFORE INSERT OR UPDATE ON public.blips FOR EACH ROW EXECUTE PROCEDURE tsvector_update_trigger('body_index', 'pg_catalog.english', 'body');
+CREATE TRIGGER trigger_blips_on_update BEFORE INSERT OR UPDATE ON public.blips FOR EACH ROW EXECUTE FUNCTION tsvector_update_trigger('body_index', 'pg_catalog.english', 'body');
 
 
 --
 -- Name: comments trigger_comments_on_update; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER trigger_comments_on_update BEFORE INSERT OR UPDATE ON public.comments FOR EACH ROW EXECUTE PROCEDURE tsvector_update_trigger('body_index', 'pg_catalog.english', 'body');
+CREATE TRIGGER trigger_comments_on_update BEFORE INSERT OR UPDATE ON public.comments FOR EACH ROW EXECUTE FUNCTION tsvector_update_trigger('body_index', 'pg_catalog.english', 'body');
 
 
 --
 -- Name: dmails trigger_dmails_on_update; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER trigger_dmails_on_update BEFORE INSERT OR UPDATE ON public.dmails FOR EACH ROW EXECUTE PROCEDURE tsvector_update_trigger('message_index', 'pg_catalog.english', 'title', 'body');
+CREATE TRIGGER trigger_dmails_on_update BEFORE INSERT OR UPDATE ON public.dmails FOR EACH ROW EXECUTE FUNCTION tsvector_update_trigger('message_index', 'pg_catalog.english', 'title', 'body');
 
 
 --
 -- Name: forum_posts trigger_forum_posts_on_update; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER trigger_forum_posts_on_update BEFORE INSERT OR UPDATE ON public.forum_posts FOR EACH ROW EXECUTE PROCEDURE tsvector_update_trigger('text_index', 'pg_catalog.english', 'body');
+CREATE TRIGGER trigger_forum_posts_on_update BEFORE INSERT OR UPDATE ON public.forum_posts FOR EACH ROW EXECUTE FUNCTION tsvector_update_trigger('text_index', 'pg_catalog.english', 'body');
 
 
 --
 -- Name: forum_topics trigger_forum_topics_on_update; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER trigger_forum_topics_on_update BEFORE INSERT OR UPDATE ON public.forum_topics FOR EACH ROW EXECUTE PROCEDURE tsvector_update_trigger('text_index', 'pg_catalog.english', 'title');
+CREATE TRIGGER trigger_forum_topics_on_update BEFORE INSERT OR UPDATE ON public.forum_topics FOR EACH ROW EXECUTE FUNCTION tsvector_update_trigger('text_index', 'pg_catalog.english', 'title');
 
 
 --
 -- Name: notes trigger_notes_on_update; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER trigger_notes_on_update BEFORE INSERT OR UPDATE ON public.notes FOR EACH ROW EXECUTE PROCEDURE tsvector_update_trigger('body_index', 'pg_catalog.english', 'body');
+CREATE TRIGGER trigger_notes_on_update BEFORE INSERT OR UPDATE ON public.notes FOR EACH ROW EXECUTE FUNCTION tsvector_update_trigger('body_index', 'pg_catalog.english', 'body');
 
 
 --
 -- Name: posts trigger_posts_on_tag_index_update; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER trigger_posts_on_tag_index_update BEFORE INSERT OR UPDATE ON public.posts FOR EACH ROW EXECUTE PROCEDURE tsvector_update_trigger('tag_index', 'public.danbooru', 'tag_string', 'fav_string', 'pool_string');
+CREATE TRIGGER trigger_posts_on_tag_index_update BEFORE INSERT OR UPDATE ON public.posts FOR EACH ROW EXECUTE FUNCTION tsvector_update_trigger('tag_index', 'public.danbooru', 'tag_string', 'fav_string', 'pool_string');
 
 
 --
 -- Name: wiki_pages trigger_wiki_pages_on_update; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER trigger_wiki_pages_on_update BEFORE INSERT OR UPDATE ON public.wiki_pages FOR EACH ROW EXECUTE PROCEDURE tsvector_update_trigger('body_index', 'public.danbooru', 'body', 'title');
+CREATE TRIGGER trigger_wiki_pages_on_update BEFORE INSERT OR UPDATE ON public.wiki_pages FOR EACH ROW EXECUTE FUNCTION tsvector_update_trigger('body_index', 'public.danbooru', 'body', 'title');
 
 
 --
@@ -5268,6 +5253,8 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20210426025625'),
 ('20210430201028'),
 ('20210506235640'),
+('20210625155528'),
 ('20210718172512'),
-('20210625155528');
+('20211223070707');
+
 

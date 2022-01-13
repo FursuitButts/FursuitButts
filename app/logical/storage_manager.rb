@@ -6,10 +6,15 @@ class StorageManager
 
   attr_reader :base_url, :base_dir, :hierarchical, :large_image_prefix, :protected_prefix, :base_path, :replacement_prefix
 
-  def initialize(base_url: default_base_url, base_path: default_base_path, base_dir: DEFAULT_BASE_DIR, hierarchical: false,
-                 large_image_prefix: Danbooru.config.large_image_prefix,
-                 protected_prefix: Danbooru.config.protected_path_prefix,
-                 replacement_prefix: Danbooru.config.replacement_path_prefix)
+  def initialize(
+      base_url: default_base_url,
+      base_path: default_base_path,
+      base_dir: DEFAULT_BASE_DIR,
+      hierarchical: false,
+      large_image_prefix: Danbooru.config.large_image_prefix,
+      protected_prefix: Danbooru.config.protected_path_prefix,
+      replacement_prefix: Danbooru.config.replacement_path_prefix
+    )
     @base_url = base_url.chomp("/")
     @base_dir = base_dir
     @base_path = base_path
@@ -20,7 +25,7 @@ class StorageManager
   end
 
   def default_base_path
-    "/data"
+    ""
   end
 
   def default_base_url

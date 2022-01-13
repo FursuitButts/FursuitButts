@@ -26,10 +26,10 @@ class CreateUsers < ActiveRecord::Migration[4.2]
       t.column :receive_email_notifications, :boolean, :null => false, :default => false
       t.column :comment_threshold, :integer, :null => false, :default => -1
       t.column :always_resize_images, :boolean, :null => false, :default => false
-      t.column :default_image_size, :string, :null => false, :default => "large"
+      t.column :default_image_size, :string, :null => false, :default => "fitv"
       t.column :favorite_tags, :text
       t.column :blacklisted_tags, :text
-      t.column :time_zone, :string, :null => false, :default => "Eastern Time (US & Canada)"
+      t.column :time_zone, :string, :null => false, :default => "UTC"
     end
 
     execute "CREATE UNIQUE INDEX index_users_on_name ON users ((lower(name)))"

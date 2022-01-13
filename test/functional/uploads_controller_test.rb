@@ -12,7 +12,7 @@ class UploadsControllerTest < ActionDispatch::IntegrationTest
 
   context "The uploads controller" do
     setup do
-      @user = create(:contributor_user)
+      @user = create(:curator_user)
       mock_iqdb_service!
     end
 

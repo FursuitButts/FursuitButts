@@ -91,7 +91,8 @@
     jQuery("#stats-pct-blockedusers").html(pct(stats.users.blocked, stats.users.total));
     jQuery("#stats-pct-memberusers").html(pct(stats.users.member, stats.users.total));
     jQuery("#stats-pct-privilegedusers").html(pct(stats.users.privileged, stats.users.total));
-    jQuery("#stats-pct-contributorusers").html(pct(stats.users.contributor, stats.users.total));
+    jQuery("#stats-pct-curatorusers").html(pct(stats.users.curator, stats.users.total));
+    jQuery("#stats-pct-formerstaffusers").html(pct(stats.users.formerstaff, stats.users.total));
     jQuery("#stats-pct-janitorusers").html(pct(stats.users.janitor, stats.users.total));
     jQuery("#stats-pct-modusers").html(pct(stats.users.mod, stats.users.total));
     jQuery("#stats-pct-adminusers").html(pct(stats.users.admin, stats.users.total));
@@ -137,7 +138,8 @@
       blocked:     <%= @stats['blocked_users'] %>,
       member:      <%= @stats['member_users'] %>,
       privileged:  <%= @stats['privileged_users'] %>,
-      contributor: <%= @stats['contributor_users'] %>,
+      curator: <%= @stats['curator_users'] %>,
+      formerstaff: <%= @stats['formerstaff_users'] %>,
       janitor:     <%= @stats['janitor_users'] %>,
       mod:         <%= @stats['moderator_users'] %>,
       admin:       <%= @stats['admin_users'] %>,
@@ -306,11 +308,11 @@
         <td style='width:50px;'></td>
       </tr>
       <tr>
-        <td>Unactivated users</td>
+        <td>Unactivated Users</td>
         <td><%= del(@stats['unactivated_users']) %></td><td class='stats-pct' id='stats-pct-unactivatedusers'></td>
       </tr>
       <tr>
-        <td>Banned users</td>
+        <td>Banned Users</td>
         <td><%= del(@stats['blocked_users']) %></td><td class='stats-pct' id='stats-pct-blockedusers'></td>
       </tr>
       <tr>
@@ -318,19 +320,23 @@
         <td><%= del(@stats['member_users']) %></td><td class='stats-pct' id='stats-pct-memberusers'></td>
       </tr>
       <tr>
-        <td>Privileged users</td>
+        <td>Privileged Users</td>
         <td><%= del(@stats['privileged_users']) %></td><td class='stats-pct' id='stats-pct-privilegedusers'></td>
       </tr>
       <tr>
-        <td>Contributors</td>
-        <td><%= del(@stats['contributor_users']) %></td><td class='stats-pct' id='stats-pct-contributorusers'></td>
+        <td>Curators</td>
+        <td><%= del(@stats['curator_users']) %></td><td class='stats-pct' id='stats-pct-curatorusers'></td>
+      </tr>
+      <tr>
+        <td>Former Staff Users</td>
+        <td><%= del(@stats['formerstaff_users']) %></td><td class='stats-pct' id='stats-pct-formerstaffusers'></td>
       </tr>
       <tr>
         <td>Janitors</td>
         <td><%= del(@stats['janitor_users']) %></td><td class='stats-pct' id='stats-pct-janitorusers'></td>
       </tr>
       <tr>
-        <td>Mods</td>
+        <td>Moderators</td>
         <td><%= del(@stats['moderator_users']) %></td><td class='stats-pct' id='stats-pct-modusers'></td>
       </tr>
       <tr>
@@ -338,7 +344,7 @@
         <td><%= del(@stats['admin_users']) %></td><td class='stats-pct' id='stats-pct-adminusers'></td>
       </tr>
       <tr>
-        <td>Dmails sent</td>
+        <td>Dmails Sent</td>
         <td><%= del(@stats['total_dmails']) %></td><td></td>
       </tr>
     </table>

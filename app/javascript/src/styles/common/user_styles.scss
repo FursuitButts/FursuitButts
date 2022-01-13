@@ -23,15 +23,15 @@ a.user-privileged.with-style:hover {
   }
 }
 
-a.user-contributor.with-style {
+a.user-curator.with-style {
   @include themable {
-    color: themed("color-user-contributor");
+    color: themed("color-user-curator");
   }
 }
 
-a.user-contributor.with-style:hover {
+a.user-curator.with-style:hover {
   @include themable {
-    color: themed("color-user-contributor-alt");
+    color: themed("color-user-curator-alt");
   }
 }
 
@@ -48,20 +48,32 @@ a.user-blocked.with-style:hover {
   }
 }
 
-a.user-former.staff.with-style {
+a.user-former-staff.with-style {
   @include themable {
     color: themed("color-user-former-staff");
   }
 }
-
+// I fixed your bug for you guys, congrats
 // TODO BUG Instead of having class .former-staff
-a.user-former.staff.with-style:hover {
+
+a.user-former-staff.with-style:hover {
   @include themable {
     color: themed("color-user-former-staff-alt");
   }
 }
 
-// This group has two classes: .former and .staff
+a.user-bitch-baby.with-style {
+  @include themable {
+    color: themed("color-user-bitch-baby");
+  }
+}
+
+a.user-bitch-baby.with-style:hover {
+  @include themable {
+    color: themed("color-user-bitch-baby-alt");
+  }
+}
+
 a.user-janitor.with-style {
   @include themable {
     color: themed("color-user-janitor");
@@ -77,6 +89,18 @@ a.user-janitor.with-style:hover {
 a.user-admin.with-style {
   @include themable {
     color: themed("color-user-admin");
+  }
+}
+
+a.user-system.with-style {
+  @include themable {
+    color: themed("color-user-system");
+  }
+}
+
+a.user-system.with-style:hover {
+  @include themable {
+    color: themed("color-user-system-alt");
   }
 }
 

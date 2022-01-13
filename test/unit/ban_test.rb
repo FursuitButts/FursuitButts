@@ -35,7 +35,7 @@ class BanTest < ActiveSupport::TestCase
         ban = FactoryBot.create(:ban, :user => user, :banner => @banner)
         assert(ban.errors.empty?)
 
-        user = FactoryBot.create(:contributor_user)
+        user = FactoryBot.create(:curator_user)
         ban = FactoryBot.create(:ban, :user => user, :banner => @banner)
         assert(ban.errors.empty?)
 
@@ -75,7 +75,7 @@ class BanTest < ActiveSupport::TestCase
       end
 
       should "be valid against anyone who is not an admin or a moderator" do
-        user = FactoryBot.create(:contributor_user)
+        user = FactoryBot.create(:curator_user)
         ban = FactoryBot.create(:ban, :user => user, :banner => @banner)
         assert(ban.errors.empty?)
 

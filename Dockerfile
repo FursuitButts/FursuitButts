@@ -5,7 +5,7 @@ RUN apk --no-cache add nodejs yarn postgresql-client ffmpeg vips tzdata \
   git build-base postgresql-dev glib-dev
 
 # Nice to have packages
-RUN apk --no-cache add nano sudo bash
+RUN apk --no-cache add nano sudo bash lsof
 
 # Install js packages and gems
 COPY package.json yarn.lock ./

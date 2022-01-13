@@ -1,0 +1,43 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema",
+	"$id": "https://yiff.rest/schema/v3_error.json",
+	"type": "object",
+	"required": [
+		"success",
+		"error"
+	],
+	"properties": {
+		"success": {
+			"$id": "#/properties/success",
+			"type": "boolean",
+			"title": "Success",
+			"description": "If this request was successful"
+		},
+		"error": {
+			"$id": "#/properties/error",
+			"type": "object",
+			"title": "Error",
+			"description": "A description of the error that occured.",
+			"required": [
+				"code",
+				"message"
+			],
+			"properties": {
+				"code": {
+					"$id": "#/properties/error/properties/code",
+					"type": "integer",
+					"title": "Code",
+					"description": "The error code. (see message, or https://github.com/DonovanDMC/e621ng/blob/master/app/controllers/yiffy_api_controller.rb#L4)"
+				},
+				"message": {
+					"$id": "#/properties/error/properties/message",
+					"type": "string",
+					"title": "Message",
+					"description": "A human readable message to explain the error."
+				}
+			},
+			"additionalProperties": true
+		}
+	},
+	"additionalProperties": true
+}

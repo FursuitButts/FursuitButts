@@ -2,7 +2,7 @@ let PostDeletion = {};
 
 PostDeletion.init = function() {
   const input = $("#reason");
-  let inputVal = input.val() + "";
+  let inputVal = String(input.val());
 
   const buttons = $("a.delreason-button")
     .on("click", (event) => {
@@ -10,7 +10,7 @@ PostDeletion.init = function() {
       event.preventDefault();
 
       const $button = $(event.target);
-      if (!$button.is("a")) return;
+      if (!$button.is("a")) {return;}
 
       const text = $button.data("processed");
       input.val((index, current) => {
@@ -20,15 +20,14 @@ PostDeletion.init = function() {
             .replace(text, "")
             .replace(/ \/ $|^ \/ /g, "") // trim leading and trailing slashes
             .replace(/( \/ ){2,}/g, " / "); // trim duplicate / leftover slashes
-        } else return (current ? current + " / " : "") + text;
+        } else {return (current ? current + " / " : "") + text;}
       });
       input.trigger("input");
     })
-    .on("e621:refresh", (event) => {
+    .on("yapi:refresh", (event) => {
       const $button = $(event.target);
       let text = $button.data("text");
-      for (const buttonInput of $button.find("input[type=text]"))
-        text = text.replace("%ID%", $(buttonInput).val());
+      for (const buttonInput of $button.find("input[type=text]")) {text = text.replace("%ID%", $(buttonInput).val());}
 
       $button.data("processed", text);
       $button.toggleClass("enabled", inputVal.indexOf(text) >= 0);
@@ -36,14 +35,14 @@ PostDeletion.init = function() {
     .each((index, element) => {
       const $button = $(element);
       $button.find("input[type=text]").on("input", () => {
-        $button.trigger("e621:refresh");
+        $button.trigger("yapi:refresh");
       })
     });
-  buttons.trigger("e621:refresh");
+  buttons.trigger("yapi:refresh");
 
   input.on("input", () => {
-    inputVal = input.val() + "";
-    buttons.trigger("e621:refresh");
+    inputVal = String(input.val());
+    buttons.trigger("yapi:refresh");
   });
 
   $("#delreason-clear").on("click", () => {
@@ -52,8 +51,7 @@ PostDeletion.init = function() {
 }
 
 $(function() {
-  if($("div#c-confirm-delete").length)
-    Danbooru.PostDeletion.init();
+  if ($("div#c-confirm-delete").length) {Danbooru.PostDeletion.init();}
 });
 
 export default PostDeletion

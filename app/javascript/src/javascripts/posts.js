@@ -699,7 +699,7 @@ Post.initialize_excerpt = function() {
     e.preventDefault();
   });
 
-  if (!$(".post-preview").length && /Nobody here but us chickens/.test($("#posts").html())) {
+  if (!$(".post-preview").length && /OwO What's This\?!\? It's nothing\.\. We didn't find anything\./.test($("#posts").html())) {
     $("#show-excerpt-link").click();
   }
 }

@@ -3,7 +3,7 @@ require 'test_helper'
 class UploadWhitelistTest < ActiveSupport::TestCase
   context "A upload whitelist" do
     setup do
-      user = FactoryBot.create(:contributor_user)
+      user = FactoryBot.create(:curator_user)
       CurrentUser.user = user
       CurrentUser.ip_addr = "127.0.0.1"
 

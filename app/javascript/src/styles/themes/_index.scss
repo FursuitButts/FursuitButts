@@ -1,9 +1,4 @@
 @import 'theme_hexagon';
-@import 'theme_pony';
-@import 'theme_bloodlust';
-@import 'theme_serpent';
-@import 'theme_hotdog';
-
 @import 'extra_none';
 @import 'extra_autumn';
 @import 'extra_winter';
@@ -15,20 +10,17 @@
 
 // Primary theming - colors, main backgrounds, etc
 $theme_main_index: (
-  "data-attr":    "main",
-  "default":      $theme_hexagon,
+  "data-attr":      "main",
+  "default":        $theme_hexagon,
   "themes": (
-    "pony":         $theme_pony,
-    "bloodlust":    $theme_bloodlust,
-    "serpent":      $theme_serpent,
-    "hotdog":       $theme_hotdog,
+    "hexagon":      $theme_hexagon
   )
 );
 
 // Tertiary theming - seasonal decorations
 $theme_extra_index: (
-  "data-attr":        "extra",
-  "default":          $extra_hexagons,
+  "data-attr":      "extra",
+  "default": $extra_none,
   "themes": (
     "none":         $extra_none,
     "autumn":       $extra_autumn,

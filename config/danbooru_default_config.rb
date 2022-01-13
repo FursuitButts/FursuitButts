@@ -4,16 +4,12 @@ module Danbooru
   class Configuration
     # The version of this Danbooru.
     def version
-      "2.1.0"
+      "1.0.0"
     end
 
     # The name of this Danbooru.
     def app_name
-      if CurrentUser.safe_mode?
-        "e926"
-      else
-        "e621"
-      end
+      "YiffyAPI"
     end
 
     def description
@@ -21,7 +17,7 @@ module Danbooru
     end
 
     def domain
-      "e621.net"
+      "yiff.rest"
     end
 
     # Force rating:s on this version of the site.
@@ -31,7 +27,7 @@ module Danbooru
 
     # The canonical hostname of the site.
     def hostname
-      Socket.gethostname
+      Rails.env.production? ? "yiff.rest" : "yiffyapi.local"
     end
 
     # The list of all domain names this site is accessible under.
@@ -42,11 +38,11 @@ module Danbooru
 
     # Contact email address of the admin.
     def contact_email
-      "management@#{server_host}"
+      "hewwo@yiff.rocks"
     end
 
     def takedown_email
-      "management@#{server_host}"
+      "none@yiffyapi.local"
     end
 
     def takedown_links
@@ -58,7 +54,7 @@ module Danbooru
     #
     # Run `rake db:seed` to create this account if it doesn't already exist in your install.
     def system_user
-      "auto_moderator"
+      "system"
     end
 
     def source_code_url
@@ -93,9 +89,9 @@ module Danbooru
           "Blocked" => 10,
           "Member" => 20,
           "Privileged" => 30,
-          "Contributor" => 33,
-          "Former Staff" => 34,
-          "Janitor" => 35,
+          "Curator" => 31,
+          "Former Staff" => 32,
+          "Janitor" => 33,
           "Moderator" => 40,
           "Admin" => 50
       }
@@ -104,13 +100,8 @@ module Danbooru
     # Set the default level, permissions, and other settings for new users here.
     def customize_new_user(user)
       user.comment_threshold = -10 unless user.will_save_change_to_comment_threshold?
-      user.blacklisted_tags = 'gore
-scat
-watersports
-young -rating:s
-loli
-shota
-fart'
+      user.blacklisted_tags = ""
+      user.level = User::Levels::MEMBER
       true
     end
 
@@ -139,7 +130,6 @@ fart'
     end
 
     def protected_file_secret
-      "abc123"
     end
 
     def replacement_path_prefix
@@ -147,7 +137,6 @@ fart'
     end
 
     def replacement_file_secret
-      "abc123"
     end
 
     def deleted_preview_url
@@ -161,7 +150,6 @@ fart'
 
     # List of memcached servers
     def memcached_servers
-      %w(127.0.0.1:11211)
     end
 
     def alias_implication_forum_category
@@ -285,12 +273,12 @@ fart'
     end
 
     def remember_key
-      "abc123"
     end
 
     def tag_type_change_cutoff
       100
     end
+
     # Determines who can see ads.
     def can_see_ads?(user)
       !user.is_privileged?
@@ -364,27 +352,24 @@ fart'
     end
 
     def discord_site
-      ""
-    end
-
-    def discord_secret
-      ""
+      "https://discord.gg/bdDKsw6srW"
     end
 
     # Maximum size of an upload. If you change this, you must also change
     # `client_max_body_size` in your nginx.conf.
     def max_file_size
-      100.megabytes
+      50.megabytes
     end
 
     def max_file_sizes
+      # TODO: increase max file sizes when we get more storage
       {
-          'jpg' => 100.megabytes,
+          'jpg' => 40.megabytes,
           'gif' => 20.megabytes,
-          'png' => 100.megabytes,
+          'png' => 40.megabytes,
           'swf' => 0,
-          'webm' => 100.megabytes,
-          'mp4' => 100.megabytes,
+          'webm' => 50.megabytes,
+          'mp4' => 50.megabytes,
           'zip' => 0
       }
     end
@@ -469,7 +454,7 @@ fart'
       # base_url - where to serve files from (default: http://#{hostname}/data)
       # hierarchical: false - store files in a single directory
       # hierarchical: true - store files in a hierarchical directory structure, based on the MD5 hash
-      StorageManager::Local.new(base_url: "#{CurrentUser.root_url}/", base_dir: "#{Rails.root}/public/data", hierarchical: true)
+      StorageManager::Local.new(base_url: Rails.env.production? ? "https://v3.yiff.media/" : "https://yiffyapi.local/data/", base_dir: "#{Rails.root}/public/data", hierarchical: true)
 
       # Store files on one or more remote host(s). Configure SSH settings in
       # ~/.ssh_config or in the ssh_options param (ref: http://net-ssh.github.io/net-ssh/Net/SSH.html#method-c-start)
@@ -669,7 +654,7 @@ fart'
 
     # If enabled, users must verify their email addresses.
     def enable_email_verification?
-      false
+      Rails.env.production?
     end
 
     def enable_signups?
@@ -773,7 +758,23 @@ fart'
 
     # The number of posts displayed per page.
     def posts_per_page
-      20
+      75
+    end
+
+    def max_posts_per_page
+      320
+    end
+
+    def minimum_general_tags
+      10
+    end
+
+    def base_upload_approved
+      5
+    end
+
+    def base_upload_deleted
+      2
     end
 
     def is_post_restricted?(post)
@@ -910,19 +911,37 @@ fart'
 
     # you should override this
     def email_key
-      "zDMSATq0W3hmA5p3rKTgD"
-    end
-
-    def mailgun_api_key
-      ''
-    end
-
-    def mailgun_domain
-      ''
     end
 
     def mail_from_addr
-      'noreply@localhost'
+      "api@yiff.rocks"
+    end
+
+    def smtp_address
+      "smtp.gmail.com"
+    end
+
+    def smtp_port
+      587
+    end
+
+    def smtp_domain
+      "yiff.rocks"
+    end
+
+    def smtp_username
+      mail_from_addr
+    end
+
+    def smtp_password
+    end
+
+    def smtp_authentication
+      "plain"
+    end
+
+    def smtp_tls
+      true
     end
 
     # For downloads, if the host matches any of these IPs, block it
@@ -962,7 +981,6 @@ fart'
     end
 
     def elasticsearch_host
-      '127.0.0.1'
     end
 
     # Use a recaptcha on the signup page to protect against spambots creating new accounts.
@@ -1026,14 +1044,9 @@ fart'
 
     def mascots
       [
-          ["https://static1.e621.net/data/mascot_bg/esix1.jpg", "#012e56", "<a href='http://www.furaffinity.net/user/keishinkae'>Keishinkae</a>"],
-          ["https://static1.e621.net/data/mascot_bg/esix2.jpg", "#012e56", "<a href='http://www.furaffinity.net/user/keishinkae'>Keishinkae</a>"],
-          ["https://static1.e621.net/data/mascot_bg/raptor1.jpg", "#012e56", "<a href='http://nowhereincoming.net/'>darkdoomer</a>"],
-          ["https://static1.e621.net/data/mascot_bg/hexerade.jpg", "#002d55", "<a href='http://www.furaffinity.net/user/chizi'>chizi</a>"],
-          ["https://static1.e621.net/data/mascot_bg/wiredhooves.jpg", "#012e56", "<a href='http://www.furaffinity.net/user/wiredhooves'>wiredhooves</a>"],
-          ["https://static1.e621.net/data/mascot_bg/ecmajor.jpg", "#012e57", "<a href='http://www.horsecore.org/'>ECMajor</a>"],
-          ["https://static1.e621.net/data/mascot_bg/evalionfix.jpg", "#012e57", "<a href='http://www.furaffinity.net/user/evalion'>evalion</a>"],
-          ["https://static1.e621.net/data/mascot_bg/peacock.png", "#012e57", "<a href='http://www.furaffinity.net/user/ratte'>Ratte</a>"]
+          ["/images/mascots/MaidBoyeMascot.png", "#222222", "<a href='https://twitter.com/Gaokunx3'>Gaokun</a> @ <a href='https://e621.net/posts/2907560'>e621</a>"],
+          ["/images/mascots/DonUndiesMascot.png", "#222222", "<a href='https://twitter.com/Gaokunx3'>Gaokun</a> @ <a href='https://e621.net/posts/2772476'>e621</a>"],
+          ["/images/mascots/DonMaidMascot.png", "#222222", "<a href='https://twitter.com/Gaokunx3'>Gaokun</a> @ <a href='https://e621.net/posts/2907536'>e621</a>"]
       ]
     end
 

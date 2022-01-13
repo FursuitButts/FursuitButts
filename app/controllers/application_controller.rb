@@ -242,4 +242,53 @@ class ApplicationController < ActionController::Base
   def allowed_readonly_actions
     %w[index show search]
   end
+
+   def v3_authcheck
+    if CurrentUser.is_anonymous?
+      render json: {
+        success: false,
+        error: YiffyApiController::APIErrors::AUTHENTICATION_REQUIRED
+      }, status: :unauthorized
+      return false
+    end
+
+    true
+  end
+
+  # TODO headers not showing on non-limited requests
+  V3_WINDOW = 5
+  def v3_throttle
+    client = ::Redis.new(url: Danbooru.config.redis_url)
+    client_ip = request.env["REMOTE_ADDR"]
+    key = "ratelimit_v3:#{client_ip}"
+    count = client.get(key)
+
+    unless count
+      client.set(key, 0)
+      client.expire(key, V3_WINDOW)
+      return true
+    end
+
+    ttl = client.ttl(key)
+    remaining = (CurrentUser.user.v3_api_limit - (count.to_i + 1))
+    if remaining < 0
+      remaining = 0
+    end
+
+    response.set_header("RateLimit-Remaining", remaining.to_s)
+    response.set_header("RateLimit-Limit", CurrentUser.user.v3_api_limit.to_s)
+    response.set_header("RateLimit-Reset", (Time.now.to_i + ttl.to_i).to_s)
+    if (count.to_i + 1) >= CurrentUser.user.v3_api_limit
+      render json: {
+        "$schema": "https://yiff.rest/schema/v3_error.json",
+        success: false,
+        error: YiffyApiController::APIErrors::RATELIMITED
+      }.to_json, status: :too_many_requests
+      return
+    end
+
+    client.incr(key)
+    client.close
+    true
+  end
 end

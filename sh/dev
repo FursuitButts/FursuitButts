@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+cd $(realpath "$(dirname "${BASH_SOURCE[0]}")")/..
+sudo rm -f tmp/pids/server.pid
+bash sh/down
+sudo docker-compose --env-file .env.dev up $1 --force-recreate --build

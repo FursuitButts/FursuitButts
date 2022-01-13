@@ -6,7 +6,15 @@ class UserPresenter
   end
 
   def name
+    user.display_name || raw_name
+  end
+
+  def raw_name
     user.pretty_name
+  end
+
+  def has_display_name?
+    !user.display_name.nil?
   end
 
   def join_date
@@ -46,11 +54,32 @@ class UserPresenter
 
     upload_limit_pieces = user.upload_limit_pieces
 
-    %{<abbr title="Base Upload Limit">#{user.base_upload_limit}</abbr> + (<abbr title="Approved Posts">#{upload_limit_pieces[:approved]}</abbr> / 10) - (<abbr title="Deleted Posts">#{upload_limit_pieces[:deleted]}</abbr> / 4) - <abbr title="Pending or Flagged Posts">#{upload_limit_pieces[:pending]}</abbr> = <abbr title="User Upload Limit Remaining">#{user.upload_limit}</abbr>}.html_safe
+    %{<abbr title="Base Upload Limit">#{user.base_upload_limit}</abbr> + (<abbr title="Approved Posts">#{upload_limit_pieces[:approved]}</abbr> / #{Danbooru.config.base_upload_approved}) - (<abbr title="Deleted Posts">#{upload_limit_pieces[:deleted]}</abbr> / #{Danbooru.config.base_upload_deleted}) - <abbr title="Pending or Flagged Posts">#{upload_limit_pieces[:pending]}</abbr> = <abbr title="User Upload Limit Remaining">#{user.upload_limit}</abbr>}.html_safe
   end
 
   def uploads
     Post.tag_match("user:#{user.name}").limit(6).records
+  end
+
+  def show_staff_notes?
+    CurrentUser.is_privileged?
+  end
+
+  def uploads
+@@ -189,7 +209,7 @@ def can_view_favorites?
+  end
+
+  def show_staff_notes?
+    CurrentUser.is_moderator?
+    CurrentUser.is_privileged?
+  end
+
+  def staff_notes
+
+  end
+
+  def uploads
+    Post.tag_match("user:#{user.raw_name}").limit(6).records
   end
 
   def has_uploads?

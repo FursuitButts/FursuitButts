@@ -15,5 +15,5 @@
 <%= render "users/secondary_links" %>
 
 <% content_for(:page_title) do %>
-  <%= @user ? "#{@user.name} - Staff Notes" : "Staff Notes" %>
+  <%= @user ? "#{@user.display_name_safe} - Staff Notes" : "Staff Notes" %>
 <% end %>

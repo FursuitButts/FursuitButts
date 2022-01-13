@@ -1,80 +1,147 @@
 version: "3"
 
 services:
-  e621:
+  yiffyapi:
     build: ./
+    container_name: yiffyapi
     volumes:
       - .:/app
       - node_modules:/app/node_modules
       - public_packs:/app/public/packs
       - public_packs_test:/app/public/packs-test
-      - post_data:/app/public/data
+      - ./data/posts:/app/public/data
     environment:
       DATABASE_URL: postgresql://danbooru:@postgres
-      RAILS_ENV: development
-      DANBOORU_HOSTNAME: http://localhost:3000
+      RAILS_ENV: ${YIFFYAPI_ENV:-development}
+      DANBOORU_HOSTNAME: ${YIFFYAPI_HOST}
       DANBOORU_REDIS_URL: redis://redis
       DANBOORU_ELASTICSEARCH_HOST: elastic
       DANBOORU_MEMCACHED_SERVERS: memcached
       DANBOORU_IQDBS_SERVER: http://iqdb:4567
-      # These are just development secrets, do not use them in production
-      SECRET_TOKEN: 1c58518a891eff4520cadc59afa9e378a9325f1247544ff258096e497f095f45
-      SESSION_SECRET_KEY: 44b4f44e9f253c406cbe727d403d500c1cecff943e4d2aea8f5447f28846fffe
+      SECRET_TOKEN: ${YIFFYAPI_STOKEN}
+      SESSION_SECRET_KEY: ${YIFFYAPI_SKEY}
+      TZ: America/Chicago
     depends_on:
-      - postgres
-      - redis
-      - memcached
-      - elastic
-      - iqdb
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      memcached:
+        condition: service_healthy
+      elastic:
+        condition: service_healthy
+      iqdb:
+        condition: service_healthy
+    restart: always
+    healthcheck:
+      interval: 10s
+      timeout: 2s
+      test: lsof -i :9000 || exit 1
+    hostname: yiffyapi.yiffyapi.containers.local
+    networks:
+      default:
+        ipv4_address: 172.21.1.2
     tty: true
 
   nginx:
     image: nginx:stable-alpine
+    container_name: yiffyapi.nginx
     volumes:
       - ./public:/app/public
-      - post_data:/app/public/data
+      - ./data/posts:/app/public/data
+      - ./ssl:/app/ssl
       - public_packs:/app/public/packs
       - public_packs_test:/app/public/packs-test
       - ./docker/default.conf.template:/etc/nginx/templates/default.conf.template
+    healthcheck:
+      interval: 10s
+      timeout: 5s
+      test: lsof -i :443 || exit 1
     environment:
-      NGINX_HOST: localhost
-      NGINX_PORT: 3000
+      - NGINX_HOST=nginx.yiffyapi.containers.local
+      - NGINX_PORT=443
+      - TZ=America/Chicago
     depends_on:
-      - e621
-    ports:
-      - "3000:3000"
-    
+      - yiffyapi
+    hostname: nginx.yiffyapi.containers.local
+    networks:
+      default:
+        ipv4_address: 172.21.1.3
+
   postgres:
-    build:  ./docker/postgres
+    build: ./docker/postgres
+    container_name: yiffyapi.postgres
     environment:
       - POSTGRES_USER=danbooru
       - POSTGRES_HOST_AUTH_METHOD=trust
+      - TZ=America/Chicago
     volumes:
-      - db_data:/var/lib/postgresql/data
-    ports:
-      - "34517:5432"
-  
+      - ./data/db:/var/lib/postgresql/data
+    healthcheck:
+      test: pg_isready
+      interval: 10s
+      timeout: 5s
+    hostname: postgres.yiffyapi.containers.local
+    networks:
+      default:
+        ipv4_address: 172.21.1.4
+
   redis:
     image: redis:alpine
+    container_name: yiffyapi.redis
     command: redis-server --save 10 1 --loglevel warning
+    environment:
+      - TZ=America/Chicago
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: redis-cli ping
+      interval: 10s
+      timeout: 5s
+    hostname: redis.yiffyapi.containers.local
+    networks:
+      default:
+        ipv4_address: 172.21.1.5
 
   memcached:
     image: memcached:alpine
+    container_name: yiffyapi.memcached
+    environment:
+      TZ: America/Chicago
+    healthcheck:
+      interval: 10s
+      timeout: 2s
+      test: nc -z 127.0.0.1 11211
+    hostname: memcached.yiffyapi.containers.local
+    networks:
+      default:
+        ipv4_address: 172.21.1.6
 
   elastic:
     image: elasticsearch:7.14.2
+    container_name: yiffyapi.elastic
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
       - logger.level=WARN
       - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      - TZ=America/Chicago
     volumes:
       - elastic_data:/usr/share/elasticsearch/data
-  
+    mem_limit: 2gb
+    healthcheck:
+      interval: 10s
+      timeout: 2s
+      test: curl --write-out 'HTTP %{http_code}' --fail --silent --output /dev/null
+        http://localhost:9200/ || exit 1
+    hostname: elastic.yiffyapi.containers.local
+    networks:
+      default:
+        ipv4_address: 172.21.1.7
+
   iqdb:
     build: ./docker/iqdb
+    container_name: yiffyapi.iqdb
     environment:
       - IQDB_HOSTNAME=localhost
       - IQDB_PORT=62125
@@ -85,18 +152,39 @@ services:
       - REDIS_URL=redis://redis
       # Sinatra only binds to localhost in development, but to 0.0.0.0 for anything else
       - APP_ENV=docker
+      - TZ=America/Chicago
     depends_on:
       - redis
     volumes:
-      - post_data:/data
-      - iqdb_data:/home/vagrant/iqdbs
+      - ./data/posts:/app/public/data
+      - ./data/iqdb:/home/vagrant/iqdbs
+    healthcheck:
+      interval: 10s
+      timeout: 2s
+      test: nc -z 127.0.0.1 62125
+    hostname: iqdb.yiffyapi.containers.local
+    networks:
+      default:
+        ipv4_address: 172.21.1.8
+
+networks:
+  default:
+    name: yiffyapi
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.21.1.0/24
+          gateway: 172.21.1.1
 
 volumes:
-  post_data:
-  iqdb_data:
-  elastic_data:
-  db_data:
   redis_data:
+    name: yiffyapi_redis
+  elastic_data:
+    name: yiffyapi_elastic
   node_modules:
+    name: yiffyapi_node_modules
   public_packs:
+    name: yiffyapi_packs
   public_packs_test:
+    name: yiffyapi_packs_test

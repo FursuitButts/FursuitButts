@@ -24,14 +24,14 @@ DText.create_wrapper = function(textarea) {
     .addClass("dtext-formatter")
     .attr({ "data-editing": "true", })
     .insertBefore(textarea);
-  
+
   build_tabs(wrapper);
   build_buttons(wrapper, textarea);
-  
+
   textarea
     .addClass("dtext-formatter-input")
     .appendTo(wrapper);
-  
+
   build_preview(wrapper, textarea);
   build_charcounter(wrapper, textarea);
 }
@@ -43,8 +43,8 @@ DText.create_wrapper = function(textarea) {
  */
 DText.destroy_wrapper = function(textarea) {
   const wrapper = textarea.parents(".dtext-formatter");
-  if(!wrapper.length) return;
-  
+  if (!wrapper.length) {return;}
+
   textarea
     .insertAfter(wrapper)
     .removeClass("dtext-formatter-input")
@@ -61,7 +61,7 @@ function build_tabs(wrapper) {
     )
     .on("click", "a", (event) => {
       event.preventDefault();
-      wrapper.trigger("e621:toggle");
+      wrapper.trigger("yapi:toggle");
     })
     .appendTo(wrapper);
 }
@@ -71,17 +71,17 @@ function build_buttons(wrapper, textarea) {
     .addClass("dtext-formatter-buttons")
     .attr({ "role": "toolbar", })
     .appendTo(wrapper);
-  
-  wrapper.on("e621:reload", () => {
+
+  wrapper.on("yapi:reload", () => {
     container.html("");
-    for(const button of DText.buttons) {
+    for (const button of DText.buttons) {
 
       // Spacer
-      if(button == null) {
+      if (button == null) {
         $("<span>").appendTo(container);
         continue;
       }
-  
+
       // Normal button
       $("<a>")
         .html("&#x" + button.icon)
@@ -96,16 +96,16 @@ function build_buttons(wrapper, textarea) {
         .appendTo(container);
     }
   });
-  wrapper.trigger("e621:reload");
+  wrapper.trigger("yapi:reload");
 }
 
 function build_preview(wrapper, textarea) {
   const preview = $("<div>")
     .addClass("dtext-formatter-preview dtext-container")
     .appendTo(wrapper);
-  
-  wrapper.on("e621:toggle", () => {
-    if(wrapper.attr("data-editing") == "true") {
+
+  wrapper.on("yapi:toggle", () => {
+    if (wrapper.attr("data-editing") == "true") {
       preview.css("min-height", textarea.outerHeight());
       wrapper.attr("data-editing", "false");
       update_preview(textarea, preview);
@@ -122,12 +122,12 @@ function build_charcounter(wrapper, textarea) {
     .addClass("dtext-formatter-charcount")
     .attr({
       "data-limit": limit,
-      "data-count": (textarea.val() + "").length,
+      "data-count": (String(textarea.val())).length,
     })
     .appendTo(wrapper);
-  
+
   textarea.on("input.danbooru.formatter", () => {
-    const length = (textarea.val() + "").length;
+    const length = (String(textarea.val())).length;
     charcount
       .toggleClass("overfill", length >= limit)
       .attr("data-count", length);
@@ -137,18 +137,18 @@ function build_charcounter(wrapper, textarea) {
 /** Refreshes the preview field to match the provided input */
 function update_preview(input, preview) {
   const currentText = input.val().trim();
-  
+
   // The input is empty, reset everything
-  if(!currentText) {
+  if (!currentText) {
     preview.text("");
     input.removeData("cache");
     return;
   }
-  
+
   // The input is identical to the previous lookup
-  if(input.data("cache") == currentText) return;
+  if (input.data("cache") == currentText) {return;}
   input.data("cache", currentText);
-  
+
   preview
     .html("")
     .attr("loading", "true");
@@ -159,16 +159,15 @@ function update_preview(input, preview) {
       dataType: "json",
       data: { body: currentText },
       success: (response) => {
-      
+
         // The loading was cancelled, since the user toggled back
         // to the editing tab and potentially changed the input
-        if(preview.attr("loading") !== "true" || input.data("cache") !== currentText)
-          return;
-        
+        if (preview.attr("loading") !== "true" || input.data("cache") !== currentText) {return;}
+
         preview
           .attr("loading", "false")
           .html(response.html);
-        $(window).trigger("e621:add_deferred_posts", response.posts);
+        $(window).trigger("yapi:add_deferred_posts", response.posts);
       },
       error: () => {
         preview
@@ -186,25 +185,24 @@ function update_preview(input, preview) {
  * @param {JQuery<HTMLElement>} input Input element to alter
  */
 DText.process_formatting = function (content, input) {
-  const currentText = input.val() + "";
+  const currentText = String(input.val());
   const position = {
     start: input.prop("selectionStart"),
     end: input.prop("selectionEnd"),
   };
-  
+
   const offset = {
     start: content.indexOf("%selection%"),
     end: content.length - (content.indexOf("%selection%") + 11),
   };
-  
+
   content = content.replace(/%selection%/g, currentText.substring(position.start, position.end));
   input.trigger("focus");
 
   // This is a workaround for a Firefox bug (prior to version 89)
   // Check https://bugzilla.mozilla.org/show_bug.cgi?id=1220696 for more information
-  if (!document.execCommand("insertText", false, content))
-    input.val(currentText.substring(0, position.start) + content + currentText.substring(position.end, currentText.length));
-  
+  if (!document.execCommand("insertText", false, content)) {input.val(currentText.substring(0, position.start) + content + currentText.substring(position.end, currentText.length));}
+
   input.prop("selectionStart", position.start + offset.start);
   input.prop("selectionEnd", position.start + content.length - offset.end);
   input.trigger("focus");
@@ -219,7 +217,7 @@ DText.initialize_all_inputs = function() {
 
 /** Initialize the dynamic elements in DText */
 DText.initialize_dynamic_elements = function() {
-  
+
   // Collapsibles
   $(document).on("click.danbooru", ".expandable-header", function(e) {
     const header = $(this);

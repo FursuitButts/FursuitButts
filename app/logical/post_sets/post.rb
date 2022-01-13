@@ -1,6 +1,6 @@
 module PostSets
   class Post < PostSets::Base
-    MAX_PER_PAGE = 320
+    MAX_PER_PAGE = Danbooru.config.max_posts_per_page
     attr_reader :tag_array, :public_tag_array, :page, :raw, :random, :post_count, :format
 
     def initialize(tags, page = 1, per_page = nil, options = {})

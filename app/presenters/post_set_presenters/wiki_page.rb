@@ -8,7 +8,7 @@ module PostSetPresenters
 
     def post_previews_html(template)
       result = super(template)
-      if result =~ /Nobody here but us chickens/
+      if result =~ /OwO What's This\?!\? It's nothing\.\. We didn't find anything\./
         result = ""
       end
       result.html_safe

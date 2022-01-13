@@ -1,6 +1,6 @@
 <div id="c-admin-users">
   <div id="a-edit">
-    <h1>Edit User: <%= @user.name %></h1>
+    <h1>Edit User: <%= @user.display_name_safe %></h1>
 
     <%= form_tag(admin_user_path(@user), :method => :put, :class => "simple_form") do %>
       <%= hidden_field_tag "id", @user.id %>
@@ -8,6 +8,11 @@
       <div class="input">
         <label class="block" for="user_name">Name</label>
         <%= text_field "user", "name", size: "50" %>
+      </div>
+
+      <div class="input">
+        <label class="block" for="user_display_name">Display Name</label>
+        <%= text_field "user", "display_name", size: "50" %>
       </div>
 
       <div class="input">
@@ -26,6 +31,11 @@
       </div>
 
       <div class="input">
+        <label class="block" for="user_use_gravatar">Use Gravatar</label>
+        <%= select_tag("user[use_gravatar]", options_for_select([["Yes", true], ["No", false]], @user.use_gravatar)) %>
+      </div>
+
+      <div class="input">
         <label class="block" for="user_about">About</label>
         <%= text_area "user", "profile_about", rows: 10, class: "dtext-full dtext-previewable", data: { limit: Danbooru.config.user_about_max_size }  %>
       </div>
@@ -38,6 +48,11 @@
       <div class="input integer optional">
         <label class="block" for="user_base_upload_limit">Upload Limit Base</label>
         <%= number_field "user", "base_upload_limit" %>
+      </div>
+
+      <div class="input integer optional">
+        <label class="block" for="user_v3_api_limit">V3 API Limit (per 5 seconds)</label>
+        <%= number_field "user", "v3_api_limit" %>
       </div>
 
       <div class="input integer optional">
@@ -73,5 +88,5 @@
 <%= render "users/secondary_links" %>
 
 <% content_for(:page_title) do %>
-  Edit User - <%= @user.name %>
+  Edit User - <%= @user.display_name_safe %>
 <% end %>

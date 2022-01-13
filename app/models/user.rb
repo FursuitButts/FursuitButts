@@ -56,6 +56,7 @@ class User < ApplicationRecord
     no_feedback
     disable_user_dmails
     enable_compact_uploader
+    use_gravatar
   )
 
   include Danbooru::HasBitFlags
@@ -79,10 +80,10 @@ class User < ApplicationRecord
   end
   validate :validate_email_address_allowed, on: [:create, :update], if: ->(rec) { (rec.new_record? && rec.email.present?) || (rec.email.present? && rec.email_changed?) }
 
-
   validates :name, user_name: true, on: :create
+  validates :display_name, user_name: { display: true }, on: :update, if: ->(rec) { rec.display_name.present? }
   validates :default_image_size, inclusion: { :in => %w(large fit fitv original) }
-  validates :per_page, inclusion: { :in => 1..320 }
+  validates :per_page, inclusion: { :in => 1..Danbooru.config.max_posts_per_page}
   validates :comment_threshold, presence: true
   validates :comment_threshold, numericality: { only_integer: true, less_than: 50_000, greater_than: -50_000 }
   validates :password, length: { :minimum => 6, :if => ->(rec) { rec.new_record? || rec.password.present? || rec.old_password.present? } }
@@ -125,6 +126,14 @@ class User < ApplicationRecord
   has_many :favorites, -> {order(id: :desc)}
   belongs_to :avatar, class_name: 'Post', optional: true
   accepts_nested_attributes_for :dmail_filter
+  after_initialize :empty_nick
+
+  def empty_nick
+    if self.display_name == ""
+      self.display_name = nil
+      update_column(:display_name, nil)
+    end
+  end
 
   module BanMethods
     def validate_ip_addr_is_not_banned
@@ -136,7 +145,7 @@ class User < ApplicationRecord
 
     def unban!
       self.is_banned = false
-      self.level = 20
+      self.level = User::Levels::MEMBER
       save
     end
 
@@ -206,6 +215,11 @@ class User < ApplicationRecord
     def pretty_name
       name.gsub(/([^_])_+(?=[^_])/, "\\1 \\2")
     end
+
+    def display_name_safe
+      display_name || pretty_name
+    end
+
 
     def update_cache
       Cache.put("uin:#{id}", name, 4.hours)
@@ -378,7 +392,7 @@ class User < ApplicationRecord
     end
 
     def level_class
-      "user-#{level_string.downcase}"
+      "user-#{level_string.downcase.gsub(" ", "-")}"
     end
 
     def create_user_status
@@ -491,51 +505,126 @@ class User < ApplicationRecord
       is_privileged?
     end
 
-    create_user_throttle(:artist_edit, ->{ Danbooru.config.artist_edit_limit - ArtistVersion.for_user(id).where('updated_at > ?', 1.hour.ago).count },
-                         :general_bypass_throttle?, 7.days)
-    create_user_throttle(:post_edit, ->{ Danbooru.config.post_edit_limit - PostArchive.for_user(id).where('updated_at > ?', 1.hour.ago).count },
-                         :general_bypass_throttle?, 7.days)
-    create_user_throttle(:wiki_edit, ->{ Danbooru.config.wiki_edit_limit - WikiPageVersion.for_user(id).where('updated_at > ?', 1.hour.ago).count },
-                         :general_bypass_throttle?, 7.days)
-    create_user_throttle(:pool, ->{ Danbooru.config.pool_limit - Pool.for_user(id).where('created_at > ?', 1.hour.ago).count },
-                         :is_janitor?, 7.days)
-    create_user_throttle(:pool_edit, ->{ Danbooru.config.pool_edit_limit - PoolArchive.for_user(id).where('updated_at > ?', 1.hour.ago).count },
-                         :is_janitor?, 3.days)
-    create_user_throttle(:pool_post_edit, -> { Danbooru.config.pool_post_edit_limit - PoolArchive.for_user(id).where('updated_at > ?', 1.hour.ago).group(:pool_id).count(:pool_id).length },
-                          :general_bypass_throttle?, 7.days)
-    create_user_throttle(:note_edit, ->{ Danbooru.config.note_edit_limit - NoteVersion.for_user(id).where('updated_at > ?', 1.hour.ago).count },
-                         :general_bypass_throttle?, 3.days)
-    create_user_throttle(:comment, ->{ Danbooru.config.member_comment_limit - Comment.for_creator(id).where('created_at > ?', 1.hour.ago).count },
-                         :general_bypass_throttle?, 7.days)
-    create_user_throttle(:forum_post, ->{ Danbooru.config.member_comment_limit - ForumPost.for_user(id).where('created_at > ?', 1.hour.ago).count },
-                         nil, 3.days)
-    create_user_throttle(:blip, ->{ Danbooru.config.blip_limit - Blip.for_creator(id).where('created_at > ?', 1.hour.ago).count },
-                         :general_bypass_throttle?, 3.days)
-    create_user_throttle(:dmail, ->{ Danbooru.config.dmail_limit - Dmail.sent_by_id(id).where('created_at > ?', 1.hour.ago).count },
-                         nil, 7.days)
-    create_user_throttle(:dmail_minute, ->{ Danbooru.config.dmail_minute_limit - Dmail.sent_by_id(id).where('created_at > ?', 1.minute.ago).count },
-                         nil, 7.days)
-    create_user_throttle(:comment_vote, ->{ Danbooru.config.comment_vote_limit - CommentVote.for_user(id).where("created_at > ?", 1.hour.ago).count },
-                         :general_bypass_throttle?, 3.days)
-    create_user_throttle(:post_vote, ->{ Danbooru.config.post_vote_limit - PostVote.for_user(id).where("created_at > ?", 1.hour.ago).count },
-                         :general_bypass_throttle?, nil)
-    create_user_throttle(:post_flag, ->{ Danbooru.config.post_flag_limit - PostFlag.for_creator(id).where("created_at > ?", 1.hour.ago).count },
-                         :can_approve_posts?, 3.days)
-    create_user_throttle(:ticket, ->{ Danbooru.config.ticket_limit - Ticket.for_creator(id).where("created_at > ?", 1.hour.ago).count },
-                         :general_bypass_throttle?, 3.days)
-    create_user_throttle(:suggest_tag, -> { Danbooru.config.tag_suggestion_limit - (TagAlias.for_creator(id).where("created_at > ?", 1.hour.ago).count + TagImplication.for_creator(id).where("created_at > ?", 1.hour.ago).count + BulkUpdateRequest.for_creator(id).where("created_at > ?", 1.hour.ago).count) },
-                         :is_janitor?, 7.days)
-    create_user_throttle(:forum_vote, -> { Danbooru.config.forum_vote_limit - ForumPostVote.by(id).where("created_at > ?", 1.hour.ago).count },
-                         :is_janitor?, 3.days)
-    create_user_throttle(:replace_post, ->{ Danbooru.config.replace_post_limit - PostReplacement.for_user(id).where("created_at > ?", 1.hour.ago).count },
-                         :can_approve_posts?, 7.days)
+    create_user_throttle(
+      :artist_edit,
+      -> { Danbooru.config.artist_edit_limit - ArtistVersion.for_user(id).where('updated_at > ?', 1.hour.ago).count },
+      :general_bypass_throttle?,
+      7.days
+    )
+    create_user_throttle(
+      :post_edit,
+      -> { Danbooru.config.post_edit_limit - PostArchive.for_user(id).where('updated_at > ?', 1.hour.ago).count },
+      :general_bypass_throttle?, 
+      7.days
+    )
+    create_user_throttle(
+      :wiki_edit,
+      -> { Danbooru.config.wiki_edit_limit - WikiPageVersion.for_user(id).where('updated_at > ?', 1.hour.ago).count },
+      :general_bypass_throttle?, 
+      7.days
+    )
+    create_user_throttle(
+      :pool,
+      -> { Danbooru.config.pool_limit - Pool.for_user(id).where('created_at > ?', 1.hour.ago).count },
+      :is_janitor?, 
+      7.days
+    )
+    create_user_throttle(
+      :pool_edit,
+      -> { Danbooru.config.pool_edit_limit - PoolArchive.for_user(id).where('updated_at > ?', 1.hour.ago).count },
+      :is_janitor?, 
+      3.days
+    )
+    create_user_throttle(
+      :pool_post_edit,
+      -> { Danbooru.config.pool_post_edit_limit - PoolArchive.for_user(id).where('updated_at > ?', 1.hour.ago).group(:pool_id).count(:pool_id).length },
+      :general_bypass_throttle?, 
+      7.days
+    )
+    create_user_throttle(
+      :note_edit,
+      -> { Danbooru.config.note_edit_limit - NoteVersion.for_user(id).where('updated_at > ?', 1.hour.ago).count },
+      :general_bypass_throttle?,
+      3.days
+    )
+    create_user_throttle(
+      :comment,
+      -> { Danbooru.config.member_comment_limit - Comment.for_creator(id).where('created_at > ?', 1.hour.ago).count },
+      :general_bypass_throttle?, 
+      7.days
+    )
+    create_user_throttle(
+      :forum_post,
+      -> { Danbooru.config.member_comment_limit - ForumPost.for_user(id).where('created_at > ?', 1.hour.ago).count },
+      nil, 
+      3.days
+    )
+    create_user_throttle(
+      :blip,
+      -> { Danbooru.config.blip_limit - Blip.for_creator(id).where('created_at > ?', 1.hour.ago).count },
+      :general_bypass_throttle?,
+      3.days
+    )
+    create_user_throttle(
+      :dmail,
+      -> { Danbooru.config.dmail_limit - Dmail.sent_by_id(id).where('created_at > ?', 1.hour.ago).count },
+      nil, 
+      7.days
+    )
+    create_user_throttle(
+      :dmail_minute,
+      -> { Danbooru.config.dmail_minute_limit - Dmail.sent_by_id(id).where('created_at > ?', 1.minute.ago).count },
+      nil, 
+      7.days
+    )
+    create_user_throttle(
+      :comment_vote,
+      -> { Danbooru.config.comment_vote_limit - CommentVote.for_user(id).where("created_at > ?", 1.hour.ago).count },
+      :general_bypass_throttle?, 
+      3.days
+    )
+    create_user_throttle(
+      :post_vote,
+      -> { Danbooru.config.post_vote_limit - PostVote.for_user(id).where("created_at > ?", 1.hour.ago).count },
+      :general_bypass_throttle?, 
+      nil
+    )
+    create_user_throttle(
+      :post_flag,
+      -> { Danbooru.config.post_flag_limit - PostFlag.for_creator(id).where("created_at > ?", 1.hour.ago).count },
+      :can_approve_posts?, 
+      3.days
+    )
+    create_user_throttle(
+      :ticket, ->{ Danbooru.config.ticket_limit - Ticket.for_creator(id).where("created_at > ?", 1.hour.ago).count },
+      :general_bypass_throttle?, 
+      3.days
+    )
+    create_user_throttle(
+      :suggest_tag,
+      -> { Danbooru.config.tag_suggestion_limit - (TagAlias.for_creator(id).where("created_at > ?", 1.hour.ago).count + TagImplication.for_creator(id).where("created_at > ?", 1.hour.ago).count + BulkUpdateRequest.for_creator(id).where("created_at > ?", 1.hour.ago).count) },
+      :is_janitor?, 
+      7.days
+    )
+    create_user_throttle(
+      :forum_vote,
+      -> { Danbooru.config.forum_vote_limit - ForumPostVote.by(id).where("created_at > ?", 1.hour.ago).count },
+      :is_janitor?, 
+      3.days
+    )
+    create_user_throttle(
+      :replace_post,
+      -> { Danbooru.config.replace_post_limit - PostReplacement.for_user(id).where("created_at > ?", 1.hour.ago).count },
+      :can_approve_posts?, 
+      7.days
+    )
 
     def can_remove_from_pools?
       is_member? && older_than(7.days)
     end
 
     def can_discord?
-      is_member? && older_than(7.days)
+      is_member?
     end
 
     def can_view_flagger?(flagger_id)
@@ -578,7 +667,7 @@ class User < ApplicationRecord
     def upload_limit
         pieces = upload_limit_pieces
 
-        base_upload_limit + (pieces[:approved] / 10) - (pieces[:deleted] / 4) - pieces[:pending]
+        base_upload_limit + (pieces[:approved] / Danbooru.config.base_upload_approved) - (pieces[:deleted] / Danbooru.config.base_upload_deleted) - pieces[:pending]
     end
     memoize :upload_limit
 
@@ -605,7 +694,7 @@ class User < ApplicationRecord
     end
 
     def favorite_limit
-      if is_contributor?
+      if is_curator?
         250_000
       elsif is_privileged?
         125_000
@@ -621,7 +710,7 @@ class User < ApplicationRecord
     def api_burst_limit
       # can make this many api calls at once before being bound by
       # api_regen_multiplier refilling your pool
-      if is_contributor?
+      if is_curator?
         120
       elsif is_privileged?
         90
@@ -635,7 +724,7 @@ class User < ApplicationRecord
     end
 
     def statement_timeout
-      if is_contributor?
+      if is_curator?
         9_000
       elsif is_privileged?
         6_000
@@ -656,7 +745,7 @@ class User < ApplicationRecord
         :id, :created_at, :name, :level, :base_upload_limit,
         :post_upload_count, :post_update_count, :note_update_count,
         :is_banned, :can_approve_posts, :can_upload_free,
-        :level_string, :avatar_id
+        :level_string, :avatar_id, :display_name
       ]
 
       if id == CurrentUser.user.id
@@ -680,7 +769,8 @@ class User < ApplicationRecord
         :wiki_page_version_count, :artist_version_count, :pool_version_count,
         :forum_post_count, :comment_count,
         :appeal_count, :flag_count, :positive_feedback_count,
-        :neutral_feedback_count, :negative_feedback_count, :upload_limit
+        :neutral_feedback_count, :negative_feedback_count, :upload_limit,
+        :v3_api_limit, :use_gravatar
       ]
     end
 
@@ -820,6 +910,7 @@ class User < ApplicationRecord
 
       params = params.dup
       params[:name_matches] = params.delete(:name) if params[:name].present?
+      params[:display_name_matches] = params.delete(:display_name) if params[:display_name].present?
 
       q = q.search_text_attribute(:name, params)
       q = q.attribute_matches(:level, params[:level])

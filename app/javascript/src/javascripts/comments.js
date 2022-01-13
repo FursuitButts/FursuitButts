@@ -47,7 +47,7 @@ Comment.show_all = function(e) {
     const current_comment_section = $(`div.comments-for-post[data-post-id=${post_id}] div.list-of-comments`);
     current_comment_section.html(data.html);
     Comment.reinitialize_all();
-    $(window).trigger("e621:add_deferred_posts", data.posts);
+    $(window).trigger("yapi:add_deferred_posts", data.posts);
   }).fail(function(data) {
     Utility.error("Failed to fetch all comments for this post.");
   });
@@ -55,8 +55,7 @@ Comment.show_all = function(e) {
 
 Comment.hide = function (e) {
   e.preventDefault();
-  if (!confirm("Are you sure you want to hide this comment?"))
-    return;
+  if (!confirm("Are you sure you want to hide this comment?")) {return;}
   const parent = $(e.target).parents('article.comment');
   const cid = parent.data('comment-id');
   $.ajax({
@@ -73,8 +72,7 @@ Comment.hide = function (e) {
 
 Comment.unhide = function (e) {
   e.preventDefault();
-  if (!confirm("Are you sure you want to unhide this comment?"))
-    return;
+  if (!confirm("Are you sure you want to unhide this comment?")) {return;}
   const parent = $(e.target).parents('article.comment');
   const cid = parent.data('comment-id');
   $.ajax({
@@ -92,8 +90,7 @@ Comment.unhide = function (e) {
 
 Comment.delete = function (e) {
   e.preventDefault();
-  if (!confirm("Are you sure you want to permanently delete this comment?"))
-    return;
+  if (!confirm("Are you sure you want to permanently delete this comment?")) {return;}
   const parent = $(e.target).parents('article.comment');
   const cid = parent.data('comment-id');
   $.ajax({
@@ -183,16 +180,16 @@ Comment.vote = function (id, score) {
     const commentScore = data.score;
     const ourScore = data.our_score;
     function scoreToClass(inScore) {
-      if (inScore === 0) return 'score-neutral';
+      if (inScore === 0) {return 'score-neutral';}
       return inScore > 0 ? 'score-positive' : 'score-negative';
     }
-    $("#comment-score-"+commentID).removeClass(scoreClasses);
-    $("#comment-vote-up-"+commentID).removeClass(scoreClasses);
-    $("#comment-vote-down-"+commentID).removeClass(scoreClasses);
-    $('#comment-score-'+commentID).text(commentScore);
-    $("#comment-score-"+commentID).addClass(scoreToClass(commentScore));
-    $('#comment-vote-up-'+commentID).addClass(ourScore > 0 ? 'score-positive' : 'score-neutral');
-    $('#comment-vote-down-'+commentID).addClass(ourScore < 0 ? 'score-negative' : 'score-neutral');
+    $("#comment-score-" + commentID).removeClass(scoreClasses);
+    $("#comment-vote-up-" + commentID).removeClass(scoreClasses);
+    $("#comment-vote-down-" + commentID).removeClass(scoreClasses);
+    $('#comment-score-' + commentID).text(commentScore);
+    $("#comment-score-" + commentID).addClass(scoreToClass(commentScore));
+    $('#comment-vote-up-' + commentID).addClass(ourScore > 0 ? 'score-positive' : 'score-neutral');
+    $('#comment-vote-down-' + commentID).addClass(ourScore < 0 ? 'score-negative' : 'score-neutral');
     Utility.notice('Vote saved');
   }).fail(function(data) {
     Utility.error(data.responseJSON.message);

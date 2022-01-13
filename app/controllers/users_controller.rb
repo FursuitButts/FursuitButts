@@ -5,8 +5,8 @@ class UsersController < ApplicationController
   before_action :member_only, only: [:custom_style, :upload_limit]
 
   def new
-    raise User::PrivilegeError.new("Already signed in") unless CurrentUser.is_anonymous?
-    return access_denied("Signups are disabled") unless Danbooru.config.enable_signups?
+    raise User::PrivilegeError.new("You are already signed in.") unless CurrentUser.is_anonymous?
+    return access_denied("We are not currently accepting new registrations.") unless Danbooru.config.enable_signups?
     @user = User.new
     respond_with(@user)
   end
@@ -59,8 +59,8 @@ class UsersController < ApplicationController
   end
 
   def create
-    raise User::PrivilegeError.new("Already signed in") unless CurrentUser.is_anonymous?
-    raise User::PrivilegeError.new("Signups are disabled") unless Danbooru.config.enable_signups?
+    raise User::PrivilegeError.new("You are already signed in.") unless CurrentUser.is_anonymous?
+    return access_denied("We are not currently accepting new registrations.") unless Danbooru.config.enable_signups?
     User.transaction do
       @user = User.new(user_params(:create).merge({last_ip_addr: request.remote_ip}))
       @user.email_verification_key = '1' if Danbooru.config.enable_email_verification?
@@ -128,10 +128,12 @@ class UsersController < ApplicationController
       enable_auto_complete
       disable_cropped_thumbnails disable_mobile_gestures
       enable_safe_mode disable_responsive_mode disable_post_tooltips
+      display_name
+      use_gravatar
     ]
 
     permitted_params += [dmail_filter_attributes: %i[id words]]
-    permitted_params += [:profile_about, :profile_artinfo, :avatar_id] if CurrentUser.is_member? # Prevent editing when blocked
+    permitted_params += [:profile_about, :profile_artinfo, :avatar_id, :use_gravatar] if CurrentUser.is_member? # Prevent editing when blocked
     permitted_params += [:enable_compact_uploader] if context != :create && CurrentUser.post_upload_count >= 10
     permitted_params += [:name, :email] if context == :create
 
@@ -139,7 +141,7 @@ class UsersController < ApplicationController
   end
 
   def user_search_params
-    permitted_params = %i[name_matches level min_level max_level can_upload_free can_approve_posts order]
+    permitted_params = %i[name_matches display_name_matches level min_level max_level can_upload_free can_approve_posts order]
     permitted_params += [:ip_addr] if CurrentUser.is_moderator?
     permitted_params += [:email_matches] if CurrentUser.is_admin?
     params.fetch(:search, {}).permit(permitted_params)

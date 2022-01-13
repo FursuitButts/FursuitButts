@@ -171,14 +171,21 @@ module ApplicationHelper
     return "anonymous" if user.blank?
 
     user_class = user.level_class
-    user_class = user_class + " user-post-approver" if user.can_approve_posts?
-    user_class = user_class + " user-post-uploader" if user.can_upload_free?
-    user_class = user_class + " user-banned" if user.is_banned?
-    user_class = user_class + " with-style" if CurrentUser.user.style_usernames?
+    user_class += " user-post-approver" if user.can_approve_posts?
+    user_class += " user-post-uploader" if user.can_upload_free?
+    user_class += " user-banned" if user.is_banned?
+    # doesn't count if they're just changing underscores/spaces/capitalization
+    user_class += " user-display-name" unless user.display_name.nil? || (!user.display_name.nil? && user.display_name.downcase.tr(" ", "_") == user.name.downcase)
+    user_class += " with-style" if CurrentUser.user.style_usernames? || CurrentUser.is_anonymous?
     if options[:raw_name]
       name = user.name
     else
       name = user.pretty_name
+      name = user.display_name_safe
+    end
+
+    if options[:show] && !user.display_name.nil? && user.display_name.downcase != user.name.downcase
+      name = "#{user.display_name} (#{user.pretty_name})"
     end
     link_to(name, user_path(user), :class => user_class, rel: "nofollow")
   end
@@ -255,10 +262,19 @@ module ApplicationHelper
   def user_avatar(user)
     return "" if user.nil?
     post_id = user.avatar_id
-    return "" unless post_id
-    deferred_post_ids.add(post_id)
-    tag.div class: 'post-thumb placeholder', id: "tp-#{post_id}", 'data-id': post_id do
-      tag.img class: 'thumb-img placeholder', src: '/images/thumb-preview.png', height: 100, width: 100
+    if post_id
+      deferred_post_ids.add(post_id)
+      tag.div class: 'post-thumb placeholder', id: "tp-#{post_id}", 'data-id': post_id do
+        tag.img class: 'thumb-img placeholder', src: '/images/thumb-preview.png', height: 100, width: 100
+      end
+    elsif user.use_gravatar? && !user.email.nil?
+      tag.div class: 'post-thumb' do
+        tag.a href: user_path(user) do
+          tag.img class: 'thumb-img', src: "https://gravatar.com/avatar/#{Digest::MD5.hexdigest(user.email.downcase)}?s=150", height: 150, width: 150
+        end
+      end
+    else
+      ""
     end
   end
 

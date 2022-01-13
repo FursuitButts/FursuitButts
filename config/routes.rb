@@ -501,10 +501,18 @@ Rails.application.routes.draw do
   post "/static/accept_terms_of_service" => "static#accept_terms_of_service", :as => "accept_terms_of_service"
   get "/static/contact" => "static#contact", :as => "contact"
   get "/static/discord" => "static#discord", as: "discord_get"
-  post "/static/discord" => "static#discord", as: "discord_post"
   get "/static/toggle_mobile_mode" => "static#disable_mobile_mode", as: "disable_mobile_mode"
   get "static/theme" => "static#theme", as: "theme"
   get "/meta_searches/tags" => "meta_searches#tags", :as => "meta_searches_tags"
+
+  # yiffy api
+  get "/V3" => redirect("https://#{Danbooru.config.hostname}/help/api")
+  get "/V3/whoami" => "yiffy_api#whoami"
+  get "/V3/animals/:category" => "yiffy_api#disabled"
+  get "/V3/furry/:category" => "yiffy_api#json"
+  get "/V3/furry/yiff/:category" => "yiffy_api#json"
+  get "/V3/:category" => "yiffy_api#json"
+  get "/V3/yiff/:category" => "yiffy_api#json"
 
   get "/intro" => redirect("/explore/posts/intro")
 

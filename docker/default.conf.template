@@ -1,5 +1,5 @@
 server {
-  listen ${NGINX_PORT};
+  listen ${NGINX_PORT} ssl;
   server_name ${NGINX_HOST};
   root /app/public;
   index index.html;
@@ -14,11 +14,6 @@ server {
     break;
   }
   location /data {
-    # if you want to block hotlinking
-    valid_referers none ${NGINX_HOST} ~\.google\. ~\.bing\. ~\.yahoo\.;
-    if ($invalid_referer) {
-      return 403;
-    }
     rewrite ^/data/sample/__.+?__(.+) /data/sample/$1 last;
     rewrite ^/data/__.+?__(.+) /data/$1 last;
     expires max;
@@ -50,8 +45,11 @@ server {
   
   error_page 404 /404.html;
   error_page 500 502 503 504 /500.html;
+	ssl_certificate     /app/ssl/ca/intermediate/certs/client.chained.crt;
+	ssl_certificate_key /app/ssl/ca/intermediate/private/client.key;
+
 }
 
 upstream app_server {
-  server e621:9000;
+  server yiffyapi:9000;
 }

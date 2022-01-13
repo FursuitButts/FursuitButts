@@ -4,7 +4,7 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
   context "The reports controller" do
     setup do
       @mod = create(:mod_user)
-      @users = FactoryBot.create_list(:contributor_user, 2)
+      @users = FactoryBot.create_list(:curator_user, 2)
       @posts = @users.map do |u|
         create(:post, uploader: u)
       end
