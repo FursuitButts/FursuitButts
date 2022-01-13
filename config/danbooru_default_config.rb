@@ -355,6 +355,14 @@ module Danbooru
       500_000
     end
 
+    def name_max_len
+      20
+    end
+
+    def display_name_max_len
+      20
+    end
+
     def favorite_limit(user)
       if user.is_curator?
         250_000
