@@ -30,49 +30,48 @@ class YiffyApiController < ApplicationController
     }
   end
 
-  # TODO: reenable these
   # I wanted to use pools, but anyone could add to those
   class PostSets
-#    BULGE             = 1
-#    YIFF_GAY          = 2
-#    YIFF_STRAIGHT     = 3
-#    YIFF_LESBIAN      = 4
-#    YIFF_GYNOMORPH    = 5
-#    YIFF_ANDROMORPH   = 6
-#    YIFF_MALE_SOLO    = 7
-#    YIFF_FEMALE_SOLO  = 8
-#    BUTTS             = 9
-#    BOOP              = 10
-#    CUDDLE            = 11
-#    FLOP              = 12
-#    FURSUIT           = 13
-#    HOLD              = 14
-#    HOWL              = 15
-#    HUG               = 16
-#    KISS              = 17
-#    LICK              = 18
-#    PROPOSE           = 19
+    BULGE             = 1
+    YIFF_GAY          = 2
+    YIFF_STRAIGHT     = 3
+    YIFF_LESBIAN      = 4
+    YIFF_GYNOMORPH    = 5
+    YIFF_ANDROMORPH   = 6
+    YIFF_MALE_SOLO    = 7
+    YIFF_FEMALE_SOLO  = 8
+    BUTTS             = 9
+    BOOP              = 10
+    CUDDLE            = 11
+    FLOP              = 12
+    FURSUIT           = 13
+    HOLD              = 14
+    HOWL              = 15
+    HUG               = 16
+    KISS              = 17
+    LICK              = 18
+    PROPOSE           = 19
 
     # for iterating
     ALL = [
-#      BULGE,
-#      YIFF_GAY,
-#      YIFF_STRAIGHT,
-#      YIFF_GYNOMORPH,
-#      YIFF_ANDROMORPH,
-#      YIFF_MALE_SOLO,
-#      YIFF_FEMALE_SOLO,
-#      BUTTS,
-#      BOOP,
-#      CUDDLE,
-#      FLOP,
-#      FURSUIT,
-#      HOLD,
-#      HOWL,
-#      HUG,
-#      KISS,
-#      LICK,
-#      PROPOSE
+      BULGE,
+      YIFF_GAY,
+      YIFF_STRAIGHT,
+      YIFF_GYNOMORPH,
+      YIFF_ANDROMORPH,
+      YIFF_MALE_SOLO,
+      YIFF_FEMALE_SOLO,
+      BUTTS,
+      BOOP,
+      CUDDLE,
+      FLOP,
+      FURSUIT,
+      HOLD,
+      HOWL,
+      HUG,
+      KISS,
+      LICK,
+      PROPOSE
   ]
   end
 
