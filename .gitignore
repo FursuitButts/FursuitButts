@@ -33,7 +33,7 @@ test/reports
 
 /public/packs
 /public/packs-test
-/node_modules
+**/node_modules
 yarn-debug.log*
 .yarn-integrity
 

@@ -1,0 +1,8 @@
+{
+	"upgrade": true,
+	"reject": [
+		"node-fetch",
+		"@types/node-fetch",
+		"file-type"
+	]
+}
