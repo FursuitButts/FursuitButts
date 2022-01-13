@@ -117,16 +117,16 @@ class StorageManager
 
     return "#{root_url}/images/download-preview.png" if type == :preview && !post.has_preview?
     path = if type == :preview
-             "#{base}/preview/#{subdir}#{file}"
-           elsif type == :crop
-             "#{base}/crop/#{subdir}#{file}"
-           elsif type == :scaled
-             "#{base}/sample/#{subdir}#{file}"
-           elsif type == :large && post.has_large?
-             "#{base}/sample/#{subdir}#{file}"
-           else
-             "#{base}/#{subdir}#{file}"
-           end
+      "#{base}/preview/#{subdir}#{file}"
+    elsif type == :crop
+      "#{base}/crop/#{subdir}#{file}"
+    elsif type == :scaled
+      "#{base}/sample/#{subdir}#{file}"
+    elsif type == :large && post.has_large?
+      "#{base}/sample/#{subdir}#{file}"
+    else
+      "#{base}/#{subdir}#{file}"
+    end
     if post.protect_file?
       "#{base_url}#{path}#{protected_params(path, post)}"
     else

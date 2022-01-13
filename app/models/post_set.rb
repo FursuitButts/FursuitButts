@@ -21,9 +21,9 @@ class PostSet < ApplicationRecord
   user_status_counter :set_count
 
   before_validation :normalize_shortname
-  validates :name, length: { in: 3..Danbooru.config.post_set_name_max_len, message: "must be between three and #{Danbooru.config.post_set_name_max_len} characters long" }
+  validates :name, length: { in: 3..Danbooru.config.post_set_name_max_len, message: "must be between 3 and #{Danbooru.config.post_set_name_max_len} characters long" }
   validates :name, :shortname, uniqueness: { case_sensitive: false, message: "is already taken" }, if: :if_names_changed?
-  validates :shortname, length: { in: 3..Danbooru.config.post_set_shortname_max_len, message: "must be between three and #{Danbooru.config.post_set_shortname_max_len} characters long" }
+  validates :shortname, length: { in: 3..Danbooru.config.post_set_shortname_max_len, message: "must be between 3 and #{Danbooru.config.post_set_shortname_max_len} characters long" }
   validates :shortname, format: { with: /\A[\w]+\z/, message: "must only contain numbers, lowercase letters, and underscores" }
   validates :shortname, format: { with: /\A\d*[a-z_][\w]*\z/, message: "must contain at least one lowercase letter or underscore" }
   validates :description, length: { maximum: Danbooru.config.pool_description_max_len }
