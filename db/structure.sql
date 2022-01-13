@@ -2622,7 +2622,7 @@ CREATE TABLE public.users (
     last_forum_read_at timestamp without time zone,
     recent_tags text,
     comment_threshold integer DEFAULT '-1'::integer NOT NULL,
-    default_image_size character varying DEFAULT 'large'::character varying NOT NULL,
+    default_image_size character varying DEFAULT 'original'::character varying NOT NULL,
     favorite_tags text,
     blacklisted_tags text DEFAULT ''::text,
     time_zone character varying DEFAULT 'UTC'::character varying NOT NULL,

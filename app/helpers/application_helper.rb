@@ -180,7 +180,6 @@ module ApplicationHelper
     if options[:raw_name]
       name = user.name
     else
-      name = user.pretty_name
       name = user.display_name_safe
     end
 

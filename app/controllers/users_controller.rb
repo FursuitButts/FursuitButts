@@ -122,20 +122,18 @@ class UsersController < ApplicationController
       comment_threshold default_image_size favorite_tags blacklisted_tags
       time_zone per_page custom_style description_collapsed_initially hide_comments
 
-      receive_email_notifications enable_keyboard_navigation
+      use_gravatar receive_email_notifications enable_keyboard_navigation
       enable_privacy_mode disable_user_dmails blacklist_users show_post_statistics
       style_usernames show_hidden_comments
       enable_auto_complete
       disable_cropped_thumbnails disable_mobile_gestures
       enable_safe_mode disable_responsive_mode disable_post_tooltips
-      display_name
-      use_gravatar
     ]
 
     permitted_params += [dmail_filter_attributes: %i[id words]]
-    permitted_params += [:profile_about, :profile_artinfo, :avatar_id, :use_gravatar] if CurrentUser.is_member? # Prevent editing when blocked
-    permitted_params += [:enable_compact_uploader] if context != :create && CurrentUser.post_upload_count >= 10
-    permitted_params += [:name, :email] if context == :create
+    permitted_params += [:profile_about, :profile_artinfo, :avatar_id, :use_gravatar, :display_name] if CurrentUser.is_member? # Prevent editing when blocked
+    permitted_params += [:enable_compact_uploader] if context != :create && CurrentUser.post_upload_count >= Danbooru.config.compact_uploader_threshold
+    permitted_params += [:name, :email, :display_name] if context == :create
 
     params.require(:user).permit(permitted_params)
   end
