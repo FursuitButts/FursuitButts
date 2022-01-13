@@ -37,7 +37,7 @@ else
   File.write(system_file, system_password)
 end
 
-admin = User.find_or_create_by!(name: "admin") do |user|
+admin = User.find_or_create_by!(name: Danbooru.config.admin_user) do |user|
   puts "Setting admin password to: %s" % [ admin_password ]
   user.created_at = 2.weeks.ago
   user.password = admin_password

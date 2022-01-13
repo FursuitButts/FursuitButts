@@ -53,6 +53,10 @@ module Danbooru
     # this account. This account must have Moderator privileges.
     #
     # Run `rake db:seed` to create this account if it doesn't already exist in your install.
+    def admin_user
+      "Donovan_DMC"
+    end
+    
     def system_user
       "system"
     end
