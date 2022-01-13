@@ -280,7 +280,7 @@ class ApplicationController < ActionController::Base
     response.set_header("RateLimit-Reset", (Time.now.to_i + ttl.to_i).to_s)
     if (count.to_i + 1) >= CurrentUser.user.v3_api_limit
       render json: {
-        "$schema": "https://yiff.rest/schema/v3_error.json",
+        "$schema": "https://yiff.rest/schema/V3_error.json",
         success: false,
         error: YiffyApiController::APIErrors::RATELIMITED
       }.to_json, status: :too_many_requests

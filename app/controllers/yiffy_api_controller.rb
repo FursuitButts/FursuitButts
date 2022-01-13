@@ -103,19 +103,19 @@ class YiffyApiController < ApplicationController
 
     if @set == nil
       render json: {
-        "$schema": "https://yiff.rest/schema/v3_error.json",
+        "$schema": "https://yiff.rest/schema/V3_error.json",
         success: false,
         error: APIErrors::INVALID_CATEGORY
       }.to_json, status: :not_found
     elsif @set.post_count == 0
       render json: {
-        "$schema": "https://yiff.rest/schema/v3_error.json",
+        "$schema": "https://yiff.rest/schema/V3_error.json",
         success: false,
         error: APIErrors::NO_POSTS
       }.to_json, status: :not_implemented
     else
       render json: {
-        "$schema": "https://yiff.rest/schema/v3.json",
+        "$schema": "https://yiff.rest/schema/V3.json",
         success: true,
         images: @set.posts.select { |post| @max_size == nil || post.file_size <= @max_size.to_i }.sample(get_amount(params[:amount])).map { |post| format_post(post) }
       }.to_json
