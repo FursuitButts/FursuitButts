@@ -85,7 +85,7 @@ class User < ApplicationRecord
   validates :default_image_size, inclusion: { :in => %w(large fit fitv original) }
   validates :per_page, inclusion: { :in => 1..Danbooru.config.max_posts_per_page}
   validates :comment_threshold, presence: true
-  validates :comment_threshold, numericality: { only_integer: true, less_than: 50_000, greater_than: -50_000 }
+  validates :comment_threshold, numericality: { only_integer: true, less_than: Danbooru.config.comment_threshold_max, greater_than: Danbooru.config.comment_threshold_min }
   validates :password, length: { :minimum => 6, :if => ->(rec) { rec.new_record? || rec.password.present? || rec.old_password.present? } }
   validates :password, confirmation: true
   validates :password_confirmation, presence: { if: ->(rec) { rec.new_record? || rec.old_password.present? } }
@@ -95,8 +95,8 @@ class User < ApplicationRecord
   before_validation :set_per_page
   before_validation :staff_cant_disable_dmail
   before_validation :blank_out_nonexistent_avatars
-  validates :blacklisted_tags, length: { maximum: 150_000 }
-  validates  :custom_style, length: { maximum: 500_000}
+  validates :blacklisted_tags, length: { maximum: Danbooru.config.blacklisted_tags_max_len }
+  validates  :custom_style, length: { maximum: Danbooru.config.custom_style_max_len }
   validates :profile_about, length: { maximum: Danbooru.config.user_about_max_size }
   validates :profile_artinfo, length: { maximum: Danbooru.config.user_about_max_size }
   before_create :encrypt_password_on_create
@@ -690,33 +690,19 @@ class User < ApplicationRecord
     memoize :post_upload_throttle
 
     def tag_query_limit
-      40
+      Danbooru.config.tag_query_limit(self)
     end
 
     def favorite_limit
-      if is_curator?
-        250_000
-      elsif is_privileged?
-        125_000
-      else
-        80_000
-      end
+      Danbooru.config.favorite_limit(self)
     end
 
     def api_regen_multiplier
-      1
+      Danbooru.config.api_regen_multiplier(self)
     end
 
     def api_burst_limit
-      # can make this many api calls at once before being bound by
-      # api_regen_multiplier refilling your pool
-      if is_curator?
-        120
-      elsif is_privileged?
-        90
-      else
-        60
-      end
+      Danbooru.config.api_burst_limit(self)
     end
 
     def remaining_api_limit
@@ -724,13 +710,7 @@ class User < ApplicationRecord
     end
 
     def statement_timeout
-      if is_curator?
-        9_000
-      elsif is_privileged?
-        6_000
-      else
-        3_000
-      end
+      Danbooru.config.statement_timeout(self)
     end
   end
 
@@ -1036,7 +1016,7 @@ class User < ApplicationRecord
   end
 
   def compact_uploader?
-    post_upload_count >= 10 && enable_compact_uploader?
+    post_upload_count >= Danbooru.config.compact_uploader_threshold && enable_compact_uploader?
   end
 
   def initialize_attributes

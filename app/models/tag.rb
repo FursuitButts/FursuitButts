@@ -1,5 +1,4 @@
 class Tag < ApplicationRecord
-  COSINE_SIMILARITY_RELATED_TAG_THRESHOLD = 300
   COUNT_METATAGS = %w[
     comment_count
     note_count
@@ -57,7 +56,7 @@ class Tag < ApplicationRecord
   has_many :consequent_implications, -> {active}, :class_name => "TagImplication", :foreign_key => "consequent_name", :primary_key => "name"
 
   validates :name, uniqueness: true, tag_name: true, on: :create
-  validates :name, length: { in: 1..100 }
+  validates :name, length: { in: 1..Danbooru.config.tag_max_len }
   validates :category, inclusion: { in: TagCategory.category_ids }
   validate :user_can_create_tag?, on: :create
   validate :user_can_change_category?, if: :category_changed?
@@ -495,13 +494,13 @@ class Tag < ApplicationRecord
         unit = $2
 
         conversion_factor = case unit
-                            when /m/i
-                              1024 * 1024
-                            when /k/i
-                              1024
-                            else
-                              1
-                            end
+          when /m/i
+            1024 * 1024
+          when /k/i
+            1024
+          else
+            1
+          end
 
         (size * conversion_factor).to_i
       end
@@ -1030,15 +1029,7 @@ class Tag < ApplicationRecord
       key = Cache.hash(name)
 
       if Cache.get("urt:#{key}").nil? && should_update_related?
-        # if post_count < COSINE_SIMILARITY_RELATED_TAG_THRESHOLD
         TagUpdateRelatedJob.perform_later(id)
-        # TODO: Part of reportbooru
-        # else
-        #   sqs = SqsService.new(Danbooru.config.aws_sqs_reltagcalc_url)
-        #   sqs.send_message("calculate #{name}")
-        #   self.related_tags_updated_at = Time.now
-        #   save
-        # end
 
         Cache.put("urt:#{key}", true, 600) # mutex to prevent redundant updates
       end

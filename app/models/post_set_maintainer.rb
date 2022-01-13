@@ -96,8 +96,8 @@ class PostSetMaintainer < ApplicationRecord
     end
 
     def ensure_maintainer_count
-      if PostSetMaintainer.where(post_set_id: post_set_id).count >= 75
-        errors.add(:post_set, "current have too many maintainers")
+      if PostSetMaintainer.where(post_set_id: post_set_id).count >= Danbooru.config.post_set_max_maintainers
+        errors.add(:post_set, "currently has too many maintainers")
         false
       end
     end

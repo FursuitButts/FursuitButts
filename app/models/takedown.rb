@@ -6,10 +6,10 @@ class Takedown < ApplicationRecord
   validates :email, presence: true
   validates :reason, presence: true
   validates :email, format: { with: /\A([\s*A-Z0-9._%+-]+@[\s*A-Z0-9.-]+\.\s*[A-Z\s*]{2,15}\s*)\z/i, on: :create }
-  validates :email, length: { maximum: 250 }
-  validates :reason, length: { maximum: 5_000 }
-  validates :instructions, length: { maximum: 5_000 }
-  validates :notes, length: { maximum: 5_000 }
+  validates :email, length: { maximum: Danbooru.config.takedown_email_max_len }
+  validates :reason, length: { maximum: Danbooru.config.takedown_reason_max_len }
+  validates :instructions, length: { maximum: Danbooru.config.takedown_instructions_max_len }
+  validates :notes, length: { maximum: Danbooru.config.takedown_notes_max_len }
   validate :can_create_takedown, on: :create
   validate :valid_posts_or_instructions, on: :create
   validate :validate_number_of_posts
@@ -66,8 +66,8 @@ class Takedown < ApplicationRecord
     end
 
     def validate_number_of_posts
-      if post_array.size > 5_000
-        self.errors.add(:base, "You can only have 5000 posts in a takedown.")
+      if post_array.size > Danbooru.config.takedown_max_posts
+        self.errors.add(:base, "You can only have #{UtilityShit::format_num(Danbooru.config.takedown_max_posts)} posts in a takedown.")
         return false
       end
       true
@@ -88,7 +88,7 @@ class Takedown < ApplicationRecord
     def add_posts_by_ids!(ids)
       added_ids = []
       with_lock do
-        ids = ids.gsub(/(https?:\/\/)?(e621|e926)\.net\/posts\/(\d+)/i, '\3')
+        ids = ids.gsub(/(https?:\/\/)?yiff\.rest\/posts\/(\d+)/i, '\3')
         self.post_ids = (post_array + ids.scan(/\d+/).map(&:to_i)).uniq.join(' ')
         added_ids = self.post_array - self.post_array_was
         save!

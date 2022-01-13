@@ -4,7 +4,7 @@ class DmailFilter < ApplicationRecord
   belongs_to :user
   validates :user, presence: true
   before_validation :initialize_user
-  validates :words, length: { maximum: 1000 }
+  validates :words, length: { maximum: Danbooru.config.dmail_maximum_words }
 
   def initialize_user
     unless user_id

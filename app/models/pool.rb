@@ -6,8 +6,8 @@ class Pool < ApplicationRecord
   belongs_to_creator
 
   validates :name, uniqueness: { case_sensitive: false, if: :name_changed? }
-  validates :name, length: { minimum: 1, maximum: 250 }
-  validates :description, length: { maximum: Danbooru.config.pool_descr_max_size }
+  validates :name, length: { minimum: 1, maximum: Danbooru.config.pool_name_max_len }
+  validates :description, length: { maximum: Danbooru.config.pool_description_max_len }
   validate :user_not_create_limited, on: :create
   validate :user_not_limited, on: :update, if: :limited_attribute_changed?
   validate :user_not_posts_limited, on: :update, if: :post_ids_changed?
@@ -237,8 +237,8 @@ class Pool < ApplicationRecord
     post_ids_before = post_ids_before_last_save || post_ids_was
     added = post_ids - post_ids_before
     return unless added.size > 0
-    if post_ids.size > 1_000
-      errors.add(:base, "Pools can have up to 1,000 posts each")
+    if post_ids.size > Danbooru.config.pool_max_posts
+      errors.add(:base, "Pools can have up to #{UtilityShit::format_num(Danbooru.config.pool_max_posts)} posts each")
       false
     else
       true

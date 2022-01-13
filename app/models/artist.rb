@@ -11,7 +11,7 @@ class Artist < ApplicationRecord
   validate :validate_user_can_edit?
   validate :user_not_limited
   validates :name, tag_name: true, uniqueness: true, on: :create
-  validates :group_name, length: { maximum: 100 }
+  validates :group_name, length: { maximum: Danbooru.config.artist_group_name_minimum }
   before_save :log_changes
   after_save :create_version
   after_save :categorize_tag
@@ -46,7 +46,6 @@ class Artist < ApplicationRecord
   module UrlMethods
     extend ActiveSupport::Concern
 
-    MAX_URLS_PER_ARTIST = 25
     module ClassMethods
 
       # Subdomains are automatically included. e.g., "twitter.com" matches "www.twitter.com",
@@ -209,7 +208,7 @@ class Artist < ApplicationRecord
       self.urls = string.to_s.scan(/[^[:space:]]+/).map do |url|
         is_active, url = ArtistUrl.parse_prefix(url)
         self.urls.find_or_initialize_by(url: url, is_active: is_active)
-      end.uniq(&:url)[0..MAX_URLS_PER_ARTIST]
+      end.uniq(&:url)[0..Danbooru.config.max_urls_per_artist]
 
       self.url_string_changed = (url_string_was != url_string)
     end

@@ -173,6 +173,26 @@ module Danbooru
       false
     end
 
+    def takedown_email_max_len
+      250
+    end
+
+    def takedown_reason_max_len
+      5_000
+    end
+
+    def takedown_instructions_max_len
+      5_000
+    end
+
+    def takedown_notes_max_len
+      5_000
+    end
+
+    def takedown_max_posts
+      5_000
+    end
+
     # Members cannot post more than X comments in an hour.
     def member_comment_limit
       15
@@ -180,6 +200,14 @@ module Danbooru
 
     def comment_vote_limit
       10
+    end
+
+    def comment_threshold_max
+      50_000
+    end
+
+    def comment_threshold_min
+      -50_000
     end
 
     def post_vote_limit
@@ -192,6 +220,26 @@ module Danbooru
 
     def dmail_minute_limit
       1
+    end
+
+    def dmail_maximum_words
+      1_000
+    end
+
+    def dmail_title_max_len
+      250
+    end
+
+    def dmail_autoban_threshold
+      10
+    end
+
+    def dmail_autoban_window
+      24.hours
+    end
+
+    def dmail_autoban_duration
+      3
     end
 
     def tag_suggestion_limit
@@ -209,6 +257,14 @@ module Danbooru
 
     # Artists creator or edited in the last hour
     def artist_edit_limit
+      25
+    end
+
+    def artist_group_name_minimum
+      100
+    end
+
+    def max_urls_per_artist
       25
     end
 
@@ -279,6 +335,62 @@ module Danbooru
       100
     end
 
+    def tag_max_len
+      100
+    end
+
+    def compact_uploader_threshold
+      10
+    end
+
+    def blacklisted_tags_max_len
+      150_000
+    end
+
+    def custom_style_max_len
+      500_000
+    end
+
+    def tag_query_limit(user)
+      40
+    end
+
+    def favorite_limit(user)
+      if user.is_curator?
+        250_000
+      elsif user.is_privileged?
+        125_000
+      else
+        80_000
+      end
+    end
+
+    def api_regen_multiplier(user)
+      1
+    end
+
+    def api_burst_limit(user)
+      # can make this many api calls at once before being bound by
+      # api_regen_multiplier refilling your pool
+      if is_curator?
+        120
+      elsif is_privileged?
+        90
+      else
+        60
+      end
+    end
+
+    def statement_timeout(user)
+      if is_curator?
+        9_000
+      elsif is_privileged?
+        6_000
+      else
+        3_000
+      end
+    end
+
     # Determines who can see ads.
     def can_see_ads?(user)
       !user.is_privileged?
@@ -322,13 +434,25 @@ module Danbooru
     def forum_post_max_size
       50_000
     end
+
+    def forum_post_title_max_len
+      250
+    end
     
     def note_max_size
       1_000
     end
     
-    def pool_descr_max_size
+    def pool_description_max_len
       10_000
+    end
+
+    def pool_name_max_len
+      250
+    end
+
+    def pool_max_posts
+      1_000
     end
     
     def post_descr_max_size
@@ -342,13 +466,37 @@ module Danbooru
     def user_about_max_size
       50_000
     end
+
+    def wiki_page_title_max_len
+      100
+    end
     
     def wiki_page_max_size
       250_000
     end
 
+    def post_set_max_maintainers
+      75
+    end
+
+    def post_set_name_max_len
+      100
+    end
+
+    def post_set_shortname_max_len
+      50
+    end
+
+    def post_set_maximum_owned
+      75
+    end
+
+    def post_set_max_posts
+      10_000
+    end
+
     def beta_notice?
-      false
+      true
     end
 
     def discord_site
@@ -359,6 +507,10 @@ module Danbooru
     # `client_max_body_size` in your nginx.conf.
     def max_file_size
       50.megabytes
+    end
+
+    def min_file_size
+      16
     end
 
     def max_file_sizes

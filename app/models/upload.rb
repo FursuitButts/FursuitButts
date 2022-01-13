@@ -27,7 +27,7 @@ class Upload < ApplicationRecord
     end
 
     def validate_file_size(record)
-      if record.file_size <= 16
+      if record.file_size <= Danbooru.config.min_file_size
         record.errors[:file_size] << "is too small"
       end
       max_size = Danbooru.config.max_file_sizes.fetch(record.file_ext, 0)

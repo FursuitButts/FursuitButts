@@ -1,13 +1,8 @@
 require 'digest/sha1'
 
 class Dmail < ApplicationRecord
-  # if a person sends spam to more than 10 users within a 24 hour window, automatically ban them for 3 days.
-  AUTOBAN_THRESHOLD = 10
-  AUTOBAN_WINDOW = 24.hours
-  AUTOBAN_DURATION = 3
-
   validates :title, :body, presence: { on: :create }
-  validates :title, length: { minimum: 1, maximum: 250 }
+  validates :title, length: { minimum: 1, maximum: Danbooru.config.dmail_title_max_len }
   validates :body, length: { minimum: 1, maximum: Danbooru.config.dmail_max_size }
   validate :sender_is_not_banned, on: :create
   validate :recipient_accepts_dmails, on: :create
@@ -29,15 +24,15 @@ class Dmail < ApplicationRecord
       def is_spammer?(user)
         return false if user.is_janitor?
 
-        spammed_users = sent_by(user).where(is_spam: true).where("created_at > ?", AUTOBAN_WINDOW.ago).distinct.count(:to_id)
-        spammed_users >= AUTOBAN_THRESHOLD
+        spammed_users = sent_by(user).where(is_spam: true).where("created_at > ?", Danbooru.config.dmail_autoban_window.ago).distinct.count(:to_id)
+        spammed_users >= Danbooru.config.dmail_autoban_threshold
       end
 
       def ban_spammer(spammer)
         spammer.bans.create! do |ban|
           ban.banner = User.system
           ban.reason = "Spambot."
-          ban.duration = AUTOBAN_DURATION
+          ban.duration = Danbooru.config.dmail_autoban_duration
         end
       end
     end

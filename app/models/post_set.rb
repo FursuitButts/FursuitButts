@@ -21,12 +21,12 @@ class PostSet < ApplicationRecord
   user_status_counter :set_count
 
   before_validation :normalize_shortname
-  validates :name, length: { in: 3..100, message: "must be between three and one hundred characters long" }
+  validates :name, length: { in: 3..Danbooru.config.post_set_name_max_len, message: "must be between three and #{Danbooru.config.post_set_name_max_len} characters long" }
   validates :name, :shortname, uniqueness: { case_sensitive: false, message: "is already taken" }, if: :if_names_changed?
-  validates :shortname, length: { in: 3..50, message: 'must be between three and fifty characters long' }
+  validates :shortname, length: { in: 3..Danbooru.config.post_set_shortname_max_len, message: "must be between three and #{Danbooru.config.post_set_shortname_max_len} characters long" }
   validates :shortname, format: { with: /\A[\w]+\z/, message: "must only contain numbers, lowercase letters, and underscores" }
   validates :shortname, format: { with: /\A\d*[a-z_][\w]*\z/, message: "must contain at least one lowercase letter or underscore" }
-  validates :description, length: { maximum: Danbooru.config.pool_descr_max_size }
+  validates :description, length: { maximum: Danbooru.config.pool_description_max_len }
   validate :validate_number_of_posts
   validate :can_make_public, if: :is_public_changed?
   validate :set_per_hour_limit, on: :create
@@ -126,8 +126,8 @@ class PostSet < ApplicationRecord
     end
 
     def can_create_new_set_limit
-      if PostSet.where(creator_id: creator.id).count() >= 75
-        errors.add(:base, "You can only create 75 sets.")
+      if PostSet.where(creator_id: creator.id).count() >= Danbooru.config.post_set_maximum_owned
+        errors.add(:base, "You can only create #{Danbooru.config.post_set_maximum_owned} sets.")
         return false
       end
       true
@@ -146,8 +146,8 @@ class PostSet < ApplicationRecord
       post_ids_before = post_ids_before_last_save || post_ids_was
       added = post_ids - post_ids_before
       return unless added.size > 0
-      if post_ids.size > 10_000
-        errors.add(:base, "Sets can have up to 10,000 posts each")
+      if post_ids.size > Danbooru.config.post_set_max_posts
+        errors.add(:base, "Sets can have up to #{UtilityShit::format_num(Danbooru.config.post_set_max_posts)} posts each")
         false
       else
         true
