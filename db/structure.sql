@@ -2622,12 +2622,12 @@ CREATE TABLE public.users (
     last_forum_read_at timestamp without time zone,
     recent_tags text,
     comment_threshold integer DEFAULT '-1'::integer NOT NULL,
-    default_image_size character varying DEFAULT 'fitv'::character varying NOT NULL,
+    default_image_size character varying DEFAULT 'large'::character varying NOT NULL,
     favorite_tags text,
     blacklisted_tags text DEFAULT ''::text,
-    time_zone character varying DEFAULT 'Eastern Time (US & Canada)'::character varying NOT NULL,
+    time_zone character varying DEFAULT 'UTC'::character varying NOT NULL,
     bcrypt_password_hash text,
-    per_page integer DEFAULT 20 NOT NULL,
+    per_page integer DEFAULT 75 NOT NULL,
     custom_style text,
     bit_prefs bigint DEFAULT 4096 NOT NULL,
     last_ip_addr inet,
@@ -5256,5 +5256,3 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20210625155528'),
 ('20210718172512'),
 ('20211223070707');
-
-

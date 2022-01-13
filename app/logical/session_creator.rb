@@ -26,8 +26,7 @@ class SessionCreator
           expires: Time.now + 14.days,
           httponly: true,
           same_site: :lax,
-          secure: true,
-          domain: ".#{Danbooru.config.hostname}"
+          secure: true
         }
       end
       return true

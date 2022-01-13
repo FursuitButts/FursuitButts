@@ -57,16 +57,8 @@ class UserPresenter
     %{<abbr title="Base Upload Limit">#{user.base_upload_limit}</abbr> + (<abbr title="Approved Posts">#{upload_limit_pieces[:approved]}</abbr> / #{Danbooru.config.base_upload_approved}) - (<abbr title="Deleted Posts">#{upload_limit_pieces[:deleted]}</abbr> / #{Danbooru.config.base_upload_deleted}) - <abbr title="Pending or Flagged Posts">#{upload_limit_pieces[:pending]}</abbr> = <abbr title="User Upload Limit Remaining">#{user.upload_limit}</abbr>}.html_safe
   end
 
-  def uploads
-    Post.tag_match("user:#{user.name}").limit(6).records
-  end
-
   def show_staff_notes?
-    CurrentUser.is_privileged?
-  end
-
-  def uploads
-@@ -189,7 +209,7 @@ def can_view_favorites?
+    CurrentUser.is_moderator?
   end
 
   def show_staff_notes?
@@ -75,7 +67,6 @@ class UserPresenter
   end
 
   def staff_notes
-
   end
 
   def uploads

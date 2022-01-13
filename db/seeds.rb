@@ -89,15 +89,15 @@ unless Rails.env.production?
 
     md5 = Digest::MD5.hexdigest(data)
     service = UploadService.new({
-        uploader_id: CurrentUser.id,
-        uploader_ip_addr: CurrentUser.ip_addr,
-        file: file,
-        tag_string: post["tags"].values.flatten.join(" "),
-        source: post["sources"].join("\n"),
-        description: post["description"],
-        rating: post["rating"],
-        md5: md5,
-        md5_confirmation: md5
+      uploader_id: CurrentUser.id,
+      uploader_ip_addr: CurrentUser.ip_addr,
+      file: file,
+      tag_string: post["tags"].values.flatten.join(" "),
+      source: "https://e621.net/posts/#{post["id"]}\n" + post["sources"].join("\n"),
+      description: post["description"],
+      rating: post["rating"],
+      md5: md5,
+      md5_confirmation: md5
     })
 
     service.start!
