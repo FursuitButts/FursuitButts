@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-until [ "`docker inspect -f {{.State.Health.Status}} yiffyapi 2> /dev/null)`)" == "healthy" ]; do
+until [ "`docker inspect -f {{.State.Health.Status}} yiffyapi 2> /dev/null`" == "healthy" ]; do
     sleep 1;
 done;
 
