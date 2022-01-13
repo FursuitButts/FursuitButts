@@ -96,6 +96,7 @@ module Danbooru
           "Curator" => 31,
           "Former Staff" => 32,
           "Janitor" => 33,
+          "System" => 34,
           "Moderator" => 40,
           "Admin" => 50
       }
