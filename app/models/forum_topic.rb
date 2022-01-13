@@ -17,7 +17,7 @@ class ForumTopic < ApplicationRecord
   validates_presence_of :original_post
   validates_associated :category
   validates :min_level, inclusion: { :in => MIN_LEVELS.values }
-  validates :title, :length => {:maximum => Danboru.config.forum_post_title_max_len}
+  validates :title, :length => {:maximum => Danbooru.config.forum_post_title_max_len}
   validate :category_allows_creation, on: :create
   accepts_nested_attributes_for :original_post
   before_destroy :create_mod_action_for_delete

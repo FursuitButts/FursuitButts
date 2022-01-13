@@ -690,7 +690,7 @@ class User < ApplicationRecord
     memoize :post_upload_throttle
 
     def tag_query_limit
-      Danbooru.config.tag_query_limit(self)
+      Danbooru.config.tag_query_limit2(self)
     end
 
     def favorite_limit

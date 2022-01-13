@@ -78,7 +78,7 @@ services:
     volumes:
       - ./data/db:/var/lib/postgresql/data
     healthcheck:
-      test: pg_isready
+      test: PGUSER=danbooru pg_isready
       interval: 10s
       timeout: 5s
     hostname: postgres.yiffyapi.containers.local

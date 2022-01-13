@@ -351,10 +351,6 @@ module Danbooru
       500_000
     end
 
-    def tag_query_limit(user)
-      40
-    end
-
     def favorite_limit(user)
       if user.is_curator?
         250_000
@@ -372,9 +368,9 @@ module Danbooru
     def api_burst_limit(user)
       # can make this many api calls at once before being bound by
       # api_regen_multiplier refilling your pool
-      if is_curator?
+      if user.is_curator?
         120
-      elsif is_privileged?
+      elsif user.is_privileged?
         90
       else
         60
@@ -382,9 +378,9 @@ module Danbooru
     end
 
     def statement_timeout(user)
-      if is_curator?
+      if user.is_curator?
         9_000
-      elsif is_privileged?
+      elsif user.is_privileged?
         6_000
       else
         3_000
@@ -407,6 +403,10 @@ module Danbooru
       else
         base_tag_query_limit
       end
+    end
+
+    def tag_query_limit2(user)
+      40
     end
 
     # Return true if the given tag shouldn't count against the user's tag search limit.
@@ -455,7 +455,7 @@ module Danbooru
       1_000
     end
     
-    def post_descr_max_size
+    def post_description_max_len
       50_000
     end
     
@@ -496,7 +496,7 @@ module Danbooru
     end
 
     def beta_notice?
-      true
+      false
     end
 
     def discord_site
