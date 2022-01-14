@@ -172,6 +172,7 @@ class Post < ApplicationRecord
     end
 
     def official_sets
+      return [] unless Rails.env.production?
       key = "post_sets:#{self.id}"
       client = ::Redis.new(url: Danbooru.config.redis_url)
       cache = client.exists?(key)
