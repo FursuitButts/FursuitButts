@@ -19,29 +19,20 @@ class StorageManager::S3 < StorageManager
   end
 
   def store(io, path)
-    if Danbooru.config.replacement_path_prefix.in? path
-      bucket = Danbooru.config.s3_protected_bucket
-    end
     data = io.read
     base64_md5 = Digest::MD5.base64digest(data)
-    client.put_object(bucket: bucket, key: key(path), body: data, content_md5: base64_md5, **DEFAULT_PUT_OPTIONS)
+    client.put_object(bucket: Danbooru.config.replacement_path_prefix.in?(path) ? Danbooru.config.s3_protected_bucket : Danbooru.config.s3_bucket, key: key(path), body: data, content_md5: base64_md5, **DEFAULT_PUT_OPTIONS)
   end
 
   def delete(path)
-    if Danbooru.config.replacement_path_prefix.in? path
-      bucket = Danbooru.config.s3_protected_bucket
-    end
-    @client.delete_object(bucket: bucket, key: key(path))
+    @client.delete_object(bucket: Danbooru.config.replacement_path_prefix.in?(path) ? Danbooru.config.s3_protected_bucket : Danbooru.config.s3_bucket, key: key(path))
   rescue Aws::S3::Errors::NoSuchKey
     # ignore
   end
 
   def open(path)
-    if Danbooru.config.replacement_path_prefix.in? path
-      bucket = Danbooru.config.s3_protected_bucket
-    end
     file = Tempfile.new(binmode: true)
-    @client.get_object(bucket: bucket, key: key(path), response_target: file)
+    @client.get_object(bucket: Danbooru.config.replacement_path_prefix.in?(path) ? Danbooru.config.s3_protected_bucket : Danbooru.config.s3_bucket, key: key(path), response_target: file)
     file
   end
 
