@@ -37,6 +37,9 @@ class StorageManager::S3 < StorageManager
   end
 
   def open(path)
+    if Danbooru.config.replacement_path_prefix.in? path
+      bucket = Danbooru.config.s3_protected_bucket
+    end
     file = Tempfile.new(binmode: true)
     @client.get_object(bucket: bucket, key: key(path), response_target: file)
     file
@@ -90,8 +93,8 @@ class StorageManager::S3 < StorageManager
     if direction == :to_replacement
       key = key(file_path(post, post.file_ext, :original))
       new_key = key(replacement_path(replacement, replacement.file_ext))
-      client.copy_object(bucket: Danbooru.config.s3_bucket, copy_source: "#{Danbooru.config.s3_protected_bucket}/#{key}", key: new_key)
-      client.delete_object(bucket: Danbooru.config.s3_protected_bucket, key: key)
+      client.copy_object(bucket: Danbooru.config.s3_protected_bucket, copy_source: "#{Danbooru.config.s3_protected_bucket}/#{key}", key: new_key)
+      client.delete_object(bucket: Danbooru.config.s3_bucket, key: key)
     else
       key = replacement_path(replacement, replacement.file_ext)
       new_key = file_path(post, post.file_ext, :original)
