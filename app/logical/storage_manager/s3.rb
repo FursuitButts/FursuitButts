@@ -90,13 +90,13 @@ class StorageManager::S3 < StorageManager
     if direction == :to_replacement
       key = key(file_path(post, post.file_ext, :original))
       new_key = key(replacement_path(replacement, replacement.file_ext))
-      client.copy_object(bucket: Danbooru.config.s3_bucket, copy_source: "#{Danbooru.config.s3_bucket}/#{key}", key: new_key)
+      client.copy_object(bucket: Danbooru.config.s3_protected_bucket, copy_source: "#{Danbooru.config.s3_bucket}/#{key}", key: new_key)
       client.delete_object(bucket: Danbooru.config.s3_bucket, key: key)
     else
       key = replacement_path(replacement, replacement.file_ext)
       new_key = file_path(post, post.file_ext, :original)
-      client.copy_object(bucket: Danbooru.config.s3_bucket, copy_source: "#{Danbooru.config.s3_bucket}/#{key}", key: new_key)
-      client.delete_object(bucket: Danbooru.config.s3_bucket, key: key)
+      client.copy_object(bucket: Danbooru.config.s3_bucket, copy_source: "#{Danbooru.config.s3_protected_bucket}/#{key}", key: new_key)
+      client.delete_object(bucket: Danbooru.config.s3_protected_bucket, key: key)
     end
   end
 end
