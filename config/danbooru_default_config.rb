@@ -629,7 +629,7 @@ module Danbooru
     # The method to use for storing image files.
     def storage_manager
      # if Rails.env.production?
-        StorageManager::S3.new(Danbooru.config.s3_bucket, hierarchical: true, base_url: "https://v3.yiff.media#{Rails.env.prodiction? ? "/" : "/dev/"}", s3_options: {
+        StorageManager::S3.new(Danbooru.config.s3_bucket, hierarchical: true, base_url: "https://v3.yiff.media#{Rails.env.production? ? "/" : "/dev/"}", s3_options: {
           credentials: Aws::Credentials.new(Danbooru.config.s3_access_key_id, Danbooru.config.s3_secret_access_key),
           region: "us-central-1",
           endpoint: "https://s3.us-central-1.wasabisys.com"
