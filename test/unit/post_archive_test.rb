@@ -1,8 +1,6 @@
 require 'test_helper'
 
 class PostArchiveTest < ActiveSupport::TestCase
-  include PoolArchiveTestHelper
-
   context "A post" do
     setup do
       Timecop.travel(1.month.ago) do
@@ -19,7 +17,6 @@ class PostArchiveTest < ActiveSupport::TestCase
 
     context "#undo" do
       setup do
-        PostArchive.sqs_service.stubs(:merge?).returns(false)
         @post = FactoryBot.create(:post, :tag_string => "1")
         @post.update(:tag_string => "1 2")
         @post.update(:tag_string => "2 3")
@@ -36,7 +33,6 @@ class PostArchiveTest < ActiveSupport::TestCase
 
     context "that has multiple versions: " do
       setup do
-        PostArchive.sqs_service.stubs(:merge?).returns(false)
         @post = FactoryBot.create(:post, :tag_string => "1")
         @post.update(:tag_string => "1 2")
         @post.update(:tag_string => "2 3")
@@ -72,37 +68,21 @@ class PostArchiveTest < ActiveSupport::TestCase
 
     context "that is tagged with a pool:<name> metatag" do
       setup do
-        mock_pool_archive_service!
         @pool = FactoryBot.create(:pool)
         @post = FactoryBot.create(:post, tag_string: "tagme pool:#{@pool.id}")
       end
 
       should "create a version" do
         assert_equal("tagme", @post.tag_string)
-        assert_equal("pool:#{@pool.id} pool:series", @post.pool_string)
+        assert_equal("pool:#{@pool.id}", @post.pool_string)
 
         assert_equal(1, @post.versions.size)
         assert_equal("tagme", @post.versions.last.tags)
       end
     end
 
-    context "that should be merged" do
-      setup do
-        @parent = FactoryBot.create(:post)
-        @post = FactoryBot.create(:post, :tag_string => "aaa bbb ccc", :rating => "q", :source => "xyz")
-      end
-
-      should "delete the previous version" do
-        assert_equal(1, @post.versions.count)
-        @post.update(:tag_string => "bbb ccc xxx", :source => "")
-        @post.reload
-        assert_equal(1, @post.versions.count)
-      end
-    end
-
     context "that has been updated" do
       setup do
-        PostArchive.sqs_service.stubs(:merge?).returns(false)
         @post = FactoryBot.create(:post, :tag_string => "aaa bbb ccc", :rating => "q", :source => "xyz")
         @post.update(:tag_string => "bbb ccc xxx", :source => "")
       end
@@ -120,7 +100,7 @@ class PostArchiveTest < ActiveSupport::TestCase
         @post.stubs(:set_tag_counts).raises(NotImplementedError)
 
         assert_equal(2, @post.versions.size)
-        assert_raise(NotImplementedError) { @post.update(rating: "s") }
+        assert_raise(NotImplementedError) { @post.update(tag_string: "zzz") }
         assert_equal(2, @post.versions.size)
       end
 

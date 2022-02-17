@@ -21,14 +21,22 @@ class UserNameChangeRequest < ApplicationRecord
     where(:status => "approved")
   end
 
-  def self.visible(viewer = CurrentUser.user)
-    if viewer.is_admin?
-      all
-    elsif viewer.is_member?
-      joins(:user).merge(User.undeleted).where("user_name_change_requests.status = 'approved' OR user_name_change_requests.user_id = ?", viewer.id)
-    else
-      none
+  def self.search(params)
+    q = super
+
+    if params[:current_name].present?
+      q = q.where("user_id = ?", User.name_to_id(params[:current_name]))
     end
+
+    if params[:original_name].present?
+      q = q.where("original_name = ?", params[:original_name])
+    end
+
+    if params[:desired_name].present?
+      q = q.where("desired_name = ?", params[:desired_name])
+    end
+
+    q.apply_default_order(params)
   end
 
   def rejected?
@@ -43,23 +51,12 @@ class UserNameChangeRequest < ApplicationRecord
     status == "pending"
   end
 
-  def feedback
-    UserFeedback.for_user(user_id).order("id desc")
-  end
-
   def approve!
     update(:status => "approved", :approver_id => CurrentUser.user.id)
     user.update_attribute(:name, desired_name)
     body = "Your name change request has been approved. Be sure to log in with your new user name."
     Dmail.create_automated(:title => "Name change request approved", :body => body, :to_id => user_id)
-    # UserFeedback.create(:user_id => user_id, :category => "neutral", :body => "Name changed from #{original_name} to #{desired_name}")
     ModAction.log(:user_name_change, {user_id: user.id, old_name: original_name, new_name: desired_name})
-  end
-
-  def reject!(reason)
-    update(:status => "rejected", :rejection_reason => reason)
-    body = "Your name change request has been rejected for the following reason: #{rejection_reason}"
-    Dmail.create_automated(:title => "Name change request rejected", :body => body, :to_id => user_id)
   end
 
   def not_limited

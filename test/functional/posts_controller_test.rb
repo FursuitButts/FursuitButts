@@ -3,8 +3,6 @@ require "test_helper"
 class PostsControllerTest < ActionDispatch::IntegrationTest
   context "The posts controller" do
     setup do
-      PopularSearchService.stubs(:enabled?).returns(false)
-
       @user = travel_to(1.month.ago) {create(:user)}
       as_user do
         @post = create(:post, :tag_string => "aaaa")
@@ -83,7 +81,6 @@ class PostsControllerTest < ActionDispatch::IntegrationTest
 
     context "revert action" do
       setup do
-        PostArchive.sqs_service.stubs(:merge?).returns(false)
         as_user do
           @post.update(tag_string: "zzz")
         end

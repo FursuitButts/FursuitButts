@@ -21,8 +21,6 @@ class BulkUpdateRequest < ApplicationRecord
 
   scope :pending_first, -> { order(Arel.sql("(case status when 'pending' then 0 when 'approved' then 1 else 2 end)")) }
   scope :pending, -> {where(status: "pending")}
-  scope :expired, -> {where("created_at < ?", TagRelationship::EXPIRY.days.ago)}
-  scope :old, -> {where("created_at between ? and ?", TagRelationship::EXPIRY.days.ago, TagRelationship::EXPIRY_WARNING.days.ago)}
 
   module ApiMethods
     def hidden_attributes
@@ -217,11 +215,8 @@ class BulkUpdateRequest < ApplicationRecord
     tokens = AliasAndImplicationImporter.tokenize(script)
     lines = tokens.map do |token|
       case token[0]
-      when :create_alias, :create_implication, :remove_alias, :remove_implication
-        "#{token[0].to_s.tr("_", " ")} [[#{token[1]}]] -> [[#{token[2]}]] #{token[3] if token[3]}"
-
-      when :mass_update
-        "mass update {{#{token[1]}}} -> #{token[2]}"
+      when :create_alias, :create_implication, :remove_alias, :remove_implication, :mass_update
+        "#{token[0].to_s.tr("_", " ")} [[#{token[1]}]] -> [[#{token[2]}]] #{token[3]}"
 
       when :change_category
         "category [[#{token[1]}]] -> #{token[2]}"

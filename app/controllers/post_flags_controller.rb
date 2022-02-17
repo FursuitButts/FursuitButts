@@ -23,8 +23,8 @@ class PostFlagsController < ApplicationController
         if @post_flag.errors.size > 0
           @post = Post.find(params[:post_flag][:post_id])
           respond_with(@post_flag)
-          else
-            redirect_to post_path(id: @post_flag.post_id)
+        else
+          redirect_to post_path(id: @post_flag.post_id)
         end
       end
     end
@@ -54,7 +54,7 @@ class PostFlagsController < ApplicationController
     # creator_id and creator_name are special cased in the model search function
     permitted_params = %i[reason_matches creator_id creator_name post_id post_tags_match is_resolved category]
     permitted_params += %i[ip_addr] if CurrentUser.is_moderator?
-    params.fetch(:search, {}).permit(permitted_params)
+    permit_search_params permitted_params
   end
 
   def post_flag_params

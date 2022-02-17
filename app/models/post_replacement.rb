@@ -13,6 +13,7 @@ class PostReplacement < ApplicationRecord
   validate :update_file_attributes, on: :create
   validate :no_pending_duplicates, on: :create
   validate :write_storage_file, on: :create
+  validates :reason, length: { maximum: 150 }, on: :create
 
   after_create -> { post.update_index }
   before_destroy :remove_files
@@ -97,12 +98,18 @@ class PostReplacement < ApplicationRecord
 
   module StorageMethods
     def remove_files
-      ModAction.log(:post_replacement_delete, {id: id, post_id: post_id, md5: md5, storage_id: storage_id})
+      PostEvent.add(post_id, CurrentUser.user, :replacement_deleted, { replacement_id: id, md5: md5, storage_id: storage_id})
       Danbooru.config.storage_manager.delete_replacement(self)
     end
 
     def fetch_source_file
       return if replacement_file.present?
+
+      valid, reason = UploadWhitelist.is_whitelisted?(replacement_url_parsed)
+      if !valid
+        self.errors.add(:replacement_url, "is not whitelisted: #{reason}")
+        throw :abort
+      end
 
       download = Downloads::File.new(replacement_url_parsed, "")
       file, strategy = download.download!
@@ -133,8 +140,12 @@ class PostReplacement < ApplicationRecord
       if replacement_file.present?
         self.file_name = replacement_file.try(:original_filename) || File.basename(replacement_file.path)
       else
+        if replacement_url_parsed.blank? && replacement_url.present?
+          self.errors.add(:replacement_url, "is invalid")
+          throw :abort
+        end
         if replacement_url_parsed.blank?
-          self.errors.add(:base, "No file or source URL provided")
+          self.errors.add(:base, "No file or replacement URL provided")
           throw :abort
         end
         self.file_name = replacement_url_parsed.basename
@@ -181,7 +192,7 @@ class PostReplacement < ApplicationRecord
       end
 
       transaction do
-        ModAction.log(:post_replacement_accept, {post_id: post.id, replacement_id: self.id, old_md5: post.md5, new_md5: self.md5})
+        PostEvent.add(post.id, CurrentUser.user, :replacement_accepted, { replacement_id: id, old_md5: post.md5, new_md5: md5 })
         processor = UploadService::Replacer.new(post: post, replacement: self)
         processor.process!(penalize_current_uploader: penalize_current_uploader)
       end
@@ -208,13 +219,14 @@ class PostReplacement < ApplicationRecord
         return
       end
 
-      transaction do
+      upload = transaction do
         processor = UploadService.new(new_upload_params)
         new_upload = processor.start!
         update_attribute(:status, 'promoted')
         new_upload
       end
       post.update_index
+      upload
     end
 
     def reject!
@@ -223,7 +235,7 @@ class PostReplacement < ApplicationRecord
         return
       end
 
-      ModAction.log(:post_replacement_reject, {post_id: post.id, replacement_id: self.id})
+      PostEvent.add(post.id, CurrentUser.user, :replacement_rejected, { replacement_id: id })
       update_attribute(:status, 'rejected')
       UserStatus.for_user(creator_id).update_all("post_replacement_rejected_count = post_replacement_rejected_count + 1")
       post.update_index

@@ -162,80 +162,6 @@ CREATE TABLE public.ar_internal_metadata (
 
 
 --
--- Name: artist_commentaries; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.artist_commentaries (
-    id integer NOT NULL,
-    post_id integer NOT NULL,
-    original_title text DEFAULT ''::text NOT NULL,
-    original_description text DEFAULT ''::text NOT NULL,
-    translated_title text DEFAULT ''::text NOT NULL,
-    translated_description text DEFAULT ''::text NOT NULL,
-    created_at timestamp without time zone,
-    updated_at timestamp without time zone
-);
-
-
---
--- Name: artist_commentaries_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.artist_commentaries_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: artist_commentaries_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.artist_commentaries_id_seq OWNED BY public.artist_commentaries.id;
-
-
---
--- Name: artist_commentary_versions; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.artist_commentary_versions (
-    id integer NOT NULL,
-    post_id integer NOT NULL,
-    updater_id integer NOT NULL,
-    updater_ip_addr inet NOT NULL,
-    original_title text,
-    original_description text,
-    translated_title text,
-    translated_description text,
-    created_at timestamp without time zone,
-    updated_at timestamp without time zone
-);
-
-
---
--- Name: artist_commentary_versions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.artist_commentary_versions_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: artist_commentary_versions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.artist_commentary_versions_id_seq OWNED BY public.artist_commentary_versions.id;
-
-
---
 -- Name: artist_urls; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1507,6 +1433,39 @@ ALTER SEQUENCE public.post_disapprovals_id_seq OWNED BY public.post_disapprovals
 
 
 --
+-- Name: post_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.post_events (
+    id bigint NOT NULL,
+    creator_id bigint NOT NULL,
+    post_id bigint NOT NULL,
+    action integer NOT NULL,
+    extra_data jsonb NOT NULL,
+    created_at timestamp without time zone NOT NULL
+);
+
+
+--
+-- Name: post_events_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.post_events_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: post_events_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.post_events_id_seq OWNED BY public.post_events.id;
+
+
+--
 -- Name: post_flags; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -2408,9 +2367,6 @@ CREATE TABLE public.uploads (
     file_size integer,
     image_width integer,
     image_height integer,
-    artist_commentary_desc text,
-    artist_commentary_title text,
-    include_artist_commentary boolean,
     context text,
     referer_url text,
     description text DEFAULT ''::text NOT NULL
@@ -2745,20 +2701,6 @@ ALTER TABLE ONLY public.api_keys ALTER COLUMN id SET DEFAULT nextval('public.api
 
 
 --
--- Name: artist_commentaries id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.artist_commentaries ALTER COLUMN id SET DEFAULT nextval('public.artist_commentaries_id_seq'::regclass);
-
-
---
--- Name: artist_commentary_versions id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.artist_commentary_versions ALTER COLUMN id SET DEFAULT nextval('public.artist_commentary_versions_id_seq'::regclass);
-
-
---
 -- Name: artist_urls id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -2997,6 +2939,13 @@ ALTER TABLE ONLY public.post_disapprovals ALTER COLUMN id SET DEFAULT nextval('p
 
 
 --
+-- Name: post_events id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.post_events ALTER COLUMN id SET DEFAULT nextval('public.post_events_id_seq'::regclass);
+
+
+--
 -- Name: post_flags id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -3220,22 +3169,6 @@ ALTER TABLE ONLY public.api_keys
 
 ALTER TABLE ONLY public.ar_internal_metadata
     ADD CONSTRAINT ar_internal_metadata_pkey PRIMARY KEY (key);
-
-
---
--- Name: artist_commentaries artist_commentaries_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.artist_commentaries
-    ADD CONSTRAINT artist_commentaries_pkey PRIMARY KEY (id);
-
-
---
--- Name: artist_commentary_versions artist_commentary_versions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.artist_commentary_versions
-    ADD CONSTRAINT artist_commentary_versions_pkey PRIMARY KEY (id);
 
 
 --
@@ -3519,6 +3452,14 @@ ALTER TABLE ONLY public.post_disapprovals
 
 
 --
+-- Name: post_events post_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.post_events
+    ADD CONSTRAINT post_events_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: post_flags post_flags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3772,34 +3713,6 @@ CREATE UNIQUE INDEX index_api_keys_on_key ON public.api_keys USING btree (key);
 --
 
 CREATE UNIQUE INDEX index_api_keys_on_user_id ON public.api_keys USING btree (user_id);
-
-
---
--- Name: index_artist_commentaries_on_post_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX index_artist_commentaries_on_post_id ON public.artist_commentaries USING btree (post_id);
-
-
---
--- Name: index_artist_commentary_versions_on_post_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_artist_commentary_versions_on_post_id ON public.artist_commentary_versions USING btree (post_id);
-
-
---
--- Name: index_artist_commentary_versions_on_updater_id_and_post_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_artist_commentary_versions_on_updater_id_and_post_id ON public.artist_commentary_versions USING btree (updater_id, post_id);
-
-
---
--- Name: index_artist_commentary_versions_on_updater_ip_addr; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_artist_commentary_versions_on_updater_ip_addr ON public.artist_commentary_versions USING btree (updater_ip_addr);
 
 
 --
@@ -4395,6 +4308,20 @@ CREATE INDEX index_post_disapprovals_on_post_id ON public.post_disapprovals USIN
 --
 
 CREATE INDEX index_post_disapprovals_on_user_id ON public.post_disapprovals USING btree (user_id);
+
+
+--
+-- Name: index_post_events_on_creator_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_post_events_on_creator_id ON public.post_events USING btree (creator_id);
+
+
+--
+-- Name: index_post_events_on_post_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_post_events_on_post_id ON public.post_events USING btree (post_id);
 
 
 --
@@ -5004,6 +4931,14 @@ ALTER TABLE ONLY public.staff_notes
 
 
 --
+-- Name: post_events fk_rails_bd327ccee6; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.post_events
+    ADD CONSTRAINT fk_rails_bd327ccee6 FOREIGN KEY (creator_id) REFERENCES public.users(id);
+
+
+--
 -- Name: favorites fk_rails_d20e53bb68; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5255,4 +5190,6 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20210506235640'),
 ('20210625155528'),
 ('20210718172512'),
-('20211223070707');
+('20211223070707'),
+('20220106081415'),
+('20220203154846');

@@ -3,11 +3,6 @@ import Post from './posts'
 let Upload = {};
 
 Upload.initialize_all = function() {
-  if ($("#c-uploads,#c-posts").length) {
-    $("#upload_direct_url").on("change.danbooru", Upload.fetch_data_manual);
-    $(document).on("click.danbooru", "#fetch-data-manual", Upload.fetch_data_manual);
-  }
-
   if ($("#c-uploads").length) {
     if ($("#image").prop("complete")) {
       this.initialize_image();
@@ -21,11 +16,6 @@ Upload.initialize_all = function() {
     }
     this.initialize_similar();
     this.initialize_submit();
-
-    $("#toggle-artist-commentary").on("click.danbooru", function(e) {
-      Upload.toggle_commentary();
-      e.preventDefault();
-    });
   }
 
   if ($("#iqdb-similar").length) {
@@ -80,35 +70,6 @@ Upload.update_scale = function() {
   }
 }
 
-Upload.showWhitelistWarning = function(allowed, reason, domain) {
-  if (allowed) {
-    $("#whitelist-warning").addClass("whitelist-warning-allowed").removeClass("whitelist-warning-disallowed");
-    $("#whitelist-warning").html("Uploads from <span style='font-weight:bold'>" + domain + "</span> are permitted!");
-  } else {
-    $("#whitelist-warning").removeClass("whitelist-warning-allowed").addClass("whitelist-warning-disallowed");
-    $("#whitelist-warning").html("Uploads from <span style='font-weight:bold'>" + domain + "</span> are not permitted: " + reason + " (<a href='/upload_whitelists'>View whitelisted domains</a>)");
-  }
-  $("#whitelist-warning").show();
-}
-
-Upload.fetch_data_manual = function(e) {
-  var url = $("#upload_direct_url").val();
-  var ref = $("#upload_referer_url").val();
-
-  if(!url.length)
-    $("#whitelist-warning").hide();
-
-  if (/^https?:\/\//.test(url)) {
-    $("#source-info").addClass("loading");
-    $.get("/source.js", { url: url, ref: ref }).always(resp => $("#source-info").removeClass("loading"));
-    $.get("/upload_whitelists/is_allowed.json", { url: url }).always(function(resp) {
-      Upload.showWhitelistWarning(resp.is_allowed, resp.reason, resp.domain);
-    });
-  }
-
-  e.preventDefault();
-}
-
 Upload.initialize_image = function() {
   var $image = $("#image");
   if (!$image.length) {
@@ -128,16 +89,6 @@ Upload.initialize_image = function() {
   Upload.update_scale();
   $("#image-resize-to-window-link").on("click.danbooru", Upload.update_scale);
 }
-
-Upload.toggle_commentary = function() {
-  if ($(".artist-commentary").is(":visible")) {
-    $("#toggle-artist-commentary").text("show »");
-  } else {
-    $("#toggle-artist-commentary").text("« hide");
-  }
-
-  $(".artist-commentary").slideToggle();
-};
 
 $(function() {
   Upload.initialize_all();

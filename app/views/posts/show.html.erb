@@ -33,26 +33,30 @@
         <section id="post-history">
           <h1>History</h1>
           <ul>
-            <li><%= fast_link_to "Tags/Desc", post_versions_path(:search => {:post_id => @post.id}) %></li>
-            <li><%= fast_link_to "Notes", note_versions_path(:search => {:post_id => @post.id}) %></li>
-            <li><%= fast_link_to "Moderation", post_events_path(@post.id) %></li>
-            <li><%= fast_link_to "Replacements", post_replacements_path(:search => {:post_id => @post.id}) %></li>
+            <li><%= fast_link_to "Tags/Desc", post_versions_path(search: { post_id: @post.id }) %></li>
+            <li><%= fast_link_to "Notes", note_versions_path(search: { post_id: @post.id }) %></li>
+            <li><%= fast_link_to "Events", post_events_path(search: { post_id: @post.id }) %></li>
+            <li><%= fast_link_to "Replacements", post_replacements_path(search: { post_id: @post.id }) %></li>
           </ul>
         </section>
 
       <% end %>
 
-      <% if @post.visible? && @post.is_image? %>
+      <% if @post.visible? %>
         <section id="post-related-images">
           <h1>Related</h1>
           <ul>
             <li><%= link_to "Sets with this post", post_sets_path(post_id: @post.id), rel: "nofollow" %></li>
-            <li><%= link_to "Visually similar on E6", iqdb_queries_path(post_id: @post.id), rel: "nofollow" %></li>
-            <li><a rel="nofollow" href="https://www.google.com/searchbyimage?image_url=<%= @post.reverse_image_url %>">Reverse Google Search</a></li>
-            <li><a rel="nofollow" href="https://saucenao.com/search.php?url=<%= @post.reverse_image_url %>">Reverse SauceNAO Search</a></li>
-            <li><a rel="nofollow" href="https://inkbunny.net/search_process.php?text=<%= @post.md5 %>&md5=yes">Inkbunny MD5 Search</a></li>
-            <li><a rel="nofollow" href="https://derpibooru.org/search/reverse?url=<%= @post.reverse_image_url %>">Reverse Derpibooru Search</a></li>
-            <li><a rel="nofollow" href="https://kheina.com/?url=<%= @post.reverse_image_url %>">Reverse Kheina Search</a></li>
+            <% if @post.has_preview? %>
+              <li><%= link_to "Visually similar on E6", iqdb_queries_path(post_id: @post.id), rel: "nofollow" %></li>
+            <% end %>
+            <% if @post.is_image? %>
+              <li><a rel="nofollow" href="https://www.google.com/searchbyimage?image_url=<%= @post.reverse_image_url %>">Reverse Google Search</a></li>
+              <li><a rel="nofollow" href="https://saucenao.com/search.php?url=<%= @post.reverse_image_url %>">Reverse SauceNAO Search</a></li>
+              <li><a rel="nofollow" href="https://inkbunny.net/search_process.php?text=<%= @post.md5 %>&md5=yes">Inkbunny MD5 Search</a></li>
+              <li><a rel="nofollow" href="https://derpibooru.org/search/reverse?url=<%= @post.reverse_image_url %>">Reverse Derpibooru Search</a></li>
+              <li><a rel="nofollow" href="https://kheina.com/?url=<%= @post.reverse_image_url %>">Reverse Kheina Search</a></li>
+            <% end %>
           </ul>
         </section>
       <% end %>
@@ -160,12 +164,12 @@
 
       <% if @post.description.present? %>
         <div id="post-description-container" class="styled-dtext">
-          <div id="artist-commentary" class="expandable <%= 'expanded' unless CurrentUser.description_collapsed_initially? %>">
+          <div id="description" class="expandable <%= 'expanded' unless CurrentUser.description_collapsed_initially? %>">
             <div class="expandable-header">
               <span class="section-arrow"></span>
               <span>Description</span>
             </div>
-            <div class="expandable-content styled-dtext original-artist-commentary">
+            <div class="expandable-content dtext-container">
               <%= format_text(@post.description, max_thumbs: 0) %>
             </div>
           </div>

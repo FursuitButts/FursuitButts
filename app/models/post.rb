@@ -33,7 +33,7 @@ class Post < ApplicationRecord
   validate :updater_can_change_rating
   before_save :update_tag_post_counts, if: :should_process_tags?
   before_save :set_tag_counts, if: :should_process_tags?
-  after_save :create_rating_lock_mod_action, if: :saved_change_to_is_rating_locked?
+  after_save :create_lock_post_events
   after_save :create_version
   after_save :update_parent_on_save
   after_save :apply_post_metatags
@@ -398,6 +398,7 @@ class Post < ApplicationRecord
     def unflag!
       flags.each(&:resolve!)
       update(is_flagged: false)
+      PostEvent.add(id, CurrentUser.user, :flag_removed)
     end
 
     def appeal!(reason)
@@ -416,16 +417,14 @@ class Post < ApplicationRecord
       approver == user || approvals.where(user: user).exists?
     end
 
-    def unapprove!(unapprover = CurrentUser.user)
-      ModAction.log(:post_unapprove, {post_id: id})
+    def unapprove!
+      PostEvent.add(id, CurrentUser.user, :unapproved)
       update(approver: nil, is_pending: true)
     end
 
     def approve!(approver = CurrentUser.user, force: false)
       raise ApprovalError.new("Post already approved.") if self.approver != nil && !force
-      if is_deleted?
-        ModAction.log(:post_undelete, {post_id: id})
-      end
+      PostEvent.add(id, CurrentUser.user, :approved)
 
       approv = approvals.create(user: approver)
       flags.each(&:resolve!)
@@ -518,220 +517,6 @@ class Post < ApplicationRecord
       when "s"
         "Safe"
       end
-    end
-
-    def normalized_source
-      source = source_array.fetch(0, "")
-      case source
-      when %r{\Ahttps?://img\d+\.pixiv\.net/img/[^\/]+/(\d+)}i,
-          %r{\Ahttps?://i\d\.pixiv\.net/img\d+/img/[^\/]+/(\d+)}i
-        "https://www.pixiv.net/member_illust.php?mode=medium&illust_id=#{$1}"
-
-      when %r{\Ahttps?://(?:i\d+\.pixiv\.net|i\.pximg\.net)/img-(?:master|original)/img/(?:\d+\/)+(\d+)_p}i,
-          %r{\Ahttps?://(?:i\d+\.pixiv\.net|i\.pximg\.net)/c/\d+x\d+/img-master/img/(?:\d+\/)+(\d+)_p}i,
-          %r{\Ahttps?://(?:i\d+\.pixiv\.net|i\.pximg\.net)/img-zip-ugoira/img/(?:\d+\/)+(\d+)_ugoira\d+x\d+\.zip}i
-        "https://www.pixiv.net/member_illust.php?mode=medium&illust_id=#{$1}"
-
-      when %r{\Ahttps?://lohas\.nicoseiga\.jp/priv/(\d+)\?e=\d+&h=[a-f0-9]+}i,
-          %r{\Ahttps?://lohas\.nicoseiga\.jp/priv/[a-f0-9]+/\d+/(\d+)}i
-        "https://seiga.nicovideo.jp/seiga/im#{$1}"
-
-      when %r{\Ahttps?://(?:d3j5vwomefv46c|dn3pm25xmtlyu)\.cloudfront\.net/photos/large/(\d+)\.}i
-        base_10_id = $1.to_i
-        base_36_id = base_10_id.to_s(36)
-        "https://twitpic.com/#{base_36_id}"
-
-        # http://orig12.deviantart.net/9b69/f/2017/023/7/c/illustration___tokyo_encount_oei__by_melisaongmiqin-dawi58s.png
-        # http://pre15.deviantart.net/81de/th/pre/f/2015/063/5/f/inha_by_inhaestudios-d8kfzm5.jpg
-        # http://th00.deviantart.net/fs71/PRE/f/2014/065/3/b/goruto_by_xyelkiltrox-d797tit.png
-        # http://th04.deviantart.net/fs70/300W/f/2009/364/4/d/Alphes_Mimic___Rika_by_Juriesute.png
-        # http://fc02.deviantart.net/fs48/f/2009/186/2/c/Animation_by_epe_tohri.swf
-        # http://fc08.deviantart.net/files/f/2007/120/c/9/Cool_Like_Me_by_47ness.jpg
-        # http://fc08.deviantart.net/images3/i/2004/088/8/f/Blackrose_for_MuzicFreq.jpg
-        # http://img04.deviantart.net/720b/i/2003/37/9/6/princess_peach.jpg
-      when %r{\Ahttps?://(?:(?:fc|th|pre|orig|img|prnt)\d{2}|origin-orig)\.deviantart\.net/.+/(?<title>[a-z0-9_]+)_by_(?<artist>[a-z0-9_]+)-d(?<id>[a-z0-9]+)\.}i
-        artist = $~[:artist].dasherize
-        title = $~[:title].titleize.strip.squeeze(" ").tr(" ", "-")
-        id = $~[:id].to_i(36)
-        "https://www.deviantart.com/#{artist}/art/#{title}-#{id}"
-
-        # http://prnt00.deviantart.net/9b74/b/2016/101/4/468a9d89f52a835d4f6f1c8caca0dfb2-pnjfbh.jpg
-        # http://fc00.deviantart.net/fs71/f/2013/234/d/8/d84e05f26f0695b1153e9dab3a962f16-d6j8jl9.jpg
-        # http://th04.deviantart.net/fs71/PRE/f/2013/337/3/5/35081351f62b432f84eaeddeb4693caf-d6wlrqs.jpg
-        # http://fc09.deviantart.net/fs22/o/2009/197/3/7/37ac79eaeef9fb32e6ae998e9a77d8dd.jpg
-      when %r{\Ahttps?://(?:fc|th|pre|orig|img|prnt)\d{2}\.deviantart\.net/.+/[a-f0-9]{32}-d(?<id>[a-z0-9]+)\.}i
-        id = $~[:id].to_i(36)
-        "https://deviantart.com/deviation/#{id}"
-
-      when %r{\Ahttp://www\.karabako\.net/images(?:ub)?/karabako_(\d+)(?:_\d+)?\.}i
-        "https://www.karabako.net/post/view/#{$1}"
-
-        # XXX http://twipple.jp is defunct
-        # http://p.twpl.jp/show/orig/myRVs
-      when %r{\Ahttp://p\.twpl\.jp/show/(?:large|orig)/([a-z0-9]+)}i
-        "https://p.twipple.jp/#{$1}"
-
-      when %r{\Ahttps?://pictures\.hentai-foundry\.com//?[^/]/([^/]+)/(\d+)}i
-        "https://www.hentai-foundry.com/pictures/user/#{$1}/#{$2}"
-
-      when %r{\Ahttp://blog(?:(?:-imgs-)?\d*(?:-origin)?)?\.fc2\.com/(?:(?:[^/]/){3}|(?:[^/]/))([^/]+)/(?:file/)?([^\.]+\.[^\?]+)}i
-        username = $1
-        filename = $2
-        "https://#{username}.blog.fc2.com/img/#{filename}/"
-
-      when %r{\Ahttp://diary(\d)?\.fc2\.com/user/([^/]+)/img/(\d+)_(\d+)/(\d+)\.}i
-        server_id = $1
-        username = $2
-        year = $3
-        month = $4
-        day = $5
-        "https://diary#{server_id}.fc2.com/cgi-sys/ed.cgi/#{username}?Y=#{year}&M=#{month}&D=#{day}"
-
-      when %r{\Ahttps?://(?:fbcdn-)?s(?:content|photos)-[^/]+\.(?:fbcdn|akamaihd)\.net/hphotos-.+/\d+_(\d+)_(?:\d+_){1,3}[no]\.}i
-        "https://www.facebook.com/photo.php?fbid=#{$1}"
-
-      when %r{\Ahttps?://c(?:s|han|[1-4])\.sankakucomplex\.com/data(?:/sample)?/(?:[a-f0-9]{2}/){2}(?:sample-|preview)?([a-f0-9]{32})}i
-        "https://chan.sankakucomplex.com/en/post/show?md5=#{$1}"
-
-      when %r{\Ahttp://s(?:tatic|[1-4])\.zerochan\.net/.+(?:\.|\/)(\d+)\.(?:jpe?g?)\z}i
-        "https://www.zerochan.net/#{$1}#full"
-
-      when %r{\Ahttp://static[1-6]?\.minitokyo\.net/(?:downloads|view)/(?:\d{2}/){2}(\d+)}i
-        "https://gallery.minitokyo.net/download/#{$1}"
-
-        # https://gelbooru.com//images/ee/5c/ee5c9a69db9602c95debdb9b98fb3e3e.jpeg
-        # http://simg.gelbooru.com//images/2003/edd1d2b3881cf70c3acf540780507531.png
-        # https://simg3.gelbooru.com//samples/0b/3a/sample_0b3ae5e225072b8e391c827cb470d29c.jpg
-      when %r{\Ahttps?://(?:\w+\.)?gelbooru\.com//?(?:images|samples)/(?:\d+|\h\h/\h\h)/(?:sample_)?(?<md5>\h{32})\.}i
-        "https://gelbooru.com/index.php?page=post&s=list&md5=#{$~[:md5]}"
-
-      when %r{\Ahttps?://(?:slot\d*\.)?im(?:g|ages)\d*\.wikia\.(?:nocookie\.net|com)/(?:_{2}cb\d{14}/)?([^/]+)(?:/[a-z]{2})?/images/(?:(?:thumb|archive)?/)?[a-f0-9]/[a-f0-9]{2}/(?:\d{14}(?:!|%21))?([^/]+)}i
-        subdomain = $1
-        filename = $2
-        "https://#{subdomain}.wikia.com/wiki/File:#{filename}"
-
-      when %r{\Ahttps?://vignette(?:\d*)\.wikia\.nocookie\.net/([^/]+)/images/[a-f0-9]/[a-f0-9]{2}/([^/]+)}i
-        subdomain = $1
-        filename = $2
-        "https://#{subdomain}.wikia.com/wiki/File:#{filename}"
-
-      when %r{\Ahttp://(?:(?:\d{1,3}\.){3}\d{1,3}):(?:\d{1,5})/h/([a-f0-9]{40})-(?:\d+-){3}(?:png|gif|(?:jpe?g?))/keystamp=\d+-[a-f0-9]{10}/([^/]+)}i
-        sha1hash = $1
-        filename = $2
-        "https://g.e-hentai.org/?f_shash=#{sha1hash}&fs_from=#{filename}"
-
-      when %r{\Ahttp://e-shuushuu.net/images/\d{4}-(?:\d{2}-){2}(\d+)}i
-        "https://e-shuushuu.net/image/#{$1}"
-
-      when %r{\Ahttp://jpg\.nijigen-daiaru\.com/(\d+)}i
-        "https://nijigen-daiaru.com/book.php?idb=#{$1}"
-
-      when %r{\Ahttps?://sozai\.doujinantena\.com/contents_jpg/([a-f0-9]{32})/}i
-        "https://doujinantena.com/page.php?id=#{$1}"
-
-      when %r{\Ahttp://rule34-(?:data-\d{3}|images)\.paheal\.net/(?:_images/)?([a-f0-9]{32})}i
-        "https://rule34.paheal.net/post/list/md5:#{$1}/1"
-
-      when %r{\Ahttp://shimmie\.katawa-shoujo\.com/image/(\d+)}i
-        "https://shimmie.katawa-shoujo.com/post/view/#{$1}"
-
-      when %r{\Ahttp://(?:(?:(?:img\d?|cdn)\.)?rule34\.xxx|img\.booru\.org/(?:rule34|r34))(?:/(?:img/rule34|r34))?/{1,2}images/\d+/(?:[a-f0-9]{32}|[a-f0-9]{40})\.}i
-        "https://rule34.xxx/index.php?page=post&s=list&md5=#{md5}"
-
-      when %r{\Ahttps?://(?:s3\.amazonaws\.com/imgly_production|img\.ly/system/uploads)/((?:\d{3}/){3}|\d+/)}i
-        imgly_id = $1
-        imgly_id = imgly_id.gsub(/[^0-9]/, '')
-        base_62 = imgly_id.to_i.encode62
-        "https://img.ly/#{base_62}"
-
-      when %r{(\Ahttp://.+)/diarypro/d(?:ata/upfile/|iary\.cgi\?mode=image&upfile=)(\d+)}i
-        base_url = $1
-        entry_no = $2
-        "#{base_url}/diarypro/diary.cgi?no=#{entry_no}"
-
-        # XXX site is defunct
-      when %r{\Ahttp://i(?:\d)?\.minus\.com/(?:i|j)([^\.]{12,})}i
-        "https://minus.com/i/#{$1}"
-
-      when %r{\Ahttps?://pic0[1-4]\.nijie\.info/nijie_picture/(?:diff/main/)?\d+_(\d+)_(?:\d+{10}|\d+_\d+{14})}i
-        "https://nijie.info/view.php?id=#{$1}"
-
-        # http://ayase.yande.re/image/2d0d229fd8465a325ee7686fcc7f75d2/yande.re%20192481%20animal_ears%20bunny_ears%20garter_belt%20headphones%20mitha%20stockings%20thighhighs.jpg
-        # https://yuno.yande.re/image/1764b95ae99e1562854791c232e3444b/yande.re%20281544%20cameltoe%20erect_nipples%20fundoshi%20horns%20loli%20miyama-zero%20sarashi%20sling_bikini%20swimsuits.jpg
-        # https://files.yande.re/image/2a5d1d688f565cb08a69ecf4e35017ab/yande.re%20349790%20breast_hold%20kurashima_tomoyasu%20mahouka_koukou_no_rettousei%20naked%20nipples.jpg
-        # https://files.yande.re/sample/0d79447ce2c89138146f64ba93633568/yande.re%20290757%20sample%20seifuku%20thighhighs%20tsukudani_norio.jpg
-      when %r{\Ahttps?://(?:[^.]+\.)?yande\.re/(?:image|jpeg|sample)/\h{32}/yande\.re%20(?<post_id>\d+)}i
-        "https://yande.re/post/show/#{$~[:post_id]}"
-
-        # https://yande.re/jpeg/0c9ec0ffcaa40470093cb44c3fd40056/yande.re%2064649%20animal_ears%20cameltoe%20fixme%20nekomimi%20nipples%20ryohka%20school_swimsuit%20see_through%20shiraishi_nagomi%20suzuya%20swimsuits%20tail%20thighhighs.jpg
-        # https://yande.re/jpeg/22577d2344fe694cf47f80563031b3cd.jpg
-        # https://yande.re/image/b4b1d11facd1700544554e4805d47bb6/.png
-        # https://yande.re/sample/ceb6a12e87945413a95b90fada406f91/.jpg
-      when %r{\Ahttps?://(?:[^.]+\.)?yande\.re/(?:image|jpeg|sample)/(?<md5>\h{32})(?:/yande\.re.*|/?\.(?:jpg|png))\z}i
-        "https://yande.re/post?tags=md5:#{$~[:md5]}"
-
-      when %r{\Ahttps?://(?:[^.]+\.)?konachan\.com/(?:image|jpeg|sample)/\h{32}/Konachan\.com%20-%20(?<post_id>\d+)}i
-        "https://konachan.com/post/show/#{$~[:post_id]}"
-
-      when %r{\Ahttps?://(?:[^.]+\.)?konachan\.com/(?:image|jpeg|sample)/(?<md5>\h{32})(?:/Konachan\.com%20-%20.*|/?\.(?:jpg|png))\z}i
-        "https://konachan.com/post?tags=md5:#{$~[:md5]}"
-
-        # https://gfee_li.artstation.com/projects/XPGOD
-        # https://gfee_li.artstation.com/projects/asuka-7
-      when %r{\Ahttps?://\w+\.artstation.com/(?:artwork|projects)/(?<project_id>[a-z0-9-]+)\z/}i
-        "https://www.artstation.com/artwork/#{$~[:project_id]}"
-
-      when %r{\Ahttps?://(?:o|image-proxy-origin)\.twimg\.com/\d/proxy\.jpg\?t=(\w+)&}i
-        str = Base64.decode64($1)
-        url = URI.extract(str, ['http', 'https'])
-        if url.any?
-          url = url[0]
-          if (url =~ /^https?:\/\/twitpic.com\/show\/large\/[a-z0-9]+/i)
-            url.gsub!(/show\/large\//, "")
-            index = url.rindex('.')
-            url = url[0..index - 1]
-          end
-          url
-        else
-          source
-        end
-
-        # http://art59.photozou.jp/pub/212/1986212/photo/118493247_org.v1534644005.jpg
-        # http://kura3.photozou.jp/pub/794/1481794/photo/161537258_org.v1364829097.jpg
-      when %r{\Ahttps?://\w+\.photozou\.jp/pub/\d+/(?<artist_id>\d+)/photo/(?<photo_id>\d+)_.*$}i
-        "https://photozou.jp/photo/show/#{$~[:artist_id]}/#{$~[:photo_id]}"
-
-        # http://img.toranoana.jp/popup_img/04/0030/09/76/040030097695-2p.jpg
-        # http://img.toranoana.jp/popup_img18/04/0010/22/87/040010228714-1p.jpg
-        # http://img.toranoana.jp/popup_blimg/04/0030/08/30/040030083068-1p.jpg
-        # https://ecdnimg.toranoana.jp/ec/img/04/0030/65/34/040030653417-6p.jpg
-      when %r{\Ahttps?://(\w+\.)?toranoana\.jp/(?:popup_(?:bl)?img\d*|ec/img)/\d{2}/\d{4}/\d{2}/\d{2}/(?<work_id>\d+)}i
-        "https://ec.toranoana.jp/tora_r/ec/item/#{$~[:work_id]}/"
-
-        # https://a.hitomi.la/galleries/907838/1.png
-        # https://0a.hitomi.la/galleries/1169701/23.png
-        # https://aa.hitomi.la/galleries/990722/003_01_002.jpg
-        # https://la.hitomi.la/galleries/1054851/001_main_image.jpg
-      when %r{\Ahttps?://\w+\.hitomi\.la/galleries/(?<gallery_id>\d+)/(?<image_id>\d+)\w*\.[a-z]+\z}i
-        "https://hitomi.la/reader/#{$~[:gallery_id]}.html##{$~[:image_id].to_i}"
-
-        # https://aa.hitomi.la/galleries/883451/t_rena1g.png
-      when %r{\Ahttps?://\w+\.hitomi\.la/galleries/(?<gallery_id>\d+)/\w*\.[a-z]+\z}i
-        "https://hitomi.la/galleries/#{$~[:gallery_id]}.html"
-
-      else
-        source
-      end
-    end
-
-    def source_domain
-      source = source_array.fetch(0, "")
-      return "" unless source =~ %r!\Ahttps?://!i
-
-      url = Addressable::URI.parse(normalized_source)
-      url.domain
-    rescue
-      ""
     end
   end
 
@@ -1361,24 +1146,6 @@ class Post < ApplicationRecord
       tags += " -status:deleted" if !Tag.has_metatag?(tags, "status", "-status")
       tags = Tag.normalize_query(tags)
 
-      # optimize some cases. these are just estimates but at these
-      # quantities being off by a few hundred doesn't matter much
-      if Danbooru.config.estimate_post_counts?
-        if tags == ""
-          return (Post.maximum(:id) * (2200402.0 / 2232212)).floor
-
-        elsif tags =~ /^rating:s(?:afe)?$/
-          return (Post.maximum(:id) * (1648652.0 / 2200402)).floor
-
-        elsif tags =~ /^rating:q(?:uestionable)?$/
-          return (Post.maximum(:id) * (350101.0 / 2200402)).floor
-
-        elsif tags =~ /^rating:e(?:xplicit)?$/
-          return (Post.maximum(:id) * (201650.0 / 2200402)).floor
-
-        end
-      end
-
       count = nil
 
       unless skip_cache
@@ -1498,18 +1265,16 @@ class Post < ApplicationRecord
       Post.find(parent_id_before_last_save).update_has_children_flag if parent_id_before_last_save.present?
     end
 
-    def give_favorites_to_parent(options = {})
-      TransferFavoritesJob.perform_later(id, CurrentUser.id, options[:without_mod_action])
+    def give_favorites_to_parent
+      TransferFavoritesJob.perform_later(id, CurrentUser.id)
     end
 
-    def give_favorites_to_parent!(options = {})
+    def give_favorites_to_parent!
       return if parent.nil?
 
       FavoriteManager.give_to_parent!(self)
-
-      unless options[:without_mod_action]
-        ModAction.log(:post_move_favorites, {post_id: id, parent_id: parent_id})
-      end
+      PostEvent.add(id, CurrentUser.user, :favorites_moved, { parent_id: parent_id })
+      PostEvent.add(parent_id, CurrentUser.user, :favorites_received, { child_id: id })
     end
 
     def parent_exists?
@@ -1574,7 +1339,7 @@ class Post < ApplicationRecord
 
       transaction do
         Post.without_timeout do
-          ModAction.log(:post_destroy, {post_id: id, md5: md5})
+          PostEvent.add(id, CurrentUser.user, :expunged)
 
           update_children_on_destroy
           decrement_tag_post_counts
@@ -1621,16 +1386,14 @@ class Post < ApplicationRecord
               is_flagged: false
           )
           move_files_on_delete
-          unless options[:without_mod_action]
-            ModAction.log(:post_delete, {post_id: id, reason: reason})
-          end
+          PostEvent.add(id, CurrentUser.user, :deleted, { reason: reason })
         end
       end
 
       # XXX This must happen *after* the `is_deleted` flag is set to true (issue #3419).
       # We don't care if these fail per-se so they are outside the transaction.
       UserStatus.for_user(uploader_id).update_all("post_deleted_count = post_deleted_count + 1")
-      give_favorites_to_parent(options) if options[:move_favorites]
+      give_favorites_to_parent if options[:move_favorites]
       give_post_sets_to_parent if options[:move_favorites]
       reject_pending_replacements
     end
@@ -1657,9 +1420,7 @@ class Post < ApplicationRecord
         flags.each {|x| x.resolve!}
         save
         approvals.create(user: CurrentUser.user)
-        unless options[:without_mod_action]
-          ModAction.log(:post_undelete, {post_id: id})
-        end
+        PostEvent.add(id, CurrentUser.user, :undeleted)
       end
       move_files_on_undelete
       UserStatus.for_user(uploader_id).update_all("post_deleted_count = post_deleted_count - 1")
@@ -1804,35 +1565,6 @@ class Post < ApplicationRecord
         hash[:preview_url] = preview_file_url
         hash[:cropped_url] = crop_file_url
       end
-      hash
-    end
-
-    def legacy_attributes
-      hash = {
-          "has_comments" => last_commented_at.present?,
-          "parent_id" => parent_id,
-          "status" => status,
-          "has_children" => has_children?,
-          "created_at" => created_at.to_formatted_s(:db),
-          "has_notes" => has_notes?,
-          "rating" => rating,
-          "author" => uploader_name,
-          "creator_id" => uploader_id,
-          "width" => image_width,
-          "source" => source,
-          "score" => score,
-          "tags" => tag_string,
-          "height" => image_height,
-          "file_size" => file_size,
-          "id" => id
-      }
-
-      if visible?
-        hash["file_url"] = file_url
-        hash["preview_url"] = preview_file_url
-        hash["md5"] = md5
-      end
-
       hash
     end
 
@@ -2025,9 +1757,20 @@ class Post < ApplicationRecord
     end
   end
 
-  module RatingMethods
-    def create_rating_lock_mod_action
-      ModAction.log(:post_rating_lock, {locked: is_rating_locked?, post_id: id})
+  module PostEventMethods
+    def create_lock_post_events
+      if saved_change_to_is_rating_locked?
+        action = is_rating_locked? ? :rating_locked : :rating_unlocked
+        PostEvent.add(id, CurrentUser.user, action)
+      end
+      if saved_change_to_is_status_locked?
+        action = is_status_locked? ? :status_locked : :status_unlocked
+        PostEvent.add(id, CurrentUser.user, action)
+      end
+      if saved_change_to_is_note_locked?
+        action = is_note_locked? ? :note_locked : :note_unlocked
+        PostEvent.add(id, CurrentUser.user, action)
+      end
     end
   end
 
@@ -2138,7 +1881,7 @@ class Post < ApplicationRecord
   extend SearchMethods
   include IqdbMethods
   include ValidationMethods
-  include RatingMethods
+  include PostEventMethods
   include Danbooru::HasBitFlags
   include Indexable
   include PostIndex

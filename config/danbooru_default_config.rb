@@ -1036,10 +1036,6 @@ module Danbooru
       %w[duplicate image_sample md5_mismatch resized upscaled downscaled]
     end
 
-    def shared_dir_path
-      "/var/www/danbooru2/shared"
-    end
-
     def twitter_api_key
     end
 
@@ -1118,18 +1114,9 @@ module Danbooru
     def twitter_site
     end
 
-    # enable some (donmai-specific) optimizations for post counts
-    def estimate_post_counts?
-      false
-    end
-
     # disable this for tests
     def enable_sock_puppet_validation?
       true
-    end
-
-    # reportbooru options - see https://github.com/r888888888/reportbooru
-    def reportbooru_server
     end
 
     def iqdbs_server
@@ -1160,22 +1147,6 @@ module Danbooru
 
     def rakismet_url
       "https://#{hostname}"
-    end
-
-    # Cloudflare data
-    def cloudflare_email
-    end
-
-    def cloudflare_zone
-    end
-
-    def cloudflare_key
-    end
-
-    def recommender_server
-    end
-
-    def recommender_key
     end
 
     def redis_url

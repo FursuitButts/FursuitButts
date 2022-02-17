@@ -68,9 +68,6 @@ Rails.application.routes.draw do
     resources :posts, :only => [] do
       collection do
         get :popular
-        get :searches
-        get :missed_searches
-        get :intro
       end
     end
   end
@@ -256,7 +253,6 @@ Rails.application.routes.draw do
   end
   resources :deleted_posts, only: [:index]
   resources :posts, :only => [:index, :show, :update] do
-    resources :events, :only => [:index], :controller => "post_events"
     resources :replacements, :only => [:index, :new, :create], :controller => "post_replacements"
     resource :votes, :controller => "post_votes", :only => [:create, :destroy]
     resource :flag, controller: 'post_flags', only: [:destroy]
@@ -280,6 +276,7 @@ Rails.application.routes.draw do
       post :delete
     end
   end
+  resources :post_events, only: :index
   resources :post_appeals
   resources :post_flags, except: [:destroy]
   resources :post_approvals, only: [:index]
@@ -291,22 +288,11 @@ Rails.application.routes.draw do
       get :search
     end
   end
-  resources :artist_commentaries, :only => [:index, :show] do
-    collection do
-      put :create_or_update
-      get :search
-    end
-    member do
-      put :revert
-    end
-  end
   resource :related_tag, :only => [:show, :update]
   match "related_tag/bulk", to: "related_tags#bulk", via: [:get, :post]
-  resource :recommended_posts, only: [:show]
   resource :session, only: [:new, :create, :destroy] do
     get :sign_out, on: :collection
   end
-  resource :source, :only => [:show]
   resources :stats, only: [:index]
   resources :tags do
     resource :correction, :only => [:new, :create, :show], :controller => "tag_corrections"
@@ -348,12 +334,7 @@ Rails.application.routes.draw do
       get :search
     end
   end
-  resources :user_name_change_requests do
-    member do
-      post :approve
-      post :reject
-    end
-  end
+  resources :user_name_change_requests
   resource :user_revert, :only => [:new, :create]
   resources :wiki_pages do
     member do

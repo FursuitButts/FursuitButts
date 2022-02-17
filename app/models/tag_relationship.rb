@@ -2,8 +2,6 @@ class TagRelationship < ApplicationRecord
   self.abstract_class = true
 
   SUPPORT_HARD_CODED = true
-  EXPIRY = 60
-  EXPIRY_WARNING = 55
 
   belongs_to_creator
   belongs_to :approver, class_name: "User", optional: true
@@ -17,8 +15,6 @@ class TagRelationship < ApplicationRecord
   scope :active, ->{approved}
   scope :approved, ->{where(status: %w[active processing queued])}
   scope :deleted, ->{where(status: "deleted")}
-  scope :expired, ->{where("created_at < ?", EXPIRY.days.ago)}
-  scope :old, ->{where("created_at >= ? and created_at < ?", EXPIRY.days.ago, EXPIRY_WARNING.days.ago)}
   scope :pending, ->{where(status: "pending")}
   scope :retired, ->{where(status: "retired")}
   scope :duplicate_relevant, ->{where(status: %w[active processing queued pending])}
@@ -37,8 +33,8 @@ class TagRelationship < ApplicationRecord
   after_save :update_notice
 
   def initialize_creator
-    self.creator_id ||= CurrentUser.user.id
-    self.creator_ip_addr ||= CurrentUser.ip_addr
+    self.creator_id = CurrentUser.user.id
+    self.creator_ip_addr = CurrentUser.ip_addr
   end
 
   def normalize_names

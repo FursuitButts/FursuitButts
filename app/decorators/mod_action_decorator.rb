@@ -75,8 +75,10 @@ class ModActionDecorator < ApplicationDecorator
       "Edited #{user}"
     when "user_blacklist_changed"
       "Edited blacklist of #{user}"
-    when "changed_user_text"
+    when "changed_user_text", "user_text_change"
       "Changed profile text of #{user}"
+    when "user_upload_limit_change"
+      "Changed upload limit of #{user} from #{vals['old_upload_limit']} to #{vals['new_upload_limit']}"
     when "user_name_change"
       "Changed name of #{user} from #{vals['old_name']} to #{vals['new_name']}"
 
@@ -95,30 +97,6 @@ class ModActionDecorator < ApplicationDecorator
       "Created neutral record ##{vals['record_id']} for #{user} with reason: #{vals['reason']}"
     when "created_negative_record"
       "Created negative record ##{vals['record_id']} for #{user} with reason: #{vals['reason']}"
-
-      ### Post ###
-
-    when "post_move_favorites"
-      "Moves favorites from post ##{vals['post_id']} to post ##{vals['parent_id']}"
-    when "post_delete"
-      "Deleted post ##{vals['post_id']} with reason: #{vals['reason']}"
-    when "post_undelete"
-      "Undeleted post ##{vals['post_id']}"
-    when "post_destroy"
-      "Destroyed post ##{vals['post_id']}"
-    when "post_rating_lock"
-      "Post rating was #{vals['locked'] ? 'locked' : 'unlocked'} on post ##{vals['post_id']}"
-    when "post_unapprove"
-      "Unapproved post ##{vals['post_id']}"
-
-      ### Post Replacements ###
-
-    when "post_replacement_accept"
-      "Post replacement for post ##{vals['post_id']} was accepted"
-    when "post_replacement_reject"
-      "Post replacement for post ##{vals['post_id']} was rejected"
-    when "post_replacement_delete"
-      "Post replacement for post ##{vals['post_id']} was deleted"
 
       ### Set ###
 
@@ -312,6 +290,26 @@ class ModActionDecorator < ApplicationDecorator
     when "bulk_revert"
       "Processed bulk revert for #{vals['constraints']} by #{user}"
 
+      ### Legacy Post Events ###
+    when "post_move_favorites"
+      "Moves favorites from post ##{vals['post_id']} to post ##{vals['parent_id']}"
+    when "post_delete"
+      "Deleted post ##{vals['post_id']} with reason: #{vals['reason']}"
+    when "post_undelete"
+      "Undeleted post ##{vals['post_id']}"
+    when "post_destroy"
+      "Destroyed post ##{vals['post_id']}"
+    when "post_rating_lock"
+      "Post rating was #{vals['locked'] ? 'locked' : 'unlocked'} on post ##{vals['post_id']}"
+    when "post_unapprove"
+      "Unapproved post ##{vals['post_id']}"
+
+    when "post_replacement_accept"
+      "Post replacement for post ##{vals['post_id']} was accepted"
+    when "post_replacement_reject"
+      "Post replacement for post ##{vals['post_id']} was rejected"
+    when "post_replacement_delete"
+      "Post replacement for post ##{vals['post_id']} was deleted"
 
     else
       CurrentUser.is_admin? ? "Unknown action #{object.action}: #{object.values.inspect}" : "Unknown action #{object.action}"

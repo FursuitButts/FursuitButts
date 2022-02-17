@@ -13,7 +13,7 @@ class Tag < ApplicationRecord
   ]
 
   METATAGS = %w[
-    -user user -approver approver commenter comm noter noteupdater artcomm
+    -user user -approver approver commenter comm noter noteupdater
     -pool pool ordpool -fav fav -favoritedby favoritedby md5 -rating rating note -note
     -locked locked width height mpixels ratio score favcount filesize source
     -source id -id date age order limit -status status tagcount parent -parent
@@ -23,7 +23,7 @@ class Tag < ApplicationRecord
     deletedby -deletedby votedup voteddown -votedup -voteddown duration
   ] + TagCategory.short_name_list.map {|x| "#{x}tags"} + COUNT_METATAGS + BOOLEAN_METATAGS
 
-  SUBQUERY_METATAGS = %w[commenter comm noter noteupdater artcomm flagger -flagger appealer -appealer]
+  SUBQUERY_METATAGS = %w[commenter comm noter noteupdater flagger -flagger appealer -appealer]
 
   ORDER_METATAGS = %w[
     id id_desc
@@ -34,7 +34,6 @@ class Tag < ApplicationRecord
     comment comment_asc
     comment_bumped comment_bumped_asc
     note note_asc
-    artcomm artcomm_asc
     mpixels mpixels_asc
     portrait landscape
     filesize filesize_asc
@@ -62,19 +61,6 @@ class Tag < ApplicationRecord
   validate :user_can_change_category?, if: :category_changed?
 
   before_save :update_category, if: :category_changed?
-
-  module ApiMethods
-    def to_legacy_json
-      return {
-          "name" => name,
-          "id" => id,
-          "created_at" => created_at.try(:strftime, "%Y-%m-%d %H:%M"),
-          "count" => post_count,
-          "type" => category,
-          "ambiguous" => false
-      }.to_json
-    end
-  end
 
   class CategoryMapping
     TagCategory.reverse_mapping.each do |value, category|
@@ -1030,7 +1016,6 @@ class Tag < ApplicationRecord
 
       if Cache.get("urt:#{key}").nil? && should_update_related?
         TagUpdateRelatedJob.perform_later(id)
-
         Cache.put("urt:#{key}", true, 600) # mutex to prevent redundant updates
       end
     end
@@ -1187,7 +1172,6 @@ class Tag < ApplicationRecord
     true
   end
 
-  include ApiMethods
   include CountMethods
   include CategoryMethods
   extend StatisticsMethods

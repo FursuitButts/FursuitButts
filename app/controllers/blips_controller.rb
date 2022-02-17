@@ -30,7 +30,7 @@ class BlipsController < ApplicationController
     check_edit_privilege(@blip)
     Blip.transaction do
       @blip.update(blip_params(:update))
-      ModAction.log(:blip_update, {blip_id: @blip.id, user_id: @blip.creator_id})
+      ModAction.log(:blip_update, { blip_id: @blip.id, user_id: @blip.creator_id }) if CurrentUser.user != @blip.creator
     end
     flash[:notice] = 'Blip updated'
     respond_with(@blip)
@@ -42,7 +42,7 @@ class BlipsController < ApplicationController
 
     Blip.transaction do
       @blip.update(is_hidden: true)
-      ModAction.log(:blip_hide, {blip_id: @blip.id, user_id: @blip.creator_id})
+      ModAction.log(:blip_hide, { blip_id: @blip.id, user_id: @blip.creator_id }) if CurrentUser.user != @blip.creator
     end
     respond_with(@blip)
   end
@@ -99,7 +99,7 @@ class BlipsController < ApplicationController
   def search_params
     permitted_params = %i[body_matches response_to creator_name creator_id order]
     permitted_params += %i[ip_addr] if CurrentUser.is_moderator?
-    params.fetch(:search, {}).permit(permitted_params)
+    permit_search_params permitted_params
   end
 
   def blip_params(mode)

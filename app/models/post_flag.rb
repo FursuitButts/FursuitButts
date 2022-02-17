@@ -8,7 +8,6 @@ class PostFlag < ApplicationRecord
   end
 
   COOLDOWN_PERIOD = 1.days
-  CREATION_THRESHOLD = 10 # in 30 days
   MAPPED_REASONS = Danbooru.config.flag_reasons.map { |i| [i[:name], i[:reason]] }.to_h
 
   belongs_to_creator :class_name => "User"
@@ -20,6 +19,7 @@ class PostFlag < ApplicationRecord
   validate :update_reason, on: :create
   validates :reason, presence: true
   before_save :update_post
+  after_create :create_post_event
   after_commit :index_post
 
   scope :by_users, -> { where.not(creator: User.system) }
@@ -163,15 +163,6 @@ class PostFlag < ApplicationRecord
 
     return if creator.is_janitor?
 
-    # TODO: Should we keep this?
-    # if creator_id != User.system.id && PostFlag.for_creator(creator_id).where("created_at > ?", 30.days.ago).count >= CREATION_THRESHOLD
-    #   report = Reports::PostFlags.new(user_id: post.uploader_id, date_range: 90.days.ago)
-    #
-    #   if report.attackers.include?(creator_id)
-    #     errors[:creator] << "cannot flag posts uploaded by this user"
-    #   end
-    # end
-
     allowed = creator.can_post_flag_with_reason
     if allowed != true
       errors.add(:creator, User.throttle_reason(allowed))
@@ -246,5 +237,10 @@ class PostFlag < ApplicationRecord
                      rescue
                        nil
                      end
+  end
+
+  def create_post_event
+    # Deletions also create flags, but they create a deletion event instead
+    PostEvent.add(post.id, CurrentUser.user, :flag_created, { reason: reason }) unless is_deletion
   end
 end

@@ -57,6 +57,7 @@ class User < ApplicationRecord
     disable_user_dmails
     enable_compact_uploader
     use_gravatar
+    replacements_beta
   )
 
   include Danbooru::HasBitFlags
@@ -121,7 +122,7 @@ class User < ApplicationRecord
   has_many :note_versions, :foreign_key => "updater_id"
   has_many :dmails, -> {order("dmails.id desc")}, :foreign_key => "owner_id"
   has_many :forum_posts, -> {order("forum_posts.created_at, forum_posts.id")}, :foreign_key => "creator_id"
-  has_many :user_name_change_requests, -> {visible.order("user_name_change_requests.id desc")}
+  has_many :user_name_change_requests, -> { order("user_name_change_requests.id desc") }
   has_many :post_sets, -> {order(name: :asc)}, foreign_key: :creator_id
   has_many :favorites, -> {order(id: :desc)}
   belongs_to :avatar, class_name: 'Post', optional: true
@@ -635,6 +636,10 @@ class User < ApplicationRecord
       is_janitor? || flag.creator_id == id || flag.is_deletion
     end
 
+    def can_replace?
+      is_janitor? || replacements_beta?
+    end
+
     def can_upload?
       can_upload_with_reason == true
     end
@@ -665,7 +670,7 @@ class User < ApplicationRecord
     memoize :hourly_upload_limit
 
     def upload_limit
-        pieces = upload_limit_pieces
+      pieces = upload_limit_pieces
 
         base_upload_limit + (pieces[:approved] / Danbooru.config.base_upload_approved) - (pieces[:deleted] / Danbooru.config.base_upload_deleted) - pieces[:pending]
     end
@@ -679,7 +684,12 @@ class User < ApplicationRecord
       unapproved_replacements_count = PostReplacement.pending.for_user(id).count
       approved_count = Post.for_user(id).where('is_flagged = false AND is_deleted = false AND is_pending = false').count
 
-      return {deleted: deleted_count, approved: approved_count, pending: unapproved_count + unapproved_replacements_count}
+      {
+        deleted: deleted_count + replaced_penalize_count + rejected_replacement_count,
+        deleted_ignore: own_post_replaced_count - replaced_penalize_count,
+        approved: approved_count,
+        pending: unapproved_count + unapproved_replacements_count
+      }
     end
     memoize :upload_limit_pieces
 
@@ -752,15 +762,6 @@ class User < ApplicationRecord
         :neutral_feedback_count, :negative_feedback_count, :upload_limit,
         :v3_api_limit, :use_gravatar
       ]
-    end
-
-    def to_legacy_json
-      return {
-        "name" => name,
-        "id" => id,
-        "level" => level,
-        "created_at" => created_at.strftime("%Y-%m-%d %H:%M")
-      }.to_json
     end
   end
 
@@ -856,16 +857,6 @@ class User < ApplicationRecord
   module SearchMethods
     def admins
       where("level = ?", Levels::ADMIN)
-    end
-
-    # UserDeletion#rename renames deleted users to `user_<1234>~`. Tildes
-    # are appended if the username is taken.
-    def deleted
-      where("name ~ 'user_[0-9]+~*'")
-    end
-
-    def undeleted
-      where("name !~ 'user_[0-9]+~*'")
     end
 
     def with_email(email)
@@ -966,12 +957,6 @@ class User < ApplicationRecord
     end
   end
 
-  module StatisticsMethods
-    def deletion_confidence(days = 30)
-      Reports::UserPromotions.deletion_confidence_interval_for(self, days)
-    end
-  end
-
   concerning :SockPuppetMethods do
     def validate_sock_puppets
       if User.where(last_ip_addr: CurrentUser.ip_addr).where("created_at > ?", 1.day.ago).exists?
@@ -993,7 +978,6 @@ class User < ApplicationRecord
   include CountMethods
   extend SearchMethods
   extend ThrottleMethods
-  include StatisticsMethods
 
   def as_current(&block)
     CurrentUser.as(self, &block)
