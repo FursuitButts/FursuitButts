@@ -650,7 +650,7 @@ class User < ApplicationRecord
       elsif can_upload_free? || is_admin?
           true
           # TODO: remove after march
-      elsif Date.today.month == 2 && Date.today.year == 2022 && younger_than(1.day)
+      elsif Date.today.month == 2 && Date.today.year == 2022 && younger_than(1.hour)
         :REJ_UPLOAD_NEWBIE
       elsif younger_than(7.days)
         :REJ_UPLOAD_NEWBIE
