@@ -9,12 +9,12 @@
    policy.script_src  :self, 'js-agent.newrelic.com', 'bam.nr-data.net', 'https://www.google.com/recaptcha/', 'https://www.gstatic.com/recaptcha/', 'https://www.recaptcha.net/', 'https://mc.yandex.ru/', 'https://yastatic.net'
    policy.style_src   :self, :unsafe_inline
    policy.connect_src :self, 'bam.nr-data.net', 'https://mc.yandex.ru', 'https://yastatic.net'
-   policy.object_src  :self, 'v3.yiff.media'
-   policy.media_src   :self, 'v3.yiff.media'
+   policy.object_src  :self, 'butts.yiff.media'
+   policy.media_src   :self, 'butts.yiff.media'
    policy.frame_ancestors :none
    policy.frame_src   'https://www.google.com/recaptcha/', 'https://www.recaptcha.net/'
    policy.font_src    :self
-   policy.img_src     :self, :data, 'gravatar.com', 'v3.yiff.media', 'ads.dragonfru.it', 'https://mc.yandex.ru', 'https://yastatic.net'
+   policy.img_src     :self, :data, 'gravatar.com', 'butts.yiff.media', 'ads.dragonfru.it', 'https://mc.yandex.ru', 'https://yastatic.net'
    policy.child_src   :none
 
 #   # Specify URI for violation reports
