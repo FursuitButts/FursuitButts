@@ -2573,7 +2573,6 @@ CREATE TABLE public.users (
     email_verification_key character varying,
     level integer DEFAULT 20 NOT NULL,
     base_upload_limit integer DEFAULT 5 NOT NULL,
-    v3_api_limit integer DEFAULT 8 NOT NULL,
     last_logged_in_at timestamp without time zone,
     last_forum_read_at timestamp without time zone,
     recent_tags text,

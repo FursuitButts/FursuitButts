@@ -1,9 +1,9 @@
 version: "3"
 
 services:
-  yiffyapi:
+  fursuitbutts:
     build: ./
-    container_name: yiffyapi
+    container_name: fursuitbutts
     volumes:
       - .:/app
       - node_modules:/app/node_modules
@@ -12,14 +12,14 @@ services:
       - ./data/posts:/app/public/data
     environment:
       DATABASE_URL: postgresql://danbooru:@postgres
-      RAILS_ENV: ${YIFFYAPI_ENV:-development}
-      DANBOORU_HOSTNAME: ${YIFFYAPI_HOST}
+      RAILS_ENV: ${FURSUITBUTTS_ENV:-development}
+      DANBOORU_HOSTNAME: ${FURSUITBUTTS_HOST}
       DANBOORU_REDIS_URL: redis://redis
       DANBOORU_ELASTICSEARCH_HOST: elastic
       DANBOORU_MEMCACHED_SERVERS: memcached
       DANBOORU_IQDBS_SERVER: http://iqdb:4567
-      SECRET_TOKEN: ${YIFFYAPI_STOKEN}
-      SESSION_SECRET_KEY: ${YIFFYAPI_SKEY}
+      SECRET_TOKEN: ${FURSUITBUTTS_STOKEN}
+      SESSION_SECRET_KEY: ${FURSUITBUTTS_SKEY}
       TZ: America/Chicago
     depends_on:
       postgres:
@@ -37,15 +37,15 @@ services:
       interval: 10s
       timeout: 2s
       test: lsof -i :9000 || exit 1
-    hostname: yiffyapi.yiffyapi.containers.local
+    hostname: fursuitbutts.fursuitbutts.containers.local
     networks:
       default:
-        ipv4_address: 172.21.1.2
+        ipv4_address: 172.22.1.2
     tty: true
 
   nginx:
     image: nginx:stable-alpine
-    container_name: yiffyapi.nginx
+    container_name: fursuitbutts.nginx
     volumes:
       - ./public:/app/public
       - ./data/posts:/app/public/data
@@ -58,19 +58,19 @@ services:
       timeout: 5s
       test: lsof -i :443 || exit 1
     environment:
-      - NGINX_HOST=nginx.yiffyapi.containers.local
+      - NGINX_HOST=nginx.fursuitbutts.containers.local
       - NGINX_PORT=443
       - TZ=America/Chicago
     depends_on:
-      - yiffyapi
-    hostname: nginx.yiffyapi.containers.local
+      - fursuitbutts
+    hostname: nginx.fursuitbutts.containers.local
     networks:
       default:
-        ipv4_address: 172.21.1.3
+        ipv4_address: 172.21.2.3
 
   postgres:
     build: ./docker/postgres
-    container_name: yiffyapi.postgres
+    container_name: fursuitbutts.postgres
     environment:
       - POSTGRES_USER=danbooru
       - POSTGRES_HOST_AUTH_METHOD=trust
@@ -81,14 +81,14 @@ services:
       test: PGUSER=danbooru pg_isready
       interval: 10s
       timeout: 5s
-    hostname: postgres.yiffyapi.containers.local
+    hostname: postgres.fursuitbutts.containers.local
     networks:
       default:
-        ipv4_address: 172.21.1.4
+        ipv4_address: 172.21.2.4
 
   redis:
     image: redis:alpine
-    container_name: yiffyapi.redis
+    container_name: fursuitbutts.redis
     command: redis-server --save 10 1 --loglevel warning
     environment:
       - TZ=America/Chicago
@@ -98,28 +98,28 @@ services:
       test: redis-cli ping
       interval: 10s
       timeout: 5s
-    hostname: redis.yiffyapi.containers.local
+    hostname: redis.fursuitbutts.containers.local
     networks:
       default:
-        ipv4_address: 172.21.1.5
+        ipv4_address: 172.21.2.5
 
   memcached:
     image: memcached:alpine
-    container_name: yiffyapi.memcached
+    container_name: fursuitbutts.memcached
     environment:
       TZ: America/Chicago
     healthcheck:
       interval: 10s
       timeout: 2s
       test: nc -z 127.0.0.1 11211
-    hostname: memcached.yiffyapi.containers.local
+    hostname: memcached.fursuitbutts.containers.local
     networks:
       default:
-        ipv4_address: 172.21.1.6
+        ipv4_address: 172.21.2.6
 
   elastic:
     image: elasticsearch:7.14.2
-    container_name: yiffyapi.elastic
+    container_name: fursuitbutts.elastic
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
@@ -134,14 +134,14 @@ services:
       timeout: 2s
       test: curl --write-out 'HTTP %{http_code}' --fail --silent --output /dev/null
         http://localhost:9200/ || exit 1
-    hostname: elastic.yiffyapi.containers.local
+    hostname: elastic.fursuitbutts.containers.local
     networks:
       default:
-        ipv4_address: 172.21.1.7
+        ipv4_address: 172.21.2.7
 
   iqdb:
     build: ./docker/iqdb
-    container_name: yiffyapi.iqdb
+    container_name: fursuitbutts.iqdb
     environment:
       - IQDB_HOSTNAME=localhost
       - IQDB_PORT=62125
@@ -162,29 +162,29 @@ services:
       interval: 10s
       timeout: 2s
       test: nc -z 127.0.0.1 62125
-    hostname: iqdb.yiffyapi.containers.local
+    hostname: iqdb.fursuitbutts.containers.local
     networks:
       default:
-        ipv4_address: 172.21.1.8
+        ipv4_address: 172.21.2.8
 
 networks:
   default:
-    name: yiffyapi
+    name: fursuitbutts
     driver: bridge
     ipam:
       driver: default
       config:
-        - subnet: 172.21.1.0/24
-          gateway: 172.21.1.1
+        - subnet: 172.21.2.0/24
+          gateway: 172.21.2.1
 
 volumes:
   redis_data:
-    name: yiffyapi_redis
+    name: fursuitbutts_redis
   elastic_data:
-    name: yiffyapi_elastic
+    name: fursuitbutts_elastic
   node_modules:
-    name: yiffyapi_node_modules
+    name: fursuitbutts_node_modules
   public_packs:
-    name: yiffyapi_packs
+    name: fursuitbutts_packs
   public_packs_test:
-    name: yiffyapi_packs_test
+    name: fursuitbutts_packs_test

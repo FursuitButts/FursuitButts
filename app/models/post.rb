@@ -171,40 +171,6 @@ class Post < ApplicationRecord
       file_url_ext('mp4')
     end
 
-    def official_sets
-      return [] unless Rails.env.production?
-      key = "post_sets:#{self.id}"
-      client = ::Redis.new(url: Danbooru.config.redis_url)
-      cache = client.exists?(key)
-      contains = []
-      if cache
-        val = client.smembers(key)
-        val.each do |v|
-          contains << {
-            name: v.split(":")[0],
-            id: v.split(":")[1].to_i
-          }
-        end
-      else
-        YiffyApiController::PostSets::ALL.each do |id|
-          set = PostSet.find(id)
-          next unless set.post_ids.include?(self.id)
-          contains << {
-            name: set.name,
-            id: id
-          }
-        end
-        unless contains.empty?
-          client.multi do |r|
-            r.sadd(key, contains.collect { |obj| "#{obj[:name]}:#{obj[:id]}" })
-            r.expire(key, 6.hours.to_i)
-          end
-        end
-      end
-
-      contains
-    end
-
     def open_graph_image_url
       if is_image?
         if has_large?

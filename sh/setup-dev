@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 cd $(realpath "$(dirname "${BASH_SOURCE[0]}")")/..
 sudo rm -f tmp/pids/server.pid
-sudo docker-compose --env-file .env.dev run -e DANBOORU_DISABLE_THROTTLES=true yiffyapi /app/bin/setup
+sudo docker-compose --env-file .env.dev run -e DANBOORU_DISABLE_THROTTLES=true fursuitbutts /app/bin/setup

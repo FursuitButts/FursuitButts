@@ -15,15 +15,6 @@
         <%= render "posts/partials/show/information", :post => @post %>
       </section>
 
-      <section id="post-official-sets">
-        <h1>Official Sets </h1>
-        <ul>
-          <% @post.official_sets.each do |set| %>
-            <li class="post-set-<%= set[:name] %> post-set-official"><%= link_to "#{set[:name]}", post_sets_path(id: set[:id]) %></li>
-          <% end %>
-        </ul>
-      </section>
-
       <section id="post-options">
         <h1>Options</h1>
         <%= render "posts/partials/show/options", :post => @post %>

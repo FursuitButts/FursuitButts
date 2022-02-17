@@ -9,15 +9,15 @@ module Danbooru
 
     # The name of this Danbooru.
     def app_name
-      "YiffyAPI"
+      "Fursuit Butts"
     end
 
     def description
-      "Find good furry art, fast"
+      "The best fuzzy butts on the net."
     end
 
     def domain
-      "yiff.rest"
+      "fursuitbutts.com"
     end
 
     # Force rating:s on this version of the site.
@@ -27,7 +27,7 @@ module Danbooru
 
     # The canonical hostname of the site.
     def hostname
-      Rails.env.production? ? "yiff.rest" : "yiffyapi.local"
+      Rails.env.production? ? "fursuitbutts.com" : "fursuitbutts.local"
     end
 
     # The list of all domain names this site is accessible under.
@@ -38,11 +38,11 @@ module Danbooru
 
     # Contact email address of the admin.
     def contact_email
-      "hewwo@yiff.rocks"
+      "fursuitbutts@yiff.rocks"
     end
 
     def takedown_email
-      "none@yiffyapi.local"
+      "none@fursuitbutts.local"
     end
 
     def takedown_links
@@ -56,13 +56,13 @@ module Danbooru
     def admin_user
       "Donovan_DMC"
     end
-    
+
     def system_user
       "system"
     end
 
     def source_code_url
-      "https://github.com/zwagoth/e621ng"
+      "https://github.com/FursuitButts/FursuitButts"
     end
 
     def commit_url(hash)
@@ -431,19 +431,19 @@ module Danbooru
     def max_numbered_pages
       750
     end
-    
+
     def blip_max_size
       1_000
     end
-    
+
     def comment_max_size
       10_000
     end
-    
+
     def dmail_max_size
       50_000
     end
-    
+
     def forum_post_max_size
       50_000
     end
@@ -451,11 +451,11 @@ module Danbooru
     def forum_post_title_max_len
       250
     end
-    
+
     def note_max_size
       1_000
     end
-    
+
     def pool_description_max_len
       10_000
     end
@@ -467,15 +467,15 @@ module Danbooru
     def pool_max_posts
       1_000
     end
-    
+
     def post_description_max_len
       50_000
     end
-    
+
     def ticket_max_size
       5_000
     end
-    
+
     def user_about_max_size
       50_000
     end
@@ -483,7 +483,7 @@ module Danbooru
     def wiki_page_title_max_len
       100
     end
-    
+
     def wiki_page_max_size
       250_000
     end
@@ -513,7 +513,7 @@ module Danbooru
     end
 
     def discord_site
-      "https://discord.gg/bdDKsw6srW"
+      "https://discord.gg/CKEyjSJwcM"
     end
 
     # Maximum size of an upload. If you change this, you must also change
@@ -619,24 +619,24 @@ module Danbooru
     end
 
     def s3_bucket
-      Rails.env.production? ? "yiffyapi" : "yiffyapi-dev"
+      "fursuitbutts"
     end
 
     def s3_protected_bucket
-      Rails.env.prodiction? ? "yiffyapi-protected" : "yiffyapi-dev-protected"
+      "fursuitbutts-protected"
     end
 
     # The method to use for storing image files.
     def storage_manager
-     # if Rails.env.production?
-        StorageManager::S3.new(Danbooru.config.s3_bucket, hierarchical: true, base_url: "https://v3.yiff.media#{Rails.env.production? ? "/" : "/dev/"}", s3_options: {
+     if Rails.env.production?
+        StorageManager::S3.new(Danbooru.config.s3_bucket, hierarchical: true, base_url: "https://butts.yiff.media/", s3_options: {
           credentials: Aws::Credentials.new(Danbooru.config.s3_access_key_id, Danbooru.config.s3_secret_access_key),
           region: "us-central-1",
           endpoint: "https://s3.us-central-1.wasabisys.com"
         })
-    #  else
-    #    StorageManager::Local.new(base_url: "https://yiffyapi.local/data/", base_dir: "#{Rails.root}/public/data", hierarchical: true)
-    #  end
+    else
+        StorageManager::Local.new(base_url: "https://fursuitbutts.local/data/", base_dir: "#{Rails.root}/public/data", hierarchical: true)
+     end
     end
 
     def backup_storage_manager
@@ -829,19 +829,9 @@ module Danbooru
             text: "We do not host paysite or commercial content of any kind. This includes Patreon leaks, reposts from piracy websites, and so on."
           },
           {
-            name: 'trace',
-            reason: "Trace of another artist's work",
-            text: "Images traced from other artists' artwork are not accepted on this site. Referencing from something is fine, but outright copying someone else's work is not.\nPlease, leave more information in the comments, or simply add the original artwork as the posts's parent if it's hosted on this site."
-          },
-          {
             name: 'previously_deleted',
             reason: "Previously deleted",
             text: "Posts usually get removed for a good reason, and reuploading of deleted content is not acceptable.\nPlease, leave more information in the comments, or simply add the original post as this post's parent."
-          },
-          {
-            name: 'real_porn',
-            reason: "Real-life pornography",
-            text: "Posts featuring real-life pornography are not acceptable on this site. No exceptions.\nNote that images featuring non-erotic photographs are acceptable."
           },
           {
             name: 'corrupt',
@@ -878,7 +868,6 @@ module Danbooru
         "Broken/corrupted file",
         "JPG resaved as PNG",
         "",
-        "Irrelevant to site (Human only)",
         "Irrelevant to site (Screencap)",
         "Irrelevant to site (Zero pictured)",
         "Irrelevant to site (%OTHER_ID%)",
@@ -1170,9 +1159,9 @@ module Danbooru
 
     def mascots
       [
-          ["/images/mascots/MaidBoyeMascot.png", "#222222", "<a href='https://twitter.com/Gaokunx3'>Gaokun</a> @ <a href='https://e621.net/posts/2907560'>e621</a>"],
-          ["/images/mascots/DonUndiesMascot.png", "#222222", "<a href='https://twitter.com/Gaokunx3'>Gaokun</a> @ <a href='https://e621.net/posts/2772476'>e621</a>"],
-          ["/images/mascots/DonMaidMascot.png", "#222222", "<a href='https://twitter.com/Gaokunx3'>Gaokun</a> @ <a href='https://e621.net/posts/2907536'>e621</a>"]
+          ["/images/mascots/strobes/1.png", "#222222", "<a href='https://twitter.com/SmellyStrobes'>@SmellyStrobes</a> on <a href='https://twitter.com/SmellyStrobes/status/880768939302715392'>Twitter</a>"],
+          ["/images/mascots/strobes/2.png", "#222222", "<a href='https://twitter.com/SmellyStrobes'>@SmellyStrobes</a> on <a href='https://twitter.com/SmellyStrobes/status/1017809075550277637'>Twitter</a>"],
+          ["/images/mascots/strobes/3.png", "#222222", "<a href='https://twitter.com/SmellyStrobes'>@SmellyStrobes</a> on <a href='https://twitter.com/FursuitButtsRev/status/1199145749155479552'>Twitter</a>"]
       ]
     end
 

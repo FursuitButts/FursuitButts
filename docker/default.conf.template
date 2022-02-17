@@ -42,7 +42,7 @@ server {
   location / {
     try_files $uri @app_server;
   }
-  
+
   error_page 404 /404.html;
   error_page 500 502 503 504 /500.html;
 	ssl_certificate     /app/ssl/ca/intermediate/certs/client.chained.crt;
@@ -51,5 +51,5 @@ server {
 }
 
 upstream app_server {
-  server yiffyapi:9000;
+  server fursuitbutts:9000;
 }

@@ -10,14 +10,6 @@ class StaticController < ApplicationController
   end
 
   def not_found
-    if "/V3".in?(request.path)
-      render json: {
-        "$schema": "https://yiff.rest/schema/V3_error.json",
-        success: false,
-        error: YiffyApiController::APIErrors::NOT_FOUND
-      }.to_json
-      return
-    end
     render "static/404", formats: [:html], status: 404
   end
 

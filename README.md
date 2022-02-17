@@ -2,6 +2,6 @@ This is a modified instance of [e621](https://github.com/Zwagoth/e621ng), go see
 
 ### Installation
 ```sh
-docker-compose run -e DANBOORU_DISABLE_THROTTLES=true yiffyapi /app/bin/setup
+docker-compose run -e DANBOORU_DISABLE_THROTTLES=true fursuitbutts /app/bin/setup
 docker-compose up
 ```

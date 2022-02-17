@@ -44,7 +44,7 @@ class RelatedTagQuery
   def wiki_page_tags
     results = wiki_page.try(:tags) || []
     results.reject! do |name|
-      name =~ /^(?:list_of_|tag_group|pool_group|howto:|about:|help:|template:yiffyapi:|yapi:)/
+      name =~ /^(?:list_of_|tag_group|pool_group|howto:|about:|help:|template:fursuitbutts:|fuzzybutts:|fuzzbutts:|fuzz:)/
     end
     results
   end
