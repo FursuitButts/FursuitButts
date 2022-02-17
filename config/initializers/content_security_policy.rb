@@ -7,7 +7,7 @@
  Rails.application.config.content_security_policy do |policy|
    policy.default_src :self
    policy.script_src  :self, 'js-agent.newrelic.com', 'bam.nr-data.net', 'https://www.google.com/recaptcha/', 'https://www.gstatic.com/recaptcha/', 'https://www.recaptcha.net/', 'https://mc.yandex.ru/', 'https://yastatic.net'
-   policy.style_src   :self, :unsafe_inline, :data
+   policy.style_src   :self, :unsafe_inline, 'data:'
    policy.connect_src :self, 'bam.nr-data.net', 'https://mc.yandex.ru', 'https://yastatic.net'
    policy.object_src  :self, 'butts.yiff.media'
    policy.media_src   :self, 'butts.yiff.media'
