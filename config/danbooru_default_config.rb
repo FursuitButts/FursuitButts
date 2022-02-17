@@ -9,7 +9,7 @@ module Danbooru
 
     # The name of this Danbooru.
     def app_name
-      "Fursuit Butts"
+      "Fuzzy Butt Central"
     end
 
     def description
@@ -1157,6 +1157,7 @@ module Danbooru
       {zone: nil, revive_id: nil, checksum: nil}
     end
 
+    # if anyone wants to make up some better mascots, feel free - you don't need to supply the blurred version
     def mascots
       [
           ["/images/mascots/strobes/1.png", "#222222", "<a href='https://twitter.com/SmellyStrobes'>@SmellyStrobes</a> on <a href='https://twitter.com/SmellyStrobes/status/880768939302715392'>Twitter</a>"],
