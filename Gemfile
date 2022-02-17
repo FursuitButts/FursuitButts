@@ -83,5 +83,4 @@ group :test do
   gem "mock_redis"
 end
 
-gem "mimemagic", "~> 0.4.3"
 gem 'aws-sdk-s3', '~> 1'
