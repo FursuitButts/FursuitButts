@@ -1,13 +1,9 @@
 import E621 from "e621";
 import { enable } from "debug";
-const authKey = process.env.AUTH_KEY;
-if(!authKey) throw new Error("Missing env variable AUTH_KEY");
-const e = new E621({
-	instanceHost: "yiff.rest",
-	instancePort: 443,
-	instanceSSL: true,
-	authUser: "Donovan_DMC",
-	authKey
+import { SYSTEM_TOKEN } from "./secrets";
+const e = new E621.YiffyAPI({
+	authUser: "System",
+	authKey: SYSTEM_TOKEN
 });
 
 enable("e621:*");

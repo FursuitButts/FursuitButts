@@ -1,27 +1,11 @@
 {
 	"extends": "@uwu-codes/tsconfig",
 	"compilerOptions": {
-		"outDir": "./build",
-		"baseUrl": "./src",
+		"baseUrl": ".",
 		"strictPropertyInitialization": false,
 		"skipLibCheck": true,
-		"inlineSourceMap": true,
-		"paths": {
-			"@root/*": ["../*"],
-			"@config": ["config/index.ts"],
-			"@config/*": ["config/*"],
-			"@util/*": ["util/*"],
-			"@handlers/*": ["util/handlers/*"],
-			"@cmd/*": ["util/cmd/*"],
-			"@events/*": ["events/*"],
-			"@db": ["db/index.ts"],
-			"@db/*": ["db/*"],
-			"@models/*": ["db/Models/*"],
-			"@commands/*": ["commands/*"],
-			"@req/*": ["util/req/*"],
-			"@MaidBoye": ["main.ts"]
-		}
+		"inlineSourceMap": true
 	},
 	"include": ["**/*"],
-	"exclude": ["node_modules", "build", "tmp", "logs", "test"]
+	"exclude": ["node_modules"]
 }
