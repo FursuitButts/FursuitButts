@@ -649,6 +649,9 @@ class User < ApplicationRecord
         :REJ_UPLOAD_HOURLY
       elsif can_upload_free? || is_admin?
           true
+          # TODO: remove after march
+      elsif Date.today.month == 2 && Date.today.year == 2022 && younger_than(1.day)
+        :REJ_UPLOAD_NEWBIE
       elsif younger_than(7.days)
         :REJ_UPLOAD_NEWBIE
       elsif !is_privileged? && post_edit_limit <= 0 && !Danbooru.config.disable_throttles?

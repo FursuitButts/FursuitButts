@@ -167,7 +167,6 @@ module Danbooru
     end
 
     def disable_throttles?
-      false
     end
 
     def disable_age_checks?
