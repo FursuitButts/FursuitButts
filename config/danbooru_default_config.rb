@@ -1160,8 +1160,8 @@ module Danbooru
     # if anyone wants to make up some better mascots, feel free - you don't need to supply the blurred version
     def mascots
       [
-          ["/images/mascots/strobes/1.png", "#222222", "<a href='https://twitter.com/SmellyStrobes'>@SmellyStrobes</a> on <a href='https://twitter.com/SmellyStrobes/status/880768939302715392'>Twitter</a>"],
-          ["/images/mascots/strobes/2.png", "#222222", "<a href='https://twitter.com/SmellyStrobes'>@SmellyStrobes</a> on <a href='https://twitter.com/SmellyStrobes/status/1017809075550277637'>Twitter</a>"],
+        # ["/images/mascots/strobes/1.png", "#222222", "<a href='https://twitter.com/SmellyStrobes'>@SmellyStrobes</a> on <a href='https://twitter.com/SmellyStrobes/status/880768939302715392'>Twitter</a>"],
+        # ["/images/mascots/strobes/2.png", "#222222", "<a href='https://twitter.com/SmellyStrobes'>@SmellyStrobes</a> on <a href='https://twitter.com/SmellyStrobes/status/1017809075550277637'>Twitter</a>"],
           ["/images/mascots/strobes/3.png", "#222222", "<a href='https://twitter.com/SmellyStrobes'>@SmellyStrobes</a> on <a href='https://twitter.com/FursuitButtsRev/status/1199145749155479552'>Twitter</a>"]
       ]
     end
