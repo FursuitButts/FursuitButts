@@ -882,10 +882,55 @@ module Danbooru
       ]
     end
 
+    def twitter_handle
+      "FursuitButtsRev"
+    end
+
     # Any custom code you want to insert into the default layout without
     # having to modify the templates.
     def custom_html_header_content
-      nil
+      %{
+	      <meta name="description" content="#{description}">
+        <!--Twitter-->
+        <meta name="twitter:card" content="summary">
+        <meta name="twitter:site" content="@#{twitter_handle}">
+        <meta name="twitter:creator" content="@Donovan_DMC">
+        <meta name="twitter:title" content="#{app_name}">
+        <meta name="twitter:description" content="#{description}">
+        <meta name="twitter:image" content="/images/mascots/strobes/3Full.jpeg">
+        <meta name="Twitter:image:alt" content="#{app_name}'s' Logo">
+
+        <!--Browser Caching-->
+        <meta http-equiv="Cache-control" content="public">
+
+        <!--Dublin Core - DC-->
+        <meta name="DC.Title" lang="en" content="#{app_name}">
+        <meta name="DC.Creator" lang="en" content="#{twitter_handle}">
+        <meta name="DC.Subject" lang="en" content="Information">
+        <meta name="DC.Description" lang="en" content="#{description}">
+        <meta name="DC.Publisher" lang="en" content="#{twitter_handle}">
+        <meta name="DC.Contributor" lang="en" content="Self">
+        <meta name="DC.Date" lang="en" content="#{Time.now.year}">
+        <meta name="DC.Type" lang="en" content="text">
+        <meta name="DC.Format" lang="en" content="text/html">
+        <meta name="DC.Language" lang="en" content="en-US">
+        <meta name="DC.Rights" lang="en" content="All members can access">
+        <link rel="schema.DC" lang="en" href="http://purl.org/dc/elements/1.1/">
+        <link rel="schema.DCTERMS" lang="en" href="http://purl.org/dc/terms/">
+
+        <!--Open Graph-->
+        <meta property="og:title" content="#{app_name}">
+        <meta property="og:site_name" content="#{app_name}">
+        <meta property="og:description" content="#{description}">
+        <meta property="og:url" content="https://#{hostname}">
+        <meta property="og:type" content="website">
+        <meta property="og:image" content="/images/mascots/strobes/3Full.jpeg">
+        <meta property="og:image:secure_url" content="/images/mascots/strobes/3Full.jpeg">
+        <meta property="og:image:type" content="image/jpeg">
+        <meta property="og:image:width" content="640">
+        <meta property="og:image:height" content="640">
+        <meta property="og:image:alt" content="#{app_name}'s Icon'">
+      }.squish
     end
 
     def flag_notice_wiki_page
