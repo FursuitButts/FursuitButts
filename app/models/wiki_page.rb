@@ -193,14 +193,14 @@ class WikiPage < ApplicationRecord
   end
 
   def validate_name_not_restricted
-    if INTERNAL_PREFIXES.any? { |prefix| title.starts_with?(prefix) } && !CurrentUser.is_janitor?
+    if INTERNAL_PREFIXES.any? { |prefix| title.starts_with?(prefix) } && !CurrentUser.user.is_janitor?
       errors.add(:title, "cannot start with '#{title.split(':')[0]}:'")
       throw(:abort)
     end
   end
 
   def ensure_internal_protected
-    if INTERNAL_PREFIXES.any? { |prefix| title.starts_with?(prefix) }
+    if INTERNAL_PREFIXES.any? { |prefix| title.starts_with?(prefix) } && (protection_level.blank? || protection_level < User::Levels.min_staff_level)
       self.protection_level = User::Levels.min_staff_level
     end
   end

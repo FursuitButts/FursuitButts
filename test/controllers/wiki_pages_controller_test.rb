@@ -7,6 +7,7 @@ class WikiPagesControllerTest < ActionDispatch::IntegrationTest
     setup do
       @user = create(:user)
       @mod = create(:moderator_user)
+      @owner = create(:owner_user)
       as(@user) do
         @wiki_page = create(:wiki_page)
       end
@@ -139,14 +140,20 @@ class WikiPagesControllerTest < ActionDispatch::IntegrationTest
       end
 
       should "set protection level" do
-        put_auth wiki_page_path(@wiki_page), @mod, params: { wiki_page: { protection_level: User::Levels::JANITOR } }
-        assert_equal(User::Levels::JANITOR, @wiki_page.reload.protection_level)
+        put_auth wiki_page_path(@wiki_page), @owner, params: { wiki_page: { protection_level: User::Levels::ADMIN } }
+        assert_equal(User::Levels::ADMIN, @wiki_page.reload.protection_level)
       end
 
       should "update protection level" do
-        @wiki_page.update_column(:protection_level, User::Levels::TRUSTED)
-        put_auth wiki_page_path(@wiki_page), @mod, params: { wiki_page: { protection_level: User::Levels::JANITOR } }
-        assert_equal(User::Levels::JANITOR, @wiki_page.reload.protection_level)
+        @wiki_page.update_column(:protection_level, User::Levels::JANITOR)
+        put_auth wiki_page_path(@wiki_page), @owner, params: { wiki_page: { protection_level: User::Levels::ADMIN } }
+        assert_equal(User::Levels::ADMIN, @wiki_page.reload.protection_level)
+      end
+
+      should "set protection level on internal page" do
+        as(@owner) { @wiki_page = create(:wiki_page, title: "internal:test") }
+        put_auth wiki_page_path(@wiki_page), @owner, params: { wiki_page: { protection_level: User::Levels::ADMIN } }
+        assert_equal(User::Levels::ADMIN, @wiki_page.reload.protection_level)
       end
 
       should "not allow setting protection level above editor's level" do
