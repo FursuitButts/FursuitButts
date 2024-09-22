@@ -26,7 +26,6 @@ module DTextHelper
     [wiki_pages, tags, artists, topics]
   end
 
-
   def replace_topics(text, topics)
     names = {}
     uncached = topics.reject { |topic_id| (names[topic_id] = Cache.fetch("topic:#{topic_id}")).present? }
