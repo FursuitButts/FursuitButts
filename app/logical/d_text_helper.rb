@@ -4,14 +4,16 @@ module DTextHelper
   module_function
 
   def parse(text, **)
-    DText.parse(text, **)
+    return nil if text.nil?
+    *data, topics = preprocess([text])
+    text = replace_topics(text, topics)
+    hash = DText.parse(text, **)
+    hash[:dtext] = postprocess(hash[:dtext], *data)
+    hash
   end
 
   def format_text(text, **)
-    data = preprocess([text])
-    parse(text, **) => { dtext: html }
-    html = postprocess(html, *data)
-    html
+    parse(text, **).fetch(:dtext)
   end
 
   def preprocess(dtext_messages)
@@ -19,8 +21,23 @@ module DTextHelper
     wiki_pages = WikiPage.where(title: names)
     tags = Tag.where(name: names)
     artists = Artist.where(name: names)
+    topics = dtext_messages.map { |message| parse_forum_topics(message) }.flatten.uniq
 
-    [wiki_pages, tags, artists]
+    [wiki_pages, tags, artists, topics]
+  end
+
+
+  def replace_topics(text, topics)
+    names = {}
+    uncached = topics.reject { |topic_id| (names[topic_id] = Cache.fetch("topic:#{topic_id}")).present? }
+    values = ForumTopic.where(id: uncached).pluck(:id, :title).to_h
+    values.each { |topic_id, title| Cache.write("topic:#{topic_id}", title) }
+    names.merge!(values)
+    text.gsub(/\[topic:(\d+)\]/) do
+      topic_id = $1.to_i
+      name = names[topic_id] || "topic ##{topic_id}"
+      "[topic=#{topic_id}]#{name}[/topic]"
+    end
   end
 
   def postprocess(html, wiki_pages, tags, artists)
@@ -63,13 +80,17 @@ module DTextHelper
         end
       end
     end
-
     fragment.to_s
+  end
+
+  def parse_forum_topics(text)
+    return [] if text.blank?
+    text.scan(/\[topic:(\d+)\]/).flatten
   end
 
   def parse_wiki_titles(text)
     return [] if text.blank?
-    parse(text) => { dtext: html }
+    DText.parse(text) => { dtext: html }
     fragment = parse_html(html)
 
     titles = fragment.css("a.dtext-wiki-link").map do |node|
@@ -88,7 +109,7 @@ module DTextHelper
 
   def parse_external_links(text)
     return [] if text.blank?
-    parse(text) => { dtext: html }
+    DText.parse(text) => { dtext: html }
     fragment = parse_html(html)
 
     links = fragment.css("a.dtext-external-link").pluck("href")
