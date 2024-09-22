@@ -30,7 +30,7 @@ module DTextHelper
     names = {}
     uncached = topics.reject { |topic_id| (names[topic_id] = Cache.fetch("topic:#{topic_id}")).present? }
     values = ForumTopic.where(id: uncached).pluck(:id, :title).to_h
-    values.each { |topic_id, title| Cache.write("topic:#{topic_id}", title) }
+    values.each { |topic_id, title| Cache.write("topic:#{topic_id}", title, expires_in: 1.hour) }
     names.merge!(values)
     text.gsub(/\[topic:(\d+)\]/) do
       topic_id = $1.to_i
