@@ -22,6 +22,9 @@ class ForumTopic < ApplicationRecord
   after_update :update_original_post, unless: :is_merging
   after_destroy :log_delete
   after_commit :log_save, on: %i[create update], unless: :is_merging
+  after_update(if: :saved_change_to_title?) do
+    Cache.delete("topic_name:#{id}")
+  end
 
   attribute :category_id, :integer, default: -> { FemboyFans.config.default_forum_category }
 
