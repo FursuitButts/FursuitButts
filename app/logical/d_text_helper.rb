@@ -28,14 +28,18 @@ module DTextHelper
 
   def replace_topics(text, topics)
     names = {}
-    uncached = topics.reject { |topic_id| (names[topic_id] = Cache.fetch("topic_name:#{topic_id}")).present? }
+    uncached = topics.reject { |topic_id| (names[topic_id.to_s] = Cache.fetch("topic_name:#{topic_id}")).present? }
     values = ForumTopic.where(id: uncached).pluck(:id, :title).to_h
     values.each { |topic_id, title| Cache.write("topic_name:#{topic_id}", title, expires_in: 1.hour) }
     names.merge!(values)
     text.gsub(/\[topic:(\d+)\]/) do
-      topic_id = $1.to_i
-      name = names[topic_id] || "topic ##{topic_id}"
-      "[topic=#{topic_id}]#{name}[/topic]"
+      topic_id = $1
+      if names[topic_id].present?
+        name = names[topic_id]
+        "[topic=#{topic_id}]#{name}[/topic]"
+      else
+        "topic ##{topic_id}"
+      end
     end
   end
 
