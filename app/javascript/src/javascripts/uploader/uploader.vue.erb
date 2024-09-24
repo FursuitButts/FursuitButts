@@ -52,6 +52,18 @@
                                             @set="setCheck"
                                             :key="check.name"></image-checkbox>
                         </div>
+                      <hr>
+                      <div class="flex-wrap">
+                        <image-checkbox :check="check" :checks="checkboxes.selected"
+                                        v-for="check in checkboxes.mascfem" @set="setCheck"
+                                        :key="check.name"></image-checkbox>
+                      </div>
+                      <hr>
+                      <div class="flex-wrap">
+                        <image-checkbox :check="check" :checks="checkboxes.selected"
+                                        v-for="check in checkboxes.behavior" @set="setCheck"
+                                        :key="check.name"></image-checkbox>
+                      </div>
                         <hr>
                         <div class="flex-wrap">
                             <image-checkbox :check="check" :checks="checkboxes.selected"
@@ -263,6 +275,18 @@
     {name: "Female/Female"},
   ];
 
+  const mascfem_checks = [
+    {name: "Masculine"},
+    {name: "Feminine"},
+  ]
+
+  const behavior_checks = [
+    {name: "Manly"},
+    {name: "Tomboy"},
+    {name: "Girly"},
+    {name: "Femboy"},
+  ]
+
   const char_count_checks = [
     {name: "Solo"},
     {name: "Duo"},
@@ -307,8 +331,10 @@
         allChecks[check.name.toLowerCase().replace(" ", "_")] = true;
       };
       sex_checks.forEach(addChecks);
-      pairing_checks.forEach(addChecks);
+      mascfem_checks.forEach(addChecks);
+      behavior_checks.forEach(addChecks);
       char_count_checks.forEach(addChecks);
+      pairing_checks.forEach(addChecks);
       body_type_checks.forEach(addChecks);
 
 
@@ -331,6 +357,8 @@
 
         checkboxes: {
           sex: sex_checks,
+          mascfem: mascfem_checks,
+          behavior: behavior_checks,
           pairing: pairing_checks,
           count: char_count_checks,
           body: body_type_checks,
