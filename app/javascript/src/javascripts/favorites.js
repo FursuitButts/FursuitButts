@@ -8,7 +8,6 @@ Favorite.initialize_actions = function () {
   $("#add-to-favorites, #add-fav-button").on("click", e => {
     e.preventDefault();
     Favorite.create($(e.target).closest(".button").data("pid"));
-    Post.vote($(e.target).closest(".button").data("pid"), 1, true);
   });
   $("#remove-from-favorites, #remove-fav-button").on("click", e => {
     e.preventDefault();

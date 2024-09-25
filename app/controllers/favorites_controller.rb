@@ -30,6 +30,7 @@ class FavoritesController < ApplicationController
     fav = FavoriteManager.add!(user: CurrentUser.user, post: @post)
     if params[:upvote].to_s.truthy?
       VoteManager::Posts.vote!(user: CurrentUser.user, post: @post, score: 1)
+      fav.reload
     end
     notice("You have favorited this post")
 
