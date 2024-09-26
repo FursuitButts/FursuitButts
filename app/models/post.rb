@@ -415,6 +415,13 @@ class Post < ApplicationRecord
       additional_sources = []
 
       alternate_processors = []
+      if upload_url.present?
+        alternate = Sources::Alternates.find(upload_url)
+        alternate_processors << alternate
+        gallery_sources << alternate.gallery_url if alternate.gallery_url
+        direct_sources << alternate.submission_url if alternate.submission_url
+        additional_sources += alternate.additional_urls if alternate.additional_urls
+      end
       sources.map! do |src|
         src.unicode_normalize!(:nfc)
         src = src.try(:strip)
