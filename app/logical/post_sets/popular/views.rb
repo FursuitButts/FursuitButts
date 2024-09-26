@@ -11,7 +11,7 @@ module PostSets
       end
 
       def ranking
-        @ranking ||= Reports.get_post_views_rank(date).first(limit)
+        @ranking ||= Reports.get_post_views_rank(date, limit: limit).first(limit)
       end
 
       def posts

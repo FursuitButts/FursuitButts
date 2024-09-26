@@ -627,6 +627,7 @@ components:
             - hover_zoom_sticky_shift
             - hover_zoom_play_audio
             - show_post_uploader
+            - unique_views
             - go_to_recent_forum_post
             - disable_colors
             - upload_notifications
@@ -704,6 +705,8 @@ components:
             hover_zoom_play_audio:
               type: boolean
             show_post_uploader:
+              type: boolean
+            unique_views:
               type: boolean
             go_to_recent_forum_post:
               type: boolean
@@ -12442,6 +12445,8 @@ paths:
                 hover_zoom_play_audio:
                   type: boolean
                 show_post_uploader:
+                  type: boolean
+                unique_views:
                   type: boolean
                 go_to_recent_forum_post:
                   type: boolean

@@ -107,6 +107,7 @@ class User < ApplicationRecord
     DISABLE_COLORS                   = pref(1 << 26)
     NO_AIBUR_VOTING                  = pref(1 << 27, settable: false, private: false)
     EMAIL_VERIFIED                   = pref(1 << 28, settable: false, public: true)
+    UNIQUE_VIEWS                     = pref(1 << 29)
 
     def self.map
       constants.to_h { |name| [name.to_s.downcase, const_get(name)] }

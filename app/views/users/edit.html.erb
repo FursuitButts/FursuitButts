@@ -78,6 +78,9 @@
     <%= f.input(:show_post_uploader, as: :select, collection: [%w[No false], %w[Yes true]], include_blank: false,
     hint: "Show the uploader on posts.") %>
 
+    <%= f.input(:unique_views, as: :select, collection: [%w[No false], %w[Yes true]], include_blank: false,
+    hint: "If the unique view count should be shown on posts. If no, the total view count will be shown.") %>
+
     <%= f.input(:upload_notifications, as: :select, collection: User.upload_notifications_options.index_by(&:humanize), multiple: true,
                 hint: "Upload/post related events to receive notifications for. Hold control to select multiple.", include_blank: false) %>
 

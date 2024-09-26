@@ -22,13 +22,13 @@ class PopularController < ApplicationController
 
   def searches
     @date, @scale, @min_date, @max_date = parse_date(params, scales: %w[day])
-    @ranking = Reports.get_post_searches_rank(@date).first(limit)
+    @ranking = Reports.get_post_searches_rank(@date, limit: limit).first(limit)
     respond_with(@ranking, &format_json(@ranking))
   end
 
   def missed_searches
     @date, @scale, @min_date, @max_date = parse_date({}, scales: %w[day])
-    @ranking = Reports.get_missed_searches_rank(limit)
+    @ranking = Reports.get_missed_searches_rank(limit: limit)
     respond_with(@ranking, &format_json(@ranking))
   end
 
