@@ -11,7 +11,7 @@ class PostAppeal < ApplicationRecord
   after_create :prune_disapprovals
   after_create :create_post_event
 
-  enum status: {
+  enum :status, {
     pending:  0,
     accepted: 1,
     rejected: 2,

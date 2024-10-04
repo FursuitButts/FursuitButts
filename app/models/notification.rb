@@ -2,7 +2,7 @@
 
 class Notification < ApplicationRecord
   belongs_to :user
-  enum category: {
+  enum :category, {
     default:             0,
     new_post:            1,
     dmail:               2,

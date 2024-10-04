@@ -4,7 +4,7 @@ class DtextLink < ApplicationRecord
   belongs_to :model, polymorphic: true
   belongs_to :linked_wiki, primary_key: :title, foreign_key: :link_target, class_name: "WikiPage", optional: true
   belongs_to :linked_tag, primary_key: :name, foreign_key: :link_target, class_name: "Tag", optional: true
-  enum link_type: { wiki_link: 0, external_link: 1 }
+  enum :link_type, { wiki_link: 0, external_link: 1 }
   MODEL_TYPES = %w[WikiPage ForumPost Pool].freeze
 
   before_validation :normalize_link_target

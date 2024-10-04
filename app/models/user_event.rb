@@ -4,7 +4,7 @@ class UserEvent < ApplicationRecord
   belongs_to :user
   belongs_to :user_session
 
-  enum category: {
+  enum :category, {
     login:                                   0,
     reauthenticate:                          25,
     failed_login:                            50,
