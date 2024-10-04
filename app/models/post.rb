@@ -2149,7 +2149,7 @@ class Post < ApplicationRecord
     end
   end
 
-  def flaggable_for_guidelines?
+  def flaggable_for_guidelines?(_user)
     true
   end
 
