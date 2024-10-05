@@ -249,6 +249,7 @@ class Pool < ApplicationRecord
       .where("pools.id = ? AND tags.category = ?", id, TagCategory.artist)
       .where.not("tags.name": ARTIST_EXCLUSION_TAGS)
       .pluck("tags.name")
+      .uniq
   end
 
   def synchronize
