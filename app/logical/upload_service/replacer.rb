@@ -14,7 +14,7 @@ class UploadService
         repl = post.replacements.new(creator_id: post.uploader_id, creator_ip_addr: post.uploader_ip_addr, status: "original",
                                      image_width: post.image_width, image_height: post.image_height, file_ext: post.file_ext,
                                      file_size: post.file_size, md5: post.md5, file_name: "#{post.md5}.#{post.file_ext}",
-                                     source: post.source, reason: "Backup of original file", is_backup: true, previous_details: replacement.current_details)
+                                     source: post.source, reason: "Original File", is_backup: true)
         repl.replacement_file = FemboyFans.config.storage_manager.open(FemboyFans.config.storage_manager.file_path(post, post.file_ext, :original))
         repl.save
       rescue Exception => e
@@ -27,7 +27,7 @@ class UploadService
       # Prevent trying to replace deleted posts
       raise(ProcessingError, "Cannot replace post: post is deleted.") if post.is_deleted?
 
-      create_backup_replacement
+      create_backup_replacement if post.replacements.count == 1
       PostReplacement.transaction do # rubocop:disable Metrics/BlockLength
         replacement.replacement_file = FemboyFans.config.storage_manager.open(FemboyFans.config.storage_manager.replacement_path(replacement, replacement.file_ext, :original))
 

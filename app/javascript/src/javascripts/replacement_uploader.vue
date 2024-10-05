@@ -24,12 +24,6 @@
     <span class="hint">If you aren't sure if this replacement is correct, checking this box will put it into the moderation queue.</span>
   </div>
 
-  <div class="input" v-if="canApprove">
-    <label class="section-label"><input type="checkbox" id="as_pending" v-model="uploadAsPending"/>
-      Upload as pending
-    </label>
-  </div>
-
   <div class="background-red error_message" v-if="showErrors && errorMessage !== undefined">
     {{ errorMessage }}
   </div>

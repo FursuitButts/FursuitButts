@@ -237,17 +237,17 @@ class PostReplacementTest < ActiveSupport::TestCase
       assert_equal 152, @note.height
     end
 
-    should "only work on pending or original replacements" do
-      @replacement.reject!
+    should "only work on pending, original, and rejected replacements" do
+      @replacement.promote!
       @replacement.approve!(penalize_current_uploader: false)
-      assert_equal(["Status must be pending or original to approve"], @replacement.errors.full_messages)
+      assert_equal(["Status must be pending, original, or rejected to approve"], @replacement.errors.full_messages)
     end
 
     should "only work once" do
       @replacement.approve!(penalize_current_uploader: false)
       assert_equal [], @replacement.errors.full_messages
       @replacement.approve!(penalize_current_uploader: false)
-      assert_equal ["Status must be pending or original to approve"], @replacement.errors.full_messages
+      assert_equal ["Status must be pending, original, or rejected to approve"], @replacement.errors.full_messages
     end
 
     context "when the replacement is a video" do

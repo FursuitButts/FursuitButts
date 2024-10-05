@@ -35,6 +35,7 @@ module Posts
         end
 
         should "automatically approve replacements by approvers" do
+          as(@user) { @replacement.destroy }
           file = fixture_file_upload("alpha.png")
           params = {
             format:           :json,
@@ -46,7 +47,7 @@ module Posts
             },
           }
 
-          assert_difference(-> { @post.replacements.size }, 2) do
+          assert_difference("@post.replacements.size", 2) do
             post_auth(post_replacements_path, @user, params: params)
             @post.reload
           end
@@ -68,7 +69,7 @@ module Posts
             },
           }
 
-          assert_difference(-> { @post.replacements.size }) do
+          assert_difference("@post.replacements.size") do
             post_auth(post_replacements_path, @user, params: params)
             @post.reload
           end

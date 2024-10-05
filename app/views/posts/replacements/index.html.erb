@@ -11,23 +11,33 @@
     <%= replacement_thumbnail(post_replacement) %>
   <% end %>
   <% t.column do |post_replacement| %>
-    <dl>
-      <dt>Replacement Source</dt>
-      <dd>
-        <% if post_replacement.source.present? %>
-          <ul>
-            <% post_replacement.source_list.each do |source| %>
-              <li><%= external_link_to source, truncate: 64 %></li>
-            <% end %>
-          </ul>
-        <% else %>
-          <em>None provided</em>
-        <% end %>
-      </dd>
-      <dt>Filename</dt>
-      <dd><%= truncate(post_replacement.file_name, length: 64) %></dd>
-    </dl>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: auto;">
+    <div class="replacement-details-row">
+      <dl>
+        <dt>Replacement Source</dt>
+        <dd>
+          <% if post_replacement.source.present? %>
+            <ul>
+              <% post_replacement.source_list.each do |source| %>
+                <li><%= external_link_to source, truncate: 64 %></li>
+              <% end %>
+            </ul>
+          <% else %>
+            <em>None provided</em>
+          <% end %>
+        </dd>
+      </dl>
+    </div>
+    <div class="replacement-details-row">
+      <dl>
+        <dt>Filename</dt>
+        <dd><%= truncate(post_replacement.file_name, length: 64) %></dd>
+      </dl>
+      <dl>
+        <dt>Sequence</dt>
+        <dd><%= post_replacement.post_id %>:<%= post_replacement.sequence %></dd>
+      </dl>
+    </div>
+    <div class="replacement-details-row">
       <dl>
         <% if post_replacement.details %>
           <dt><%= post_replacement.show_current? ? "Current" : "Previous" %> MD5</dt>
@@ -41,8 +51,7 @@
         <% end %>
       </dl>
     </div>
-
-    <div style="display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: auto;">
+    <div class="replacement-details-row">
       <dl>
         <% if post_replacement.details %>
           <dt><%= post_replacement.show_current? ? "Current" : "Previous" %> Size</dt>
@@ -77,7 +86,7 @@
         <dd>
           <%= link_to_user(post_replacement.uploader_on_approve) %>
           <% if CurrentUser.can_approve_posts? %>
-            | penalized: <span class="penalized-status"><%= post_replacement.penalize_uploader_on_approve ? "yes" : "no" %></span>
+            | penalized: <span class="penalized-status"><%= post_replacement.penalize_uploader_on_approve? ? "yes" : "no" %></span>
           <% end %>
           <%= link_to_if(policy(post_replacement).toggle_penalize?, "toggle", "#toggle", class: "replacement-toggle-penalize-action", data: { replacement_id: post_replacement.id }) { "" } %><br>
         </dd>
@@ -109,16 +118,21 @@
   <% t.column do |post_replacement| %>
     <% if CurrentUser.user.can_approve_posts? %>
       <div class="pending-links">
-        <% if post_replacement.status == "pending"%>
+        <% case post_replacement.status %>
+        <% when "pending" %>
           <%= link_to("Approve", "#approve", class: "replacement-approve-action", data: { replacement_id: post_replacement.id, penalize: post_replacement.post.uploader != post_replacement.creator }) %><br>
           <br>
           <%= link_to("Reject", "#reject", class: "replacement-reject-action", data: { replacement_id: post_replacement.id }) %><br>
           <%= link_to("Reject With Reason", reject_with_reason_post_replacement_path(post_replacement), class: "replacement-reject-with-reason-action") %><br>
           <%= link_to("As New Post", "#promote", class: "replacement-promote-action", data: { replacement_id: post_replacement.id }) %><br>
+        <% when "original" %>
+          <%= link_to("Reset To", "#approve", class: "replacement-approve-action", data: { replacement_id: post_replacement.id, penalize: false }) %><br>
+        <% when "rejected" %>
+          <%= link_to("Approve", "#approve", class: "replacement-approve-action", data: { replacement_id: post_replacement.id, penalize: post_replacement.post.uploader != post_replacement.creator }) %><br>
         <% end %>
       </div>
       <% if post_replacement.status == "original" %>
-        <%= link_to("Reset To", "#approve", class: "replacement-approve-action", data: { replacement_id: post_replacement.id, penalize: false }) %><br>
+
       <% end %>
     <% end %>
     <%= link_to_if(policy(post_replacement).destroy?, "Destroy", post_replacement_path(post_replacement), "method": :delete, "data-confirm": "Are you sure you want to destroy this replacement?") { "" } %>

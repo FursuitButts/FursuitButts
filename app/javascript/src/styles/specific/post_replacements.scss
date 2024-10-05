@@ -7,6 +7,13 @@ div#c-posts-replacements {
     background-color: themed("color-warning-darken-5");
   }
 
+  .replacement-details-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-auto-rows: auto;
+    padding: 0.25em 0;
+  }
+
   .replacement-reason {
     white-space: pre-wrap;
   }

@@ -76,7 +76,7 @@ class Post < ApplicationRecord
   has_many :approvals, class_name: "PostApproval", dependent: :destroy
   has_many :disapprovals, class_name: "PostDisapproval", dependent: :destroy
   has_many :favorites
-  has_many :replacements, class_name: "PostReplacement", dependent: :destroy
+  has_many :replacements, -> { default_order }, class_name: "PostReplacement", dependent: :destroy
 
   attr_accessor :old_tag_string, :old_parent_id, :old_source, :old_rating,
                 :do_not_version_changes, :tag_string_diff, :source_diff, :edit_reason, :tag_string_before_parse,

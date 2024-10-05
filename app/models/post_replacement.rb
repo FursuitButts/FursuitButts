@@ -179,11 +179,14 @@ class PostReplacement < ApplicationRecord
 
   module ProcessingMethods
     def approve!(penalize_current_uploader:)
-      unless %w[pending original].include?(status)
-        errors.add(:status, "must be pending or original to approve")
+      unless %w[pending original rejected].include?(status)
+        errors.add(:status, "must be pending, original, or rejected to approve")
         return
       end
 
+      post.replacements.approved.find_each do |replacement|
+        replacement.update_column(:status, replacement.sequence == 0 ? "original" : "rejected")
+      end
       update(previous_details: {
         width:  post.image_width,
         height: post.image_height,
@@ -282,7 +285,11 @@ class PostReplacement < ApplicationRecord
           q = q.where("post_id in (?)", params[:post_id].split(",").first(100).map(&:to_i))
         end
 
-        q.order(Arel.sql("CASE status WHEN 'pending' THEN 0 ELSE 1 END ASC, id DESC"))
+        q.apply_basic_order(params)
+      end
+
+      def default_order
+        order(Arel.sql("CASE status WHEN 'pending' THEN 0 WHEN 'original' THEN 2 ELSE 1 END ASC, id DESC"))
       end
 
       def pending
@@ -384,6 +391,10 @@ class PostReplacement < ApplicationRecord
     else
       previous_details.transform_keys(&:to_sym)
     end
+  end
+
+  def sequence
+    post.replacements.reverse.index(self)
   end
 
   def self.available_includes
