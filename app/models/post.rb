@@ -535,9 +535,7 @@ class Post < ApplicationRecord
     end
 
     def update_pool_artists!
-      pools.each do |pool|
-        pool.update_artists!
-      end
+      pools.each(&:update_artists!)
     end
 
     def update_tag_followers
