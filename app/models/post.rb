@@ -536,7 +536,7 @@ class Post < ApplicationRecord
 
     def update_pool_artists!
       pools.each do |pool|
-        pool.update_artists(self, :tag_update)
+        pool.update_artists!
       end
     end
 

@@ -341,33 +341,33 @@ class PoolTest < ActiveSupport::TestCase
     end
 
     should "be correct" do
-      assert_same_elements(%w[foo], @pool.artists)
+      assert_same_elements(%w[foo], @pool.artist_names)
     end
 
     should "update when an artist is added/removed" do
       with_inline_jobs { @post.update(tag_string_diff: "artist:bar") }
-      assert_same_elements(%w[foo bar], @pool.artists)
+      assert_same_elements(%w[foo bar], @pool.reload.artist_names)
 
       with_inline_jobs { @post.update(tag_string_diff: "-foo") }
-      assert_same_elements(%w[bar], @pool.artists)
+      assert_same_elements(%w[bar], @pool.reload.artist_names)
     end
 
     should "update when a post is added/removed (via add!/remove!)" do
       @post2 = create(:post, tag_string: "artist:baz")
       @pool.add!(@post2)
-      assert_same_elements(%w[foo baz], @pool.artists)
+      assert_same_elements(%w[foo baz], @pool.artist_names)
 
       @pool.remove!(@post)
-      assert_same_elements(%w[baz], @pool.artists)
+      assert_same_elements(%w[baz], @pool.artist_names)
     end
 
     should "update when a post is added/removed (via post_ids=)" do
       @post2 = create(:post, tag_string: "artist:baz")
       @pool.update(post_ids: [@post.id, @post2.id])
-      assert_same_elements(%w[foo baz], @pool.artists)
+      assert_same_elements(%w[foo baz], @pool.artist_names)
 
       @pool.update(post_ids: [@post2.id])
-      assert_same_elements(%w[baz], @pool.artists)
+      assert_same_elements(%w[baz], @pool.artist_names)
     end
   end
 end

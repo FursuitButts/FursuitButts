@@ -5,7 +5,6 @@ module TagCategory
 
   Category = Struct.new(:id, :name, :aliases) do
     KWARGS = %i[header suffix limit exclusion regex formatstr].freeze # rubocop:disable Lint/ConstantDefinitionInBlock
-    attr_reader :admin_only
     attr_accessor(*KWARGS)
 
     def initialize(*, **kwargs)

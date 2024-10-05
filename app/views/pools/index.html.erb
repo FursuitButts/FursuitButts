@@ -9,7 +9,7 @@
     <% end %>
   <% end %>
   <% t.column("Artists") do |pool| %>
-    <%= link_to_pool_artists(pool.artists) %>
+    <%= link_to_pool_artists(pool.artist_names) %>
   <% end %>
   <% t.column("Count") do |pool| %>
     <%= pool.post_count %>

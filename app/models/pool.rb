@@ -4,6 +4,8 @@ class Pool < ApplicationRecord
   class RevertError < StandardError
   end
 
+  ARTIST_EXCLUSION_TAGS = TagCategory::ARTIST.exclusion
+
   array_attribute :post_ids, parse: %r{(?:https://#{FemboyFans.config.domain}/posts/)?(\d+)}i, cast: :to_i
   belongs_to_creator
 
@@ -201,7 +203,7 @@ class Pool < ApplicationRecord
       self.skip_sync = true
       update(post_ids: post_ids + [post.id])
       raise(ActiveRecord::Rollback) unless valid?
-      update_artists(post, :add)
+      update_artists!
       self.skip_sync = false
       post.add_pool!(self)
       post.save
@@ -224,7 +226,7 @@ class Pool < ApplicationRecord
       self.skip_sync = true
       update(post_ids: post_ids - [post.id])
       raise(ActiveRecord::Rollback) unless valid?
-      update_artists(post, :remove)
+      update_artists!
       self.skip_sync = false
       post.remove_pool!(self)
       post.save
@@ -235,25 +237,18 @@ class Pool < ApplicationRecord
     Post.joins("left join pools on posts.id = ANY(pools.post_ids)").where(pools: { id: id }).order(Arel.sql("array_position(pools.post_ids, posts.id)"))
   end
 
-  def artists
-    return artist_names if Cache.fetch("pa:#{id}", expires_in: 12.hours) == "1"
-    names = posts.flat_map(&:artist_tags).map(&:name).reject { |name| FemboyFans.config.artist_exclusion_tags.include?(name) }
-    update_column(:artist_names, names)
-    self.artist_names = names
-    Cache.write("pa:#{id}", "1", expires_in: 12.hours)
+  def update_artists!
+    update_column(:artist_names, posts_artist_tags)
     artist_names
   end
 
-  def update_artists(post, action)
-    arttags = post.artist_tags.map(&:name)
-    current = artists
-    case action
-    when :add
-      Cache.delete("pa:#{id}") unless (arttags - current).empty?
-    else
-      # We don't know if any other posts have the artist tags when removing a post, so we're forced to always clear the cache
-      Cache.delete("pa:#{id}")
-    end
+  def posts_artist_tags
+    posts
+      .with_unflattened_tags
+      .joins("inner join tags on tags.name = tag")
+      .where("pools.id = ? AND tags.category = ?", id, TagCategory.artist)
+      .where.not("tags.name": ARTIST_EXCLUSION_TAGS)
+      .pluck("tags.name")
   end
 
   def synchronize
@@ -263,16 +258,15 @@ class Pool < ApplicationRecord
     removed = post_ids_before - post_ids
 
     Post.where(id: added).find_each do |post|
-      update_artists(post, :add)
       post.add_pool!(self)
       post.save
     end
 
     Post.where(id: removed).find_each do |post|
-      update_artists(post, :remove)
       post.remove_pool!(self)
       post.save
     end
+    update_artists!
   end
 
   def synchronize!
