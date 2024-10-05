@@ -259,10 +259,10 @@ class PostsControllerTest < ActionDispatch::IntegrationTest
       should "update the pool's artists" do
         as(@user) { @post.update(tag_string: "artist:foo") }
         perform_enqueued_jobs(only: UpdatePoolArtistsJob)
-        assert_equal([], @pool.artists)
+        assert_equal([], @pool.artist_names)
         post_auth add_to_pool_post_path(@post), @user, params: { pool_id: @pool.id, format: :json }
         perform_enqueued_jobs(only: UpdatePoolArtistsJob)
-        assert_same_elements(%w[foo], @pool.reload.artists)
+        assert_same_elements(%w[foo], @pool.reload.artist_names)
       end
 
       should "restrict access" do
@@ -297,10 +297,10 @@ class PostsControllerTest < ActionDispatch::IntegrationTest
       should "update the pool's artists" do
         as(@user) { @post.update(tag_string: "artist:foo") }
         perform_enqueued_jobs(only: UpdatePoolArtistsJob)
-        assert_same_elements(%w[foo], @pool.artists)
+        assert_same_elements(%w[foo], @pool.reload.artist_names)
         post_auth remove_from_pool_post_path(@post), @user, params: { pool_id: @pool.id, format: :json }
         perform_enqueued_jobs(only: UpdatePoolArtistsJob)
-        assert_equal([], @pool.reload.artists)
+        assert_equal([], @pool.reload.artist_names)
       end
 
       should "restrict access" do

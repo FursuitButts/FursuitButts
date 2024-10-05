@@ -56,7 +56,7 @@ class Post < ApplicationRecord
   after_save :update_parent_on_save
   after_save :apply_post_metatags
   after_commit :update_pool_artists
-  after_commit :update_tag_followers, on: %i[create update]
+  after_commit :update_tag_followers, on: %i[create update], if: :should_update_followers?
   after_commit :delete_files, on: :destroy
   after_commit :remove_iqdb_async, on: :destroy
   after_commit :update_iqdb_async, on: :create
@@ -544,6 +544,10 @@ class Post < ApplicationRecord
 
     def update_tag_followers!
       TagFollower.update_from_post!(self)
+    end
+
+    def should_update_followers?
+      previously_new_record? || (saved_change_to_tag_string? && (tag_array - tag_array_was).any?)
     end
 
     def reset_followers_on_destroy
