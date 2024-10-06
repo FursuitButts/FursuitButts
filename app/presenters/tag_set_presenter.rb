@@ -65,7 +65,7 @@ class TagSetPresenter < Presenter
     end.compact_blank.join(" \n")
   end
 
-  def humanized_essential_tag_string(category_list: TagCategory.humanized, default: "")
+  def humanized_essential_tag_string(category_list: TagCategory::HUMANIZED_LIST, default: "")
     @humanized_essential_tag_string ||= begin
       strings = category_list.map do |category|
         mapping = TagCategory.get(category)

@@ -27,10 +27,6 @@ module TagCategory
     def admin_only?
       is_a?(AdminCategory)
     end
-
-    def humanized?
-      %i[limit exclusion regex formatstr].any? { |v| send(v).present? }
-    end
   end
   class AdminCategory < Category; end
 
@@ -90,10 +86,6 @@ module TagCategory
     @short_name_regex ||= short_name_mapping.keys.join("|")
   end
 
-  def humanized
-    @humanized ||= categories.select(&:humanized?).map(&:name)
-  end
-
   def category_names
     @category_names ||= categories.map(&:name)
   end
@@ -106,4 +98,5 @@ module TagCategory
 
   SPLIT_HEADER_LIST = %w[invalid artist voice_actor copyright character species gender general meta lore].freeze
   CATEGORIZED_LIST = %w[invalid artist voice_actor copyright character species gender meta general lore].freeze
+  HUMANIZED_LIST = %w[character copyright artist].freeze
 end
