@@ -3,13 +3,16 @@
 class ExceptionLog < ApplicationRecord
   serialize :extra_params, coder: JSON
 
-  def self.add(exception, user_id, request)
+  def self.add!(exception, user_id: nil, request: nil, source: nil, **extra)
+    source ||= request.present? ? request.filtered_parameters.slice(:controller, :action).values.join("#") : "Unknown"
     extra_params = {
       host:       Socket.gethostname,
-      params:     request.filtered_parameters,
+      params:     request.try(:filtered_parameters),
       user_id:    user_id,
-      referrer:   request.referrer,
-      user_agent: request.user_agent,
+      referrer:   request.try(:referrer),
+      user_agent: request.try(:user_agent) || "Internal",
+      source:     source,
+      **extra,
     }
 
     # Required to unwrap exceptions that occur inside template rendering.
@@ -25,10 +28,10 @@ class ExceptionLog < ApplicationRecord
     end
 
     create!(
-      ip_addr:      request.remote_ip || "0.0.0.0",
+      ip_addr:      request.try(:remote_ip) || "0.0.0.0",
       class_name:   unwrapped_exception.class.name,
       message:      unwrapped_exception.message,
-      trace:        unwrapped_exception.backtrace.join("\n"),
+      trace:        unwrapped_exception.backtrace.try(:join, "\n") || "",
       code:         SecureRandom.uuid,
       version:      GitHelper.short_hash,
       extra_params: extra_params,

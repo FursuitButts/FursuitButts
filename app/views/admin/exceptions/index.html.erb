@@ -12,8 +12,8 @@
   <% t.column("Commit", th: { style: "width: 100px;" }) do |exception_log| %>
     <%= link_to(exception_log.version, GitHelper.commit_url(exception_log.version)) %>
   <% end %>
-  <% t.column("Controller/Action") do |exception_log| %>
-    <%= exception_log.extra_params.dig("params", "controller") %>/<%= exception_log.extra_params.dig("params", "action") %>
+  <% t.column("Source") do |exception_log| %>
+    <%= exception_log.extra_params["source"] %>
   <% end %>
   <% t.column(:class_name) %>
   <% t.column("Message") do |exception_log| %>

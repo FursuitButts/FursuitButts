@@ -150,7 +150,7 @@ class ApplicationController < ActionController::Base
     end
 
     FemboyFans::Logger.log(@exception, expected: @expected)
-    log = ExceptionLog.add(exception, CurrentUser.id, request) unless @expected
+    log = ExceptionLog.add!(exception, user_id: CurrentUser.id, request: request) unless @expected
     @log_code = log&.code
     render("static/error", status: status, formats: format)
   end

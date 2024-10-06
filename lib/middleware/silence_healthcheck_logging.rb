@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class SilenceHealthcheckLogging
   def initialize(app)
     @app = app
