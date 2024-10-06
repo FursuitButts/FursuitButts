@@ -456,6 +456,7 @@ Rails.application.routes.draw do
   get "/static/avoid_posting", to: "static#avoid_posting", as: "avoid_posting_static"
   get "/robots", to: "static#robots", as: "robots"
   get "/route", to: "static#recognize_route", as: "recognize_route"
+  get "/up", to: "rails/health#show", as: "health_check"
   root to: "static#home"
 
   get "*other", to: "static#not_found"

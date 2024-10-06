@@ -22,6 +22,7 @@ Bundler.require(*Rails.groups)
 
 require_relative "default_config"
 require_relative "local_config"
+require_relative "../lib/middleware/silence_healthcheck_logging"
 
 module FemboyFans
   class Application < Rails::Application
@@ -71,5 +72,6 @@ module FemboyFans
     config.generators.assets = false
     config.generators.helper = false
     config.generators.test_framework = nil
+    config.middleware.insert_before(Rails::Rack::Logger, SilenceHealthcheckLogging)
   end
 end

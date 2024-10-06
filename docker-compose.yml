@@ -25,11 +25,11 @@ x-depends-on: &common-depends-on
   opensearch:
     condition: service_healthy
   memcached:
-    condition: service_started
+    condition: service_healthy
   postgres:
-    condition: service_started
+    condition: service_healthy
   redis:
-    condition: service_started
+    condition: service_healthy
 
 services:
   femboyfans:
@@ -40,6 +40,12 @@ services:
         HOST_GID: ${HOST_GID:-1000}
     user: ${DOCKER_USER:-root}
     image: femboyfans
+    healthcheck:
+      # this healthcheck is only for the rails app, sidekiq needs to be separated to be healthchecked
+      test: wget --no-verbose --tries=1 --spider http://127.0.0.1:9000/up || exit 1
+      interval: 15s
+      timeout: 2s
+      retries: 5
     volumes:
       - .:/app
       - node_modules:/app/node_modules
@@ -53,21 +59,26 @@ services:
     depends_on:
       <<: *common-depends-on
       autocompleted:
-        condition: service_started
+        condition: service_healthy
       iqdb:
-        condition: service_started
+        condition: service_healthy
       recommender:
-        condition: service_started
+        condition: service_healthy
       redis:
         condition: service_healthy
       reports:
-        condition: service_started
+        condition: service_healthy
     tty: true
 
   # For this service to work properly, it must be accessible from /tags/autocomplete.json on the same url as the primary app
   autocompleted:
-    image: ghcr.io/e621ng/autocompleted:8807bc8658f594cd0de04de1c272c3a2f917fc48
+    image: ghcr.io/femboyfans/autocompleted:413faed9e0371d14e350c8131f1300f1687f951a
     command: /app/autocompleted
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://$$SERVER_ADDR/up || exit 1
+      interval: 30s
+      timeout: 2s
+      retries: 5
     environment:
       SERVER_ADDR: autocompleted:8118
       PG__USER: femboyfans
@@ -78,19 +89,26 @@ services:
 
   nginx:
     image: nginx:stable-alpine
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://127.0.0.1/online || exit 1
+      interval: 15s
+      timeout: 2s
+      retries: 5
     volumes:
       - ./public:/app/public
       - post_data:/app/public/data
       - ./docker/default.conf.template:/etc/nginx/templates/default.conf.template
     environment:
       <<: *common-env
-      NGINX_PORT: ${EXPOSED_SERVER_PORT:-3001}
     depends_on:
-      - autocompleted
-      - femboyfans
-      - reports
+      autocompleted:
+        condition: service_healthy
+      femboyfans:
+        condition: service_healthy
+      reports:
+        condition: service_healthy
     ports:
-      - "${EXPOSED_SERVER_PORT:-3001}:${EXPOSED_SERVER_PORT:-3001}"
+      - "${EXPOSED_SERVER_PORT:-3001}:80"
 
   postgres:
     image: postgres:15-alpine
@@ -100,11 +118,21 @@ services:
       - POSTGRES_HOST_AUTH_METHOD=trust
     volumes:
       - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: pg_isready -U femboyfans -d postgres
+      interval: 20s
+      timeout: 2s
+      retries: 10
     ports:
       - "${EXPOSED_POSTGRES_PORT:-34518}:5432"
 
   clickhouse:
     image: clickhouse/clickhouse-server:latest-alpine
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://127.0.0.1:8123/ping || exit 1
+      interval: 15s
+      timeout: 2s
+      retries: 5
     cap_add:
       - NET_ADMIN
       - IPC_LOCK
@@ -121,15 +149,23 @@ services:
   redis:
     image: redis:7.0.10-alpine
     command: redis-server --save 10 1 --loglevel warning
+    healthcheck:
+      test: redis-cli ping
+      interval: 15s
+      timeout: 2s
+      retries: 5
     volumes:
       - redis_data:/data
     ports:
       - "${EXPOSED_REDIS_PORT:-34519}:6379"
-    healthcheck:
-      test: redis-cli ping
 
   memcached:
     image: memcached:1.5.22-alpine
+    healthcheck:
+      test: echo "version" | nc -vn -w 1 127.0.0.1 11211
+      interval: 30s
+      timeout: 2s
+      retries: 5
 
   opensearch:
     image: opensearchproject/opensearch:2.13.0
@@ -143,19 +179,29 @@ services:
       - opensearch_data:/usr/share/opensearch/data
     init: true
     healthcheck:
-      interval: 5s
+      test: curl "opensearch:9200/_cluster/health?wait_for_status=yellow&timeout=2s"
+      interval: 30s
       timeout: 2s
       retries: 12
-      test: curl "opensearch:9200/_cluster/health?wait_for_status=yellow&timeout=2s"
 
   iqdb:
     image: ghcr.io/e621ng/iqdb:ad5e363879d4e4b80a0821253ae610b7859c5d32
     command: iqdb http 0.0.0.0 5588 /iqdb/iqdb.db
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://127.0.0.1:5588/status || exit 1
+      interval: 30s
+      timeout: 2s
+      retries: 5
     volumes:
       - iqdb_data:/iqdb
 
   recommender:
     image: ghcr.io/femboyfans/recommender:b29409d748333c99beb1faf2dc7b902cefdf26cf
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://127.0.0.1:5000/metrics || exit 1
+      interval: 30s
+      timeout: 2s
+      retries: 5
     volumes:
       - recommender_data:/recommender/data
     environment:
@@ -167,7 +213,12 @@ services:
   # To change this, set the FEMBOYFANS_REPORTS_SERVER env variable
   # For internal access, change the FEMBOYFANS_REPORTS_SERVER_INTERNAL env varable (defaults to http://reports:3000)
   reports:
-    image: ghcr.io/femboyfans/reports:1606678782190c8b764b5270dd3a4c83519292c4
+    image: ghcr.io/femboyfans/reports:6d20e8557cbb816d8a52f5d489533b8684eef5e1
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/up || exit 1
+      interval: 30s
+      timeout: 2s
+      retries: 5
     environment:
       - CLICKHOUSE_URL=http://clickhouse:8123
       - REDIS_URL=redis://redis/1
@@ -176,7 +227,7 @@ services:
       - "${EXPOSED_REPORTS_PORT:-3002}:3000"
     depends_on:
       clickhouse:
-        condition: service_started
+        condition: service_healthy
       redis:
         condition: service_healthy
 
