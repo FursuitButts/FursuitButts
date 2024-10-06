@@ -32,7 +32,7 @@ class UploadServiceTest < ActiveSupport::TestCase
     end
 
     context ".video_framecount" do
-      context "for a video" do
+      context "for a webm" do
         setup do
           @path = file_fixture("test-512x512.webm").to_s
           @upload = Upload.new(file_ext: "webm")
@@ -44,10 +44,22 @@ class UploadServiceTest < ActiveSupport::TestCase
           assert_operator(count, :==, 24)
         end
       end
+
+      context "for an mp4" do
+        setup do
+          @path = file_fixture("test-300x300.mp4").to_s
+          @upload = Upload.new(file_ext: "mp4")
+        end
+
+        should "return the frame count" do
+          count = @upload.video_framecount(@path)
+          assert_operator(count, :==, 10)
+        end
+      end
     end
 
     context ".calculate_dimensions" do
-      context "for a video" do
+      context "for a webm" do
         setup do
           @path = file_fixture("test-512x512.webm").to_s
           @upload = Upload.new(file_ext: "webm")
@@ -55,8 +67,21 @@ class UploadServiceTest < ActiveSupport::TestCase
 
         should "return the dimensions" do
           w, h = @upload.calculate_dimensions(@path)
-          assert_operator(w, :>, 0)
-          assert_operator(h, :>, 0)
+          assert_operator(w, :==, 512)
+          assert_operator(h, :==, 512)
+        end
+      end
+
+      context "for a webm" do
+        setup do
+          @path = file_fixture("test-300x300.mp4").to_s
+          @upload = Upload.new(file_ext: "mp4")
+        end
+
+        should "return the dimensions" do
+          w, h = @upload.calculate_dimensions(@path)
+          assert_operator(w, :==, 300)
+          assert_operator(h, :==, 300)
         end
       end
 
@@ -79,6 +104,33 @@ class UploadServiceTest < ActiveSupport::TestCase
         context "for a webm" do
           setup do
             @file = file_fixture("test-512x512.webm").open
+            @upload = UploadService.new(attributes_for(:upload).merge(file: @file, uploader: @user)).start!
+          end
+
+          teardown do
+            @file.close
+          end
+
+          should "generate a video" do
+            preview, crop, _sample = subject.generate_resizes(@file, @upload)
+            assert_operator(File.size(preview.path), :>, 0)
+            assert_operator(File.size(crop.path), :>, 0)
+            preview_image = Vips::Image.new_from_file(preview.path)
+            crop_image = Vips::Image.new_from_file(crop.path)
+            assert_equal(FemboyFans.config.small_image_width, preview_image.width)
+            assert_equal(FemboyFans.config.small_image_width, preview_image.height)
+            assert_equal(FemboyFans.config.small_image_width, crop_image.width)
+            assert_equal(FemboyFans.config.small_image_width, crop_image.height)
+            preview.close
+            preview.unlink
+            crop.close
+            crop.unlink
+          end
+        end
+
+        context "for an mp4" do
+          setup do
+            @file = file_fixture("test-300x300.mp4").open
             @upload = UploadService.new(attributes_for(:upload).merge(file: @file, uploader: @user)).start!
           end
 

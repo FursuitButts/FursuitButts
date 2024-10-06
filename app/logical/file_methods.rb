@@ -89,6 +89,8 @@ module FileMethods
         "webp"
       when "video/webm"
         "webm"
+      when "video/mp4"
+        "mp4"
       else
         mime_type
       end

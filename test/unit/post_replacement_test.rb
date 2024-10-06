@@ -250,12 +250,12 @@ class PostReplacementTest < ActiveSupport::TestCase
       assert_equal ["Status must be pending, original, or rejected to approve"], @replacement.errors.full_messages
     end
 
-    context "when the replacement is a video" do
+    context "when the replacement is a webm" do
       setup do
         @replacement = create(:webm_replacement, creator: @user, post: @post)
       end
 
-      should "when the replacement is a video" do
+      should "detect the correct duration" do
         @replacement.approve!(penalize_current_uploader: false)
         @post.reload
         assert_equal(0.48, @post.duration)
@@ -264,6 +264,29 @@ class PostReplacementTest < ActiveSupport::TestCase
       should "update the framecount" do
         @replacement.approve!(penalize_current_uploader: false)
         assert_equal(24, @post.reload.framecount)
+      end
+
+      should "reset thumbnail_frame" do
+        @post.update_column(:thumbnail_frame, 5)
+        @replacement.approve!(penalize_current_uploader: false)
+        assert_nil(@post.reload.thumbnail_frame)
+      end
+    end
+
+    context "when the replacement is an mp4" do
+      setup do
+        @replacement = create(:mp4_replacement, creator: @user, post: @post)
+      end
+
+      should "detect the correct duration" do
+        @replacement.approve!(penalize_current_uploader: false)
+        @post.reload
+        assert_equal(5.7, @post.duration)
+      end
+
+      should "update the framecount" do
+        @replacement.approve!(penalize_current_uploader: false)
+        assert_equal(10, @post.reload.framecount)
       end
 
       should "reset thumbnail_frame" do

@@ -37,7 +37,7 @@ class PostVideoConversionJob < ApplicationJob
       sm.store(named_samples[1], mp4_path)
       named_samples[1].close!
     end
-    sm.store(samples[:original][1], sm.file_path(md5, "mp4", :original, protected: post.is_deleted?))
+    sm.store(samples[:original][1], sm.file_path(md5, post.is_webm? ? "mp4" : "webm", :original, protected: post.is_deleted?))
     samples[:original].each(&:close!)
   end
 
@@ -48,14 +48,14 @@ class PostVideoConversionJob < ApplicationJob
       scaled_dims = post.scaled_sample_dimensions(dims)
       outputs[size] = generate_scaled_video(post.file_path, scaled_dims)
     end
-    outputs[:original] = generate_scaled_video(post.file_path, post.scaled_sample_dimensions([post.image_width, post.image_height]), format: :mp4)
+    outputs[:original] = generate_scaled_video(post.file_path, post.scaled_sample_dimensions([post.image_width, post.image_height]), format: post.is_webm? ? :mp4 : :webm)
     outputs
   end
 
   def generate_scaled_video(infile, dimensions, format: :both)
     target_size = "scale=w=#{dimensions[0]}:h=#{dimensions[1]}"
-    webm_file = Tempfile.new(["video-sample", ".webm"], binmode: true)
-    mp4_file = Tempfile.new(["video-sample", ".mp4"], binmode: true)
+    webm_file = Tempfile.new(%w[video-sample .webm], binmode: true)
+    mp4_file = Tempfile.new(%w[video-sample .mp4], binmode: true)
     webm_args = [
       "-c:v",
       "libvpx-vp9",
