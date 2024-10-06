@@ -81,7 +81,9 @@ module IqdbProxy
 
   def generate_thumbnail(file_path)
     Vips::Image.thumbnail(file_path, IQDB_NUM_PIXELS, height: IQDB_NUM_PIXELS, size: :force)
-  rescue Vips::Error
+  rescue Vips::Error => e
+    Rails.logger.error("failed to generate thumbnail for #{file_path}")
+    Rails.logger.error(e)
     nil
   end
 
