@@ -9,4 +9,4 @@ SELECT id,
        created_at,
        updated_at,
        version
-FROM public.notes ORDER BY id;
+FROM public.notes ORDER BY id

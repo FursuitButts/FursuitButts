@@ -22,5 +22,5 @@ SELECT wiki_update_count as wiki_page_version_count,
        (bit_prefs::bit(64) & (1 << 9)::bit(64) = (1 << 9)::bit(64)) as unrestricted_uploads,
        (bit_prefs::bit(64) & (1 << 14)::bit(64) = (1 << 14)::bit(64)) as disable_user_dmails,
        (bit_prefs::bit(64) & (1 << 22)::bit(64) = (1 << 22)::bit(64)) as can_manage_aibur
-FROM public.users ORDER BY id;
+FROM public.users ORDER BY id
 

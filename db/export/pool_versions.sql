@@ -12,4 +12,4 @@ SELECT id,
        updated_at,
        is_active,
        version
-FROM public.pool_versions ORDER BY id;
+FROM public.pool_versions ORDER BY id

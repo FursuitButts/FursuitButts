@@ -6,4 +6,4 @@ SELECT id,
        tag_id,
        updater_id,
        reason
-FROM public.tag_versions ORDER BY id;
+FROM public.tag_versions ORDER BY id

@@ -7,4 +7,4 @@ SELECT id,
        other_names,
        urls,
        notes_changed
-FROM public.artist_versions ORDER BY id;
+FROM public.artist_versions ORDER BY id

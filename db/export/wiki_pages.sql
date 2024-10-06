@@ -7,4 +7,4 @@ SELECT id,
        updated_at,
        updater_id,
        parent
-FROM public.wiki_pages ORDER BY id;
+FROM public.wiki_pages ORDER BY id

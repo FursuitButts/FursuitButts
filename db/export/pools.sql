@@ -7,4 +7,4 @@ SELECT id,
        created_at,
        updated_at,
        artist_names
-FROM public.pools ORDER BY id;
+FROM public.pools ORDER BY id

@@ -10,4 +10,4 @@ SELECT id,
        approver_id,
        forum_post_id,
        reason
-FROM public.tag_aliases ORDER BY id;
+FROM public.tag_aliases ORDER BY id

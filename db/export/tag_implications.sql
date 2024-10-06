@@ -10,4 +10,4 @@ SELECT id,
        forum_post_id,
        descendant_names,
        reason
-FROM public.tag_implications ORDER BY id;
+FROM public.tag_implications ORDER BY id

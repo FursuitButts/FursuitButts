@@ -8,4 +8,4 @@ SELECT id,
        approver_id,
        forum_post_id,
        title
-FROM public.bulk_update_requests ORDER BY id;
+FROM public.bulk_update_requests ORDER BY id

@@ -8,4 +8,4 @@ SELECT id,
        updated_at,
        reason,
        parent
-FROM public.wiki_page_versions ORDER BY id;
+FROM public.wiki_page_versions ORDER BY id

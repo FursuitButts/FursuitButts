@@ -7,4 +7,4 @@ SELECT id,
        created_at,
        updated_at,
        is_locked
-FROM public.tags ORDER BY id;
+FROM public.tags ORDER BY id

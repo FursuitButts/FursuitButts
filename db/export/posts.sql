@@ -47,4 +47,4 @@ SELECT id,
        tag_count_gender,
        qtags,
        upload_url
-FROM public.posts ORDER BY id;
+FROM public.posts ORDER BY id

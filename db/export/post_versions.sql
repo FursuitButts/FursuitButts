@@ -19,4 +19,4 @@ SELECT id,
        version,
        reason,
        original_tags
-FROM public.post_versions ORDER BY id;
+FROM public.post_versions ORDER BY id

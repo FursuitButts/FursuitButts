@@ -11,4 +11,4 @@ SELECT id,
        created_at,
        updated_at,
        version
-FROM public.note_versions ORDER BY id;
+FROM public.note_versions ORDER BY id
