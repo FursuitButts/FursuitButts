@@ -44,6 +44,10 @@
     Type: <%= post.file_ext.upcase %>
   </li>
   <li>
+    <% gcd = post.image_width.gcd(post.image_height) %>
+    Ratio: <%= post.image_width / gcd %>:<%= post.image_height / gcd %>
+  </li>
+  <li>
     Status:
     <% if @post.is_pending? %>
       Pending
