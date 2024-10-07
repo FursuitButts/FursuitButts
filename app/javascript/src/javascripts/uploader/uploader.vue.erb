@@ -30,7 +30,7 @@
                     <div class="col">
                         <label class="section-label" for="names">Artists</label>
                         <div><a href="/help/tags">How do I tag an artist?</a></div>
-                        <div>Please don't use <a href="/wiki_pages/show_or_new?title=anonymous_artist">anonymous_artist</a> or <a href="/wiki_pages/show_or_new?title=unknown_artist">unknown_artist</a> tags unless they fall under those definitions on the wiki.</div>
+                        <div>Please don't use <a href="/wiki_pages/show_or_new?title=anonymous_artist">anonymous_artist</a> or <a href="/wiki_pages/show_or_new?title=unknown_artist">unknown_artist</a> tags unless they fall under the definitions found on the wiki.</div>
                     </div>
                     <div class="col2">
                         <div>
@@ -47,38 +47,37 @@
                         </div>
                     </div>
                     <div class="col2">
-                        <div class="flex-wrap">
-                            <image-checkbox :check="check" :checks="checkboxes.selected" v-for="check in checkboxes.sex"
+                      <div class="flex-wrap">
+                        <image-checkbox :check="check" :checks="checkboxes.selected" v-for="check in checkboxes.sex"
                                             @set="setCheck"
-                                            :key="check.name"></image-checkbox>
-                        </div>
+                                            :key="check.name" :data-tag="check.tag || check.name.toLowerCase().replace(/ /g, '_')"></image-checkbox>
+                      </div>
                       <hr>
                       <div class="flex-wrap">
                         <image-checkbox :check="check" :checks="checkboxes.selected"
                                         v-for="check in checkboxes.mascfem" @set="setCheck"
                                         :key="check.name"></image-checkbox>
                       </div>
-                      <hr>
                       <div class="flex-wrap">
                         <image-checkbox :check="check" :checks="checkboxes.selected"
                                         v-for="check in checkboxes.behavior" @set="setCheck"
-                                        :key="check.name"></image-checkbox>
+                                        :key="check.name" style="display: none" :data-tag="check.tag || check.name.toLowerCase().replace(/ /g, '_')"></image-checkbox>
                       </div>
-                        <hr>
-                        <div class="flex-wrap">
-                            <image-checkbox :check="check" :checks="checkboxes.selected"
-                                            v-for="check in checkboxes.count" @set="setCheck"
-                                            :key="check.name"></image-checkbox>
-                        </div>
-                        <hr>
-                        <div class="flex-wrap">
-                            <image-checkbox :check="check" :checks="checkboxes.selected"
-                                            v-for="check in checkboxes.pairing" @set="setCheck"
-                                            :key="check.name"></image-checkbox>
-                        </div>
-                        <textarea class="tag-textarea" rows="2" v-model="tagEntries.character" id="post_character"
-                                  placeholder="Ex: character_name solo_focus etc."
-                                  data-autocomplete="tag-edit"></textarea>
+                      <hr>
+                      <div class="flex-wrap">
+                        <image-checkbox :check="check" :checks="checkboxes.selected"
+                                          v-for="check in checkboxes.count" @set="setCheck"
+                                          :key="check.name"></image-checkbox>
+                      </div>
+                      <hr>
+                      <div class="flex-wrap">
+                          <image-checkbox :check="check" :checks="checkboxes.selected"
+                                          v-for="check in checkboxes.pairing" @set="setCheck"
+                                          :key="check.name" style="display: none" :data-tag-a="check.tagA" :data-tag-b="check.tagB"></image-checkbox>
+                      </div>
+                      <textarea class="tag-textarea" rows="2" v-model="tagEntries.character" id="post_character"
+                                placeholder="Ex: character_name solo_focus 1_male 2_females etc."
+                                data-autocomplete="tag-edit"></textarea>
                     </div>
                 </div>
                 <div class="flex-grid border-bottom">
@@ -90,7 +89,13 @@
                         <div class="flex-wrap">
                             <image-checkbox :check="check" :checks="checkboxes.selected"
                                             v-for="check in checkboxes.body" @set="setCheck"
-                                            :key="check.name"></image-checkbox>
+                                            :key="check.name" :data-tag="check.tag || check.name.toLowerCase().replace(/ /g, '_')"></image-checkbox>
+                        </div>
+                        <hr>
+                        <div class="flex-wrap">
+                          <image-checkbox :check="check" :checks="checkboxes.selected"
+                                          v-for="check in checkboxes.bodyTypePairing" @set="setCheck"
+                                          :key="check.name" style="display: none" :data-tag-a="check.tagA" :data-tag-b="check.tagB"></image-checkbox>
                         </div>
                         <textarea class="tag-textarea" rows="2" v-model="tagEntries.species" id="post_species"
                                   placeholder="Ex: bear dragon hyena rat newt etc."
@@ -145,9 +150,9 @@
                         Separate tags with spaces. (<a href="/help/tags" target="_blank">help</a>)
                     </div>
                     <div>
-                      <a href="/wiki_pages/show_or_new?title=tag_what_you_see">
-                        Outside information or other images should not be used when deciding what tags are used.
-                      </a>
+                      Ensure you've reviewed our <a href="/wiki_pages/show_or_new?title=tag_what_you_see">
+                        Tag What You See
+                      </a> policy.
                     </div>
                 </div>
                 <div class="col2">
@@ -268,38 +273,52 @@
     {name: "Male-Herm", tag: "maleherm"},
     {name: "Other"},
     {name: "Ambiguous", tag: "ambiguous_gender"}];
+  const genders = sex_checks.slice(0, -1).map(s => s.tag || s.name.toLowerCase().replace(/ /g, "_"));
+  const mascgenders = ["male", "andromorph", "maleherm"];
+  const femgenders = ["female", "gynomorph", "herm"];
+  const ucwords = (str) => str.toString().toLowerCase().replace(/^(.)|\s+(.)/g, r => r.toUpperCase());
 
-  const pairing_checks = [
-    {name: "Male/Male"},
-    {name: "Male/Female"},
-    {name: "Female/Female"},
-  ];
+  function removeDuplicates(set) {
+    const unique = [];
+    for (const item of set) {
+      if (unique.find(p => p.tagA === item.tagB && p.tagB === item.tagA)) continue;
+      unique.push(item);
+    }
+    return unique;
+  }
+
+  const pairing_checks = removeDuplicates(genders.flatMap(tagA => genders.flatMap(tagB => ({ name: `${ucwords(tagA)}/${ucwords(tagB)}`, tagA, tagB }))))
 
   const mascfem_checks = [
-    {name: "Masculine"},
-    {name: "Feminine"},
-  ]
+    { name: "Masculine" },
+    { name: "Feminine" },
+  ];
 
   const behavior_checks = [
-    {name: "Manly"},
-    {name: "Tomboy"},
-    {name: "Girly"},
-    {name: "Femboy"},
-  ]
+    { name: "Manly", genders: mascgenders },
+    { name: "Femboy", genders: mascgenders },
+    { name: "Tomboy", genders: femgenders },
+    { name: "Girly", genders: femgenders },
+  ];
 
   const char_count_checks = [
-    {name: "Solo"},
-    {name: "Duo"},
-    {name: "Trio"},
-    {name: "Group"},
-    {name: "Zero Pictured"}];
+    { name: "Solo" },
+    { name: "Duo" },
+    { name: "Trio" },
+    { name: "Group" },
+    { name: "Zero Pictured" }
+  ];
 
   const body_type_checks = [
-    {name: "Anthro"},
-    {name: "Feral"},
-    {name: "Humanoid"},
-    {name: "Human"},
-    {name: "Taur"}];
+    { name: "Anthro" },
+    { name: "Feral" },
+    { name: "Humanoid" },
+    { name: "Human" },
+    { name: "Taur" }
+  ];
+
+  const forms = body_type_checks.map(b => b.tag || b.name.toLowerCase().replace(/ /g, "_"));
+  const body_type_pairing_checks = removeDuplicates(forms.flatMap(tagA => forms.flatMap(tagB => ({ name: `${ucwords(tagA)}/${ucwords(tagB)}`, tagA, tagB }))))
 
   function tagSorter(a, b) {
     return a.name > b.name ? 1 : -1;
@@ -336,6 +355,7 @@
       char_count_checks.forEach(addChecks);
       pairing_checks.forEach(addChecks);
       body_type_checks.forEach(addChecks);
+      body_type_pairing_checks.forEach(addChecks);
 
 
       return {
@@ -362,6 +382,7 @@
           pairing: pairing_checks,
           count: char_count_checks,
           body: body_type_checks,
+          bodyTypePairing: body_type_pairing_checks,
           selected: {},
           all: allChecks
         },
@@ -634,6 +655,55 @@
         }).always(function () {
           self.loadingRelated = false;
         });
+      },
+      toggleTag(tag, checked) {
+        if (genders.includes(tag)) {
+          this.updateGenderTags(tag, checked);
+        }
+
+        if (forms.includes(tag)) {
+          this.updateFormTags(tag, checked);
+        }
+      },
+      updateGenderTags(tag, checked) {
+        this.updateBehaviorTags();
+        const selected = genders.filter(g => this.checkboxes.selected[g] === true);
+        if (!checked) {
+          $(`[data-tag-a=${tag}], [data-tag-b=${tag}]`).hide();
+          return;
+        }
+        for (const gender of genders) {
+          if (!selected.includes(gender)) continue;
+          for (const gender2 of genders) {
+            if (!selected.includes(gender2)) continue;
+            $(`[data-tag-a=${gender}][data-tag-b=${gender2}]`).show();
+          }
+        }
+      },
+      updateFormTags(tag, checked) {
+        const selected = forms.filter(g => this.checkboxes.selected[g] === true);
+        if (!checked) {
+          $(`[data-tag-a=${tag}], [data-tag-b=${tag}]`).hide();
+          return;
+        }
+        for (const form of forms) {
+          if (!selected.includes(form)) continue;
+          for (const form2 of forms) {
+            if (!selected.includes(form2)) continue;
+            $(`[data-tag-a=${form}][data-tag-b=${form2}]`).show();
+          }
+        }
+      },
+      updateBehaviorTags() {
+        const selected = genders.filter(g => this.checkboxes.selected[g] === true);
+        for (const behavior of behavior_checks) {
+          const tag = behavior.tag || behavior.name.toLowerCase().replace(/ /g, "_");
+          if (!behavior.genders.some(g => selected.includes(g))) {
+            $(`[data-tag=${tag}]`).hide();
+          } else {
+            $(`[data-tag=${tag}]`).show();
+          }
+        }
       }
     },
     computed: {

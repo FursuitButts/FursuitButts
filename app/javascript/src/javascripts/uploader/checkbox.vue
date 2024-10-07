@@ -14,6 +14,7 @@
         },
         set(v) {
           this.$emit('set', this.tagName, v);
+          this.$root.toggleTag(this.tagName, v);
         }
       },
       tagName() {
