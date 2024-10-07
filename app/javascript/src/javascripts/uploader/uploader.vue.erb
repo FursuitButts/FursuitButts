@@ -58,10 +58,10 @@
                                         v-for="check in checkboxes.mascfem" @set="setCheck"
                                         :key="check.name"></image-checkbox>
                       </div>
-                      <div class="flex-wrap">
+                      <div class="flex-wrap hide-default">
                         <image-checkbox :check="check" :checks="checkboxes.selected"
                                         v-for="check in checkboxes.behavior" @set="setCheck"
-                                        :key="check.name" style="display: none" :data-tag="check.tag || check.name.toLowerCase().replace(/ /g, '_')"></image-checkbox>
+                                        :key="check.name" :data-tag="check.tag || check.name.toLowerCase().replace(/ /g, '_')"></image-checkbox>
                       </div>
                       <hr>
                       <div class="flex-wrap">
@@ -70,10 +70,10 @@
                                           :key="check.name"></image-checkbox>
                       </div>
                       <hr>
-                      <div class="flex-wrap">
+                      <div class="flex-wrap hide-default">
                           <image-checkbox :check="check" :checks="checkboxes.selected"
                                           v-for="check in checkboxes.pairing" @set="setCheck"
-                                          :key="check.name" style="display: none" :data-tag-a="check.tagA" :data-tag-b="check.tagB"></image-checkbox>
+                                          :key="check.name" :data-tag-a="check.tagA" :data-tag-b="check.tagB"></image-checkbox>
                       </div>
                       <textarea class="tag-textarea" rows="2" v-model="tagEntries.character" id="post_character"
                                 placeholder="Ex: character_name solo_focus 1_male 2_females etc."
@@ -92,10 +92,10 @@
                                             :key="check.name" :data-tag="check.tag || check.name.toLowerCase().replace(/ /g, '_')"></image-checkbox>
                         </div>
                         <hr>
-                        <div class="flex-wrap">
+                        <div class="flex-wrap hide-default">
                           <image-checkbox :check="check" :checks="checkboxes.selected"
                                           v-for="check in checkboxes.bodyTypePairing" @set="setCheck"
-                                          :key="check.name" style="display: none" :data-tag-a="check.tagA" :data-tag-b="check.tagB"></image-checkbox>
+                                          :key="check.name" :data-tag-a="check.tagA" :data-tag-b="check.tagB"></image-checkbox>
                         </div>
                         <textarea class="tag-textarea" rows="2" v-model="tagEntries.species" id="post_species"
                                   placeholder="Ex: bear dragon hyena rat newt etc."
@@ -421,6 +421,7 @@
       };
     },
     mounted() {
+      $(".hide-default button").hide();
       const self = this;
       window.onbeforeunload = unloadWarning.bind(self);
       const params = new URLSearchParams(window.location.search);
