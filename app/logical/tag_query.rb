@@ -349,11 +349,11 @@ class TagQuery
           add_to_query(type, :disapproval_count, any_none_key: :disapprover, value: g2) { ParseValue.range(g2) }
         end
 
-      when *COUNT_METATAGS
-        q[metatag_name.downcase.to_sym] = ParseValue.range(g2)
+      when /[-~]?(#{TagQuery::COUNT_METATAGS.join('|')})/
+        q[:"#{$1.downcase}#{type == :must ? '' : "_#{type}"}"] = ParseValue.range(g2)
 
-      when *BOOLEAN_METATAGS
-        q[metatag_name.downcase.to_sym] = parse_boolean(g2)
+      when /[-~]?(#{TagQuery::BOOLEAN_METATAGS.join('|')})/
+        q[:"#{$1.downcase}#{type == :must ? '' : "_#{type}"}"] = parse_boolean(g2)
 
       else
         add_tag(token)
