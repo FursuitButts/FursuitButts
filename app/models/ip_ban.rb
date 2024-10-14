@@ -7,13 +7,18 @@ class IpBan < ApplicationRecord
   validate :validate_ip_addr
   after_create do |rec|
     StaffAuditLog.log!(:ip_ban_create, CurrentUser.user, ip_addr: rec.subnetted_ip, reason: rec.reason)
+    Cache.delete("ipban:#{rec.ip_addr}")
   end
   after_destroy do |rec|
     StaffAuditLog.log!(:ip_ban_delete, CurrentUser.user, ip_addr: rec.subnetted_ip, reason: rec.reason)
+    Cache.delete("ipban:#{rec.ip_addr}")
   end
 
   def self.is_banned?(ip_addr)
-    exists?(["ip_addr >>= ?", ip_addr])
+    return false if ip_addr.blank?
+    Cache.fetch("ipban:#{ip_addr}", expires_in: 6.hours) do
+      exists?(["ip_addr >>= ?", ip_addr.to_s])
+    end
   end
 
   def self.search(params)

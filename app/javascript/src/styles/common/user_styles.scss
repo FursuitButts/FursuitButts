@@ -30,3 +30,7 @@ $levels: (
     font-weight: bold;
   }
 }
+
+.ip-addr.is-banned {
+  text-decoration: line-through;
+}

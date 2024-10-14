@@ -105,7 +105,8 @@ module ApplicationHelper
 
   def link_to_ip(ip)
     return "(none)" unless ip
-    link_to(ip, moderator_ip_addrs_path(search: { ip_addr: ip }))
+    banned = IpBan.is_banned?(ip)
+    link_to(ip, moderator_ip_addrs_path(search: { ip_addr: ip }), class: "ip-addr #{'is-banned' if banned}")
   end
 
   def link_to_wiki(text, title = text, classes: nil, **)
