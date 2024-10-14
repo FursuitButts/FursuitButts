@@ -182,6 +182,7 @@ x-constants:
     - appeal_created
     - appeal_accepted
     - appeal_rejected
+    - copied_notes
   - &ratings
     - s
     - q
@@ -2234,7 +2235,7 @@ components:
         source_post_id:
           type: number
           description: |
-            Valid for: `replacement_promoted`
+            Valid for: `replacement_promoted`, `copied_notes`
         bg_color:
           type: string
           description: |
@@ -2247,7 +2248,10 @@ components:
           type: ["number", "null"]
           description: |
             Valid for: `changed_thumbnail_frame`
-
+        note_count:
+          type: number
+          description: |
+            Valid for: `copied_notes`
     PostFlag:
       type: object
       required:

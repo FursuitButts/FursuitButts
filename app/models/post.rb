@@ -1600,17 +1600,7 @@ class Post < ApplicationRecord
           note.copy_to(other_post)
         end
 
-        dummy = Note.new
-        if notes.active.length == 1
-          dummy.body = "Copied 1 note from post ##{id}."
-        else
-          dummy.body = "Copied #{notes.active.length} notes from post ##{id}."
-        end
-        dummy.is_active = false
-        dummy.post_id = other_post.id
-        dummy.x = dummy.y = dummy.width = dummy.height = 0
-        dummy.save
-
+        PostEvent.add(other_post.id, CurrentUser.user, :copied_notes, { source_post_id: other_post.id, note_count: notes.active.count })
         copy_tags.each do |tag|
           other_post.remove_tag(tag)
           other_post.add_tag(tag) if has_tag?(tag)

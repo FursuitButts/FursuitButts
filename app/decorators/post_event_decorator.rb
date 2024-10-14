@@ -23,6 +23,8 @@ class PostEventDecorator < ApplicationDecorator
       "To: #{vals['bg_color'] || 'None'}"
     when "changed_thumbnail_frame"
       "#{vals['old_thumbnail_frame'] || 'Default'} -> #{vals['new_thumbnail_frame'] || 'Default'}"
+    when "copied_notes"
+      "Copied #{vals['note_count']} #{'note'.pluralize(vals['note_count'])} from post ##{vals['source_post_id']}"
     end
   end
 end

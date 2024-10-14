@@ -107,6 +107,11 @@ class PostEventTest < ActiveSupport::TestCase
         @post.save
       end
 
+      assert_post_events_created(@janitor, :copied_notes) do
+        create(:note, post: @post)
+        @post.copy_notes_to(@post2)
+      end
+
       assert_post_events_created(@admin, :expunged) do
         @post.expunge!
       end
