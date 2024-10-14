@@ -150,6 +150,9 @@ class ForumPostsControllerTest < ActionDispatch::IntegrationTest
       end
 
       should "not create a new forum post if topic is stale" do
+        as(@mod) { create(:forum_post, topic: @forum_topic) } # if the topic doesn't have any posts it will never be stale
+        FemboyFans.config.stubs(:enable_stale_forum_topics?).returns(true)
+        FemboyFans.config.stubs(:forum_topic_stale_window).returns(6.months)
         travel_to(1.year.from_now) do
           assert_no_difference("ForumPost.count") do
             post_auth forum_posts_path, @user, params: { forum_post: { body: "xaxaxa", topic_id: @forum_topic.id }, format: :json }
@@ -159,7 +162,21 @@ class ForumPostsControllerTest < ActionDispatch::IntegrationTest
         end
       end
 
+      should "work even if the topic is stale if it has no posts" do
+        FemboyFans.config.stubs(:enable_stale_forum_topics?).returns(true)
+        FemboyFans.config.stubs(:forum_topic_stale_window).returns(6.months)
+        travel_to(1.year.from_now) do
+          assert_difference("ForumPost.count", 1) do
+            post_auth forum_posts_path, @user, params: { forum_post: { body: "xaxaxa", topic_id: @forum_topic.id } }
+            assert_redirected_to(forum_topic_path(ForumPost.last.topic, page: ForumPost.last.forum_topic_page, anchor: "forum_post_#{ForumPost.last.id}"))
+          end
+        end
+      end
+
       should "still create a new forum post if topic is stale for moderators" do
+        as(@mod) { create(:forum_post, topic: @forum_topic) } # if the topic doesn't have any posts it will never be stale
+        FemboyFans.config.stubs(:enable_stale_forum_topics?).returns(true)
+        FemboyFans.config.stubs(:forum_topic_stale_window).returns(6.months)
         travel_to(1.year.from_now) do
           assert_difference("ForumPost.count", 1) do
             post_auth forum_posts_path, @mod, params: { forum_post: { body: "xaxaxa", topic_id: @forum_topic.id }, format: :json }

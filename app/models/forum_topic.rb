@@ -304,8 +304,9 @@ class ForumTopic < ApplicationRecord
   end
 
   def is_stale?
-    return false if posts.empty? || (original_post&.is_aibur? && (original_post&.tag_change_request&.is_pending? || posts.last.created_at < 1.year.ago))
-    posts.last.created_at < 6.months.ago
+    return false unless FemboyFans.config.enable_stale_forum_topics?
+    return false if !posts.many? || (original_post&.is_aibur? && (original_post&.tag_change_request&.is_pending? || posts.last.created_at < FemboyFans.config.forum_topic_aibur_stale_window.ago))
+    posts.last.created_at < FemboyFans.config.forum_topic_stale_window.ago
   end
 
   def is_stale_for?(user)

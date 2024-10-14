@@ -531,6 +531,18 @@ module FemboyFans
       true
     end
 
+    def enable_stale_forum_topics?
+      true
+    end
+
+    def forum_topic_stale_window
+      6.months
+    end
+
+    def forum_topic_aibur_stale_window
+      1.year
+    end
+
     def flag_reasons
       [
         {
