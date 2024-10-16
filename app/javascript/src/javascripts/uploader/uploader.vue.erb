@@ -579,8 +579,10 @@
         tagsA.forEach((tag) => {
           if(tagsB.indexOf(tag) >= 0) return;
           // In advanced mode, checkboxes are not available
-          if(this.normalMode && typeof this.checkboxes.all[tag] !== "undefined")
+          if(this.normalMode && typeof this.checkboxes.all[tag] !== "undefined") {
             this.setCheck(tag, true);
+            this.toggleTag(tag, true);
+          }
           tagsB.push(tag);
         });
 
