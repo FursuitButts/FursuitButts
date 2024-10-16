@@ -1,4 +1,3 @@
-<%= render partial: "posts/partials/common/zoom_container" %>
 <aside id="sidebar">
   <%= render "posts/partials/common/search", path: posts_path, tags: params[:q], tags_dom_id: "tags" %>
   <% if CurrentUser.move_related_thumbnails? %>

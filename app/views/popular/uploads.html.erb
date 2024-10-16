@@ -1,5 +1,3 @@
-<%= render partial: "posts/partials/common/zoom_container" %>
-
 <h1>Popular: <%= date_range_description(@date, @scale, @min_date, @max_date) %></h1>
 
 <%= @post_set.presenter.nav_links(self) %>
