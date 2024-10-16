@@ -6,6 +6,7 @@ class Dmail < ApplicationRecord
   validates :body, length: { minimum: 1, maximum: FemboyFans.config.dmail_max_size }
   validate :recipient_accepts_dmails, on: :create
   validate :user_not_limited, on: :create
+  validate :user_can_send_to, on: :create
   has_secure_token :key
 
   belongs_to :owner, class_name: "User"
@@ -171,21 +172,36 @@ class Dmail < ApplicationRecord
     return true if from_id == User.system.id
     return true if from.is_janitor?
 
-    allowed = CurrentUser.can_dmail_with_reason
-    if allowed != true
-      errors.add(:base, "Sender #{User.throttle_reason(allowed)}")
-      return
+    # different throttle for restricted users, no newbie restriction & much more restrictive total limit
+    if from.is_rejected? || from.is_restricted?
+      allowed = CurrentUser.can_dmail_restricted_with_reason
+      errors.add(:base, "You #{User.throttle_reason(allowed, 'daily')}.") if allowed != true
+    else
+      allowed = CurrentUser.can_dmail_with_reason
+      if allowed != true
+        errors.add(:base, "Sender #{User.throttle_reason(allowed)}")
+        return
+      end
+      minute_allowed = CurrentUser.can_dmail_minute_with_reason
+      if minute_allowed != true
+        errors.add(:base, "Please wait a bit before trying to send again")
+        return
+      end
+      day_allowed = CurrentUser.can_dmail_day_with_reason
+      if day_allowed != true
+        errors.add(:base, "Sender #{User.throttle_reason(day_allowed, 'daily')}")
+        nil
+      end
     end
-    minute_allowed = CurrentUser.can_dmail_minute_with_reason
-    if minute_allowed != true
-      errors.add(:base, "Please wait a bit before trying to send again")
-      return
+  end
+
+  def user_can_send_to
+    return true unless from.is_rejected? || from.is_restricted?
+    unless to.is_admin?
+      errors.add(:to_name, "is not a valid recipient. You may only message admins")
+      return false
     end
-    day_allowed = CurrentUser.can_dmail_day_with_reason
-    if day_allowed != true
-      errors.add(:base, "Sender #{User.throttle_reason(day_allowed, 'daily')}")
-      nil
-    end
+    true
   end
 
   def recipient_accepts_dmails

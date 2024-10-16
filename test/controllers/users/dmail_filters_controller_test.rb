@@ -36,7 +36,7 @@ module Users
         end
 
         should "restrict access" do
-          assert_access(User::Levels::RESTRICTED, success_response: :redirect) { |user| put_auth users_dmail_filter_path, user, params: { dmail_filter: { words: "owned" } } }
+          assert_access(User::Levels::REJECTED, success_response: :redirect) { |user| put_auth users_dmail_filter_path, user, params: { dmail_filter: { words: "owned" } } }
         end
       end
     end

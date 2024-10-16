@@ -1,0 +1,37 @@
+<h1>User Approvals</h1>
+
+<%= render(partial: "search") %>
+
+<%= table_for(@user_approvals) do |t| %>
+  <% t.column("User") do |user_approval| %>
+    <%= link_to_user(user_approval.user) %>
+    <p><%= compact_time(user_approval.user.created_at) %></p>
+  <% end %>
+  <% t.column("Updater") do |user_approval| %>
+    <% if user_approval.updater.present? %>
+      <%= link_to_user(user_approval.updater) %>
+      <p><%= compact_time(user_approval.updated_at) %></p>
+    <% end %>
+  <% end %>
+  <% t.column(:status) %>
+  <% t.column do |user_approval| %>
+    <% p = policy(user_approval) %>
+    <% if p.approve? %>
+      <%= link_to("Approve", approve_moderator_user_approval_path(user_approval), method: :put, data: { confirm: "Are you sure you want to approve this user?" }) %>
+    <% end %>
+    <% if p.all?(:approve?, :reject?) %>
+      |
+    <% end %>
+    <% if p.reject? %>
+      <%= link_to("Reject", reject_moderator_user_approval_path(user_approval), method: :put, data: { confirm: "Are you sure you want to reject this user?" }) %>
+    <% end %>
+  <% end %>
+<% end %>
+
+<%= numbered_paginator(@user_approvals) %>
+
+<%= render(partial: "secondary_links") %>
+
+<% content_for(:page_title) do %>
+  User Approvals
+<% end %>

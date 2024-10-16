@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_09_06_184638) do
+ActiveRecord::Schema[7.1].define(version: 2024_10_16_165142) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -970,6 +970,16 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_06_184638) do
     t.index ["uploader_ip_addr"], name: "index_uploads_on_uploader_ip_addr"
   end
 
+  create_table "user_approvals", force: :cascade do |t|
+    t.bigint "updater_id"
+    t.bigint "user_id", null: false
+    t.string "status", default: "pending", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["updater_id"], name: "index_user_approvals_on_updater_id"
+    t.index ["user_id"], name: "index_user_approvals_on_user_id"
+  end
+
   create_table "user_blocks", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "target_id", null: false
@@ -1280,6 +1290,8 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_06_184638) do
   add_foreign_key "tickets", "users", column: "handler_id"
   add_foreign_key "uploads", "posts"
   add_foreign_key "uploads", "users", column: "uploader_id"
+  add_foreign_key "user_approvals", "users"
+  add_foreign_key "user_approvals", "users", column: "updater_id"
   add_foreign_key "user_blocks", "users"
   add_foreign_key "user_events", "user_sessions"
   add_foreign_key "user_events", "users"

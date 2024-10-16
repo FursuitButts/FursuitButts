@@ -1,0 +1,5 @@
+<%= form_search(path: moderator_user_approvals_path) do |f| %>
+  <%= f.user(:updater) %>
+  <%= f.user(:user) %>
+  <%= f.input(:status, collection: UserApproval.statuses) %>
+<% end %>

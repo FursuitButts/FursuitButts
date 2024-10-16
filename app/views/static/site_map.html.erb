@@ -100,6 +100,7 @@
     <%= li_link_to("Feedback", user_feedbacks_path) %>
     <%= li_link_to("Terms of Service", terms_of_service_path) %>
     <%= li_link_to("Help", help_page_path(id: "accounts")) %>
+    <%= li_link_to_if(policy(UserApproval).index?, "User Approvals", moderator_user_approvals_path) %>
     <%= li_link_to_if(policy(UserEvent).index?, "Events", user_events_path) %>
     <%= li_link_to_if(policy(UserSession).index?, "Sessions", user_sessions_path) %>
   </ul>

@@ -10,8 +10,8 @@
   <% t.column("Subject") do |mod_action| %>
     <% if mod_action.subject_id.present? %>
       <% if mod_action.subject.present? %>
-        <% result = Rails.application.routes.recognize_path(url_for(mod_action.subject)) %>
-        <% if result[:controller] == "static" && result[:action] == "not_found" %>
+        <% result = Rails.application.routes.recognize_path(url_for(mod_action.subject)) rescue nil %>
+        <% if result.blank? || (result[:controller] == "static" && result[:action] == "not_found") %>
           <%= mod_action.subject_type.titleize %> #<%= mod_action.subject_id %>
         <% else %>
           <%= link_to("#{mod_action.subject_type.titleize} ##{mod_action.subject_id}", mod_action.subject) %>

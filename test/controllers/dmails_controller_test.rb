@@ -39,7 +39,7 @@ class DmailsControllerTest < ActionDispatch::IntegrationTest
       end
 
       should "restrict access" do
-        assert_access(User::Levels::MEMBER) { |user| get_auth new_dmail_path, user }
+        assert_access(User::Levels::REJECTED) { |user| get_auth new_dmail_path, user }
       end
     end
 
@@ -65,7 +65,7 @@ class DmailsControllerTest < ActionDispatch::IntegrationTest
       end
 
       should "restrict access" do
-        assert_access(User::Levels::MEMBER) { |user| get_auth dmails_path, user }
+        assert_access(User::Levels::REJECTED) { |user| get_auth dmails_path, user }
       end
     end
 
@@ -107,7 +107,7 @@ class DmailsControllerTest < ActionDispatch::IntegrationTest
       end
 
       should "restrict access" do
-        assert_access(User::Levels::MEMBER) { |user| get_auth dmail_path(create(:dmail, owner: user, to: user, from: create(:user))), user }
+        assert_access(User::Levels::REJECTED) { |user| get_auth dmail_path(create(:dmail, owner: user, to: user, from: create(:user))), user }
       end
     end
 
@@ -120,7 +120,7 @@ class DmailsControllerTest < ActionDispatch::IntegrationTest
       end
 
       should "restrict access" do
-        assert_access(User::Levels::MEMBER) { |user| put_auth mark_as_read_dmail_path(create(:dmail, owner: user, to: user, from: create(:user))), user }
+        assert_access(User::Levels::REJECTED) { |user| put_auth mark_as_read_dmail_path(create(:dmail, owner: user, to: user, from: create(:user))), user }
       end
     end
 
@@ -144,7 +144,7 @@ class DmailsControllerTest < ActionDispatch::IntegrationTest
       end
 
       should "restrict access" do
-        assert_access(User::Levels::MEMBER, success_response: :redirect) { |user| put_auth mark_as_unread_dmail_path(create(:dmail, owner: user, to: user, from: create(:user))), user }
+        assert_access(User::Levels::REJECTED, success_response: :redirect) { |user| put_auth mark_as_unread_dmail_path(create(:dmail, owner: user, to: user, from: create(:user))), user }
       end
     end
 
@@ -162,7 +162,8 @@ class DmailsControllerTest < ActionDispatch::IntegrationTest
       end
 
       should "restrict access" do
-        assert_access(User::Levels::MEMBER, success_response: :redirect) { |user| post_auth dmails_path, user, params: { dmail: { to_id: @user2.id, title: "abc", body: "abc" } } }
+        @admin = create(:admin_user)
+        assert_access(User::Levels::REJECTED, success_response: :redirect) { |user| post_auth dmails_path, user, params: { dmail: { to_id: @admin.id, title: "abc", body: "abc" } } }
       end
     end
 
@@ -181,7 +182,7 @@ class DmailsControllerTest < ActionDispatch::IntegrationTest
       end
 
       should "restrict access" do
-        assert_access(User::Levels::MEMBER, success_response: :redirect) { |user| delete_auth dmail_path(create(:dmail, owner: user, to: user, from: create(:user))), user }
+        assert_access(User::Levels::REJECTED, success_response: :redirect) { |user| delete_auth dmail_path(create(:dmail, owner: user, to: user, from: create(:user))), user }
       end
     end
 

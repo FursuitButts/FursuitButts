@@ -21,6 +21,7 @@ class User < ApplicationRecord
   module Levels
     ANONYMOUS    = 0
     BANNED       = 1
+    REJECTED     = 4
     RESTRICTED   = 5
     MEMBER       = 10
     TRUSTED      = 15
@@ -171,8 +172,9 @@ class User < ApplicationRecord
   validates :upload_notifications, inclusion: { in: -> { User.upload_notifications_options } }
   before_create :promote_to_owner_if_first_user
   before_create :encrypt_password_on_create
-  before_update :encrypt_password_on_update
   # after_create :notify_sock_puppets
+  after_create :create_user_approval, if: ->(rec) { rec.is_restricted? }
+  before_update :encrypt_password_on_update
   after_update :log_update
   after_save :update_cache
   after_update(if: ->(rec) { rec.saved_change_to_profile_about? || rec.saved_change_to_profile_artinfo? || rec.saved_change_to_blacklisted_tags? }) do |rec|
@@ -425,6 +427,10 @@ class User < ApplicationRecord
       level == Levels::BANNED
     end
 
+    def is_rejected?
+      level == Levels::REJECTED
+    end
+
     def is_restricted?
       level == Levels::RESTRICTED
     end
@@ -443,6 +449,10 @@ class User < ApplicationRecord
 
     def level_css_class
       Levels.level_class(level)
+    end
+
+    def create_user_approval
+      UserApproval.create!(user_id: id)
     end
   end
 
@@ -632,6 +642,9 @@ class User < ApplicationRecord
                          :is_janitor?, 7.days)
     create_user_throttle(:dmail_day, -> { FemboyFans.config.dmail_day_limit - Dmail.sent_by_id(id).where("created_at > ?", 1.day.ago).count },
                          :is_janitor?, 7.days)
+    # dmails sent by a user of the "rejected" level
+    create_user_throttle(:dmail_restricted, -> { FemboyFans.config.dmail_restricted_day_limit - Dmail.sent_by_id(id).where("created_at > ?", 1.day.ago).count },
+                         nil, nil)
     create_user_throttle(:comment_vote, -> { FemboyFans.config.comment_vote_limit - CommentVote.for_user(id).where("created_at > ?", 1.hour.ago).count },
                          :general_bypass_throttle?, 3.days)
     create_user_throttle(:post_vote, -> { FemboyFans.config.post_vote_limit - PostVote.for_user(id).where("created_at > ?", 1.hour.ago).count },

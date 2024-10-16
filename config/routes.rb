@@ -46,6 +46,12 @@ Rails.application.routes.draw do
     resources :user_text_versions, only: %i[index show] do
       get :diff, on: :collection
     end
+    resources :user_approvals, only: %i[index] do
+      member do
+        put :approve
+        put :reject
+      end
+    end
   end
   resources :api_keys
   resources :popular, only: %i[index] do

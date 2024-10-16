@@ -2,19 +2,23 @@
 
 class DmailPolicy < ApplicationPolicy
   def index?
-    unbanned?
+    restricted_access? || unbanned?
+  end
+
+  def create?
+    restricted_access? || unbanned?
   end
 
   def show?
-    unbanned? && (!record.is_a?(Dmail) || record.visible_to?(user))
+    (restricted_access? || unbanned?) && (!record.is_a?(Dmail) || record.visible_to?(user))
   end
 
   def respond?
-    unbanned? && (!record.is_a?(Dmail) || (record.visible_to?(user) && record.owner_id == user.id))
+    (restricted_access? || unbanned?) && (!record.is_a?(Dmail) || (record.visible_to?(user) && record.owner_id == user.id))
   end
 
   def destroy?
-    unbanned? && (!record.is_a?(Dmail) || record.owner_id == user.id)
+    (restricted_access? || unbanned?) && (!record.is_a?(Dmail) || record.owner_id == user.id)
   end
 
   def mark_spam?
@@ -26,15 +30,19 @@ class DmailPolicy < ApplicationPolicy
   end
 
   def mark_as_read?
-    unbanned? && (!record.is_a?(Dmail) || record.owner_id == user.id)
+    (restricted_access? || unbanned?) && (!record.is_a?(Dmail) || record.owner_id == user.id)
   end
 
   def mark_as_unread?
-    unbanned? && (!record.is_a?(Dmail) || record.owner_id == user.id)
+    (restricted_access? || unbanned?) && (!record.is_a?(Dmail) || record.owner_id == user.id)
   end
 
   def mark_all_as_read?
-    unbanned?
+    restricted_access? || unbanned?
+  end
+
+  def restricted_access?
+    !user.is_banned? && (user.is_restricted? || user.is_rejected?)
   end
 
   def permitted_attributes

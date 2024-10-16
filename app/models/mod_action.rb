@@ -422,6 +422,10 @@ class ModAction < ApplicationRecord
     },
 
     ### User ###
+    user_approve:                               {
+      text: ->(_mod, user) { "Approved #{user}" },
+      json: %i[user_id],
+    },
     user_ban:                                   {
       text: ->(_mod, user) { "Banned #{user}" },
       json: %i[user_id],
@@ -444,6 +448,10 @@ class ModAction < ApplicationRecord
     },
     user_name_change:                           {
       text: ->(_mod, user) { "Changed name of #{user}" },
+      json: %i[user_id],
+    },
+    user_reject:                                {
+      text: ->(_mod, user) { "Rejected #{user}" },
       json: %i[user_id],
     },
     user_text_change:                           {

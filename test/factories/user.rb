@@ -29,6 +29,10 @@ FactoryBot.define do
       level { User::Levels::RESTRICTED }
     end
 
+    factory(:rejected_user) do
+      level { User::Levels::REJECTED }
+    end
+
     factory(:member_user) do
       level { User::Levels::MEMBER }
     end

@@ -160,7 +160,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
       end
 
       should "restrict access" do
-        assert_access(User::Levels::RESTRICTED) { |user| get_auth edit_users_path, user }
+        assert_access(User::Levels::REJECTED) { |user| get_auth edit_users_path, user }
       end
     end
 
@@ -207,7 +207,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
       end
 
       should "restrict access" do
-        assert_access(User::Levels::RESTRICTED, success_response: :redirect) { |user| post_auth update_users_path, user, params: { user: { favorite_tags: "xyz" } } }
+        assert_access(User::Levels::REJECTED, success_response: :redirect) { |user| post_auth update_users_path, user, params: { user: { favorite_tags: "xyz" } } }
       end
     end
 

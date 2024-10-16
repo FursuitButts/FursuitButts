@@ -23,8 +23,8 @@
       <div class="new-comment">
         <%= render "comments/partials/form_decorated", comment: post.comments.new %>
       </div>
-    <% else %>
-      <h5 id="respond-link"><%= link_to "Sign in to respond »", new_session_path %></h5>
+    <% elsif CurrentUser.user.is_anonymous? %>
+      <h5 id="respond-link"><%= link_to "Login to respond »", new_session_path %></h5>
     <% end %>
 
     <div class="comments-list">

@@ -52,7 +52,7 @@ module Users
         end
 
         should "restrict access" do
-          assert_access(User::Levels::RESTRICTED, success_response: :redirect) { |user| post_auth users_email_change_path, user, params: { email_change: { password: "password", email: "abc@ogres.net" } } }
+          assert_access(User::Levels::REJECTED, success_response: :redirect) { |user| post_auth users_email_change_path, user, params: { email_change: { password: "password", email: "abc@ogres.net" } } }
         end
       end
     end

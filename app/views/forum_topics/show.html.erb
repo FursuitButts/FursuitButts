@@ -34,7 +34,7 @@
         </div>
       <% end %>
     <% end %>
-  <% elsif !@forum_topic.is_locked? %>
+  <% elsif !CurrentUser.user.is_anonymous? && !@forum_topic.is_locked? %>
     <h5 id="respond-link"><%= link_to "Login to respond »", new_session_path %></h5>
   <% end %>
 

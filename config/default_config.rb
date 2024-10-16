@@ -39,6 +39,10 @@ module FemboyFans
       false
     end
 
+    def user_approvals_enabled?
+      true
+    end
+
     # The canonical hostname of the site.
     def hostname
       Socket.gethostname
@@ -114,6 +118,7 @@ module FemboyFans
       user.go_to_recent_forum_post    = true
       user.upload_notifications       = User.upload_notifications_options
       user.email_verified             = !enable_email_verification?
+      user.level                      = User::Levels::RESTRICTED if user_approvals_enabled? && user.level == User::Levels::MEMBER
     end
 
     def default_blacklist
@@ -218,6 +223,10 @@ module FemboyFans
 
     def dmail_day_limit
       60
+    end
+
+    def dmail_restricted_day_limit
+      5
     end
 
     def tag_suggestion_limit

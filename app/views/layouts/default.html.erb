@@ -51,6 +51,10 @@
       <%= render "users/validation_notice" %>
     <% end %>
 
+    <% if CurrentUser.user.is_restricted? %>
+      <%= render "users/restricted_notice" %>
+    <% end %>
+
     <div class="ui-corner-all ui-state-highlight" id="notice" style="<%= "display: none;" unless flash[:notice] %>">
       <span><%= format_text(flash[:notice], inline: true) %>.</span>
       <a href="#" id="close-notice-link">close</a>
