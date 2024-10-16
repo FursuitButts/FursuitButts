@@ -4,25 +4,27 @@ Disallow: /admin
 Disallow: /moderator
 Disallow: <%= artist_urls_path %>
 Disallow: <%= artist_versions_path %>
+Disallow: <%= avoid_postings_path %>
+Disallow: <%= avoid_posting_versions_path %>
 Disallow: <%= api_keys_path %>
 Disallow: <%= show_or_new_artists_path %>
-Disallow: <%= artist_versions_path %>
 Disallow: <%= bans_path %>
 Disallow: <%= bulk_update_requests_path %>
-Disallow: <%= comments_path %>
 Disallow: <%= comment_votes_path(comment_id: "*") %>
+Disallow: <%= url_for(controller: "comments/votes", action: "index") %>
 Disallow: <%= dmails_path %>
+Disallow: <%= dtext_links_path %>
 Disallow: <%= dtext_preview_path %>
 Disallow: <%= edit_histories_path %>
 Disallow: <%= email_blacklists_path %>
 Disallow: /email
 Disallow: <%= favorites_path %>
 Disallow: <%= forum_categories_path %>
-Disallow: <%= forum_posts_path %>
+Disallow: <%= forum_post_votes_path(forum_post_id: "*") %>
+Disallow: <%= url_for(controller: "forum_posts/votes", action: "index") %>
 Disallow: <%= ip_bans_path %>
 Disallow: <%= mascots_path %>
 Disallow: <%= mod_actions_path %>
-Disallow: <%= news_updates_path %>
 Disallow: <%= notes_path %>
 Disallow: <%= edit_pool_order_path(pool_id: "*") %>
 Disallow: <%= pool_versions_path %>
@@ -60,7 +62,6 @@ Disallow: <%= url_for(controller: "posts", action: action, id: "*") %>
 Disallow: /popular
 Disallow: <%= post_sets_path %>
 Disallow: /sessions
-Disallow: <%= stats_path %>
 Disallow: <%= tags_path %>
 Disallow: <%= takedowns_path %>
 Disallow: <%= tickets_path %>
@@ -75,6 +76,8 @@ Disallow: <%= keyboard_shortcuts_path %>
 Disallow: <%= discord_get_path %>
 Disallow: <%= toggle_mobile_mode_path %>
 Disallow: <%= theme_path %>
+Disallow: <%= qtag_path(id: "*") %>
+Disallow: <%= rules_path %>
 
 User-agent: MJ12bot
 User-agent: dotbot

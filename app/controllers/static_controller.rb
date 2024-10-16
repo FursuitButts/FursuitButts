@@ -2,6 +2,7 @@
 
 class StaticController < ApplicationController
   respond_to :text, only: %i[robots]
+  respond_to :xml, only: %i[site_map]
 
   def privacy
     @page = view_context.safe_wiki("help:privacy_policy")
@@ -35,6 +36,7 @@ class StaticController < ApplicationController
   end
 
   def site_map
+    expires_in(1.day, public: true)
   end
 
   def home
@@ -73,7 +75,7 @@ class StaticController < ApplicationController
   end
 
   def robots
-    expires_in(1.hour, public: true)
+    expires_in(1.day, public: true)
   end
 
   def recognize_route

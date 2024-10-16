@@ -1,0 +1,13 @@
+<urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">
+  <%= sitemap_link(root_url) %>
+  <%= sitemap_link(api_documentation_url, changefreq: "daily") %>
+  <%= sitemap_link(posts_url, priority: "1.0", changefreq: "always") %>
+  <%= sitemap_link(forum_topics_url, priority: "0.8", changefreq: "always") %>
+  <%= sitemap_link(forum_posts_url, priority: "0.4", changefreq: "always") %>
+  <%= sitemap_link(artists_url, priority: "0.7", changefreq: "always") %>
+  <%= sitemap_link(help_pages_url, priority: "0.9", changefreq: "weekly") %>
+  <%= sitemap_link(news_updates_url, changefreq: "daily") %>
+  <%= sitemap_link(pools_url, priority: "0.7", changefreq: "always") %>
+  <%= sitemap_link(stats_url, changefreq: "daily") %>
+  <%= sitemap_link(wiki_pages_url, priority: "0.7", changefreq: "always") %>
+</urlset>
