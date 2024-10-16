@@ -673,6 +673,8 @@
         const selected = genders.filter(g => this.checkboxes.selected[g] === true);
         if (!checked) {
           $(`[data-tag-a=${tag}], [data-tag-b=${tag}]`).hide();
+          // I feel like there should be a better way to do this but I can't find one (I hate vue)
+          $(`[data-tag-a=${tag}].active, [data-tag-b=${tag}].active`).click();
           return;
         }
         for (const gender of genders) {
@@ -687,6 +689,8 @@
         const selected = forms.filter(g => this.checkboxes.selected[g] === true);
         if (!checked) {
           $(`[data-tag-a=${tag}], [data-tag-b=${tag}]`).hide();
+          // I feel like there should be a better way to do this but I can't find one (I hate vue)
+          $(`[data-tag-a=${tag}].active, [data-tag-b=${tag}].active`).click();
           return;
         }
         for (const form of forms) {
@@ -703,6 +707,8 @@
           const tag = behavior.tag || behavior.name.toLowerCase().replace(/ /g, "_");
           if (!behavior.genders.some(g => selected.includes(g))) {
             $(`[data-tag=${tag}]`).hide();
+            // I feel like there should be a better way to do this but I can't find one (I hate vue)
+            $(`[data-tag=${tag}].active`).click();
           } else {
             $(`[data-tag=${tag}]`).show();
           }
