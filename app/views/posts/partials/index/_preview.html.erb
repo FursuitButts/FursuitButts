@@ -1,3 +1,5 @@
+<%# locals: (post:, views: :daily, article_attrs: {}, link_target:, link_params: {}, tooltip: "", cropped_url:, preview_url:, alt_text: "", has_cropped: false, pool: nil, width: 0, height: 0, similarity: nil, size: nil, file_ext: nil, stats: false) -%>
+
 <%= tag.article(**article_attrs) do -%>
   <%= link_to polymorphic_path(link_target, link_params) do -%>
     <%= tag.picture do -%>
@@ -9,7 +11,7 @@
   <%= post_ribbons(post) %>
   <% if stats -%>
     <div class="desc">
-      <%= post_stats_section(post) %>
+      <%= post_stats_section(post, views: views) %>
     </div>
   <% end -%>
   <% if pool -%>

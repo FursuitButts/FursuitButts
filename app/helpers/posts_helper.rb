@@ -83,7 +83,7 @@ module PostsHelper
     params[:post_set_id].to_i == post_set.id
   end
 
-  def post_stats_section(post)
+  def post_stats_section(post, views: nil)
     post_score_icon_positive = "↑"
     post_score_icon_negative = "↓"
     post_score_icon_neutral = "↕"
@@ -102,7 +102,7 @@ module PostsHelper
     rating = tag.span(post.rating.upcase, class: "post-score-rating")
     views = tag.span(class: "post-score-views-classes-#{post.id}") do
       icon = tag.i("", class: "fa-regular fa-eye")
-      amount = tag.span(" #{post.total_views || 0}", class: "post-score-views-views-#{post.id}")
+      amount = tag.span(" #{views == :daily ? 'D' : 'T'}#{'U' if CurrentUser.user.unique_views?}#{(views == :daily ? post.daily_views : post.total_views) || 0}", class: "post-score-views-views-#{post.id}")
       icon + amount
     end
     tag.div(score + favs + comments + views + rating, class: "post-score", id: "post-score-#{post.id}")

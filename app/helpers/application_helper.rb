@@ -270,10 +270,10 @@ module ApplicationHelper
 
   def sitemap_link(url, **options)
     <<~XML.html_safe
-<url>
-  <loc>#{url}</loc>
-  #{options.map { |k, v| "<#{k}>#{v}</#{k}>" }.join("\n")}
-</url>
+      <url>
+        <loc>#{url}</loc>
+        #{options.map { |k, v| "<#{k}>#{v}</#{k}>" }.join("\n")}
+      </url>
     XML
   end
 end
