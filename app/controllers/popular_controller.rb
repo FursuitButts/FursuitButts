@@ -33,7 +33,7 @@ class PopularController < ApplicationController
   end
 
   def followed_tags
-    @tags = Tag.order(follower_count: :desc, name: :asc).paginate(params[:page], limit: limit)
+    @tags = Tag.order(follower_count: :desc, name: :asc).where("follower_count > ?", 0).paginate(params[:page], limit: limit)
     respond_with(@tags)
   end
 
