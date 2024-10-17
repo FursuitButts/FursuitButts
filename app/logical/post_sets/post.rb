@@ -55,6 +55,12 @@ module PostSets
       random || (TagQuery.fetch_metatag(tag_array, "order") == "random" && !TagQuery.has_metatag?(tag_array, "randseed"))
     end
 
+    def is_simple_tags?
+      return false if %w[~ *].any? { |c| public_tag_string.include?(c) }
+      return false if public_tag_string.split.any? { |tag| TagQuery::METATAGS.include?(tag.split(":")[0]) }
+      true
+    end
+
     def posts
       @posts ||= begin
         temp = ::Post.tag_match(tag_string).paginate_posts(page, limit: limit, includes: [:uploader])

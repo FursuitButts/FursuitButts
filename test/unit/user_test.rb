@@ -307,5 +307,14 @@ class UserTest < ActiveSupport::TestCase
         assert_nothing_raised { @user.refresh_counts! }
       end
     end
+
+    should "create a pending user approval after creation" do
+      assert_difference("UserApproval.count", 1) do
+        @restricted = create(:restricted_user)
+      end
+      @approval = UserApproval.last
+      assert_equal("pending", @approval.status)
+      assert_equal(@restricted.id, @approval.user_id)
+    end
   end
 end
