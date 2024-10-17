@@ -81,6 +81,48 @@ module ModActions
         end
       end
 
+      context "forum_category_topics_move" do
+        setup do
+          @topic = create(:forum_topic, category: @category)
+          @category2 = create(:forum_category, can_view: User::Levels::TRUSTED)
+          set_count!
+        end
+
+        should "format correctly for users that can see the category" do
+          with_inline_jobs { @category.move_all_topics(@category2, user: @admin) }
+
+          as(@trusted) do
+            assert_matches(
+              actions:                 %w[forum_category_topics_move forum_category_update forum_category_update],
+              text:                    "Moved all topics in [#{@category.name}](#{forum_category_path(@category)}) to [#{@category2.name}](#{forum_category_path(@category2)})",
+              subject:                 @category,
+              creator:                 @admin,
+              forum_category_name:     @category2.name,
+              old_forum_category_name: @category.name,
+              can_view:                @category2.can_view,
+              old_can_view:            @category.can_view,
+              forum_category_id:       @category2.id,
+              old_forum_category_id:   @category.id,
+            )
+          end
+        end
+
+        should "format correctly for users that cannot see the category" do
+          with_inline_jobs { @category.move_all_topics(@category2, user: @admin) }
+
+          as(@user) do
+            assert_matches(
+              actions:               %w[forum_category_topics_move forum_category_update forum_category_update],
+              text:                  "Moved all topics in category ##{@category.id} to category ##{@category2.id}",
+              subject:               @category,
+              creator:               @admin,
+              forum_category_id:     @category2.id,
+              old_forum_category_id: @category.id,
+            )
+          end
+        end
+      end
+
       context "forum_category_update" do
         setup do
           @original = @category.dup

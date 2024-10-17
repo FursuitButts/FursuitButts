@@ -198,6 +198,7 @@ Rails.application.routes.draw do
   end
   resources :forum_categories, only: %i[index show new create edit update destroy] do
     post :reorder, on: :collection
+    match :move_all_topics, via: %i[get post], on: :member
   end
   resources :help_pages, controller: "help", path: "help"
   resources :ip_bans, only: %i[index new create destroy]

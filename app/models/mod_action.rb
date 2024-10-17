@@ -202,6 +202,21 @@ class ModAction < ApplicationRecord
         values + %i[forum_category_name can_view can_create]
       end,
     },
+    forum_category_topics_move:                 {
+      text: ->(mod, _user) do
+        new_category = "category ##{mod.forum_category_id}"
+        new_category = "[#{mod.forum_category_name}](#{url.forum_category_path(id: mod.forum_category_id)})" if CurrentUser.user.level >= mod.can_view
+        old_category = "category ##{mod.subject_id}"
+        old_category = "[#{mod.old_forum_category_name}](#{url.forum_category_path(id: mod.subject_id)})" if CurrentUser.user.level >= mod.old_can_view
+        "Moved all topics in #{old_category} to #{new_category}"
+      end,
+      json: ->(mod, _user) do
+        values = %i[forum_category_id old_forum_category_id]
+        values += %i[forum_category_name can_view] if CurrentUser.user.level >= mod.can_view
+        values += %i[old_forum_category_name old_can_view] if CurrentUser.user.level >= mod.old_can_view
+        values
+      end,
+    },
     forum_category_update:                      {
       text: ->(mod, _user) do
         text = "Updated forum category ##{mod.subject_id}"

@@ -11,8 +11,21 @@ module ModActions
     context "mod actions for users" do
       setup do
         @target = create(:user)
+        @restricted = create(:restricted_user)
         @original = @target.dup
         set_count!
+      end
+
+      should "format user_approve correctly" do
+        @approval = create(:user_approval, user: @restricted)
+        @approval.approve!
+
+        assert_matches(
+          actions: %w[user_approve],
+          text:    "Approved #{user(@restricted)}",
+          subject: @approval,
+          user_id: @restricted.id,
+        )
       end
 
       should "format user_blacklist_change correctly" do
@@ -82,6 +95,18 @@ module ModActions
           text:    "Changed name of #{user(@target)}",
           subject: @target,
           user_id: @target.id,
+        )
+      end
+
+      should "format user_reject correctly" do
+        @approval = create(:user_approval, user: @restricted)
+        @approval.reject!
+
+        assert_matches(
+          actions: %w[user_reject],
+          text:    "Rejected #{user(@restricted)}",
+          subject: @approval,
+          user_id: @restricted.id,
         )
       end
 

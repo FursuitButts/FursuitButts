@@ -135,7 +135,7 @@ class ActionDispatch::IntegrationTest # rubocop:disable Style/ClassAndModuleChil
   end
 
   def assert_access(minlevel, success_response: :success, fail_response: :forbidden, anonymous_response: nil, &)
-    all = User::Levels.constants.map { |c| User::Levels.const_get(c) }.select { |l| l > User::Levels::BANNED }
+    all = User::Levels.constants.map { |c| User::Levels.const_get(c) }.select { |l| l > User::Levels::BANNED && l < User::Levels::LOCKED }.sort
     if minlevel.is_a?(Integer)
       success = all.select { |l| l >= minlevel }
       fail = all.select { |l| l < minlevel }

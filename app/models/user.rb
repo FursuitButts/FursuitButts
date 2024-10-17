@@ -31,6 +31,7 @@ class User < ApplicationRecord
     SYSTEM       = 35
     ADMIN        = 40
     OWNER        = 50
+    LOCKED       = 100 # intended to be a level above everyone else, used for raising restrictions above everyone
 
     def self.id_to_name(level)
       name = constants.find { |c| const_get(c) == level }.to_s.titleize
@@ -59,6 +60,11 @@ class User < ApplicationRecord
     def self.level_class(level)
       level = id_to_name(level) if level.is_a?(Integer)
       "user-#{level.downcase}"
+    end
+
+    def self.max_level
+      # constants.map { |c| [c, User::Levels.const_get(c)] }.max_by(&:second)
+      constants.map { |c| User::Levels.const_get(c) }.max
     end
   end
 

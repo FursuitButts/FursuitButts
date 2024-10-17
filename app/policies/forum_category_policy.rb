@@ -21,7 +21,15 @@ class ForumCategoryPolicy < ApplicationPolicy
     user.is_admin?
   end
 
+  def move_all_topics?
+    user.is_admin?
+  end
+
   def permitted_attributes
     %i[name can_create can_reply can_view order]
+  end
+
+  def permitted_attributes_for_move_all_topics
+    %i[new_category_id]
   end
 end

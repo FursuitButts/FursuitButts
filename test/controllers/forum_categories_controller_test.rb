@@ -121,5 +121,38 @@ class ForumCategoriesControllerTest < ActionDispatch::IntegrationTest
         end
       end
     end
+
+    context "move_all_topics action" do
+      setup do
+        as(@admin) do
+          @category3 = create(:forum_category)
+          @category4 = create(:forum_category)
+          @topic = create(:forum_topic, category: @category3)
+        end
+      end
+
+      should "work" do
+        assert_equal(@category3.id, @topic.category_id)
+        assert_difference({ "@category3.forum_topics.count" => -1, "@category4.forum_topics.count" => 1 }) do
+          post_auth move_all_topics_forum_category_path(@category3), @admin, params: { forum_category: { new_category_id: @category4.id } }
+          assert_redirected_to(forum_categories_path)
+          perform_enqueued_jobs(only: MoveForumCategoryTopicsJob)
+          assert_equal(@category4.id, @topic.reload.category_id)
+        end
+      end
+
+      should "fail if the category has too many topics" do
+        stub_const(ForumCategory, :MAX_TOPIC_MOVE_COUNT, 0) do
+          assert_no_difference(%w[@category3.forum_topics.count @category4.forum_topics.count]) do
+            post_auth move_all_topics_forum_category_path(@category3), @admin, params: { forum_category: { new_category_id: @category4.id } }
+            assert_response :bad_request
+          end
+        end
+      end
+
+      should "restrict access" do
+        assert_access(User::Levels::ADMIN, success_response: :redirect) { |user| post_auth move_all_topics_forum_category_path(@category3), user, params: { forum_category: { new_category_id: @category4.id } } }
+      end
+    end
   end
 end

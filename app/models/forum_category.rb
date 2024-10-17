@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 class ForumCategory < ApplicationRecord
-  has_many :forum_topics, -> { order(id: :desc) }, foreign_key: :category
+  MAX_TOPIC_MOVE_COUNT = 1000
+  has_many :forum_topics, -> { order(id: :desc) }, foreign_key: :category_id
   validates :name, uniqueness: { case_sensitive: false }, length: { minimum: 3, maximum: 100 }
 
   after_create :log_create
@@ -12,6 +13,8 @@ class ForumCategory < ApplicationRecord
   before_validation(on: :create) do
     self.order = (ForumCategory.maximum(:order) || 0) + 1 if order.blank?
   end
+
+  attr_accessor :new_category_id # technical bullshit
 
   def can_create_within?(user = CurrentUser.user)
     user.level >= can_create
@@ -73,5 +76,14 @@ class ForumCategory < ApplicationRecord
 
   def visible?(user = CurrentUser.user)
     user.level >= can_view
+  end
+
+  def can_move_topics?
+    forum_topics.count <= ForumCategory::MAX_TOPIC_MOVE_COUNT
+  end
+
+  def move_all_topics(new_category, user: CurrentUser.user)
+    return if forum_topics.empty?
+    MoveForumCategoryTopicsJob.perform_later(user, self, new_category)
   end
 end

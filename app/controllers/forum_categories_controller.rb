@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class ForumCategoriesController < ApplicationController
-  before_action :load_forum_category, only: %i[show edit update destroy]
+  before_action :load_forum_category, only: %i[show edit update destroy move_all_topics]
   respond_to :html, :json
 
   def index
@@ -81,6 +81,22 @@ class ForumCategoriesController < ApplicationController
     end
   rescue ActiveRecord::RecordNotFound
     render_expected_error(400, "Category not found")
+  end
+
+  def move_all_topics
+    authorize(ForumCategory)
+    unless @forum_category.can_move_topics?
+      return render_expected_error(400, "Forum category cannot have more than #{ForumCategory::MAX_TOPIC_MOVE_COUNT} topics")
+    end
+    if request.get?
+      return respond_with(@forum_category)
+    end
+    @new_forum_category = ForumCategory.find(permitted_attributes(ForumCategory)[:new_category_id])
+    @forum_category.move_all_topics(@new_forum_category)
+    respond_to do |format|
+      format.html { redirect_to(forum_categories_path, notice: "The category is now locked, topics be moved soon") }
+      format.json
+    end
   end
 
   private

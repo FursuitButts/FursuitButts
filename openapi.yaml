@@ -37,6 +37,7 @@ x-constants:
     - post_replacement_rejection_reason_update
     - forum_category_create
     - forum_category_delete
+    - forum_category_topics_move
     - forum_category_update
     - forum_post_delete
     - forum_post_hide
@@ -77,12 +78,14 @@ x-constants:
     - upload_whitelist_create
     - upload_whitelist_delete
     - upload_whitelist_update
+    - user_approve
     - user_blacklist_change
-    - user_delete
+      user_delete
     - user_flags_change
     - user_level_change
     - user_name_change
     - user_text_change
+    - user_reject
     - user_upload_limit_change
     - user_feedback_create
     - user_feedback_delete
@@ -135,6 +138,7 @@ x-constants:
     - UploadWhitelist
     - UserFeedback
     - User
+    - UserApproval
     - WikiPage
   - &auditlog-actions
     - force_name_change
@@ -1411,27 +1415,27 @@ components:
         forum_category_id:
           type: number
           description: |
-            Valid for: `forum_topic_move`
+            Valid for: `forum_topic_move`, `forum_category_topics_move`
         old_forum_category_id:
           type: number
           description: |
-            Valid for: `forum_topic_move`
+            Valid for: `forum_topic_move`, `forum_category_topics_move`
         forum_category_name:
           type: string
           description: |
-            Valid for: `forum_topic_move`, `forum_category_create`, `forum_category_delete`, `forum_category_update`
+            Valid for: `forum_topic_move`, `forum_category_create`, `forum_category_delete`, `forum_category_update`, `forum_category_topics_move`
         old_forum_category_name:
           type: string
           description: |
-            Valid for: `forum_topic_move`, `forum_category_update`
+            Valid for: `forum_topic_move`, `forum_category_update`, `forum_category_topics_move`
         can_view:
           type: number
           description: |
-            Valid for: `forum_category_create`, `forum_category_delete`, `forum_category_update`
+            Valid for: `forum_category_create`, `forum_category_delete`, `forum_category_update`, `forum_category_topics_move`
         old_can_view:
           type: number
           description: |
-            Valid for: `forum_category_update`
+            Valid for: `forum_category_update`, `forum_category_topics_move`
         can_create:
           type: number
           description: |
@@ -5815,6 +5819,38 @@ paths:
       responses:
         204:
           description: Success
+        403:
+          $ref: "#/components/responses/AccessDenied"
+        404:
+          $ref: "#/components/responses/NotFound"
+  /forum_categories/{id}/move_all_topics.json:
+    patch:
+      summary: Move All Forum Category Topics
+      tags:
+        - Forum Categories
+      security:
+        - basicAuth: []
+      description: You must be Admin+.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the forum category.
+          schema:
+            type: number
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                new_category_id:
+                  type: number
+      responses:
+        204:
+          description: Success
+        400:
+          $ref: "#/components/responses/MessageError"
         403:
           $ref: "#/components/responses/AccessDenied"
         404:
