@@ -2,7 +2,7 @@
 
 module LinkHelper
   DECORATABLE_DOMAINS = [
-    "e621.net",
+    "femboy.fan",
     #
     # Aggregators
     "linktr.ee",
@@ -81,6 +81,7 @@ module LinkHelper
     "onedrive.live.com",
     #
     # Imageboards
+    "e621.net",
     "4chan.org",
     "danbooru.donmai.us",
     "desuarchive.org",
@@ -102,6 +103,7 @@ module LinkHelper
     "web.archive.org",
     "wordpress.com",
     "wikimedia.org",
+    "gitea.com",
   ].freeze
 
   DECORATABLE_ALIASES = {
@@ -124,6 +126,7 @@ module LinkHelper
     "mastodon.art"              => "mastodon.social",
     "meow.social"               => "mastodon.social",
     "sta.sh"                    => "deviantart.com",
+    "git.furry.cool"            => "gitea.com",
 
     # image servers
     "4cdn.org"                  => "4chan.org",
