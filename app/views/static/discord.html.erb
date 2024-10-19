@@ -1,15 +1,13 @@
-<div class='content'>
-  <p><%= FemboyFans.config.app_name %> has a discord server where you can chat with other <%= FemboyFans.config.app_name %> users. All site rules apply in the discord server.
-    There is no voice chat, and there never will be.</p>
-  <h4>In order to limit access to the server to <%= FemboyFans.config.app_name %> members we have employed a system where you must authorize e621 to
-    join the server on your behalf. You will be asked to authorize the "<%= FemboyFans.config.app_name %> Joiner" application to do this.</h4>
-  <p>Once you have joined the server this authorization serves no purpose and you can safely deauthorize the application
-    if you wish to.</p>
+<div class="content">
+  <div class="dtext-container">
+    <%= format_text(@page.body, allow_color: true) %>
+  </div>
   <%= form_tag(discord_post_path) do %>
     <%= submit_tag "Join the server." %>
   <% end %>
 </div>
 
+<%= render(partial: "static/wiki_edit_link", locals: { wiki: @page }) %>
 <% content_for(:page_title) do %>
   Discord Server
 <% end %>

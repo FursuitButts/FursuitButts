@@ -71,6 +71,8 @@ class StaticController < ApplicationController
       user_hash = "?user_id=#{CurrentUser.id}&user_name=#{CurrentUser.name}&time=#{time}&hash=#{hashed_values}"
 
       redirect_to(FemboyFans.config.discord_site + user_hash, allow_other_host: true)
+    else
+      @page = view_context.safe_wiki(FemboyFans.config.discord_notice_wiki_page)
     end
   end
 

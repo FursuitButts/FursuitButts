@@ -6,7 +6,7 @@ class RulesController < ApplicationController
   respond_to :js, only: %i[reorder]
 
   def index
-    @wiki = WikiPage.find_by(title: "internal:rules_body")
+    @wiki = view_context.safe_wiki(FemboyFans.config.rules_body_wiki_page)
     respond_to do |format|
       format.html
       format.json { render(json: { rules: Rule.order(:category_id, :order), categories: @categories, body: @wiki }) }

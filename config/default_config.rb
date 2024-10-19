@@ -616,6 +616,14 @@ module FemboyFans
       "internal:avoid_posting_notice"
     end
 
+    def discord_notice_wiki_page
+      "internal:discord_notice"
+    end
+    
+    def rules_body_wiki_page
+      "internal:rules_body"
+    end
+
     def appeal_notice_wiki_page
       "internal:appeal_notice"
     end

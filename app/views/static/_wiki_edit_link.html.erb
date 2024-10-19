@@ -1,0 +1,10 @@
+<%# locals: (wiki:) -%>
+
+<% if wiki.try(:can_edit?, CurrentUser.user) %>
+  <% content_for(:secondary_links) do %>
+    <% if content_for(:secondary_links) %>
+      |
+    <% end %>
+    <%= link_to("Edit Wiki Page", edit_wiki_page_path(wiki)) %>
+  <% end %>
+<% end %>

@@ -331,6 +331,10 @@ class WikiPage < ApplicationRecord
     WikiPage.is_meta_wiki?(title)
   end
 
+  def can_edit?(user)
+    persisted? && (protection_level.blank? || user.level >= protection_level)
+  end
+
   def self.available_includes
     %i[artist dtext_links help_page tag]
   end
