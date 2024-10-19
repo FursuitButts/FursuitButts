@@ -619,7 +619,7 @@ module FemboyFans
     def discord_notice_wiki_page
       "internal:discord_notice"
     end
-    
+
     def rules_body_wiki_page
       "internal:rules_body"
     end

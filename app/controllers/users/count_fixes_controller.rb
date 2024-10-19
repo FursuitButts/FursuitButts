@@ -8,11 +8,11 @@ module Users
 
     def create
       authorize(:count_fixes)
-      CurrentUser.user.refresh_counts!
-      notice("Counts have been refreshed")
+      CurrentUser.user.refresh_counts
+      notice("Your counts will soon be refreshed")
       respond_to do |format|
-        format.html { redirect_to(user_path(CurrentUser.id)) }
-        format.json { head(204) }
+        format.html { redirect_to(user_path(CurrentUser.user)) }
+        format.json { head(202) }
       end
     end
   end

@@ -841,6 +841,10 @@ class User < ApplicationRecord
       feedback.deleted.count
     end
 
+    def refresh_counts
+      RefreshUserCountsJob.perform_later(self)
+    end
+
     def refresh_counts!
       self.class.without_timeout do
         User.where(id: id).update_all(
