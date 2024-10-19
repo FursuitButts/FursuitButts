@@ -623,9 +623,13 @@ module FemboyFans
     def rules_body_wiki_page
       "internal:rules_body"
     end
-    
+
     def restricted_notice_wiki_page
       "internal:restricted_notice"
+    end
+
+    def rejected_notice_wiki_page
+      "internal:rejected_notice"
     end
 
     def appeal_notice_wiki_page
