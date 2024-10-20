@@ -16,7 +16,7 @@ class UploadService
                                      file_size: post.file_size, md5: post.md5, file_name: "#{post.md5}.#{post.file_ext}",
                                      source: post.source, reason: "Original File", is_backup: true)
         repl.replacement_file = FemboyFans.config.storage_manager.open(FemboyFans.config.storage_manager.file_path(post, post.file_ext, :original))
-        repl.save
+        repl.save!
       rescue Exception => e
         raise(ProcessingError, "Failed to create post file backup: #{e.message}")
       end
@@ -45,6 +45,10 @@ class UploadService
 
         if upload.invalid? || upload.is_errored?
           raise(ProcessingError, upload.errors.full_messages.to_sentence)
+        end
+
+        if replacement.invalid?
+          raise(ProcessingError, replacement.errors.full_messages.to_sentence)
         end
 
         begin
