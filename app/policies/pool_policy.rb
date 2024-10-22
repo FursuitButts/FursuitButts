@@ -22,6 +22,6 @@ class PoolPolicy < ApplicationPolicy
   end
 
   def api_attributes
-    super + %i[artists creator_name post_count]
+    super + %i[artist_names creator_name post_count]
   end
 end
