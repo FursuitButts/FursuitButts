@@ -35,7 +35,7 @@ class PostSetsController < ApplicationController
   end
 
   def create
-    @post_set = authorize(PostSet.new(permitted_attributes(@post_set)))
+    @post_set = authorize(PostSet.new(permitted_attributes(PostSet)))
     @post_set.save
     notice(@post_set.valid? ? "Set created" : @post_set.errors.full_messages.join("; "))
     respond_with(@post_set)
