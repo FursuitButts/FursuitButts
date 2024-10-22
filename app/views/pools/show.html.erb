@@ -23,6 +23,47 @@
 
 <%= render "secondary_links" %>
 
+<% content_for(:html_header) do %>
+  <% post = @pool.cover_post %>
+  <%= tag.meta(name: "description", content: @pool.description.truncate(250)) %>
+  <meta name="pool-id" content="<%= @pool.id %>">
+  <%= tag.meta(property: "og:site", content: FemboyFans.config.app_name) %>
+  <%= tag.meta(property: "og:title", content: "#{@pool.pretty_name} - #{FemboyFans.config.app_name}") %>
+  <%= tag.meta(property: "og:url", content: pool_url(@pool, host: FemboyFans.config.hostname, protocol: "https")) %>
+
+  <% if post.visible? %>
+    <% if post.is_video? && post.has_sample_size?("original") %>
+      <meta property="og:type" content="video.other">
+      <%= tag.meta(property: "og:video", content: post.open_graph_video_url) %>
+      <%= tag.meta(property: "og:image", content: post.open_graph_image_url) %>
+      <meta property="og:video:height" content="<%= post.image_height %>"/>
+      <meta property="og:video:width" content="<%= post.image_width %>"/>
+    <% else %>
+      <meta property="og:type" content="website">
+      <%= tag.meta(property: "og:image", content: post.open_graph_image_url) %>
+    <% end %>
+    <meta property="og:image:height" content="<%= post.image_height %>"/>
+    <meta property="og:image:width" content="<%= post.image_width %>"/>
+  <% end %>
+
+  <%= tag.meta(name: "canonical", content: pool_url(@pool, host: FemboyFans.config.hostname, protocol: "https")) %>
+
+  <%# Twitter properties %>
+  <% if post.twitter_card_supported? && post.is_image? %>
+    <meta name="twitter:card" content="summary_large_image">
+    <%= tag.meta(name: "twitter:title", content: "#{@pool.pretty_name} - #{FemboyFans.config.app_name}") %>
+    <%= tag.meta(name: "twitter:description", content: @pool.description.truncate(250)) %>
+
+    <% if post.visible? %>
+      <%= tag.meta(name: "twitter:image", content: post.open_graph_image_url) %>
+    <% end %>
+  <% end %>
+
+  <% if post.rating == "e" %>
+    <meta name="rating" content="adult">
+  <% end %>
+<% end %>
+
 <% content_for(:page_title) do %>
   Pool - <%= @pool.pretty_name %>
 <% end %>
