@@ -26,7 +26,7 @@ class PostSetsController < ApplicationController
   end
 
   def new
-    @post_set = authorize(PostSet.new(permitted_attributes(@post_set)))
+    @post_set = authorize(PostSet.new(permitted_attributes(PostSet)))
   end
 
   def edit
