@@ -567,7 +567,7 @@ module FemboyFans
         {
           name:   "pay_content",
           reason: "Paysite, commercial, or subscription content",
-          text:   "We do not host paysite or commercial that is under 2 years old.",
+          text:   "We do not host paysite or commercial that is under 1 year old.",
         },
         {
           name:   "trace",

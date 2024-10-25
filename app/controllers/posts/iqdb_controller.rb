@@ -13,9 +13,15 @@ module Posts
       search_params = params[:search].presence || params
       throttle(search_params)
 
+
+
       @matches = []
       if search_params[:file].present?
-        @matches = IqdbProxy.query_file(search_params[:file].tempfile, search_params[:score_cutoff])
+        if search_params[:file].is_a?(ActionDispatch::Http::UploadedFile)
+          @matches = IqdbProxy.query_file(search_params[:file].tempfile, search_params[:score_cutoff])
+        else
+          return render_expected_error(400, "Invalid file")
+        end
       elsif search_params[:url].present?
         parsed_url = begin
           Addressable::URI.heuristic_parse(search_params[:url])
