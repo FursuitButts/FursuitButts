@@ -13,8 +13,6 @@ module Posts
       search_params = params[:search].presence || params
       throttle(search_params)
 
-
-
       @matches = []
       if search_params[:file].present?
         if search_params[:file].is_a?(ActionDispatch::Http::UploadedFile)
