@@ -90,7 +90,7 @@
           <%= f.input(:hide_from_search_engines, as: :boolean, label: "Hide from search engines") %>
         <% end %>
         <% if can_use_attribute?(post, :is_comment_disabled) %>
-          <%= f.input(:is_comment_disabled, label: "Disable comments") %>
+          <%= f.input(:is_comment_disabled, label: "Hide comments") %>
         <% end %>
       </fieldset>
     </div>

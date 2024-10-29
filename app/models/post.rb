@@ -2049,11 +2049,6 @@ class Post < ApplicationRecord
     true
   end
 
-  def comments_visible_to?(_user)
-    return true if CurrentUser.is_moderator?
-    !is_comment_disabled?
-  end
-
   def allow_sample_resize?
     true
   end
@@ -2146,7 +2141,11 @@ class Post < ApplicationRecord
   end
 
   def visible_comment_count(user)
-    comments_visible_to?(user) ? comment_count : 0
+    if user.is_moderator? || !is_comment_disabled?
+      comment_count
+    else
+      comments.visible(user).count
+    end
   end
 
   def self.search_uploaders(params)

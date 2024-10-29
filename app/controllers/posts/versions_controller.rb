@@ -6,7 +6,7 @@ module Posts
     respond_to :js, only: %i[undo]
 
     def index
-      @post_versions = PostVersion.document_store.search(PostVersion.build_query(search_params)).paginate(params[:page], limit: params[:limit], max_count: 10_000, includes: [:updater, { post: [:versions] }])
+      @post_versions = PostVersion.search(search_params).paginate(params[:page], limit: params[:limit], max_count: 10_000, includes: [:updater, { post: [:versions] }])
       respond_with(@post_versions)
     end
 

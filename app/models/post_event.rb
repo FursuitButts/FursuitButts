@@ -36,10 +36,10 @@ class PostEvent < ApplicationRecord
   }
 
   MOD_ONLY_SEARCH_ACTIONS = [
-    actions[:comment_disabled],
-    actions[:comment_enabled],
     actions[:comment_locked],
     actions[:comment_unlocked],
+    actions[:comment_disabled],
+    actions[:comment_enabled],
   ].freeze
 
   def self.search_options_for(user)

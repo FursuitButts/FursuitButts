@@ -50,12 +50,8 @@ module Tags
 
     def destroy
       @tag_alias = authorize(TagAlias.find(params[:id]))
-      if @tag_alias.rejectable_by?(CurrentUser.user)
-        @tag_alias.reject!
-        respond_with(@tag_alias, location: tag_aliases_path)
-      else
-        access_denied
-      end
+      @tag_alias.reject!
+      respond_with(@tag_alias, location: tag_aliases_path)
     end
 
     def approve

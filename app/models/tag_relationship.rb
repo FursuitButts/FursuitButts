@@ -19,7 +19,7 @@ class TagRelationship < ApplicationRecord
   scope :retired, -> { where(status: "retired") }
   scope :duplicate_relevant, -> { where(status: %w[active processing queued pending]) }
 
-  before_validation :initialize_creator, on: :create
+  before_validation :initialize_creator, on: :create # TODO: see if we need this
   before_validation :normalize_names
   validates :status, format: { with: /\A(active|deleted|pending|processing|queued|retired|error: .*)\Z/ }
   validates :creator_id, :antecedent_name, :consequent_name, presence: true
@@ -76,11 +76,14 @@ class TagRelationship < ApplicationRecord
 
   def approvable_by?(user)
     return false unless is_pending? && user.can_manage_aibur?
-    (creator_id != user.id || user.is_admin?) && FemboyFans.config.tag_change_request_update_limit(user) >= estimate_update_count
+    return false unless user.is_owner? || !(consequent_tag&.artist&.is_dnp? || antecedent_tag&.artist&.is_dnp?)
+    return false unless user.is_admin? || creator_id != user.id
+    FemboyFans.config.tag_change_request_update_limit(user) >= estimate_update_count
   end
 
   def rejectable_by?(user)
-    (user.can_manage_aibur? && !is_deleted?) || (is_pending? && creator_id == user.id)
+    return true if !is_deleted? && user.can_manage_aibur?
+    is_pending? && creator_id == user.id
   end
 
   def editable_by?(user)

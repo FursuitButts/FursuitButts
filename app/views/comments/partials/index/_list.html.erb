@@ -3,10 +3,18 @@
 <div class="comments-for-post" data-post-id="<%= post.id %>">
   <% if post.is_comment_disabled? %>
     Comment section has been disabled.
-  <% elsif post.is_comment_locked? %>
-    Comment section has been locked.
   <% end %>
-  <% if !post.is_comment_disabled? || CurrentUser.user.is_moderator? %>
+  <% if post.is_comment_locked? %>
+  Comment section has been locked.
+  <% end %>
+  <% if !CurrentUser.user.is_moderator? && post.is_comment_disabled? %>
+    <% comments = comments.stickied %>
+    <div class="comments-list">
+      <% if comments.any? %>
+        <%= render partial: "comments/partials/show/comment", collection: comments, locals: { post: post } %>
+      <% end %>
+    </div>
+  <% else %>
     <div class="row notices">
       <% if post.comments.hidden(CurrentUser.user).count > 0 || (params[:controller] == "comments" && post.comments.count > Comment::RECENT_COUNT) %>
         <span id="threshold-comments-notice-for-<%= post.id %>">
@@ -15,16 +23,16 @@
       <% end %>
     </div>
 
-    <% if post.is_comment_locked? && !CurrentUser.user.is_moderator? %>
+    <% if (post.is_comment_locked? || post.is_comment_disabled?) && !CurrentUser.user.is_moderator? %>
     <% elsif CurrentUser.user.is_member? %>
-      <% if !CurrentUser.user.is_anonymous? && !CurrentUser.user.is_janitor? %>
+      <% unless CurrentUser.user.is_janitor? %>
         <h2>Before commenting, read the <%= link_to("how to comment guide", help_page_path(id: "commenting")) %>.</h2>
       <% end %>
       <div class="new-comment">
         <%= render "comments/partials/form_decorated", comment: post.comments.new %>
       </div>
     <% elsif CurrentUser.user.is_anonymous? %>
-      <h5 id="respond-link"><%= link_to "Login to respond »", new_session_path %></h5>
+      <h5 id="respond-link"><%= link_to("Login to respond »", new_session_path) %></h5>
     <% end %>
 
     <div class="comments-list">

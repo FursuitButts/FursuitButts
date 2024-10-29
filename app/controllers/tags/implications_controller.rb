@@ -50,21 +50,12 @@ module Tags
 
     def destroy
       @tag_implication = authorize(TagImplication.find(params[:id]))
-      if @tag_implication.rejectable_by?(CurrentUser.user)
-        @tag_implication.reject!
-        if @tag_implication.errors.any?
-          flash[:notice] = @tag_implication.errors.full_messages.join("; ")
+      @tag_implication.reject!
+      respond_with(@tag_implication) do |format|
+        format.html do
+          flash[:notice] = @tag_implication.errors.any? ? @tag_implication.errors.full_messages.join("; ") : "Tag implication was deleted"
           redirect_to(tag_implications_path)
-          return
         end
-        respond_with(@tag_implication) do |format|
-          format.html do
-            flash[:notice] = "Tag implication was deleted"
-            redirect_to(tag_implications_path)
-          end
-        end
-      else
-        access_denied
       end
     end
 
