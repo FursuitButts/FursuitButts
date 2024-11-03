@@ -1,10 +1,10 @@
 <% user.artists.each do |artist| %>
   <div class="box user-artwork">
     <h2 class="box-label">
-      <%= link_to(user.artists.length == 1 ? "Artwork" : artist.name, posts_path(tags: artist.name)) %>
+      <%= link_to(sanitize("<b>#{user.artists.length == 1 ? "Artwork" : artist.name}</b>"), posts_path(tags: artist.name)) %>
     </h2>
     <span class="box-extra">
-      <%= link_to("Comments", comments_path(group_by: "comment", search: { post_tags_match: artist.name })) %>
+      <%= link_to(sanitize("<b>Comments</b>"), comments_path(group_by: "comment", search: { post_tags_match: artist.name })) %>
     </span>
     <div class="box-posts">
       <% presenter.artwork(artist.name).each do |post| %>
@@ -17,17 +17,16 @@
 <% if presenter.show_uploads? %>
   <div class="box user-uploads">
     <h2 class="box-label">
-      <%= link_to "Uploads", posts_path(tags: "user:#{user.name}") %>
+      <%= link_to("Uploads", posts_path(tags: "user:#{user.name}")) %>
     </h2>
     <span class="box-extra">
-      <%= link_to("#{user.post_upload_count - user.post_deleted_count} total", posts_path(tags: "user:#{user.name}")) %>
-      <%= link_to("#{user.post_deleted_count} deleted", deleted_posts_path(user_id: user.id)) %>
-      <%= link_to("#{user.own_post_replaced_count} replaced", post_replacements_path(search: { uploader_id_on_approve: user.id })) %>
-      <%= link_to("#{user.post_replacement_rejected_count} rejected", post_replacements_path(search: { creator_id: user.id, status: "rejected" })) %>
-      <%= link_to("#{user.post_appealed_count} appealed", post_appeals_path(search: { creator_id: user.id })) %>
+      <%= link_to(sanitize("<b>#{user.post_upload_count - user.post_deleted_count} total</b>"), posts_path(tags: "user:#{user.name}")) %>
+      <%= link_to(sanitize("<b>#{user.post_deleted_count} deleted</b>"), deleted_posts_path(user_id: user.id)) %>
+      <%= link_to(sanitize("<b>#{user.own_post_replaced_count} replaced</b>"), post_replacements_path(search: { uploader_id_on_approve: user.id })) %>
+      <%= link_to(sanitize("<b>#{user.post_replacement_rejected_count} rejected</b>"), post_replacements_path(search: { creator_id: user.id, status: "rejected" })) %>
       <span class="spacer"></span>
-      <%= link_to("Comments", comments_path(group_by: "comment", search: { poster_id: user.id })) %>
-      <%= link_to_if(PostVotePolicy.new(CurrentUser.user, presenter).index?, "Votes", { controller: "posts/votes", search: { user_name: user.name } }) { "" } %>
+      <%= link_to(sanitize("<b>Comments</b>"), comments_path(group_by: "comment", search: { poster_id: user.id })) %>
+      <%= link_to_if(PostVotePolicy.new(CurrentUser.user, presenter).index?, sanitize("<b>Votes</b>"), { controller: "posts/votes", search: { user_name: user.name } }) { "" } %>
     </span>
     <div class="box-posts">
       <% presenter.uploads.each do |post| %>
@@ -40,10 +39,10 @@
 <% if presenter.has_favorites? && !@user.hide_favorites? %>
   <div class="box user-favorites">
     <h2 class="box-label">
-      <%= link_to "Favorites", favorites_path(user_id: user.id) %>
+      <%= link_to("Favorites", favorites_path(user_id: user.id)) %>
     </h2>
     <span class="box-extra">
-      <%= link_to("#{user.favorite_count} total", favorites_path(user_id: user.id)) %>
+      <%= link_to(sanitize("<b>#{user.favorite_count} total</b>"), favorites_path(user_id: user.id)) %>
       <% if user.enable_privacy_mode? || user.is_banned? %>
         <span class="text">
           [hidden]

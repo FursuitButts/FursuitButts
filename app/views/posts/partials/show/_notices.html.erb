@@ -24,7 +24,7 @@
         <%= link_to("Approve", undelete_post_path(post), method: :put, class: "button btn-neutral") %> |
         <%= link_to("Reject", post_appeal_path(appeal), method: :delete, class: "button btn-neutral") %>
         <% if !post.parent_id.nil? && post.pending_flag&.reason =~ %r{Inferior version/duplicate of post #\d+} %>
-           | <%= tag.a("Move flag to parent", href: "#", "data-pid": post.id, "data-parent-id": post.parent_id, class: "move-flag-to-parent-link button btn-neutral") %>
+           | <%= tag.a("Move flag to parent", "href": "#", "data-pid": post.id, "data-parent-id": post.parent_id, "class": "move-flag-to-parent-link button btn-neutral") %>
         <% end %>
       </div>
     <% end %>
