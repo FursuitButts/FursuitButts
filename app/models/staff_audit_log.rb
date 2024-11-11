@@ -10,6 +10,7 @@ class StaffAuditLog < ApplicationRecord
     ip_addr
     comment_id post_id forum_post_id vote voter_id
     destroyed_post_id
+    duration
   ].freeze
 
   store_accessor :values, *VALUES
@@ -27,6 +28,10 @@ class StaffAuditLog < ApplicationRecord
     force_name_change:          {
       text: ->(log) { "Forced a name change for #{link_to_user(log.user_id)}" },
       json: %i[user_id],
+    },
+    hide_pending_posts_for: {
+      text: ->(log) { "Hid pending posts for #{log.duration} #{'hour'.pluralize(duration)}#{" (#{duration / 24} days)" if log.duration >= 24}"},
+      json: %i[duration],
     },
     min_upload_level_change:    {
       text: ->(log, _user) { "Changed the minimum upload level from [b]#{User::Levels.id_to_name(log.old_level)}[/b] to [b]#{User::Levels.level_name(log.new_level)}[/b]" },
