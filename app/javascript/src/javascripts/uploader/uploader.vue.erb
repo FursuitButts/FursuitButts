@@ -272,7 +272,7 @@
     {name: "Hermaphrodite", tag: "herm"},
     {name: "Male-Herm", tag: "maleherm"},
     {name: "Unknown", tag: "unknown_gender"}];
-  const genders = sex_checks.map(s => s.tag.replaceAll("_gender", "") || s.name.toLowerCase().replace(/ /g, "_"));
+  const genders = sex_checks.map(s => s.tag?.replace(/_gender/g, "") || s.name.toLowerCase().replace(/ /g, "_"));
   const mascgenders = ["male", "andromorph", "maleherm"];
   const femgenders = ["female", "gynomorph", "herm"];
   const ucwords = (str) => str.toString().toLowerCase().replace(/^(.)|\s+(.)/g, r => r.toUpperCase());
