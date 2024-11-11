@@ -271,9 +271,8 @@
     {name: "Gynomorph"},
     {name: "Hermaphrodite", tag: "herm"},
     {name: "Male-Herm", tag: "maleherm"},
-    {name: "Other"},
-    {name: "Ambiguous", tag: "ambiguous_gender"}];
-  const genders = sex_checks.slice(0, -1).map(s => s.tag || s.name.toLowerCase().replace(/ /g, "_"));
+    {name: "Unknown", tag: "unknown_gender"}];
+  const genders = sex_checks.map(s => s.tag.replaceAll("_gender", "") || s.name.toLowerCase().replace(/ /g, "_"));
   const mascgenders = ["male", "andromorph", "maleherm"];
   const femgenders = ["female", "gynomorph", "herm"];
   const ucwords = (str) => str.toString().toLowerCase().replace(/^(.)|\s+(.)/g, r => r.toUpperCase());
