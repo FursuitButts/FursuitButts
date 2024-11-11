@@ -29,8 +29,8 @@ class StaffAuditLog < ApplicationRecord
       text: ->(log) { "Forced a name change for #{link_to_user(log.user_id)}" },
       json: %i[user_id],
     },
-    hide_pending_posts_for: {
-      text: ->(log) { "Hid pending posts for #{log.duration} #{'hour'.pluralize(duration)}#{" (#{duration / 24} days)" if log.duration >= 24}"},
+    hide_pending_posts_for:     {
+      text: ->(log) { "Hid pending posts for #{log.duration} #{'hour'.pluralize(duration)}#{" (#{duration / 24} days)" if log.duration >= 24}" },
       json: %i[duration],
     },
     min_upload_level_change:    {

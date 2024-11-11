@@ -24,7 +24,7 @@ module Admin
       duration = params[:hide_pending_posts][:duration].to_f
       if duration >= 0 && duration != DangerZone.hide_pending_posts_for
         DangerZone.hide_pending_posts_for = duration
-        StaffAuditLog.log!(:hide_pending_posts_for, CurrentUser.user, { duration: duration })
+        StaffAuditLog.log!(:hide_pending_posts_for, CurrentUser.user, duration: duration)
       end
       redirect_to(admin_danger_zone_index_path)
     end
