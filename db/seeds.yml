@@ -1,41 +1,10 @@
-base_url: https://e621.net
+base_url: https://femboy.fan
 post_ids: []
 # fetch and restore parent/child chains
-fetch_related_posts: true
+fetch_related_posts: false
+safe: true
 tags:
-  - fav:Donovan_DMC
   - order:random
-  - -female
-  - -comic
-  - score:>=50
 
 
-mascots:
-  - name: Donovan Shy
-    file: https://yiff.rocks/mascots/DonovanShy.png
-    color: "#222222"
-    artist_url: https://twitter.com/Gaokunx3
-    artist_name: Gaokun
-    active: true
-    hide_anonymous: false
-  - name: Donovan Lying
-    file: https://yiff.rocks/mascots/DonovanLying.png
-    color: "#222222"
-    artist_url: https://twitter.com/Gaokunx3
-    artist_name: Gaokun
-    active: true
-    hide_anonymous: false
-  - name: Donovan Maid
-    file: https://yiff.rocks/mascots/DonovanMaid.png
-    color: "#222222"
-    artist_url: https://twitter.com/Gaokunx3
-    artist_name: Gaokun
-    active: true
-    hide_anonymous: false
-  - name: Donovan Sheath
-    file: https://yiff.rocks/mascots/DonovanSheath.png
-    color: "#222222"
-    artist_url: https://twitter.com/gaoNaughtyDoggo
-    artist_name: Gaokun
-    active: true
-    hide_anonymous: true
+mascots: []

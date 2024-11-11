@@ -24,9 +24,13 @@ module Seeds
   end
 
   def self.api_request(path)
-    puts("-> GET #{read_resources['base_url']}#{path}")
-    response = Faraday.get("#{read_resources['base_url']}#{path}", nil, user_agent: "femboyfans/seeding")
+    puts("-> GET #{base_url}#{path}")
+    response = Faraday.get("#{base_url}#{path}", nil, user_agent: "femboyfans/seeding")
     JSON.parse(response.body)
+  end
+
+  def self.base_url
+    read_resources["base_url"]
   end
 
   def self.read_resources
@@ -36,23 +40,29 @@ module Seeds
     end
     @resources = YAML.load_file(Rails.root.join("db/seeds.yml"))
     @resources["tags"] << "randseed:#{Digest::MD5.hexdigest(Time.now.to_s)}" if @resources["tags"]&.include?("order:random")
+    @resources["tags"] << "rating:s" if Posts.safe?
     yield(@resources) if block_given?
     @resources
-  end
-
-  def self.fetch_related_posts?
-    read_resources do |r|
-      val = r["fetch_related_posts"]
-      return val unless val.nil?
-      false
-    end
   end
 
   module Posts
     MAX_PER_PAGE = 320
 
+    def self.fetch_related_posts?
+      Seeds.read_resources["fetch_related_posts"].to_s.truthy?
+    end
+
+    def self.safe?
+      Seeds.read_resources["safe"].to_s.truthy?
+    end
+
+    def self.e621?
+      Seeds.base_url.include?("e621.net")
+    end
+
     def self.get_posts(tags, limit = ENV.fetch("SEED_POST_COUNT", 100), page = 1, logpage: true)
-      posts = Seeds.api_request("/posts.json?limit=#{[MAX_PER_PAGE, limit].min}&tags=#{tags.join('%20')}&page=#{page}")["posts"]
+      posts = Seeds.api_request("/posts.json?limit=#{[MAX_PER_PAGE, limit].min}&tags=#{tags.join('%20')}&page=#{page}")
+      posts = posts["posts"] if e621?
       puts("Get Page #{page}") if logpage
       limit -= posts.length
       if posts.length == MAX_PER_PAGE && limit > 0
@@ -86,7 +96,7 @@ module Seeds
     end
 
     def self.create_with_relationships(ogpost)
-      return create_post(ogpost) unless Seeds.fetch_related_posts?
+      return create_post(ogpost) unless fetch_related_posts?
       related = get_related_posts(ogpost)
       original = [ogpost, *related]
 
@@ -188,6 +198,7 @@ module Seeds
           masc.artist_url = mascot["artist_url"]
           masc.artist_name = mascot["artist_name"]
           masc.available_on_string = FemboyFans.config.app_name
+          masc.hide_anonymous = mascot["hide_anonymous"]
           masc.active = mascot["active"]
         end
       end
