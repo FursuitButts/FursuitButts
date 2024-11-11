@@ -8,6 +8,7 @@ class Ticket < ApplicationRecord
   belongs_to :accused, class_name: "User", optional: true
   after_initialize :classify
   before_validation :initialize_fields, on: :create
+  normalizes :reason, with: ->(reason) { reason.gsub("\r\n", "\n") }
   validates :reason, presence: true
   validates :reason, length: { minimum: 2, maximum: FemboyFans.config.ticket_max_size }
   validates :response, length: { minimum: 2, maximum: FemboyFans.config.ticket_max_size }, on: :update

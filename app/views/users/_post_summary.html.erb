@@ -1,7 +1,7 @@
 <% user.artists.each do |artist| %>
   <div class="box user-artwork">
     <h2 class="box-label">
-      <%= link_to(sanitize("<b>#{user.artists.length == 1 ? "Artwork" : artist.name}</b>"), posts_path(tags: artist.name)) %>
+      <%= link_to(sanitize("<b>#{user.artists.length == 1 ? 'Artwork' : artist.name}</b>"), posts_path(tags: artist.name)) %>
     </h2>
     <span class="box-extra">
       <%= link_to(sanitize("<b>Comments</b>"), comments_path(group_by: "comment", search: { post_tags_match: artist.name })) %>

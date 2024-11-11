@@ -5,7 +5,11 @@ class DangerZonePolicy < ApplicationPolicy
     user.is_admin?
   end
 
-  def update?
+  def uploading_limits?
+    user.is_admin?
+  end
+
+  def hide_pending_posts?
     user.is_admin?
   end
 end

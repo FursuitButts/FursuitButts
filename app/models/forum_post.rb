@@ -18,6 +18,7 @@ class ForumPost < ApplicationRecord
   after_create :update_topic_updated_at_on_create
   before_destroy :validate_topic_is_unlocked
   after_destroy :update_topic_updated_at_on_destroy
+  normalizes :body, with: ->(body) { body.gsub("\r\n", "\n") }
   validates :body, :creator_id, presence: true
   validates :body, length: { minimum: 1, maximum: FemboyFans.config.forum_post_max_size }
   validate :validate_topic_is_unlocked
