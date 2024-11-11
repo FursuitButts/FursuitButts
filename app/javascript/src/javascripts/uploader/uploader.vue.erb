@@ -264,7 +264,7 @@
   import filePreview from "./file_preview.vue";
   import fileInput from "./file_input.vue";
 
-  const sex_checks = [
+  const sex_checks = window.s = [
     {name: "Male"},
     {name: "Female"},
     {name: "Andromorph"},
@@ -272,10 +272,10 @@
     {name: "Hermaphrodite", tag: "herm"},
     {name: "Male-Herm", tag: "maleherm"},
     {name: "Unknown", tag: "unknown_gender"}];
-  const genders = sex_checks.map(s => s.tag?.replace(/_gender/g, "") || s.name.toLowerCase().replace(/ /g, "_"));
+  const genders = window.g = sex_checks.map(s => s.tag || s.name.toLowerCase().replace(/ /g, "_"));
   const mascgenders = ["male", "andromorph", "maleherm"];
   const femgenders = ["female", "gynomorph", "herm"];
-  const ucwords = (str) => str.toString().toLowerCase().replace(/^(.)|\s+(.)/g, r => r.toUpperCase());
+  const ucwords = (str) => str.toString().toLowerCase().replace(/_gender/g, "").replace(/^(.)|\s+(.)/g, r => r.toUpperCase());
 
   function removeDuplicates(set) {
     const unique = [];
@@ -286,7 +286,7 @@
     return unique;
   }
 
-  const pairing_checks = removeDuplicates(genders.flatMap(tagA => genders.flatMap(tagB => ({ name: `${ucwords(tagA)}/${ucwords(tagB)}`, tagA, tagB }))))
+  const pairing_checks = window.pc = removeDuplicates(genders.flatMap(tagA => genders.flatMap(tagB => ({ name: `${ucwords(tagA)}/${ucwords(tagB)}`, tagA, tagB }))))
 
   const mascfem_checks = [
     { name: "Masculine" },
