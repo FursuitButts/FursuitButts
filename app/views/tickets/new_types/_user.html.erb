@@ -3,8 +3,8 @@
 <% case @ticket.report_type %>
 <% when "report" %>
   Tell us what they've done wrong. Ensure you provide proof, especially for accusations such as being underage.<br>
-  If you meant to make a commendation instead, click <%= link_to("here", model_new_ticket_path(model: @ticket.model, report_type: "commendation")) %>.
+  If you meant to make a commendation instead, click <%= link_to("here", model_new_ticket_path(model: @ticket.model, ticket: { report_type: "commendation" })) %>.
 <% when "commendation" %>
   Tell us what great things they've done for the site.<br>
-  If you meant to file a report instead, click <%= link_to("here", model_new_ticket_path(model: @ticket.model, report_type: "report")) %>.
+  If you meant to file a report instead, click <%= link_to("here", model_new_ticket_path(model: @ticket.model, ticket: { report_type: "report" })) %>.
 <% end %>
