@@ -1,16 +1,16 @@
 x-environment: &common-env
-  FEMBOYFANS_HOSTNAME: http://localhost:${EXPOSED_SERVER_PORT:-3001}
+  FEMBOYFANS_HOSTNAME: http://localhost:${EXPOSED_SERVER_PORT:-4000}
   FEMBOYFANS_REDIS_URL: redis://redis
   FEMBOYFANS_OPENSEARCH_HOST: opensearch
   FEMBOYFANS_MEMCACHED_SERVERS: memcached
   FEMBOYFANS_IQDB_SERVER: http://iqdb:5588
   FEMBOYFANS_RECOMMENDER_SERVER: http://recommender:5000
   # Must be externally accessible
-  FEMBOYFANS_REPORTS_SERVER: http://localhost:${EXPOSED_SERVER_PORT:-3001}/reports
+  FEMBOYFANS_REPORTS_SERVER: http://localhost:${EXPOSED_SERVER_PORT:-4000}/reports
   # Must be internally accessible
   FEMBOYFANS_REPORTS_SERVER_INTERNAL: http://reports:3000
   FEMBOYFANS_REPORTS_ENABLED: 1
-  FEMBOYFANS_DISCORD_SITE: http://localhost:3003
+  FEMBOYFANS_DISCORD_SITE: http://localhost:4002
   FEMBOYFANS_DISCORD_SECRET: super_secret_for_url_discord
   FEMBOYFANS_REPORT_KEY: super_secret_key_for_reports_signature
   # These are just development secrets, do not use them in production
@@ -44,7 +44,7 @@ services:
       # this healthcheck is only for the rails app, sidekiq needs to be separated to be healthchecked
       test: wget --no-verbose --tries=1 --spider http://127.0.0.1:9000/up || exit 1
       interval: 15s
-      timeout: 2s
+      timeout: 5s
       retries: 5
     volumes:
       - .:/app
@@ -69,6 +69,7 @@ services:
       reports:
         condition: service_healthy
     tty: true
+    init: true
 
   # For this service to work properly, it must be accessible from /tags/autocomplete.json on the same url as the primary app
   autocompleted:
@@ -100,7 +101,7 @@ services:
       - ./docker/default.conf.template:/etc/nginx/templates/default.conf.template
     environment:
       <<: *common-env
-      NGINX_PORT: ${EXPOSED_NGINX_PORT:-3001}
+      NGINX_PORT: ${EXPOSED_NGINX_PORT:-4000}
     depends_on:
       autocompleted:
         condition: service_healthy
@@ -109,7 +110,7 @@ services:
       reports:
         condition: service_healthy
     ports:
-      - "${EXPOSED_SERVER_PORT:-3001}:${EXPOSED_SERVER_PORT:-3001}"
+      - "${EXPOSED_SERVER_PORT:-4000}:${EXPOSED_SERVER_PORT:-4000}"
 
   postgres:
     image: postgres:15-alpine
@@ -225,7 +226,7 @@ services:
       - REDIS_URL=redis://redis/1
       - SECRET_KEY=${FEMBOYFANS_REPORT_KEY:-super_secret_key_for_reports_signature}
     ports:
-      - "${EXPOSED_REPORTS_PORT:-3002}:3000"
+      - "${EXPOSED_REPORTS_PORT:-4001}:3000"
     depends_on:
       clickhouse:
         condition: service_healthy
@@ -244,17 +245,17 @@ services:
       REDIS_CHANNELS_TICKETS: ${DISCORDBOT_CHANNELS_TICKETS:-ticket_updates}
       GUILD_ID: ${DISCORDBOT_GUILD_ID-}
       ADMIN_ROLE: ${DISCORDBOT_ADMIN_ROLE-}
-      JOINER_PORT: ${JOINER_PORT:-3003}
-      JOINER_URL: ${DISCORDBOT_JOINER_URL:-http://localhost:${EXPOSED_JOINER_PORT:-3003}}
+      JOINER_PORT: ${JOINER_PORT:-4002}
+      JOINER_URL: ${DISCORDBOT_JOINER_URL:-http://localhost:${EXPOSED_JOINER_PORT:-4002}}
       JOINER_SECRET: ${FEMBOYFANS_DISCORD_SECRET:-super_secret_for_url_discord}
       JOINER_CHANNEL_ID: ${DISCORDBOT_JOINER_CHANNEL_ID-}
       AUDIT_LOG_CHANNEL_ID: ${DISCORDBOT_AUDIT_LOG_CHANNEL_ID-}
       EVENT_CHANNEL_ID: ${DISCORDBOT_EVENT_CHANNEL_ID-}
       TICKET_CHANNEL_ID: ${DISCORDBOT_TICKET_CHANNEL_ID-}
       MEMBER_ROLE_ID: ${DISCORDBOT_MEMBER_ROLE_ID-}
-      BASE_URL: ${DISCORDBOT_BASE_URL:-http://localhost:${EXPOSED_SERVER_PORT:-3001}}
-      FETCH_URL: ${DISCORDBOT_FETCH_URL:-http://nginx:${EXPOSED_SERVER_PORT:-3001}}
-      CDN_HOST: ${DISCORDBOT_CDN_HOST:-localhost:${EXPOSED_SERVER_PORT:-3001}}
+      BASE_URL: ${DISCORDBOT_BASE_URL:-http://localhost:${EXPOSED_SERVER_PORT:-4000}}
+      FETCH_URL: ${DISCORDBOT_FETCH_URL:-http://nginx:${EXPOSED_SERVER_PORT:-4000}}
+      CDN_HOST: ${DISCORDBOT_CDN_HOST:-localhost:${EXPOSED_SERVER_PORT:-4000}}
       BLACKLISTED_TAGS: ${DISCORDBOT_BLACKLISTED_TAGS:-}
       STAFF_CATEGORIES: ${DISCORDBOT_STAFF_CATEGORIES:-}
       SAFE_CHANNELS: ${DISCORDBOT_SAFE_CHANNELS:-}
@@ -262,7 +263,7 @@ services:
       ENCRYPTION_SALT: ${DISCORDBOT_ENCRYPTION_SALT:-apPyQsjNgUOIiAV62Evly0qgJATdocWwKT0vsdow}
     init: true
     ports:
-      - "${EXPOSED_JOINER_PORT:-${JOINER_PORT-}}:${JOINER_PORT:-3003}"
+      - "${EXPOSED_JOINER_PORT:-${JOINER_PORT-}}:${JOINER_PORT:-4002}"
     profiles:
       - discord
 

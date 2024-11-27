@@ -10,7 +10,7 @@ info:
 servers:
   - url: "https://femboy.fan"
     description: "Production Server"
-  - url: "http://localhost:3001"
+  - url: "http://localhost:4000"
     description: "Development server"
 
 x-constants:

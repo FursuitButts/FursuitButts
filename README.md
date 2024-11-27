@@ -44,7 +44,7 @@
     docker compose up
     ```
     After running the commands once only `docker compose up` is needed to bring up the containers.
-6. To confirm the installation worked, open the web browser of your choice and enter `http://localhost:3001` into the address bar and see if the website loads correctly. Create an account via http://localhost:3001/users/new. The first created user will automatically be promoted to the "Owner" level.
+6. To confirm the installation worked, open the web browser of your choice and enter `http://localhost:4000` into the address bar and see if the website loads correctly. Create an account via http://localhost:4000/users/new. The first created user will automatically be promoted to the "Owner" level.
 
 Note: When gems or js packages are updated you need to execute `docker compose build` to reflect them in the container.
 
