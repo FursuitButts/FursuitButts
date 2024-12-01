@@ -10,7 +10,12 @@
         <span><%= compact_time @user.created_at %></span>
 
         <span>Level</span>
-        <span><%= "(Unactivated)" unless user.is_verified? %> <%= presenter.level %></span>
+        <span>
+          <%= "(Unactivated)" unless user.is_verified? %> <%= presenter.level %>
+          <% if policy(UserApproval).index? %>
+            <%= link_to("»", moderator_user_approvals_path(search: { user_id: user.id })) %>
+          <% end %>
+        </span>
 
         <% if user.is_banned? && user.recent_ban %>
           <span>Ban reason</span>
