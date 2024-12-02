@@ -2,18 +2,18 @@
 
 class BulkUpdateRequestPolicy < ApplicationPolicy
   def update?
-    return unbanned? unless record.is_a?(BulkUpdateRequest)
-    unbanned? && record.editable?(user)
+    return member? unless record.is_a?(BulkUpdateRequest)
+    member? && record.editable?(user)
   end
 
   def approve?
-    return unbanned? && user.can_manage_aibur? unless record.is_a?(BulkUpdateRequest)
-    unbanned? && record.approvable?(user)
+    return member? && user.can_manage_aibur? unless record.is_a?(BulkUpdateRequest)
+    member? && record.approvable?(user)
   end
 
   def destroy?
-    return unbanned? unless record.is_a?(BulkUpdateRequest)
-    unbanned? && record.rejectable?(user)
+    return member? unless record.is_a?(BulkUpdateRequest)
+    member? && record.rejectable?(user)
   end
 
   alias reject? destroy?

@@ -5,8 +5,12 @@ class UserNameChangeRequestPolicy < ApplicationPolicy
     user.is_moderator?
   end
 
+  def create?
+    unbanned?
+  end
+
   def show?
-    unbanned? && (record.user_id == user.id || user.is_moderator?)
+    unbanned? && (record.user_id == user.id || user.is_janitor?)
   end
 
   def permitted_attributes

@@ -3,22 +3,22 @@
 class TagImplicationPolicy < ApplicationPolicy
   def create?
     # record: TagImplicationRequest
-    unbanned?
+    member?
   end
 
   def destroy?
-    return unbanned? unless record.is_a?(TagImplication)
-    unbanned? && record.rejectable_by?(user)
+    return member? unless record.is_a?(TagImplication)
+    member? && record.rejectable_by?(user)
   end
 
   def update?
-    return unbanned? unless record.is_a?(TagImplication)
-    unbanned? && record.editable_by?(user)
+    return member? unless record.is_a?(TagImplication)
+    member? && record.editable_by?(user)
   end
 
   def approve?
-    return unbanned? && user.can_manage_aibur? unless record.is_a?(TagImplication)
-    unbanned? && record.approvable_by?(user)
+    return member? && user.can_manage_aibur? unless record.is_a?(TagImplication)
+    member? && record.approvable_by?(user)
   end
 
   def permitted_attributes

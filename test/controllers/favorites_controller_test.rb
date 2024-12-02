@@ -27,7 +27,7 @@ class FavoritesControllerTest < ActionDispatch::IntegrationTest
       end
 
       should "restrict access" do
-        assert_access(User::Levels::MEMBER) { |user| get_auth favorites_path, user }
+        assert_access(User::Levels::REJECTED) { |user| get_auth favorites_path, user }
       end
     end
 
@@ -49,7 +49,7 @@ class FavoritesControllerTest < ActionDispatch::IntegrationTest
       end
 
       should "restrict access" do
-        assert_access(User::Levels::MEMBER, success_response: :redirect) { |user| post_auth favorites_path, user, params: { post_id: @post.id } }
+        assert_access(User::Levels::REJECTED, success_response: :redirect) { |user| post_auth favorites_path, user, params: { post_id: @post.id } }
       end
     end
 
@@ -66,7 +66,7 @@ class FavoritesControllerTest < ActionDispatch::IntegrationTest
       end
 
       should "restrict access" do
-        assert_access(User::Levels::MEMBER, success_response: :redirect) { |user| delete_auth favorite_path(@post), user }
+        assert_access(User::Levels::REJECTED, success_response: :redirect) { |user| delete_auth favorite_path(@post), user }
       end
     end
 
@@ -92,7 +92,7 @@ class FavoritesControllerTest < ActionDispatch::IntegrationTest
       end
 
       should "restrict access" do
-        assert_access(User::Levels::MEMBER, success_response: :redirect) { |user| put_auth clear_favorites_path, user }
+        assert_access(User::Levels::REJECTED, success_response: :redirect) { |user| put_auth clear_favorites_path, user }
       end
     end
   end

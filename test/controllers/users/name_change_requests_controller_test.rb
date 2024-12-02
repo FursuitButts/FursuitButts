@@ -25,7 +25,7 @@ module Users
         end
 
         should "restrict access" do
-          assert_access(User::Levels::MEMBER) { |user| get_auth new_user_name_change_request_path, user }
+          assert_access(User::Levels::REJECTED) { |user| get_auth new_user_name_change_request_path, user }
         end
       end
 
@@ -36,7 +36,7 @@ module Users
         end
 
         should "restrict access" do
-          assert_access(User::Levels::MEMBER, success_response: :redirect) { |user| post_auth user_name_change_requests_path, user, params: { user_name_change_request: { desired_name: SecureRandom.hex(6) } } }
+          assert_access(User::Levels::REJECTED, success_response: :redirect) { |user| post_auth user_name_change_requests_path, user, params: { user_name_change_request: { desired_name: SecureRandom.hex(6) } } }
         end
       end
 
@@ -55,7 +55,7 @@ module Users
         end
 
         should "restrict access" do
-          assert_access(User::Levels::MEMBER) do |user|
+          assert_access(User::Levels::REJECTED) do |user|
             request = UserNameChangeRequest.create!(
               user_id:       user.id,
               original_name: user.name,

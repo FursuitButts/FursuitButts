@@ -1111,6 +1111,8 @@ Post.vote = function (id, score, prevent_unvote) {
       $(window).trigger("danbooru:notice", "Vote saved");
     }).always(function () {
       Post.notice_update("dec");
+    }).fail(function (data) {
+      Utility.error("Error: " + data.responseJSON.message);
     });
   });
 };

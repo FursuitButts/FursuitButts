@@ -2,15 +2,15 @@
 
 class TicketPolicy < ApplicationPolicy
   def index?
-    unbanned?
+    member?
   end
 
   def show?
-    unbanned? && (!record.is_a?(Ticket) || record.can_view?(user))
+    member? && (!record.is_a?(Ticket) || record.can_view?(user))
   end
 
   def create?
-    return false unless unbanned?
+    return false unless member?
     if record.is_a?(Ticket)
       record.can_create_for?(user)
     elsif record.is_a?(ApplicationRecord)

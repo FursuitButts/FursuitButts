@@ -6,12 +6,12 @@ class TagPolicy < ApplicationPolicy
   end
 
   def preview?
-    unbanned?
+    member?
   end
 
   def update?
     return false if record && !record.category_editable_by?(user)
-    unbanned?
+    member?
   end
 
   def correct?
@@ -19,19 +19,19 @@ class TagPolicy < ApplicationPolicy
   end
 
   def followed?
-    unbanned?
+    member?
   end
 
   def followers?
-    unbanned?
+    member?
   end
 
   def follow?
-    unbanned?
+    member?
   end
 
   def unfollow?
-    unbanned?
+    member?
   end
 
   def permitted_attributes

@@ -48,7 +48,7 @@ class ApiKeysControllerTest < ActionDispatch::IntegrationTest
       end
 
       should "restrict access" do
-        assert_access(User::Levels::MEMBER) { |user| get_auth user_api_keys_path(@user), user }
+        assert_access(User::Levels::REJECTED) { |user| get_auth user_api_keys_path(@user), user }
       end
     end
 
@@ -64,7 +64,7 @@ class ApiKeysControllerTest < ActionDispatch::IntegrationTest
       end
 
       should "restrict access" do
-        assert_access(User::Levels::MEMBER) { |user| get_auth new_user_api_key_path(@user), user }
+        assert_access(User::Levels::REJECTED) { |user| get_auth new_user_api_key_path(@user), user }
       end
     end
 
@@ -77,7 +77,7 @@ class ApiKeysControllerTest < ActionDispatch::IntegrationTest
       end
 
       should "restrict access" do
-        assert_access(User::Levels::MEMBER, success_response: :redirect) { |user| post_auth user_api_keys_path(user), user, params: { api_key: { name: "blah" } } }
+        assert_access(User::Levels::REJECTED, success_response: :redirect) { |user| post_auth user_api_keys_path(user), user, params: { api_key: { name: "blah" } } }
       end
     end
 
@@ -93,7 +93,7 @@ class ApiKeysControllerTest < ActionDispatch::IntegrationTest
       end
 
       should "restrict access" do
-        assert_access(User::Levels::MEMBER) { |user| get_auth edit_api_key_path(create(:api_key, user: user)), user }
+        assert_access(User::Levels::REJECTED) { |user| get_auth edit_api_key_path(create(:api_key, user: user)), user }
       end
     end
 
@@ -111,7 +111,7 @@ class ApiKeysControllerTest < ActionDispatch::IntegrationTest
       end
 
       should "restrict access" do
-        assert_access(User::Levels::MEMBER, success_response: :redirect) { |user| put_auth api_key_path(create(:api_key, user: user)), user, params: { api_key: { name: "blah" } } }
+        assert_access(User::Levels::REJECTED, success_response: :redirect) { |user| put_auth api_key_path(create(:api_key, user: user)), user, params: { api_key: { name: "blah" } } }
       end
     end
 
@@ -131,7 +131,7 @@ class ApiKeysControllerTest < ActionDispatch::IntegrationTest
       end
 
       should "restrict access" do
-        assert_access(User::Levels::MEMBER, success_response: :redirect) { |user| delete_auth api_key_path(create(:api_key, user: user)), user }
+        assert_access(User::Levels::REJECTED, success_response: :redirect) { |user| delete_auth api_key_path(create(:api_key, user: user)), user }
       end
     end
   end

@@ -2,7 +2,7 @@
 
 class PostSetMaintainerPolicy < ApplicationPolicy
   def index?
-    unbanned?
+    member?
   end
 
   def approve?

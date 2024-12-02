@@ -12,6 +12,7 @@ module Posts
         end
 
         @user2 = create(:user)
+        @restricted = create(:restricted_user)
         CurrentUser.user = @user2
         @admin = create(:admin_user)
       end
@@ -41,7 +42,7 @@ module Posts
         end
 
         should "restrict access" do
-          assert_access(User::Levels::MEMBER) { |user| get_auth url_for(controller: "posts/votes", action: "index", only_path: true), user }
+          assert_access(User::Levels::REJECTED) { |user| get_auth url_for(controller: "posts/votes", action: "index", only_path: true), user }
         end
       end
 
@@ -66,6 +67,20 @@ module Posts
           assert_equal(1, @post.score)
         end
 
+        should "allow restricted users to upvote" do
+          post_auth post_votes_path(post_id: @post.id), @restricted, params: { score: 1, format: :json }
+          assert_response :success
+          @post.reload
+          assert_equal(1, @post.score)
+        end
+
+        should "not allow restricted users to downvote" do
+          post_auth post_votes_path(post_id: @post.id), @restricted, params: { score: -1, format: :json }
+          assert_response :unprocessable_entity
+          @post.reload
+          assert_equal(0, @post.score)
+        end
+
         context "for a post that has already been voted on" do
           setup do
             as(@user2) do
@@ -81,7 +96,7 @@ module Posts
         end
 
         should "restrict access" do
-          assert_access(User::Levels::MEMBER) { |user| post_auth post_votes_path(@post), user, params: { score: 1 } }
+          assert_access(User::Levels::REJECTED) { |user| post_auth post_votes_path(@post), user, params: { score: 1 } }
         end
       end
 

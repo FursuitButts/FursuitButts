@@ -6,7 +6,7 @@ class WikiPagePolicy < ApplicationPolicy
   end
 
   def update?
-    unbanned? && unrestricted?
+    member? && unrestricted?
   end
 
   def destroy?

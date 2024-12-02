@@ -2,11 +2,19 @@
 
 class FavoritePolicy < ApplicationPolicy
   def index?
-    unbanned?
+    unbanned? || user.is_pending?
   end
 
   def clear?
-    unbanned?
+    unbanned? || user.is_pending?
+  end
+
+  def create?
+    unbanned? || user.is_pending?
+  end
+
+  def destroy?
+    unbanned? || user.is_pending?
   end
 
   def api_attributes

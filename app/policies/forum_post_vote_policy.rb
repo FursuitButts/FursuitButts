@@ -2,8 +2,8 @@
 
 class ForumPostVotePolicy < UserVotePolicy
   def create?
-    return unbanned? unless record.is_a?(ForumPost)
-    policy(record).min_level? && unbanned?
+    return member? unless record.is_a?(ForumPost)
+    policy(record).min_level? && member?
   end
 
   protected

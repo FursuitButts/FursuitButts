@@ -10,7 +10,8 @@ module VoteManager
       score = score.to_i
       begin
         raise(UserVote::Error, "Invalid vote") unless [1, -1].include?(score)
-        raise(UserVote::Error, "You do not have permission to vote") unless user.is_member?
+        raise(UserVote::Error, "You do not have permission to vote") unless user.can_post_vote?
+        raise(UserVote::Error, "You do not have permission to downvote") if user.is_pending? && score == -1
         PostVote.transaction(**ISOLATION) do
           PostVote.uncached do
             @vote = PostVote.where(user_id: user.id, post_id: post.id).first

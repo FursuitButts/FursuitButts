@@ -25,7 +25,7 @@ class ApplicationPolicy
   end
 
   def create?
-    unbanned?
+    member?
   end
 
   def edit?
@@ -33,7 +33,7 @@ class ApplicationPolicy
   end
 
   def update?
-    unbanned?
+    member?
   end
 
   def delete?
@@ -41,11 +41,15 @@ class ApplicationPolicy
   end
 
   def destroy?
-    unbanned?
+    member?
   end
 
   def unbanned?
-    user.is_member? && !user.is_banned?
+    logged_in? && !user.is_banned?
+  end
+
+  def member?
+    user.is_member?
   end
 
   def logged_in?

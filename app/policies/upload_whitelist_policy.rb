@@ -14,7 +14,7 @@ class UploadWhitelistPolicy < ApplicationPolicy
   end
 
   def is_allowed?
-    unbanned?
+    member?
   end
 
   def permitted_attributes

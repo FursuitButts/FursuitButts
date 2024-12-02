@@ -10,11 +10,11 @@ class CommentPolicy < ApplicationPolicy
   end
 
   def update?
-    unbanned? && (!record.is_a?(Comment) || record.editable_by?(user))
+    member? && (!record.is_a?(Comment) || record.editable_by?(user))
   end
 
   def hide?
-    unbanned? && (!record.is_a?(Comment) || record.can_hide?(user))
+    member? && (!record.is_a?(Comment) || record.can_hide?(user))
   end
 
   def unhide?

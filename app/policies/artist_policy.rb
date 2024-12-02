@@ -6,7 +6,7 @@ class ArtistPolicy < ApplicationPolicy
   end
 
   def update?
-    unbanned? && (!record.is_a?(Artist) || !record.is_locked? || user.is_janitor?)
+    member? && (!record.is_a?(Artist) || !record.is_locked? || user.is_janitor?)
   end
 
   def destroy?
@@ -14,7 +14,7 @@ class ArtistPolicy < ApplicationPolicy
   end
 
   def revert?
-    unbanned? && (!record.is_a?(Artist) || !record.is_locked? || user.is_janitor?)
+    member? && (!record.is_a?(Artist) || !record.is_locked? || user.is_janitor?)
   end
 
   def permitted_attributes

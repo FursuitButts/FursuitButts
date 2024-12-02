@@ -12,7 +12,7 @@ module Tags
         end
 
         should "restrict access" do
-          assert_access(User::Levels::MEMBER) { |user| get_auth related_tags_path, user }
+          assert_access(User::Levels::REJECTED) { |user| get_auth related_tags_path, user }
         end
       end
     end

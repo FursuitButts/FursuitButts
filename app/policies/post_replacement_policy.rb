@@ -2,7 +2,7 @@
 
 class PostReplacementPolicy < ApplicationPolicy
   def create?
-    unbanned? && user.can_replace?
+    member? && user.can_replace?
   end
 
   def approve?

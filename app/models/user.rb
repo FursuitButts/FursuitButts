@@ -442,12 +442,28 @@ class User < ApplicationRecord
       level == Levels::RESTRICTED
     end
 
+    def is_pending?
+      is_rejected? || is_restricted?
+    end
+
     def is_staff?
       level >= Levels.min_staff_level
     end
 
     def is_approver?
       can_approve_posts?
+    end
+
+    def can_post_vote?
+      PostVotePolicy.new(self, nil).create?
+    end
+
+    def can_favorite?
+      FavoritePolicy.new(self, nil).create?
+    end
+
+    def can_comment_vote?
+      CommentPolicy.new(self, nil).create?
     end
 
     def staff_cant_disable_dmail

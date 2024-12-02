@@ -29,7 +29,7 @@ module Users
         end
 
         should "restrict access" do
-          assert_access(User::Levels::MEMBER) { |user| get_auth user_blocks_path(user), user }
+          assert_access(User::Levels::REJECTED) { |user| get_auth user_blocks_path(user), user }
         end
       end
 
@@ -105,7 +105,7 @@ module Users
         end
 
         should "restrict access" do
-          assert_access(User::Levels::MEMBER, success_response: :redirect) { |user| post_auth user_blocks_path(user), user, params: { user_block: { target_id: @user.id, hide_comments: true } } }
+          assert_access(User::Levels::REJECTED, success_response: :redirect) { |user| post_auth user_blocks_path(user), user, params: { user_block: { target_id: @user.id, hide_comments: true } } }
         end
       end
 
@@ -187,7 +187,7 @@ module Users
         end
 
         should "restrict access" do
-          assert_access(User::Levels::MEMBER, success_response: :redirect) { |user| put_auth user_block_path(user, create(:user_block, user: user, target: @user)), user, params: { user_block: { hide_comments: true } } }
+          assert_access(User::Levels::REJECTED, success_response: :redirect) { |user| put_auth user_block_path(user, create(:user_block, user: user, target: @user)), user, params: { user_block: { hide_comments: true } } }
         end
       end
 
@@ -242,7 +242,7 @@ module Users
         end
 
         should "restrict access" do
-          assert_access(User::Levels::MEMBER, success_response: :redirect) { |user| delete_auth user_block_path(user, create(:user_block, user: user, target: @user)), user }
+          assert_access(User::Levels::REJECTED, success_response: :redirect) { |user| delete_auth user_block_path(user, create(:user_block, user: user, target: @user)), user }
         end
       end
     end

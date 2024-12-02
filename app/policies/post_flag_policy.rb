@@ -2,7 +2,7 @@
 
 class PostFlagPolicy < ApplicationPolicy
   def create?
-    unbanned? && !user.no_flagging?
+    member? && !user.no_flagging?
   end
 
   def destroy?

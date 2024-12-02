@@ -88,17 +88,18 @@
   </div>
 
   <section id="image-extra-controls">
-
-    <% if CurrentUser.user.is_member? %>
+    <% if CurrentUser.user.can_post_vote? %>
       <div id="image-vote-buttons">
         <%= post_vote_block(@post, @post.own_vote, buttons: true) %>
       </div>
+    <% end %>
+    <% if CurrentUser.user.can_favorite? %>
       <%= tag.div(class: "fav-buttons fav-buttons-#{@post.is_favorited?}") do %>
-        <%= button_tag "id": "add-fav-button", "class": "button btn-success", "data-pid": @post.id do %>
+        <%= button_tag("id": "add-fav-button", "class": "button btn-success", "data-pid": @post.id) do %>
           <%= tag.i(class: "fa-regular fa-star") %>
           <span>Favorite</span>
         <% end %>
-        <%= button_tag "id": "remove-fav-button", "class": "button btn-danger", "data-pid": @post.id do %>
+        <%= button_tag("id": "remove-fav-button", "class": "button btn-danger", "data-pid": @post.id) do %>
           <%= tag.i(class: "fa-solid fa-star") %>
           <span>Unfavorite</span>
         <% end %>
@@ -106,23 +107,25 @@
     <% end %>
     <% if @post.visible? %>
       <div id="image-full-screen-button">
-        <%= link_to "Full Screen", @post.file_url, class: "button btn-warn" %>
+        <%= link_to("Full Screen", @post.file_url, class: "button btn-warn") %>
       </div>
       <div id="image-add-buttons">
         <%# TODO: find some way to remove the whitespace that's being inserted here, then return the margin to 0.5 %>
-        <%= link_to "+ Set", "#", id: "set", class: "button btn-neutral" %>
-        <%= link_to "+ Pool", "#", id: "pool", class: "button btn-neutral" %>
+        <%= link_to_if(policy(PostSet).add_posts?, "+ Set", "#", id: "set", class: "button btn-neutral") { "" } %>
+        <%= link_to_if(policy(Pool).update?, "+ Pool", "#", id: "pool", class: "button btn-neutral") { "" } %>
       </div>
       <div id="image-note-buttons">
-        <%= link_to "Notes: ON", "#", id: "toggle-notes-button", class: "button btn-neutral" %>
-        <% if @post.is_note_locked? %>
-          <%= link_to "Notes Locked", "#", class: "button btn-neutral" %>
-        <% else %>
-          <%= link_to "+ Note", "#", id: "translate", title: "shortcut is n", class: "button btn-neutral", data: { shortcut: "n" } %>
+        <%= link_to("Notes: ON", "#", id: "toggle-notes-button", class: "button btn-neutral") %>
+        <% if policy(Note).create? %>
+          <% if @post.is_note_locked? %>
+            <%= link_to("Notes Locked", "#", class: "button btn-neutral") %>
+          <% else %>
+            <%= link_to("+ Note", "#", id: "translate", title: "shortcut is n", class: "button btn-neutral", data: { shortcut: "n" }) %>
+          <% end %>
         <% end %>
       </div>
     <% end %>
-    <% if !@post.force_original_size? %>
+    <% unless @post.force_original_size? %>
       <div>
         | <select id="image-resize-selector" class="button btn-neutral">
             <% FemboyFans.config.video_rescales.keys.each do |size| %>

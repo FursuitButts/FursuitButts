@@ -3,22 +3,22 @@
 class TagAliasPolicy < ApplicationPolicy
   def create?
     # record: TagAliasRequest
-    unbanned?
+    member?
   end
 
   def destroy?
-    return unbanned? unless record.is_a?(TagAlias)
-    unbanned? && record.rejectable_by?(user)
+    return member? unless record.is_a?(TagAlias)
+    member? && record.rejectable_by?(user)
   end
 
   def update?
-    return unbanned? unless record.is_a?(TagAlias)
-    unbanned? && record.editable_by?(user)
+    return member? unless record.is_a?(TagAlias)
+    member? && record.editable_by?(user)
   end
 
   def approve?
-    return unbanned? && user.can_manage_aibur? unless record.is_a?(TagAlias)
-    unbanned? && record.approvable_by?(user)
+    return member? && user.can_manage_aibur? unless record.is_a?(TagAlias)
+    member? && record.approvable_by?(user)
   end
 
   def permitted_attributes

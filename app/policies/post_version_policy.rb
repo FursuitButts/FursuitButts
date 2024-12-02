@@ -2,7 +2,7 @@
 
 class PostVersionPolicy < ApplicationPolicy
   def undo?
-    unbanned?
+    member?
   end
 
   def api_attributes

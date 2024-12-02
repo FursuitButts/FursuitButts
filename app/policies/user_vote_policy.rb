@@ -14,7 +14,7 @@ class UserVotePolicy < ApplicationPolicy
   def index?
     return user.is_moderator? if record.present? && record.is_a?(model.model) # if we're referencing a specific model instance, only allow moderators
     return user.is_moderator? || user == record if presenter.present? # if we're in a UserPresenter, only show to the same user or Moderators
-    user.is_member?
+    user.is_member? || (model == PostVote && user.is_pending?)
   end
 
   def lock?

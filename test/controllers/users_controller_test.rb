@@ -220,7 +220,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
       end
 
       should "restrict access" do
-        assert_access(User::Levels::MEMBER, anonymous_response: :forbidden) { |user| get_auth custom_style_users_path(format: :css), user }
+        assert_access(User::Levels::REJECTED, anonymous_response: :forbidden) { |user| get_auth custom_style_users_path(format: :css), user }
       end
     end
 

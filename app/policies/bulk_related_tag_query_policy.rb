@@ -2,6 +2,6 @@
 
 class BulkRelatedTagQueryPolicy < ApplicationPolicy
   def bulk?
-    unbanned?
+    member?
   end
 end

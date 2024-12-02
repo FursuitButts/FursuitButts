@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
 class PostSetPolicy < ApplicationPolicy
+  def create?
+    unbanned?
+  end
+
   def show?
     return true unless record.is_a?(PostSet)
     view_access?(record)

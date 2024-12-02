@@ -10,63 +10,63 @@ class PostPolicy < ApplicationPolicy
   end
 
   def update_iqdb?
-    unbanned? && user.is_admin?
+    user.is_admin?
   end
 
   def expunge?
-    unbanned? && user.is_approver? && user.is_admin?
+    user.is_approver? && user.is_admin?
   end
 
   def revert?
-    unbanned?
+    member?
   end
 
   def copy_notes?
-    unbanned?
+    member?
   end
 
   def mark_as_translated?
-    unbanned?
+    member?
   end
 
   def regenerate_thumbnails?
-    unbanned? && user.is_janitor?
+    user.is_janitor?
   end
 
   def regenerate_videos?
-    unbanned? && user.is_janitor?
+    user.is_janitor?
   end
 
   def uploaders?
-    unbanned? && user.is_janitor?
+    user.is_janitor?
   end
 
   def destroy?
-    unbanned? && user.is_approver?
+    user.is_approver?
   end
 
   def undelete?
-    unbanned? && user.is_approver?
+    user.is_approver?
   end
 
   def move_favorites?
-    unbanned? && user.is_approver?
+    user.is_approver?
   end
 
   def approve?
-    unbanned? && user.is_approver?
+    user.is_approver?
   end
 
   def unapprove?
-    unbanned? && user.is_approver?
+    user.is_approver?
   end
 
   def add_to_pool?
-    unbanned?
+    member?
   end
 
   def remove_from_pool?
-    unbanned?
+    member?
   end
 
   def favorites?
