@@ -3292,6 +3292,38 @@ components:
           type: boolean
         post_count:
           type: number
+    Throttle:
+      type: object
+      required:
+        - throttle
+        - bypass
+        - newbie
+        - level
+        - limit
+      properties:
+        throttle:
+          type: object
+          required:
+            - name
+            - newbie_duration
+            - level
+          properties:
+            name:
+              type: string
+            newbie_duration:
+              type: ["integer", "null"]
+            level:
+              type: ["integer", "string", "null"]
+              description: |
+                String is ruby range syntax (`..10` = <=10, `10..` = >=10)
+        bypass:
+          type: boolean
+        newbie:
+          type: boolean
+        level:
+          type: boolean
+        limit:
+          type: ["integer", "null"]
     UploadWhitelist:
       type: object
       required:
@@ -3512,6 +3544,15 @@ components:
           format: date-time
         updater_id:
           type: number
+    UserInfo:
+      type: object
+      required:
+        - throttles
+      properties:
+        throttles:
+          type: array
+          items:
+            $ref: "#/components/schemas/Throttle"
     UserNameChangeRequest:
       type: object
       required:
@@ -6352,6 +6393,14 @@ paths:
           name: search[is_hidden]
           schema:
             type: boolean
+        - in: query
+          name: search[creator_id]
+          schema:
+            type: integer
+        - in: query
+          name: search[creator_name]
+          schema:
+            type: string
       responses:
         200:
           description: Success
@@ -12522,6 +12571,23 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CurrentUser"
+        403:
+          $ref: "#/components/responses/AccessDenied"
+  /users/info.json:
+    get:
+      summary: Get User Info
+      description: You must be the user or Moderator+.
+      tags:
+        - Users
+      security:
+        - basicAuth: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserInfo"
         403:
           $ref: "#/components/responses/AccessDenied"
   # User Blocks

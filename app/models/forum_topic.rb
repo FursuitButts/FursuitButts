@@ -124,6 +124,7 @@ class ForumTopic < ApplicationRecord
       q = q.visible(CurrentUser.user)
 
       q = q.attribute_matches(:title, params[:title_matches])
+      q = q.where_user(:creator_id, :creator, params)
 
       if params[:category_id].present?
         q = q.for_category_id(params[:category_id])

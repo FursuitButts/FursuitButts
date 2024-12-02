@@ -619,14 +619,54 @@ class User < ApplicationRecord
       created_at < duration.ago
     end
 
-    def self.create_user_throttle(name, limiter, checker, newbie_duration)
-      define_method(:"#{name}_limit", limiter)
+    class Throttle
+      include ActiveModel::Serializers::JSON
+      attr_reader :name, :limiter, :bypass, :newbie_duration, :level
+
+      def initialize(name, limiter, bypass, newbie_duration, level)
+        @name = name
+        @limiter = limiter
+        @bypass = bypass
+        @newbie_duration = newbie_duration
+        @level = level
+      end
+
+      def bypass?(user)
+        (bypass && user.send(bypass)) || false
+      end
+
+      def newbie?(user)
+        (newbie_duration && user.younger_than(newbie_duration)) || false
+      end
+
+      def limit(user)
+        user.instance_exec(&limiter)
+      end
+
+      def limited?(user)
+        limit(user) <= 0
+      end
+
+      def level?(user)
+        level.is_a?(Range) ? level.include?(user.level) : (level.blank? || user.level == level)
+      end
+
+      def serializable_hash(*)
+        %i[name newbie_duration level].index_with { |k| send(k) }
+      end
+    end
+
+    cattr_accessor :throttles, default: []
+
+    def self.create_user_throttle(name, limiter, bypass, newbie_duration, level)
+      throttle = Throttle.new(name, limiter, bypass, newbie_duration, level)
+      throttles << throttle
+      define_method(:"#{name}_limit", -> { throttle.limit(self) })
 
       define_method(:"can_#{name}_with_reason") do
-        return true if FemboyFans.config.disable_throttles?
-        return send(checker) if checker && send(checker)
-        return :REJ_NEWBIE if newbie_duration && younger_than(newbie_duration)
-        return :REJ_LIMITED if send("#{name}_limit") <= 0
+        return true if FemboyFans.config.disable_throttles? || throttle.bypass?(self)
+        return :REJ_NEWBIE if throttle.newbie?(self)
+        return :REJ_LIMITED if throttle.limited?(self)
         true
       end
     end
@@ -640,46 +680,46 @@ class User < ApplicationRecord
     end
 
     create_user_throttle(:artist_edit, -> { FemboyFans.config.artist_edit_limit - ArtistVersion.for_user(id).where("updated_at > ?", 1.hour.ago).count },
-                         :general_bypass_throttle?, 3.days)
+                         :general_bypass_throttle?, 3.days, Levels::MEMBER..)
     create_user_throttle(:post_edit, -> { FemboyFans.config.post_edit_limit - PostVersion.for_user(id).where("updated_at > ?", 1.hour.ago).count },
-                         :general_bypass_throttle?, 3.days)
+                         :general_bypass_throttle?, 3.days, Levels::MEMBER..)
     create_user_throttle(:post_appeal, -> { FemboyFans.config.post_appeal_limit - PostAppeal.for_user(id).where("updated_at > ?", 1.hour.ago).count },
-                         :general_bypass_throttle?, 3.days)
+                         :general_bypass_throttle?, 3.days, Levels::MEMBER..)
     create_user_throttle(:wiki_edit, -> { FemboyFans.config.wiki_edit_limit - WikiPageVersion.for_user(id).where("updated_at > ?", 1.hour.ago).count },
-                         :general_bypass_throttle?, 3.days)
+                         :general_bypass_throttle?, 3.days, Levels::MEMBER..)
     create_user_throttle(:pool, -> { FemboyFans.config.pool_limit - Pool.for_user(id).where("created_at > ?", 1.hour.ago).count },
-                         :is_janitor?, 3.days)
+                         :is_janitor?, 3.days, Levels::MEMBER..)
     create_user_throttle(:pool_edit, -> { FemboyFans.config.pool_edit_limit - PoolVersion.for_user(id).where("updated_at > ?", 1.hour.ago).count },
-                         :is_janitor?, 3.days)
+                         :is_janitor?, 3.days, Levels::MEMBER..)
     create_user_throttle(:pool_post_edit, -> { FemboyFans.config.pool_post_edit_limit - PoolVersion.for_user(id).where("updated_at > ?", 1.hour.ago).group(:pool_id).count(:pool_id).length },
-                         :general_bypass_throttle?, 3.days)
+                         :general_bypass_throttle?, 3.days, Levels::MEMBER..)
     create_user_throttle(:note_edit, -> { FemboyFans.config.note_edit_limit - NoteVersion.for_user(id).where("updated_at > ?", 1.hour.ago).count },
-                         :general_bypass_throttle?, 3.days)
+                         :general_bypass_throttle?, 3.days, Levels::MEMBER..)
     create_user_throttle(:comment, -> { FemboyFans.config.member_comment_limit - Comment.for_creator(id).where("created_at > ?", 1.hour.ago).count },
-                         :general_bypass_throttle?, 3.days)
+                         :general_bypass_throttle?, 3.days, Levels::MEMBER..)
     create_user_throttle(:forum_post, -> { FemboyFans.config.member_comment_limit - ForumPost.for_user(id).where("created_at > ?", 1.hour.ago).count },
-                         :general_bypass_throttle?, 3.days)
+                         :general_bypass_throttle?, 3.days, Levels::MEMBER..)
     create_user_throttle(:dmail_minute, -> { FemboyFans.config.dmail_minute_limit - Dmail.sent_by_id(id).where("created_at > ?", 1.minute.ago).count },
-                         :is_janitor?, 3.days)
+                         :is_janitor?, 3.days, Levels::MEMBER..)
     create_user_throttle(:dmail, -> { FemboyFans.config.dmail_limit - Dmail.sent_by_id(id).where("created_at > ?", 1.hour.ago).count },
-                         :is_janitor?, 3.days)
+                         :is_janitor?, 3.days, Levels::MEMBER..)
     create_user_throttle(:dmail_day, -> { FemboyFans.config.dmail_day_limit - Dmail.sent_by_id(id).where("created_at > ?", 1.day.ago).count },
-                         :is_janitor?, 3.days)
+                         :is_janitor?, 3.days, Levels::MEMBER..)
     # dmails sent by a user of the "restricted" level
     create_user_throttle(:dmail_restricted, -> { FemboyFans.config.dmail_restricted_day_limit - Dmail.sent_by_id(id).where("created_at > ?", 1.day.ago).count },
-                         nil, nil)
+                         :general_bypass_throttle?, nil, Levels::RESTRICTED)
     create_user_throttle(:comment_vote, -> { FemboyFans.config.comment_vote_limit - CommentVote.for_user(id).where("created_at > ?", 1.hour.ago).count },
-                         :general_bypass_throttle?, 3.days)
+                         :general_bypass_throttle?, 3.days, Levels::MEMBER..)
     create_user_throttle(:post_vote, -> { FemboyFans.config.post_vote_limit - PostVote.for_user(id).where("created_at > ?", 1.hour.ago).count },
-                         :general_bypass_throttle?, nil)
+                         :general_bypass_throttle?, nil, Levels::RESTRICTED..)
     create_user_throttle(:post_flag, -> { FemboyFans.config.post_flag_limit - PostFlag.for_creator(id).where("created_at > ?", 1.hour.ago).count },
-                         :can_approve_posts?, 3.days)
+                         :can_approve_posts?, 3.days, Levels::MEMBER..)
     create_user_throttle(:ticket, -> { FemboyFans.config.ticket_limit - Ticket.for_creator(id).where("created_at > ?", 1.hour.ago).count },
-                         :general_bypass_throttle?, 3.days)
+                         :general_bypass_throttle?, 3.days, Levels::MEMBER..)
     create_user_throttle(:suggest_tag, -> { FemboyFans.config.tag_suggestion_limit - (TagAlias.for_creator(id).where("created_at > ?", 1.hour.ago).count + TagImplication.for_creator(id).where("created_at > ?", 1.hour.ago).count + BulkUpdateRequest.for_creator(id).where("created_at > ?", 1.hour.ago).count) },
-                         :is_janitor?, 3.days)
+                         :is_janitor?, 3.days, Levels::MEMBER..)
     create_user_throttle(:forum_vote, -> { FemboyFans.config.forum_vote_limit - ForumPostVote.by(id).where("created_at > ?", 1.hour.ago).count },
-                         :general_bypass_throttle?, 3.days)
+                         :general_bypass_throttle?, 3.days, Levels::MEMBER..)
 
     def can_remove_from_pools?
       is_member? && older_than(3.days)

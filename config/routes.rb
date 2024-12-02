@@ -401,6 +401,7 @@ Rails.application.routes.draw do
       put :delete
       put :undelete
       put :unban
+      get :info
     end
   end
   resources :wiki_pages, constraints: id_name_constraint do

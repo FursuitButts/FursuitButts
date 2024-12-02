@@ -92,7 +92,7 @@ class ForumTopicPolicy < ApplicationPolicy
   end
 
   def permitted_search_params
-    super + %i[title title_matches category_id is_sticky is_locked is_hidden order]
+    super + %i[title title_matches category_id is_sticky is_locked is_hidden creator_id creator_name order]
   end
 
   def api_attributes

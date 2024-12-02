@@ -36,6 +36,7 @@
       <%= subnav_link_to_if(policy(Ban).create?, "Ban", new_ban_path(ban: { user_id: @user.id })) %>
     <% end %>
     <%= subnav_link_to_if(policy(UserTextVersion).index?, "Text Versions", user_text_versions_path(@user)) %>
+    <%= subnav_link_to_if(policy(@user).info?, "Info", info_user_path(@user)) %>
 
     <li>|</li>
     <%= subnav_link_to("Sign out", session_path, method: :delete) %>

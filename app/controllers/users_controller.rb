@@ -124,4 +124,10 @@ class UsersController < ApplicationController
     notice("User unbanned")
     respond_with(@user)
   end
+
+  def info
+    @user = authorize(User.find(params[:id]))
+    @info = UserInfo.new(@user)
+    respond_with(@info)
+  end
 end

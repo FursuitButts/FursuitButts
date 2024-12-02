@@ -13,6 +13,10 @@ class UserPolicy < ApplicationPolicy
     unbanned?
   end
 
+  def info?
+    unbanned? && (!record.is_a?(User) || record.id == user.id || user.is_moderator?)
+  end
+
   def unban?
     user.is_moderator?
   end

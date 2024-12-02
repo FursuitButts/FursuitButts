@@ -1,0 +1,31 @@
+<% content_for(:page_title) do %>
+  User Info
+<% end %>
+
+<h1>Throttles</h1>
+<table class="striped">
+  <tr>
+    <th width="50%">Throttle</th>
+    <th>Limit</th>
+  </tr>
+  <% UserInfo::THROTTLE_LIST.each do |throttle| %>
+    <% t = @info.throttles[throttle] %>
+    <tr>
+      <td><%= throttle %></td>
+      <td>
+        <% if !t.level %>
+          N/A
+        <% elsif t.newbie %>
+          Newbie
+        <% elsif t.bypass %>
+          Bypass
+        <% else %>
+          <%= t.limit %>
+        <% end %>
+        <% if t.url %>
+          <%= link_to("»", t.url, target: "_blank") %>
+        <% end %>
+      </td>
+    </tr>
+  <% end %>
+</table>
