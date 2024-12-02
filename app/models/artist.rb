@@ -34,6 +34,7 @@ class Artist < ApplicationRecord
   has_one :inactive_dnp, -> { deleted }, class_name: "AvoidPosting"
   belongs_to :linked_user, class_name: "User", optional: true
   attribute :notes, :string
+  delegate :post_count, to: :tag
 
   # FIXME: This is a hack on top of the hack below for setting url_string to ensure name is set first for validations
   def assign_attributes(new_attributes)

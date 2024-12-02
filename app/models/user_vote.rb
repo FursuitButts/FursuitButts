@@ -5,7 +5,6 @@ class UserVote < ApplicationRecord
 
   self.abstract_class = true
 
-  belongs_to :user
   after_initialize :initialize_attributes, if: :new_record?
   scope :for_user, ->(uid) { where("user_id = ?", uid) }
 
@@ -14,6 +13,7 @@ class UserVote < ApplicationRecord
     return if child_class.name.starts_with?("Lockable") # We can't check for abstract here, it hasn't been set yet
     child_class.class_eval do
       belongs_to(model_type)
+      belongs_to(:user, counter_cache: "#{child_class.name.underscore}_count")
     end
   end
 

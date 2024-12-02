@@ -209,6 +209,8 @@ class User < ApplicationRecord
   has_many :post_sets, -> { order(name: :asc) }, foreign_key: :creator_id
   has_many :post_versions
   has_many :post_votes
+  has_many :comment_votes
+  has_many :forum_post_votes
   has_many :staff_notes, -> { active.order("staff_notes.id desc") }
   has_many :user_name_change_requests, -> { order(id: :asc) }
   has_many :text_versions, -> { order(id: :desc) }, class_name: "UserTextVersion"

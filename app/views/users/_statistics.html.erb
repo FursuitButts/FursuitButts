@@ -37,7 +37,7 @@
         <span>
           <%= presenter.forum_post_count(self) %>
           <%= link_to_enclosed("mentions", forum_posts_path(search: { body_matches: user.name })) %>
-          <%= link_to_enclosed_if(ForumPostVotePolicy.new(CurrentUser.user, user).index?, "votes", action: "index", controller: "forum_posts/votes", search: { user_name: user.name }) %>
+          <%= link_to_enclosed_if(ForumPostVotePolicy.new(CurrentUser.user, user).index?, "#{user.forum_post_vote_count} votes", action: "index", controller: "forum_posts/votes", search: { user_name: user.name }) %>
           <%= link_to_enclosed_if(policy(EditHistory).index?, "edits", edit_histories_path(search: { versionable_type: "ForumPost", user_id: user.id })) %>
         </span>
 
@@ -54,7 +54,7 @@
         <span>
           <%= presenter.comment_count(self) %> on <%= presenter.commented_posts_count(self) %> <%= "post".pluralize(presenter.commented_on_posts_count) %>
           <%= link_to_enclosed("mentions", comments_path(group_by: :comment, search: { body_matches: user.name })) %>
-          <%= link_to_enclosed_if(CommentVotePolicy.new(CurrentUser.user, user).index?, "votes", action: "index", controller: "comments/votes", search: { user_name: user.name }) %>
+          <%= link_to_enclosed_if(CommentVotePolicy.new(CurrentUser.user, user).index?, "#{user.comment_vote_count} votes", action: "index", controller: "comments/votes", search: { user_name: user.name }) %>
           <%= link_to_enclosed_if(policy(EditHistory).index?, "edits", edit_histories_path(search: { versionable_type: "Comment", user_id: user.id })) %>
         </span>
 
@@ -144,7 +144,7 @@
             <span>
               <%= link_to(user.post_upload_count - user.post_deleted_count, posts_path(tags: "user:#{user.name}")) %>
               <%= link_to_enclosed("comments", comments_path(group_by: "comment", search: { poster_id: user.id })) %>
-              <%= link_to_enclosed_if(votes, "votes", action: "index", controller: "posts/votes", search: { user_name: user.name }) %>
+              <%= link_to_enclosed_if(votes, "#{user.post_vote_count} votes", action: "index", controller: "posts/votes", search: { user_name: user.name }) %>
             </span>
           <% end %>
 
