@@ -174,7 +174,7 @@ class Dmail < ApplicationRecord
     return true if from.is_janitor?
 
     # different throttle for restricted users, no newbie restriction & much more restrictive total limit
-    if from.is_rejected? || from.is_restricted?
+    if from.is_pending?
       allowed = CurrentUser.can_dmail_restricted_with_reason
       errors.add(:base, "You #{User.throttle_reason(allowed, 'daily')}.") if allowed != true
     else
@@ -227,7 +227,7 @@ class Dmail < ApplicationRecord
   end
 
   def quoted_body
-    "[quote]\n@#{from.pretty_name} said:\n\n#{body}\n[/quote]\n\n"
+    "[quote]\n@#{from.name} said:\n\n#{body}\n[/quote]\n\n"
   end
 
   def send_email
@@ -308,6 +308,10 @@ class Dmail < ApplicationRecord
     return true if user.is_moderator? && (from_id == User.system.id || Ticket.exists?(model: self) || key == self.key)
     return true if user.is_admin? && (to.is_admin? || from.is_admin?)
     owner_id == user.id
+  end
+
+  def is_owner?
+    owner_id == CurrentUser.id
   end
 
   def self.available_includes

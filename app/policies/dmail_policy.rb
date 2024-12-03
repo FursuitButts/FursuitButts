@@ -52,4 +52,10 @@ class DmailPolicy < ApplicationPolicy
   def api_attributes
     super - %i[key]
   end
+
+  def html_data_attributes
+    attr = super
+    attr += %i[is_owner?] if user.is_owner?
+    attr
+  end
 end
