@@ -14,7 +14,7 @@ class TagQuery
   NEGATABLE_METATAGS = %w[
     id filetype type rating description parent user user_id approver disapprover flagger deletedby delreason
     source status pool set fav favoritedby note locked upvote votedup downvote voteddown voted
-    width height mpixels ratio filesize duration score favcount date age change tagcount
+    width height mpixels ratio filesize duration score favcount framecount date age change tagcount
     commenter comm noter noteupdater disapprovals
   ] + TagCategory.short_name_list.map { |tag_name| "#{tag_name}tags" }
 
@@ -247,6 +247,9 @@ class TagQuery
 
       when "favcount", "-favcount", "~favcount"
         add_to_query(type, :fav_count) { ParseValue.range(g2) }
+
+      when "framecount", "-framecount", "~framecount"
+        add_to_query(type, :framecount) { ParseValue.range(g2) }
 
       when "filesize", "-filesize", "~filesize"
         add_to_query(type, :filesize) { ParseValue.range_fudged(g2, :filesize) }

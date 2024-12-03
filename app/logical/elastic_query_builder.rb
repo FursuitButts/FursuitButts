@@ -14,6 +14,10 @@ class ElasticQueryBuilder
   end
 
   def search
+    model_class.document_store.search(search_body)
+  end
+
+  def search_body
     if must.empty?
       must.push({ match_all: {} })
     end
@@ -33,14 +37,12 @@ class ElasticQueryBuilder
       query = { function_score: @function_score }
     end
 
-    search_body = {
+    {
       query:   query,
       sort:    order,
       _source: false,
       timeout: "#{CurrentUser.user.try(:statement_timeout) || 3_000}ms",
     }
-
-    model_class.document_store.search(search_body)
   end
 
   def match_any(*args)

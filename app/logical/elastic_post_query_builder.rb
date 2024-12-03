@@ -43,6 +43,7 @@ class ElasticPostQueryBuilder < ElasticQueryBuilder
     add_array_range_relation(:duration, :duration)
     add_array_range_relation(:score, :score)
     add_array_range_relation(:fav_count, :fav_count)
+    add_array_range_relation(:framecount, :framecount)
     add_array_range_relation(:filesize, :file_size)
     add_array_range_relation(:change_seq, :change_seq)
     add_array_range_relation(:date, :created_at)
