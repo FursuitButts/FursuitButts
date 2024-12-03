@@ -1,4 +1,4 @@
-<% if comment.visible_to?(CurrentUser.user) && comment.should_see?(CurrentUser.user) %>
+<% if (comment.visible_to?(CurrentUser.user) && comment.should_see?(CurrentUser.user)) || (current_page?(controller: "comments", action: "show") && CurrentUser.user.id == comment.creator_id) %>
   <article
     class="comment <%= "below-threshold" if comment.below_threshold? %>"
     id="comment-<%= comment.id %>"

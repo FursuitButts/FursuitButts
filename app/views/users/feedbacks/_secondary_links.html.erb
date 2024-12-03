@@ -1,7 +1,7 @@
 <% if @user_feedback %>
   <% user_id = @user_feedback.user_id %>
-<% elsif params[:search] && params[:search][:user_id] %>
-  <% user_id = params[:search][:user_id] %>
+<% elsif params.dig(:search, :user_id) %>
+  <% user_id = params.dig(:search, :user_id) %>
 <% end %>
 <% content_for(:secondary_links) do %>
   <% if user_id %>
@@ -9,6 +9,7 @@
     <%= subnav_link_to_if(policy(Ban).create?, "Ban", new_ban_path(ban: { user_id: user_id })) %>
   <% else %>
     <%= subnav_link_to_if(policy(UserFeedback).create?, "New", new_user_feedback_path) %>
+    <%= subnav_link_to_if(policy(Ban).create?, "Ban", new_ban_path) %>
   <% end %>
   <%= subnav_link_to("Listing", user_feedbacks_path) %>
   <%= subnav_link_to("Search", search_user_feedbacks_path) %>

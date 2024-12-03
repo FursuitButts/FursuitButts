@@ -23,7 +23,7 @@
           <%= t.limit %>
         <% end %>
         <% if t.url %>
-          <%= link_to("»", t.url, target: "_blank") %>
+          <%= link_to("»", t.url, target: "_blank", rel: "noopener") %>
         <% end %>
       </td>
     </tr>

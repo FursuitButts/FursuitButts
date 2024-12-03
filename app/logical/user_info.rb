@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class UserInfo
   include ActiveModel::Serializers::JSON
   THROTTLE_LIST = User::LimitMethods.throttles.map(&:name).sort
@@ -30,7 +32,7 @@ class UserInfo
         r.comments_path(search: { creator_id: user.id }, group_by: "comment")
       when :comment_vote
         r.url_for(controller: "comments/votes", action: :index, search: { user_id: user.id })
-      when :dmail, :dmail_day,:dmail_minute, :dmail_restricted
+      when :dmail, :dmail_day, :dmail_minute, :dmail_restricted
         r.dmails_path(search: { from_id: user.id })
       when :forum_post
         r.forum_posts_path(search: { creator_id: user.id })

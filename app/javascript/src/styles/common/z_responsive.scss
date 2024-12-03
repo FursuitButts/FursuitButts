@@ -23,7 +23,7 @@
     #c-posts #a-show {
       .nav-block li {
         padding: 0 0.5em;
-        
+
         .first span, .last span {
           display: none;
         }
@@ -313,6 +313,7 @@
     }
   }
 }
+
 @media screen and (max-width: 800px) and (horizontal-viewport-segments: 2) {
   body.resp {
     #posts #posts-container {
