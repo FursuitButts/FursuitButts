@@ -72,7 +72,7 @@ class StatsUpdater
       stats[:"#{cat}_tags"] = Tag.where(category: TagCategory.mapping[cat]).count
     end
 
-    Cache.redis.set("e6stats", stats.to_json)
+    Cache.redis.setex("e6stats", 1.day, stats.to_json)
     stats
   end
 end
