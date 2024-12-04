@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
-class StatsUpdater
-  def self.run!
+module StatsUpdater
+  module_function
+
+  def run!
     stats = {}
     stats[:started] = User.system.created_at
 
@@ -71,8 +73,12 @@ class StatsUpdater
     TagCategory.category_names.each do |cat|
       stats[:"#{cat}_tags"] = Tag.where(category: TagCategory.mapping[cat]).count
     end
-
-    Cache.redis.setex("e6stats", 1.day, stats.to_json)
     stats
+  end
+
+  def get
+    Cache.fetch("ffstats", expires_in: 1.day) do
+      run!.as_json
+    end
   end
 end
