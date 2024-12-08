@@ -18,6 +18,10 @@ module Maintenance
     ignoring_exceptions { Recommender.train! }
   end
 
+  def hourly
+    ignoring_exceptions { Post.document_store.import_views }
+  end
+
   def ignoring_exceptions
     ActiveRecord::Base.connection.execute("set statement_timeout = 0")
     yield

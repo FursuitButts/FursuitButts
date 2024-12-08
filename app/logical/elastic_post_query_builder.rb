@@ -44,6 +44,7 @@ class ElasticPostQueryBuilder < ElasticQueryBuilder
     add_array_range_relation(:score, :score)
     add_array_range_relation(:fav_count, :fav_count)
     add_array_range_relation(:framecount, :framecount)
+    add_array_range_relation(:views, :views)
     add_array_range_relation(:filesize, :file_size)
     add_array_range_relation(:change_seq, :change_seq)
     add_array_range_relation(:date, :created_at)
@@ -199,7 +200,13 @@ class ElasticPostQueryBuilder < ElasticQueryBuilder
     when "framecount_asc"
       order.push({ framecount: :asc }, { id: :asc })
 
-    when "favcount"
+    when "views", "views_desc"
+      order.push({ views: :desc }, { id: :desc })
+
+    when "views_asc"
+      order.push({ views: :asc }, { id: :asc })
+
+    when "favcount", "favcount_desc"
       order.push({ fav_count: :desc }, { id: :desc })
 
     when "favcount_asc"

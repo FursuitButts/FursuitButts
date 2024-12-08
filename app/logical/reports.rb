@@ -79,4 +79,16 @@ module Reports
       sub: url.split("?").first,
     }, FemboyFans.config.report_key, "HS256")
   end
+
+  PostView = Struct.new(:id, :post_id, :ip_address, :date)
+  MissedSearch = Struct.new(:id, :tags, :page, :date)
+  Search = Struct.new(:id, :tags, :page, :date)
+
+  def get_all_post_views
+    ClickHouse.connection.select_all("SELECT post_id, COUNT(*) as count FROM post_views GROUP BY (post_id)").to_h { |v| [v["post_id"], v["count"]] }
+  end
+
+  def get_views_for_posts(post_ids)
+    ClickHouse.connection.select_all("SELECT post_id, COUNT(*) as count FROM post_views WHERE post_id IN (#{post_ids.join(', ')}) GROUP BY (post_id)").to_h { |v| [v["post_id"], v["count"]] }
+  end
 end

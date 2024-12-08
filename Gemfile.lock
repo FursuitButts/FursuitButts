@@ -103,6 +103,9 @@ GEM
       msgpack (~> 1.2)
     builder (3.2.4)
     chunky_png (1.4.0)
+    click_house (2.1.2)
+      activesupport
+      faraday (>= 1.7, < 3)
     concurrent-ruby (1.2.3)
     connection_pool (2.4.1)
     crack (1.0.0)
@@ -388,6 +391,7 @@ DEPENDENCIES
   addressable
   bcrypt
   bootsnap
+  click_house (~> 2.1)
   dalli
   debug
   diffy

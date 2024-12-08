@@ -756,6 +756,10 @@ module FemboyFans
     def redis_url
     end
 
+    def clickhouse_url
+      "http://clickhouse:8123"
+    end
+
     def bypass_upload_whitelist?(user)
       user.is_admin? || user == User.system
     end

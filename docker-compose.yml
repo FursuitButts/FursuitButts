@@ -9,6 +9,7 @@ x-environment: &common-env
   FEMBOYFANS_REPORTS_SERVER: http://localhost:${EXPOSED_SERVER_PORT:-4000}/reports
   # Must be internally accessible
   FEMBOYFANS_REPORTS_SERVER_INTERNAL: http://reports:3000
+  FEMBOYFANS_CLICKHOUSE_URL: http://clickhouse:8123
   FEMBOYFANS_REPORTS_ENABLED: 1
   FEMBOYFANS_DISCORD_SITE: http://localhost:4002
   FEMBOYFANS_DISCORD_SECRET: super_secret_for_url_discord
@@ -51,6 +52,7 @@ services:
       - node_modules:/app/node_modules
       - post_data:/app/public/data
       - ./docker/cron_tasks/daily:/etc/periodic/daily
+      - ./docker/cron_tasks/hourly:/etc/periodic/hourly
     environment:
       <<: *common-env
       RAILS_ENV: development

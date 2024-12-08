@@ -59,6 +59,7 @@ module PostIndex
           aspect_ratio:             { type: "float" },
           duration:                 { type: "float" },
           framecount:               { type: "integer" },
+          views:                    { type: "integer" },
 
           tags:                     { type: "keyword" },
           md5:                      { type: "keyword" },
@@ -186,6 +187,7 @@ module PostIndex
         notes            = Hash.new { |h, k| h[k] = [] }
         conn.execute(note_sql).values.each { |p, b| notes[p] << b } # rubocop:disable Style/HashEachMethods
         pending_replacements = conn.execute(pending_replacements_sql).values.to_h
+        views = Reports.get_views_for_posts(post_ids.split(","))
 
         # Special handling for votes to do it with one query
         vote_ids = conn.execute(votes_sql).values.map do |pid, uids, scores|
@@ -218,12 +220,42 @@ module PostIndex
             has_pending_replacements: pending_replacements[p.id],
             disapproval_count:        disapprovers[p.id]&.count || 0,
             artverified:              p.tag_array.any? { |tag| verified_artists.key?(tag) && verified_artists[tag] == p.uploader_id },
+            views:                    views[p.id] || 0,
           }
 
           {
             index: {
               _id:  p.id,
               data: p.as_indexed_json(index_options),
+            },
+          }
+        end
+
+        client.bulk({
+          index: index_name,
+          body:  batch,
+        })
+      end
+    end
+
+    def import_views(options = {})
+      batch_size = options[:batch_size] || 10_000
+
+      relation = all
+      relation = relation.where("id >= ?", options[:from]) if options[:from]
+      relation = relation.where("id <= ?", options[:to])   if options[:to]
+      relation = relation.where(options[:query])           if options[:query]
+
+      relation.find_in_batches(batch_size: batch_size) do |batch|
+        post_ids = batch.map(&:id)
+        views = Reports.get_views_for_posts(post_ids)
+        batch.map! do |p|
+          {
+            index: {
+              _id:  p.id,
+              data: {
+                views: views[p.id] || 0,
+              },
             },
           }
         end
@@ -286,6 +318,7 @@ module PostIndex
       aspect_ratio:             image_width && image_height ? (image_width.to_f / [image_height, 1].max).round(10) : 1.0,
       duration:                 duration,
       framecount:               framecount,
+      views:                    options[:views] || Reports.get_post_views(id),
 
       tags:                     tag_string.split,
       md5:                      md5,

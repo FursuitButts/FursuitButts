@@ -14,7 +14,7 @@ class TagQuery
   NEGATABLE_METATAGS = %w[
     id filetype type rating description parent user user_id approver disapprover flagger deletedby delreason
     source status pool set fav favoritedby note locked upvote votedup downvote voteddown voted
-    width height mpixels ratio filesize duration score favcount framecount date age change tagcount
+    width height mpixels ratio filesize duration score favcount framecount views date age change tagcount
     commenter comm noter noteupdater disapprovals
   ] + TagCategory.short_name_list.map { |tag_name| "#{tag_name}tags" }
 
@@ -25,7 +25,7 @@ class TagQuery
   ORDER_METATAGS = %w[
     id id_desc
     score score_asc
-    favcount favcount_asc
+    favcount favcount_desc favcount_asc
     created_at created_at_asc
     updated updated_desc updated_asc
     comment comment_asc
@@ -38,6 +38,7 @@ class TagQuery
     change change_desc change_asc
     duration duration_desc duration_asc
     framecount framecount_desc framecount_asc
+    views views_desc views_asc
     rank
     random
   ] + COUNT_METATAGS + TagCategory.short_name_list.flat_map { |str| %W[#{str}tags #{str}tags_asc] }
@@ -245,11 +246,14 @@ class TagQuery
       when "score", "-score", "~score"
         add_to_query(type, :score) { ParseValue.range(g2) }
 
-      when "favcount", "-favcount", "~favcount"
-        add_to_query(type, :fav_count) { ParseValue.range(g2) }
-
       when "framecount", "-framecount", "~framecount"
         add_to_query(type, :framecount) { ParseValue.range(g2) }
+
+      when "views", "-views", "~views"
+        add_to_query(type, :views) { ParseValue.range(g2) }
+
+      when "favcount", "-favcount", "~favcount"
+        add_to_query(type, :fav_count) { ParseValue.range(g2) }
 
       when "filesize", "-filesize", "~filesize"
         add_to_query(type, :filesize) { ParseValue.range_fudged(g2, :filesize) }
