@@ -629,7 +629,7 @@ class Post < ApplicationRecord
       @tag_array_was = nil
     end
 
-    def set_tag_string(string) # rubocop:disable Naming/AccessorMethodName
+    def set_tag_string(string)
       self.tag_string = string
       reset_tag_array_cache
     end

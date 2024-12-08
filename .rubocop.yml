@@ -208,3 +208,7 @@ Lint/StructNewOverride:
 
 Style/RedundantAssignment:
   Enabled: false
+
+
+Naming/AccessorMethodName:
+  Enabled: false

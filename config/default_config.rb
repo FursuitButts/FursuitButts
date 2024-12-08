@@ -413,7 +413,7 @@ module FemboyFans
       1_000
     end
 
-    def set_post_limit(user) # rubocop:disable Naming/AccessorMethodName
+    def set_post_limit(user)
       if user.is_admin?
         Float::INFINITY
       else
