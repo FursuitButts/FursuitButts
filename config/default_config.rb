@@ -858,16 +858,16 @@ module FemboyFans
     # only applies to approving
     def tag_change_request_update_limit(user)
       return 0 unless user.can_manage_aibur?
-      if user.is_trusted?
-        100
-      elsif user.is_janitor?
-        500
-      elsif user.is_moderator?
-        1_000
+      if user.is_owner?
+        Float::INFINITY
       elsif user.is_admin?
         100_000
-      elsif user.is_owner?
-        Float::INFINITY
+      elsif user.is_moderator?
+        10_000
+      elsif user.is_janitor?
+        1_000
+      elsif user.is_trusted?
+        500
       else
         0
       end
