@@ -123,11 +123,11 @@ class ElasticQueryBuilder
 
   def add_boolean_exists_relation(key, index_field)
     if q.include?(key)
-      (q[key] ? must : must_not).push({ term: { exists: { field: index_field } } })
+      (q[key] ? must : must_not).push({ exists: { field: index_field } })
     end
 
     if q.include?(:"#{key}_must_not")
-      (q[:"#{key}_must_not"] ? must_not : must).push({ term: { exists: { field: index_field } } })
+      (q[:"#{key}_must_not"] ? must_not : must).push({ exists: { field: index_field } })
     end
 
     if q.include?(:"#{key}_should")
