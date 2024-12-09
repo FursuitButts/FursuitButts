@@ -109,12 +109,14 @@ Autocomplete.initialize_tag_autocomplete = function() {
       case "fav":
       case "favoritedby":
       case "flagger":
-      case "upvote":
-      case "downvote":
-      case "voted":
-      case "votedup":
-      case "voteddown":
         Autocomplete.user_source(term, resp, metatag + ":");
+        break;
+        case "upvote":
+        case "downvote":
+        case "voted":
+        case "votedup":
+        case "voteddown":
+        Autocomplete.user_vote_source(term, resp, metatag + ":");
         break;
       case "pool":
         Autocomplete.pool_source(term, resp, metatag);
@@ -384,6 +386,23 @@ Autocomplete.static_metatag_source = function(term, resp, metatag) {
   matches = matches.map(sub_metatag => `${metatag}:${sub_metatag}`).sort().slice(0, 10);
 
   resp(matches);
+}
+
+Autocomplete.user_vote_source = function(term, resp, prefix) {
+  if (document.body.dataset.userIsModerator === "true") {
+    return Autocomplete.user_source(term, resp, prefix);
+  } else {
+    const id = Number(Utility.meta("current-user-id") || 0),
+      name = Utility.meta("current-user-name").replace(/_/g, " ")
+
+    resp([{
+      id,
+      type: "user",
+      label: name,
+      value: prefix + name,
+      level: document.body.dataset.userLevelString,
+    }]);
+  }
 }
 
 Autocomplete.user_source = function(term, resp, prefix) {
