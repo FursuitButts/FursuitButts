@@ -27,13 +27,16 @@
     <% end %>
   <% end %>
   <% t.column("Last Post") do |topic| %>
-    <%= link_to_user(topic.posts.last.creator) %>
-    <% if policy(topic).can_see_ip_addr? %>
-      (<%= link_to_ip(topic.posts.last.creator_ip_addr) %>)
+    <% post = topic.posts.order(created_at: :desc).last %>
+    <% if post %>
+      <%= link_to_user(post.creator) %>
+      <% if policy(topic).can_see_ip_addr? %>
+        (<%= link_to_ip(post.creator_ip_addr) %>)
+      <% end %>
+      <p><%= time_ago_in_words_tagged(post.created_at, compact: true) %></p>
     <% end %>
-    <p><%= time_ago_in_words_tagged(topic.updated_at, compact: true) %></p>
   <% end %>
-  <% t.column("Creator", th: { class: "created-at creator" }) do |topic| %>
+  <% t.column("Creator", th: { class: "created-at creator" }, td: { class: "creator" }) do |topic| %>
     <%= link_to_user(topic.creator) %>
     <% if policy(topic).can_see_ip_addr? %>
       (<%= link_to_ip(topic.creator_ip_addr) %>)
