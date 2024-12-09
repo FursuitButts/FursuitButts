@@ -291,6 +291,12 @@ class User < ApplicationRecord
         where("lower(name) = ?", normalize_name(name)).first
       end
 
+      def find_by_normalized_name!(name)
+        user = find_by_normalized_name(name)
+        raise(ActiveRecord::RecordNotFound) if user.blank?
+        user
+      end
+
       def find_by_normalized_name_or_id(name)
         if name =~ /\A!\d+\z/
           where("id = ?", name[1..].to_i).first
