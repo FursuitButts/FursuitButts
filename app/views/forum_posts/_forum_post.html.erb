@@ -34,40 +34,50 @@
       <div class="content-menu">
         <menu>
           <% if CurrentUser.user.is_member? && !@forum_topic&.is_stale_for?(CurrentUser.user) && params[:controller] != "forum_posts" %>
-            <%= li_link_to("Reply", "", class: "reply-link forum-post-reply-link") %>
+            <li><%= link_to("Reply", "", class: "reply-link forum-post-reply-link") %>
           <% end %>
           <% if forum_post.is_original_post?(original_forum_post_id) %>
             <% if forum_post.topic.is_hidden? && policy(forum_post.topic).unhide? %>
-              <%= li_link_to("Unhide", unhide_forum_topic_path(forum_post.topic.id), method: :put) %>
+              <li><%= link_to("Unhide", unhide_forum_topic_path(forum_post.topic.id), method: :put) %></li>
             <% elsif policy(forum_post.topic).hide? %>
-              <%= li_link_to("Hide", hide_forum_topic_path(forum_post.topic.id), data: { confirm: "Are you sure you want to hide this forum topic?" }, method: :put) %>
+              <li><%= link_to("Hide", hide_forum_topic_path(forum_post.topic.id), data: { confirm: "Are you sure you want to hide this forum topic?" }, method: :put) %></li>
             <% end %>
-            <%= li_link_to_if(policy(forum_post.topic).destroy?, "Destroy", forum_topic_path(forum_post.topic), data: { confirm: "Are you sure you want to destroy this forum topic?" }, method: :delete) %></li>
+            <% if policy(forum_post.topic).destroy? %>
+              <li><%= link_to("Destroy", forum_topic_path(forum_post.topic), data: { confirm: "Are you sure you want to destroy this forum topic?" }, method: :delete) %></li>
+            <% end %>
           <% else %>
             <% if forum_post.is_hidden? && policy(forum_post).unhide? %>
-              <%= li_link_to("Unhide", "", class: "forum-post-unhide-link") %>
+              <li><%= link_to("Unhide", "", class: "forum-post-unhide-link") %></li>
             <% elsif !forum_post.is_hidden? && policy(forum_post).hide? %>
-              <%= li_link_to("Hide", "", class: "forum-post-hide-link") %>
+              <li><%= link_to("Hide", "", class: "forum-post-hide-link") %></li>
             <% end %>
-            <%= li_link_to_if(policy(forum_post).destroy?, "Destroy", forum_post_path(forum_post.id), data: { confirm: "Are you sure you want to destroy this forum post?" }, method: :delete) %>
+            <% if policy(forum_post).destroy? %>
+              <li><%= link_to("Destroy", forum_post_path(forum_post.id), data: { confirm: "Are you sure you want to destroy this forum post?" }, method: :delete) %></li>
+            <% end %>
           <% end %>
           <% if policy(forum_post).update? %>
-            <% if forum_post.is_original_post?(original_forum_post_id) %>
-              <%= li_link_to("Edit", edit_forum_topic_path(forum_post.topic), id: "edit_forum_topic_link_#{forum_post.topic.id}", class: "edit_forum_topic_link") %>
-            <% else %>
-              <%= li_link_to("Edit", edit_forum_post_path(forum_post.id), id: "edit_forum_post_link_#{forum_post.id}", class: "edit_forum_post_link") %>
-            <% end %>
+            <li>
+              <% if forum_post.is_original_post?(original_forum_post_id) %>
+                <%= link_to("Edit", edit_forum_topic_path(forum_post.topic), id: "edit_forum_topic_link_#{forum_post.topic.id}", class: "edit_forum_topic_link") %>
+              <% else %>
+                <%= link_to("Edit", edit_forum_post_path(forum_post.id), id: "edit_forum_post_link_#{forum_post.id}", class: "edit_forum_post_link") %>
+              <% end %>
+            </li>
           <% end %>
           <% if params[:controller] == "forum_posts" %>
-            <%= li_link_to("Parent", forum_topic_path(forum_post.topic, page: forum_post.forum_topic_page, anchor: "forum_post_#{forum_post.id}")) %>
+            <li><%= link_to("Parent", forum_topic_path(forum_post.topic, page: forum_post.forum_topic_page, anchor: "forum_post_#{forum_post.id}")) %></li>
           <% end %>
-          <%= li_link_to_if(TicketPolicy.new(CurrentUser.user, forum_post).create?, "Report", model_new_ticket_path(model: forum_post)) %>
+          <% if TicketPolicy.new(CurrentUser.user, forum_post).create? %>
+          <li><%= link_to("Report", model_new_ticket_path(model: forum_post)) %></li>
+          <% end %>
           <% edits = policy(EditHistory).show? %>
           <% mark = policy(forum_post).warning? %>
           <% if edits || mark %>
             <li>|</li>
           <% end %>
-          <%= li_link_to_if(edits, "Show Edits", edit_history_path(id: forum_post.id, type: "ForumPost")) %>
+          <% if edits %>
+            <li><%= link_to("Show Edits", edit_history_path(id: forum_post.id, type: "ForumPost")) %></li>
+          <% end %>
           <% if mark %>
             <%= render "user_warnable/buttons", model: forum_post %>
           <% end %>
@@ -102,7 +112,9 @@
           <% end %>
           <% if forum_post.votable? %>
             <%= render "forum_posts/votes/list", votes: forum_post.votes, forum_post: forum_post %>
-            <%= li_link_to_if(ForumPostVotePolicy.new(CurrentUser.user, forum_post).index?, "(List)", { controller: "forum_posts/votes", search: { forum_post_id: forum_post.id } }) %>
+            <% if ForumPostVotePolicy.new(CurrentUser.user, forum_post).index? %>
+              <li><%= link_to("(List)", { controller: "forum_posts/votes", search: { forum_post_id: forum_post.id } }) %></li>
+            <% end %>
           <% end %>
         </menu>
         <% if policy(forum_post).update? %>
