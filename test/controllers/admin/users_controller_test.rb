@@ -36,7 +36,7 @@ module Admin
           end
 
           should "rename" do
-            assert_difference(-> { ModAction.count }, 1) do
+            assert_difference(%w[ModAction.count UserNameChangeRequest.count], 1) do
               put_auth admin_user_path(@user), @admin, params: { user: { name: "renamed" } }
               assert_redirected_to(user_path(@user))
               assert_equal("renamed", @user.reload.name)
@@ -87,14 +87,14 @@ module Admin
         context "when updating the verification of emails" do
           should "allow setting to true" do
             user = create(:user, email_verified: false)
-            put_auth admin_user_path(user), @admin, params: { user: { verified: "true" } }
+            put_auth admin_user_path(user), @admin, params: { user: { email_verified: "true" } }
 
             assert_predicate user.reload, :is_verified?
           end
 
           should "allow setting to false" do
             user = create(:user)
-            put_auth admin_user_path(user), @admin, params: { user: { verified: "false" } }
+            put_auth admin_user_path(user), @admin, params: { user: { email_verified: "false" } }
 
             assert_not_predicate user.reload, :is_verified?
           end

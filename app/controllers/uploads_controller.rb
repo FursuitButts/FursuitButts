@@ -27,7 +27,7 @@ class UploadsController < ApplicationController
   def new
     @upload = authorize(Upload.new)
     if CurrentUser.can_upload_with_reason == :REJ_UPLOAD_NEWBIE
-      return access_denied("You can not upload during your first week.")
+      return access_denied("You can not upload during your first three days.")
     end
     respond_with(@upload)
   end

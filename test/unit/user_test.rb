@@ -11,28 +11,6 @@ class UserTest < ActiveSupport::TestCase
       CurrentUser.user = @user
     end
 
-    context "promoting a user" do
-      setup do
-        CurrentUser.user = create(:moderator_user)
-      end
-
-      should "change the users level and flags" do
-        @user.promote_to!(User::Levels::TRUSTED, can_approve_posts: true)
-        @user.reload
-
-        assert_equal(User::Levels::TRUSTED, @user.level)
-        assert(@user.can_approve_posts?)
-        assert_not(@user.unrestricted_uploads?)
-
-        @user.promote_to!(User::Levels::TRUSTED, can_approve_posts: false, unrestricted_uploads: true)
-        @user.reload
-
-        assert_equal(User::Levels::TRUSTED, @user.level)
-        assert_not(@user.can_approve_posts?)
-        assert(@user.unrestricted_uploads?)
-      end
-    end
-
     should "not validate if the originating ip address is banned" do
       assert_raises ActiveRecord::RecordInvalid do
         as(create(:user)) do

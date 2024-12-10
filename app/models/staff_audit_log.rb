@@ -26,8 +26,8 @@ class StaffAuditLog < ApplicationRecord
 
   FORMATTERS = {
     force_name_change:          {
-      text: ->(log) { "Forced a name change for #{link_to_user(log.user_id)}" },
-      json: %i[user_id],
+      text: ->(log) { "Forced a name change for #{link_to_user(log.target_id)}" },
+      json: %i[target_id],
     },
     hide_pending_posts_for:     {
       text: ->(log) { "Hid pending posts for #{log.duration} #{'hour'.pluralize(duration)}#{" (#{duration / 24} days)" if log.duration >= 24}" },
@@ -46,8 +46,8 @@ class StaffAuditLog < ApplicationRecord
       json: %i[query post_ids],
     },
     user_title_change:          {
-      text: ->(log) { "Set the title of #{link_to_user(log.user_id)} to \"#{log.title}\"" },
-      json: %i[user_id title],
+      text: ->(log) { "Set the title of #{link_to_user(log.target_id)} to \"#{log.title}\"" },
+      json: %i[target_id title],
     },
 
     ### IP Ban ###

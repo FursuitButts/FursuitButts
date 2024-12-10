@@ -62,7 +62,7 @@ module ModActions
       end
 
       should "format user_flags_change correctly" do
-        @target.promote_to!(@target.level, { unrestricted_uploads: true })
+        @target.admin_edit!(@admin, unrestricted_uploads: true)
 
         assert_matches(
           actions: %w[user_flags_change],
@@ -75,7 +75,7 @@ module ModActions
       end
 
       should "format user_level_change correctly" do
-        @target.promote_to!(User::Levels::TRUSTED)
+        @target.admin_edit!(@admin, level: User::Levels::TRUSTED)
 
         assert_matches(
           actions:   %w[user_level_change],

@@ -27,8 +27,8 @@ module Admin
     end
 
     def permitted_attributes
-      attr = %i[profile_about profile_artinfo base_upload_limit enable_privacy_mode unrestricted_uploads can_approve_posts no_flagging no_replacements no_aibur_voting force_name_change]
-      attr += %i[can_manage_aibur email title] if user.is_owner?
+      attr = %i[name profile_about profile_artinfo base_upload_limit enable_privacy_mode unrestricted_uploads can_approve_posts no_flagging no_replacements no_aibur_voting force_name_change]
+      attr += %i[can_manage_aibur email email_verified title] if user.is_owner?
       attr += %i[level] if user.is_owner? || !record.is_admin?
       attr
     end

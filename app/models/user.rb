@@ -182,7 +182,7 @@ class User < ApplicationRecord
   # after_create :notify_sock_puppets
   after_create :create_user_approval, if: ->(rec) { rec.is_restricted? }
   before_update :encrypt_password_on_update
-  after_update :log_update
+  after_update :log_update, if: :is_admin_edit
   after_save :update_cache
   after_update(if: ->(rec) { rec.saved_change_to_profile_about? || rec.saved_change_to_profile_artinfo? || rec.saved_change_to_blacklisted_tags? }) do |rec|
     UserTextVersion.create_version(rec)
@@ -222,6 +222,25 @@ class User < ApplicationRecord
 
   belongs_to :avatar, class_name: "Post", optional: true
   accepts_nested_attributes_for :dmail_filter
+
+  module AdminEditMethods
+    def can_admin_edit?(user)
+      # owners can edit anyone
+      return true if user.is_owner?
+      # no one else can edit admins
+      return false if is_admin?
+      # admins can edit anyone else
+      user.is_admin?
+    end
+
+    def admin_edit(promoter, options)
+      UserAdminEdit.new(self, promoter, options)
+    end
+
+    def admin_edit!(...)
+      admin_edit(...).apply!
+    end
+  end
 
   module BanMethods
     def validate_ip_addr_is_not_banned
@@ -401,10 +420,6 @@ class User < ApplicationRecord
       end
     end
 
-    def promote_to!(new_level, options = {})
-      UserPromotion.new(self, CurrentUser.user, new_level, options).promote!
-    end
-
     def promote_to_owner_if_first_user
       return if Rails.env.test?
 
@@ -418,7 +433,7 @@ class User < ApplicationRecord
     end
 
     def level_string_was
-      level_string(level_was)
+      level_string(level_before_last_save)
     end
 
     def level_string(value = nil)
@@ -1073,12 +1088,6 @@ class User < ApplicationRecord
     end
 
     def log_update
-      if saved_change_to_base_upload_limit?
-        ModAction.log!(:user_upload_limit_change, self, old_upload_limit: base_upload_limit_before_last_save, upload_limit: base_upload_limit, user_id: id)
-      end
-
-      return unless is_admin_edit
-
       if saved_change_to_profile_about? || saved_change_to_profile_artinfo?
         ModAction.log!(:user_text_change, self, user_id: id)
       end
@@ -1087,13 +1096,40 @@ class User < ApplicationRecord
         ModAction.log!(:user_blacklist_change, self, user_id: id)
       end
 
-      if saved_change_to_title
-        StaffAuditLog.log!(:user_title_change, CurrentUser.user, user_id: id, title: title)
+      if saved_change_to_base_upload_limit?
+        ModAction.log!(:user_upload_limit_change, self, old_upload_limit: base_upload_limit_before_last_save, upload_limit: base_upload_limit, user_id: id)
+      end
+
+      if saved_change_to_title?
+        StaffAuditLog.log!(:user_title_change, CurrentUser.user, target_id: id, title: title)
       end
 
       if force_name_change_was != force_name_change && force_name_change?
-        StaffAuditLog.log!(:force_name_change, CurrentUser.user, user_id: id)
+        StaffAuditLog.log!(:force_name_change, CurrentUser.user, target_id: id)
       end
+
+      if bit_prefs != bit_prefs_before_last_save
+        added = []
+        removed = []
+        UserAdminEdit::PREFERENCES.select { |p| p.second.present? }.each do |key, name|
+          next if send(key) == send("#{key}_was")
+          if send(key)
+            added << name
+          else
+            removed << name
+          end
+        end
+
+        if added.any? || removed.any?
+          ModAction.log!(:user_flags_change, self, user_id: id, added: added, removed: removed)
+        end
+      end
+
+      if level != level_before_last_save
+        ModAction.log!(:user_level_change, self, user_id: id, level: level_string, old_level: level_string_was)
+      end
+
+      log_name_change if name != name_before_last_save
     end
   end
 
@@ -1118,6 +1154,7 @@ class User < ApplicationRecord
     end
   end
 
+  include AdminEditMethods
   include BanMethods
   include NameMethods
   include PasswordMethods
@@ -1203,15 +1240,6 @@ class User < ApplicationRecord
     errors = UserNameValidator.validate(self)
     errors << "Forced change by administrator" if force_name_change?
     errors.join("; ").presence
-  end
-
-  def can_admin_edit?(user)
-    # owners can edit anyone
-    return true if user.is_owner?
-    # no one else can edit admins
-    return false if is_admin?
-    # admins can edit anyone else
-    user.is_admin?
   end
 
   def validate_prefs
