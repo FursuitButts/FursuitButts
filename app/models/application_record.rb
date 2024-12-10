@@ -401,7 +401,7 @@ class ApplicationRecord < ActiveRecord::Base
             DText.parse(send(mentionable_body_column)) => { mentions: }
             return if mentions.empty?
             sent = mentionable_notified_mentions_column.present? && respond_to?(mentionable_notified_mentions_column) ? send(mentionable_notified_mentions_column) : []
-            userids = mentions.map { |name| User.name_to_id(name) }.compact
+            userids = mentions.uniq.map { |name| User.name_to_id(name) }.compact.uniq
             unsent = userids - sent
             creator = send(mentionable_creator_column)
             return if unsent.empty?
