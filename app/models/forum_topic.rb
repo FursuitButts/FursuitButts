@@ -90,7 +90,7 @@ class ForumTopic < ApplicationRecord
         ModAction.log!(:forum_topic_move, self, forum_topic_title: title, user_id: creator_id, forum_category_id: category_id, forum_category_name: category.name, old_forum_category_id: category_id_before_last_save, old_forum_category_name: ForumCategory.find_by(id: category_id_before_last_save)&.name || "")
       end
 
-      unless specific || previously_new_record?
+      unless specific || previously_new_record? || CurrentUser.id == creator_id
         ModAction.log!(:forum_topic_update, self, forum_topic_title: title, user_id: creator_id)
       end
     end
