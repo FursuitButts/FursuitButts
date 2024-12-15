@@ -7,7 +7,7 @@ require File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "config",
   klass.find_each do |tcr|
     puts "#{tcr.class.name}: #{tcr.id}"
     if tcr.forum_post.present? && tcr.forum_post.tag_change_request != tcr
-      tcr.forum_post.update(tag_change_request: tcr)
+      tcr.forum_post.update_columns(tag_change_request_id: tcr.id, tag_change_request_type: tcr.class.name)
     end
   end
 end

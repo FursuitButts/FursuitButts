@@ -24,7 +24,7 @@ module Tags
     end
 
     def create
-      @tag_alias_request = authorize(TagAliasRequest.new(permitted_attributes(TagAlias)), policy_class: TagAliasPolicy)
+      @tag_alias_request = authorize(TagAliasRequest.new(**permitted_attributes(TagAlias).to_h.symbolize_keys), policy_class: TagAliasPolicy)
       @tag_alias_request.create
 
       if @tag_alias_request.invalid?

@@ -24,7 +24,7 @@ module Tags
     end
 
     def create
-      @tag_implication_request = authorize(TagImplicationRequest.new(permitted_attributes(TagImplication)), policy_class: TagImplicationPolicy)
+      @tag_implication_request = authorize(TagImplicationRequest.new(**permitted_attributes(TagImplication).to_h.symbolize_keys), policy_class: TagImplicationPolicy)
       @tag_implication_request.create
 
       if @tag_implication_request.invalid?

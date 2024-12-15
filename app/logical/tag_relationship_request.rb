@@ -13,7 +13,7 @@ class TagRelationshipRequest
     @antecedent_name = antecedent_name&.strip&.tr(" ", "_")
     @consequent_name = consequent_name&.strip&.tr(" ", "_")
     @reason = reason
-    @skip_forum = skip_forum
+    @skip_forum = skip_forum.to_s.truthy?
     if forum_topic.present?
       @forum_topic = forum_topic
       @forum_topic_id = forum_topic.id
