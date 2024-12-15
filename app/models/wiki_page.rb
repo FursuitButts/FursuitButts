@@ -9,6 +9,7 @@ class WikiPage < ApplicationRecord
 
   belongs_to_creator
   belongs_to_updater
+  has_dtext_links :body
   has_one :help_page
   has_one :tag, foreign_key: "name", primary_key: "title"
   has_one :artist, foreign_key: "name", primary_key: "title"
@@ -41,8 +42,6 @@ class WikiPage < ApplicationRecord
   after_save :update_help_page, if: :saved_change_to_title?
 
   attr_accessor :edit_reason, :parent_name, :parent_anchor, :target_wiki_page_id, :target_wiki_page_title
-
-  has_dtext_links :body
 
   module LogMethods
     def log_save

@@ -8,6 +8,7 @@ class Pool < ApplicationRecord
 
   array_attribute :post_ids, parse: %r{(?:https://#{FemboyFans.config.domain}/posts/)?(\d+)}i, cast: :to_i
   belongs_to_creator
+  has_dtext_links :description
 
   normalizes :description, with: ->(desc) { desc.gsub("\r\n", "\n") }
   validates :name, uniqueness: { case_sensitive: false, if: :name_changed? }
@@ -30,8 +31,6 @@ class Pool < ApplicationRecord
   has_many :versions, -> { order("id asc") }, class_name: "PoolVersion", dependent: :destroy
 
   attr_accessor :skip_sync
-
-  has_dtext_links :description
 
   def limited_attribute_changed?
     name_changed? || description_changed? || is_active_changed?

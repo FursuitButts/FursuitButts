@@ -4,6 +4,7 @@ class ForumPost < ApplicationRecord
   include UserWarnable
   simple_versioning
   mentionable
+  has_dtext_links :body
   belongs_to_creator counter_cache: "forum_post_count"
   belongs_to_updater
   belongs_to :topic, class_name: "ForumTopic"
@@ -40,8 +41,6 @@ class ForumPost < ApplicationRecord
   end
 
   attr_accessor :bypass_limits, :is_merging
-
-  has_dtext_links :body
 
   module SearchMethods
     def topic_title_matches(title)
