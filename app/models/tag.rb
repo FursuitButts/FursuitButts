@@ -367,14 +367,11 @@ class Tag < ApplicationRecord
       return if followers.exists?(user: user)
       raise(TagFollower::AliasedTagError) if antecedent_alias.present?
       last_post = Post.sql_raw_tag_match(name).order(id: :asc).last
-      follower = followers.create(user: user, last_post: last_post)
-      user.increment!(:followed_tag_count) unless follower.errors.any?
-      follower
+      followers.create(user: user, last_post: last_post)
     end
 
     def unfollow!(user = CurrentUser.user)
       return unless followers.exists?(user: user)
-      user.decrement!(:followed_tag_count)
       followers.find_by(user: user).destroy
     end
   end

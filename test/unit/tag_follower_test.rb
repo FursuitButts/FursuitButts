@@ -7,6 +7,8 @@ class TagFollowerTest < ActiveSupport::TestCase
     setup do
       @user = create(:user)
       CurrentUser.user = @user
+      @tag = create(:tag)
+      @tag2 = create(:tag)
     end
 
     context "posts" do
@@ -63,35 +65,38 @@ class TagFollowerTest < ActiveSupport::TestCase
     end
 
     should "update the tag's follower count" do
-      tag = create(:tag)
-      assert_equal(0, tag.reload.follower_count)
-      follower = create(:tag_follower, tag: tag, user: @user)
-      assert_equal(1, tag.reload.follower_count)
-      follower.destroy
-      assert_equal(0, tag.reload.follower_count)
+      assert_equal(0, @tag.reload.follower_count)
+      @tag.follow!(@user)
+      assert_equal(1, @tag.reload.follower_count)
+      @tag.unfollow!(@user)
+      assert_equal(0, @tag.reload.follower_count)
     end
 
     should "update the user's followed tag count" do
       assert_equal(0, @user.reload.followed_tag_count)
-      follower = create(:tag_follower, user: @user)
+      @tag.follow!(@user)
       assert_equal(1, @user.reload.followed_tag_count)
-      follower.destroy
+      @tag.unfollow!(@user)
       assert_equal(0, @user.reload.followed_tag_count)
     end
 
     should "have its tag changed when an alias is approved" do
-      tag = create(:tag)
-      tag2 = create(:tag)
-      follower = create(:tag_follower, tag: tag, user: @user)
-      assert_equal(tag.id, follower.tag_id)
-      assert_equal(1, tag.reload.follower_count)
-      assert_equal(0, tag2.reload.follower_count)
-      ta = create(:tag_alias, antecedent_name: tag.name, consequent_name: tag2.name)
-      with_inline_jobs { ta.approve! }
-      follower.reload
-      assert_equal(tag2.id, follower.tag_id)
-      assert_equal(0, tag.reload.follower_count)
-      assert_equal(1, tag2.reload.follower_count)
+      @follower = @tag.follow!(@user)
+      assert_equal(@tag.id, @follower.tag_id)
+      assert_equal(1, @tag.reload.follower_count)
+      assert_equal(0, @tag2.reload.follower_count)
+      @ta = create(:tag_alias, antecedent_name: @tag.name, consequent_name: @tag2.name)
+      with_inline_jobs { @ta.approve! }
+      @follower.reload
+      assert_equal(@tag2.id, @follower.tag_id)
+      assert_equal(0, @tag.reload.follower_count)
+      assert_equal(1, @tag2.reload.follower_count)
+    end
+
+    should "prevent following aliased tags" do
+      @ta = create(:tag_alias, antecedent_name: @tag.name, consequent_name: @tag2.name)
+      with_inline_jobs { @ta.approve! }
+      assert_raises(TagFollower::AliasedTagError) { @tag.follow!(@user) }
     end
   end
 end
