@@ -392,7 +392,7 @@ class ApplicationRecord < ActiveRecord::Base
           after_save(:update_mentions, if: :should_update_mentions?)
 
           define_method(:should_update_mentions?) do
-            saved_change_to_attribute?(mentionable_body_column) && CurrentUser.user.id == send(mentionable_creator_column)
+            saved_change_to_attribute?(mentionable_body_column) && CurrentUser.user.id == send(mentionable_creator_column)# && send(mentionable_creator_column) != User.system.id
           end
 
           define_method(:update_mentions) do
@@ -409,7 +409,7 @@ class ApplicationRecord < ActiveRecord::Base
               # Save the user to the mentioned list regardless so they don't get a random notification for a future edit if they unblock the creator
               send(mentionable_notified_mentions_column) << user_id if mentionable_notified_mentions_column.present? && respond_to?(mentionable_notified_mentions_column)
               user = User.find(user_id)
-              next if user.is_suppressing_mentions_from?(creator) || user.id == creator
+              next if user.is_suppressing_mentions_from?(creator) || user.id == creator || user == User.system
               extra = {}
               type = self.class.name
               case type

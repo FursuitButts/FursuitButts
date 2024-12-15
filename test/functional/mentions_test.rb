@@ -39,6 +39,18 @@ class MentionsTest < ActiveSupport::TestCase
             @comment = create(:comment, creator: @user, body: "hello @#{@user.name}")
           end
         end
+
+        should "not create a notification when mentioning the system user" do
+          assert_no_difference("Notification.count") do
+            @comment = create(:comment, creator: @user, body: "hello @#{FemboyFans.config.system_user_name}")
+          end
+        end
+
+        should "not create a notification when mentioned by the system user" do
+          assert_no_difference("Notification.count") do
+            @comment = create(:comment, creator: User.system, body: "hello @#{@user.name}", topic: @topic)
+          end
+        end
       end
 
       context "when editing" do
@@ -145,6 +157,18 @@ class MentionsTest < ActiveSupport::TestCase
         should "not create a notification when mentioning the creator" do
           assert_no_difference("Notification.count") do
             @forum_post = create(:forum_post, creator: @user, body: "hello @#{@user.name}", topic: @topic)
+          end
+        end
+
+        should "not create a notification when mentioning the system user" do
+          assert_no_difference("Notification.count") do
+            @forum_post = create(:forum_post, creator: @user, body: "hello @#{FemboyFans.config.system_user_name}", topic: @topic)
+          end
+        end
+
+        should "not create a notification when mentioned by the system user" do
+          assert_no_difference("Notification.count") do
+            @forum_post = create(:forum_post, creator: User.system, body: "hello @#{@user.name}", topic: @topic)
           end
         end
       end
