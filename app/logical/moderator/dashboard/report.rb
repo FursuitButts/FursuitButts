@@ -46,7 +46,7 @@ module Moderator
 
       def user_feedbacks
         ApplicationRecord.without_timeout do
-          Queries::UserFeedback.all
+          Queries::UserFeedback.all(min_date, max_level)
         end
       end
 

@@ -4,7 +4,7 @@
     <%= link_to_user(activity.user) %>
   <% end %>
   <% t.column("Count") do |activity| %>
-    <%= link_to(activity.count, user_text_versions_path(search: { updater_id: activity.user.id })) %>
+    <%= link_to(activity.count, moderator_user_text_versions_path(search: { updater_id: activity.user.id })) %>
   <% end %>
 <% end %>
 
