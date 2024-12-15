@@ -7,7 +7,7 @@ module StorageManager
     TEMP_DIR = "/tmp"
     attr_reader :secret_token
 
-    def initialize(host, port, user, password, secret_token, **options) # rubocop:disable Metrics/ParameterLists
+    def initialize(host, port, user, password, secret_token, **options)
       @host = host
       @port = port
       @user = user

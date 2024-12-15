@@ -5,7 +5,7 @@ class SessionCreator
   AUTH_TYPES = %w[login reauthenticate].freeze
   attr_reader :session, :cookies, :name, :password, :ip_addr, :remember, :secure, :request
 
-  def initialize(session, cookies, name, password, ip_addr, request, remember: false, secure: false) # rubocop:disable Metrics/ParameterLists
+  def initialize(session, cookies, name, password, ip_addr, request, remember: false, secure: false)
     @session = session
     @cookies = cookies
     @name = name

@@ -4,7 +4,7 @@ module StorageManager
   class Base
     attr_reader :base_url, :base_dir, :hierarchical, :large_image_prefix, :protected_prefix, :base_path, :replacement_prefix
 
-    def initialize(base_url: default_base_url, base_path: default_base_path, base_dir: DEFAULT_BASE_DIR, hierarchical: false, # rubocop:disable Metrics/ParameterLists
+    def initialize(base_url: default_base_url, base_path: default_base_path, base_dir: DEFAULT_BASE_DIR, hierarchical: false,
                    large_image_prefix: FemboyFans.config.large_image_prefix,
                    protected_prefix: FemboyFans.config.protected_path_prefix,
                    replacement_prefix: FemboyFans.config.replacement_path_prefix)

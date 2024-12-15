@@ -35,7 +35,7 @@ class TableBuilder
     # @param td [Hash] the HTML attributes for the column's <td> tag.
     # @param width [String] the HTML width value for the <th> tag.
     # @yieldparam item a block that returns the column value based on the item.
-    def initialize(attribute = nil, column: nil, th: {}, td: {}, width: nil, name: nil, &block) # rubocop:disable Metrics/ParameterLists, Naming/MethodParameterName
+    def initialize(attribute = nil, column: nil, th: {}, td: {}, width: nil, name: nil, &block) # rubocop:disable Naming/MethodParameterName
       @attribute = attribute
       @column = column
       @header_attributes = { width: width, **th }

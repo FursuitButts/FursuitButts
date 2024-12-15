@@ -392,7 +392,7 @@ class ApplicationRecord < ActiveRecord::Base
           after_save(:update_mentions, if: :should_update_mentions?)
 
           define_method(:should_update_mentions?) do
-            saved_change_to_attribute?(mentionable_body_column) && CurrentUser.user.id == send(mentionable_creator_column)# && send(mentionable_creator_column) != User.system.id
+            saved_change_to_attribute?(mentionable_body_column) && CurrentUser.user.id == send(mentionable_creator_column) # && send(mentionable_creator_column) != User.system.id
           end
 
           define_method(:update_mentions) do
