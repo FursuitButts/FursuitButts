@@ -99,9 +99,10 @@ class BulkUpdateRequest < ApplicationRecord
         update(forum_post_id: forum_post.id)
       else
         forum_topic = ForumTopic.create(title: title, category_id: FemboyFans.config.alias_implication_forum_category, original_post_attributes: { body: "Reason: #{reason}" })
-        update(forum_topic_id: forum_topic.id, forum_post_id: forum_topic.posts.first.id)
-        forum_topic.posts.first.update(tag_change_request: self)
+        forum_post = forum_topic.posts.first
+        update(forum_topic_id: forum_topic.id, forum_post_id: forum_post.id)
       end
+      forum_post.update(tag_change_request: self)
     end
 
     def reject!(rejector = User.system)

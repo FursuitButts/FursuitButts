@@ -9,12 +9,18 @@ class TagRelationshipRequest
   validate :validate_tag_relationship
   validate :validate_forum_topic
 
-  def initialize(attributes)
-    @antecedent_name = attributes[:antecedent_name]&.strip&.tr(" ", "_")
-    @consequent_name = attributes[:consequent_name]&.strip&.tr(" ", "_")
-    @reason = attributes[:reason]
-    @forum_topic_id = attributes[:forum_topic_id]
-    self.skip_forum = attributes[:skip_forum]
+  def initialize(antecedent_name:, consequent_name:, reason: nil, skip_forum: false, forum_topic: nil, forum_topic_id: nil)
+    @antecedent_name = antecedent_name&.strip&.tr(" ", "_")
+    @consequent_name = consequent_name&.strip&.tr(" ", "_")
+    @reason = reason
+    @skip_forum = skip_forum
+    if forum_topic.present?
+      @forum_topic = forum_topic
+      @forum_topic_id = forum_topic.id
+    elsif forum_topic_id.present?
+      @forum_topic = ForumTopic.find_by(id: forum_topic_id)
+      @forum_topic_id = forum_topic_id
+    end
   end
 
   def self.create(...)
@@ -76,13 +82,7 @@ class TagRelationshipRequest
 
   def validate_forum_topic
     return if skip_forum
-    if forum_topic_id.present?
-      @forum_topic = ForumTopic.find_by(id: forum_topic_id)
-      if @forum_topic.blank?
-        errors.add(:forum_topic_id, "is invalid")
-        return
-      end
-    end
+    return errors.add(:forum_topic_id, "is invalid") if @forum_topic_id.present? && @forum_topic.blank?
     ft = @forum_topic || build_forum_topic
     if ft.invalid?
       errors.add(:base, ft.errors.full_messages.join("; "))

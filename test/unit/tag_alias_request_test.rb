@@ -23,19 +23,30 @@ class TagAliasRequestTest < ActiveSupport::TestCase
 
     should "create a forum topic" do
       assert_difference("ForumTopic.count", 1) do
-        TagAliasRequest.create(antecedent_name: "aaa", consequent_name: "bbb", reason: "reason")
+        @tar = TagAliasRequest.create(antecedent_name: "aaa", consequent_name: "bbb", reason: "reason").tag_relationship
       end
+      @topic = ForumTopic.last
+      assert_equal(@tar.forum_topic_id, @topic.id)
+      assert_equal(@tar.forum_post_id, @topic.posts.first.id)
+      assert_equal(@tar.id, @tar.forum_post.tag_change_request_id)
+      assert_equal("TagAlias", @tar.forum_post.tag_change_request_type)
     end
 
-    should "create a forum post" do
+    should "create a post in an existing topic" do
+      @topic = create(:forum_topic)
       assert_difference("ForumPost.count", 1) do
-        TagAliasRequest.create(antecedent_name: "aaa", consequent_name: "bbb", reason: "reason")
+        @tar = TagAliasRequest.create(antecedent_name: "aaa", consequent_name: "bbb", reason: "reason", forum_topic: @topic).tag_relationship
       end
+      assert_equal(@tar.forum_topic_id, @topic.id)
+      assert_equal(@tar.forum_post_id, @topic.posts.second.id)
+      assert_equal(@tar.id, @tar.forum_post.tag_change_request_id)
+      assert_equal("TagAlias", @tar.forum_post.tag_change_request_type)
     end
 
-    should "save the forum post id" do
-      tar = TagAliasRequest.create(antecedent_name: "aaa", consequent_name: "bbb", reason: "reason")
-      assert_equal(tar.forum_topic.posts.first.id, tar.tag_relationship.forum_post.id)
+    should "not create a topic when skip_forum is true" do
+      assert_no_difference("ForumTopic.count") do
+        TagAliasRequest.create(antecedent_name: "aaa", consequent_name: "bbb", skip_forum: true)
+      end
     end
 
     should "fail validation if the reason is too short" do

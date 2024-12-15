@@ -45,8 +45,6 @@ class BulkUpdateRequestTest < ActiveSupport::TestCase
 
         @ta = TagAlias.where(antecedent_name: "foo", consequent_name: "bar").first
         @ti = TagImplication.where(antecedent_name: "bar", consequent_name: "baz").first
-        Rails.logger.debug(ModAction.count)
-        Rails.logger.debug(ModAction.all.map(&:action))
       end
 
       should "reference the approver in the automated message" do
@@ -70,11 +68,27 @@ class BulkUpdateRequestTest < ActiveSupport::TestCase
 
     should "create a forum topic" do
       assert_difference("ForumTopic.count", 1) do
-        create(:bulk_update_request)
+        @bur = create(:bulk_update_request)
       end
+      @topic = ForumTopic.last
+      assert_equal(@bur.forum_topic_id, @topic.id)
+      assert_equal(@bur.forum_post_id, @topic.posts.first.id)
+      assert_equal(@bur.id, @bur.forum_post.tag_change_request_id)
+      assert_equal("BulkUpdateRequest", @bur.forum_post.tag_change_request_type)
     end
 
-    should "not create a forum when skip_forum is true" do
+    should "create a post in an existing topic" do
+      @topic = create(:forum_topic)
+      assert_difference("ForumPost.count", 1) do
+        @bur = create(:bulk_update_request, forum_topic: @topic)
+      end
+      assert_equal(@bur.forum_topic_id, @topic.id)
+      assert_equal(@bur.forum_post_id, @topic.posts.second.id)
+      assert_equal(@bur.id, @bur.forum_post.tag_change_request_id)
+      assert_equal("BulkUpdateRequest", @bur.forum_post.tag_change_request_type)
+    end
+
+    should "not create a topic when skip_forum is true" do
       assert_no_difference("ForumTopic.count") do
         create(:bulk_update_request, skip_forum: true)
       end

@@ -23,13 +23,29 @@ class TagImplicationRequestTest < ActiveSupport::TestCase
 
     should "create a forum topic" do
       assert_difference("ForumTopic.count", 1) do
-        TagImplicationRequest.create(antecedent_name: "aaa", consequent_name: "bbb", reason: "reason")
+        @tir = TagImplicationRequest.create(antecedent_name: "aaa", consequent_name: "bbb", reason: "reason").tag_relationship
       end
+      @topic = ForumTopic.last
+      assert_equal(@tir.forum_topic_id, @topic.id)
+      assert_equal(@tir.forum_post_id, @topic.posts.first.id)
+      assert_equal(@tir.id, @tir.forum_post.tag_change_request_id)
+      assert_equal("TagImplication", @tir.forum_post.tag_change_request_type)
     end
 
-    should "create a forum post" do
+    should "create a post in an existing topic" do
+      @topic = create(:forum_topic)
       assert_difference("ForumPost.count", 1) do
-        TagImplicationRequest.create(antecedent_name: "aaa", consequent_name: "bbb", reason: "reason")
+        @tir = TagImplicationRequest.create(antecedent_name: "aaa", consequent_name: "bbb", reason: "reason", forum_topic: @topic).tag_relationship
+      end
+      assert_equal(@tir.forum_topic_id, @topic.id)
+      assert_equal(@tir.forum_post_id, @topic.posts.second.id)
+      assert_equal(@tir.id, @tir.forum_post.tag_change_request_id)
+      assert_equal("TagImplication", @tir.forum_post.tag_change_request_type)
+    end
+
+    should "not create a topic when skip_forum is true" do
+      assert_no_difference("ForumTopic.count") do
+        TagImplicationRequest.create(antecedent_name: "aaa", consequent_name: "bbb", skip_forum: true)
       end
     end
   end
