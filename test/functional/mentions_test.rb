@@ -48,7 +48,7 @@ class MentionsTest < ActiveSupport::TestCase
 
         should "not create a notification when mentioned by the system user" do
           assert_no_difference("Notification.count") do
-            @comment = create(:comment, creator: User.system, body: "hello @#{@user.name}", topic: @topic)
+            @comment = create(:comment, creator: User.system, body: "hello @#{@user.name}")
           end
         end
       end
