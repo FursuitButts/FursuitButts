@@ -143,6 +143,7 @@ x-constants:
   - &auditlog-actions
     - force_name_change
     - min_upload_level_change
+    - hide_pending_posts_for
     - post_owner_reassign
     - stuck_dnp
     - user_title_change
@@ -157,6 +158,8 @@ x-constants:
     - post_vote_delete
     - post_vote_lock
     - forum_post_vote_delete
+    - lockdown
+    - lockdown_panic
   - &post-event-actions
     - deleted
     - undeleted
@@ -2807,6 +2810,10 @@ components:
           type: number
           description: |
             Valid for: `min_upload_level_change`
+        duration:
+          type: number
+          description: |
+            Valid for: `hide_pending_posts_for`
         new_user_id:
           type: number
           description: |
@@ -2851,6 +2858,27 @@ components:
           type: number
           description: |
             Valid for: `comment_vote_delete`, `comment_vote_lock`, `post_vote_delete`, `post_vote_lock`, `forum_post_vote_delete`
+        params:
+          type: object
+          description: |
+            Valid for: `lockdown`
+          properties:
+            uploads:
+              type: boolean
+            pools:
+              type: boolean
+            post_sets:
+              type: boolean
+            comments:
+              type: boolean
+            forums:
+              type: boolean
+            aiburs:
+              type: boolean
+            favorites:
+              type: boolean
+            votes:
+              type: boolean
     StaffNote:
       type: object
       required:

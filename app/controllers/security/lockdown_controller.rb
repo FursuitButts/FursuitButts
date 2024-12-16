@@ -40,10 +40,11 @@ module Security
     def uploads_min_level
       authorize(%i[security lockdown])
       new_level = params.dig(:uploads_min_level, :min_level).to_i
+      old_level = Lockdown.uploads_min_level
       return render_expected_error(422, "#{new_level} is not valid") unless User::VALID_LEVELS.include?(new_level)
-      if new_level != Lockdown.uploads_min_level
+      if new_level != old_level
         Security::Lockdown.uploads_min_level = new_level
-        StaffAuditLog.log!(:min_upload_level_change, CurrentUser.user, level: new_level)
+        StaffAuditLog.log!(:min_upload_level_change, CurrentUser.user, old_level: old_level, new_level: new_level)
       end
       redirect_to(security_root_path)
     end
