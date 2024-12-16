@@ -11,10 +11,16 @@ class StaffAuditLog < ApplicationRecord
     comment_id post_id forum_post_id vote voter_id
     destroyed_post_id
     duration
+    params
   ].freeze
 
   store_accessor :values, *VALUES
   belongs_to :user, class_name: "User"
+
+  def self.log(...)
+    Rails.logger.warn("StaffAuditLog: use StaffAuditLog.log! instead of StaffAuditLog.log")
+    log!(...)
+  end
 
   def self.log!(category, user, **details)
     create!(user: user, action: category.to_s, values: details)
@@ -33,8 +39,22 @@ class StaffAuditLog < ApplicationRecord
       text: ->(log) { "Hid pending posts for #{log.duration} #{'hour'.pluralize(duration)}#{" (#{duration / 24} days)" if log.duration >= 24}" },
       json: %i[duration],
     },
+    lockdown:                   {
+      text: ->(log) do
+        text = "Updated lockdown"
+        log.params.each do |k, v|
+          text += "\nset #{k} to #{v}"
+        end
+        text
+      end,
+      json: %i[params],
+    },
+    lockdown_panic:             {
+      text: ->(_log) { "Enabled lockdown panic" },
+      json: %i[],
+    },
     min_upload_level_change:    {
-      text: ->(log, _user) { "Changed the minimum upload level from [b]#{User::Levels.id_to_name(log.old_level)}[/b] to [b]#{User::Levels.level_name(log.new_level)}[/b]" },
+      text: ->(log) { "Changed the minimum upload level from [b]#{User::Levels.id_to_name(log.old_level)}[/b] to [b]#{User::Levels.level_name(log.new_level)}[/b]" },
       json: %i[new_level old_level],
     },
     post_owner_reassign:        {

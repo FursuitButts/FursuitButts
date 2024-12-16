@@ -2,6 +2,7 @@
 
 class PostsController < ApplicationController
   respond_to :html, :json
+  before_action :ensure_lockdown_disabled, except: %i[index show show_seq random uploaders]
 
   def index
     if params[:md5].present?
@@ -28,7 +29,7 @@ class PostsController < ApplicationController
   def show
     @post = authorize(Post.find(params[:id]))
 
-    raise(User::PrivilegeError, "Post unavailable") unless DangerZone.post_visible?(@post, CurrentUser.user)
+    raise(User::PrivilegeError, "Post unavailable") unless Security::Lockdown.post_visible?(@post, CurrentUser.user)
 
     include_deleted = @post.is_deleted? || (@post.parent_id.present? && @post.parent.is_deleted?) || CurrentUser.is_approver?
     @parent_post_set = PostSets::PostRelationship.new(@post.parent_id, include_deleted: include_deleted, want_parent: true)
@@ -306,6 +307,10 @@ class PostsController < ApplicationController
   def ensure_can_edit(_post)
     can_edit = CurrentUser.can_post_edit_with_reason
     raise(User::PrivilegeError, "Updater #{User.throttle_reason(can_edit)}") unless can_edit == true
+  end
+
+  def ensure_lockdown_disabled
+    access_denied if Security::Lockdown.uploads_disabled? && !CurrentUser.is_staff?
   end
 
   def append_pool_to_session(pool)

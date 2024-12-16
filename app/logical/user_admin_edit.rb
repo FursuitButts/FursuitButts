@@ -16,7 +16,6 @@ class UserAdminEdit
     [:enable_privacy_mode, nil, :is_admin?],
     [:email_verified, nil, :is_owner?],
   ].freeze
-  VALID_LEVELS = (User::Levels.constants - %i[ANONYMOUS LOCKED]).map { |v| User::Levels.const_get(v) }.freeze
 
   def initialize(user, promoter, options)
     @user = user
@@ -38,7 +37,7 @@ class UserAdminEdit
     return nil if !options.key?(:level) || user.level == new_level
     errors.add(:level, "Can't demote owner") if user.is_owner? && !promoter.is_owner?
     errors.add(:level, "Only owner can promote to admin") if new_level >= User::Levels::ADMIN && !promoter.is_owner?
-    errors.add(:level, "Invalid level") unless VALID_LEVELS.include?(new_level)
+    errors.add(:level, "Invalid level") unless User::VALID_LEVELS.include?(new_level)
     return nil if errors[:level].any?
     user.level = new_level
   end

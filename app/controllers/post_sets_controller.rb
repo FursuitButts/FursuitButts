@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 class PostSetsController < ApplicationController
+  before_action :ensure_lockdown_disabled, except: %i[index show]
   respond_to :html, :json
 
   def index
@@ -105,5 +106,9 @@ class PostSetsController < ApplicationController
 
   def add_remove_posts_params
     (params.extract!(:post_ids).presence || params.require(:post_set)).permit(post_ids: []).require(:post_ids)
+  end
+
+  def ensure_lockdown_disabled
+    access_denied if Security::Lockdown.post_sets_disabled? && !CurrentUser.is_staff?
   end
 end

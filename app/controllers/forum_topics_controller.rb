@@ -3,6 +3,7 @@
 class ForumTopicsController < ApplicationController
   respond_to :html, :json
   before_action :load_topic, except: %i[index new create mark_all_as_read]
+  before_action :ensure_lockdown_disabled, except: %i[index show]
   skip_before_action :api_check
 
   def index
@@ -161,5 +162,9 @@ class ForumTopicsController < ApplicationController
 
   def load_topic
     @forum_topic = ForumTopic.includes(:category).find(params[:id])
+  end
+
+  def ensure_lockdown_disabled
+    access_denied if Security::Lockdown.forums_disabled? && !CurrentUser.is_staff?
   end
 end

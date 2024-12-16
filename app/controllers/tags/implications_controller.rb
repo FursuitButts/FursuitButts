@@ -4,6 +4,7 @@ module Tags
   class ImplicationsController < ApplicationController
     respond_to :html, :json
     wrap_parameters :tag_implication
+    before_action :ensure_lockdown_disabled
 
     def index
       @tag_implications = authorize(TagImplication).includes(:antecedent_tag, :consequent_tag, :approver).search(search_params).paginate(params[:page], limit: params[:limit])
@@ -63,6 +64,12 @@ module Tags
       @tag_implication = authorize(TagImplication.find(params[:id]))
       @tag_implication.approve!(approver: CurrentUser.user)
       respond_with(@tag_implication, location: tag_implication_path(@tag_implication))
+    end
+
+    private
+
+    def ensure_lockdown_disabled
+      access_denied if Security::Lockdown.aiburs_disabled? && !CurrentUser.is_staff?
     end
   end
 end

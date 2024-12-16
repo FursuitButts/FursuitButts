@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 class CommentsController < ApplicationController
-  skip_before_action :api_check
   respond_to :html, :json
+  before_action :ensure_lockdown_disabled, except: %i[index search show for_post]
+  skip_before_action :api_check
 
   def index
     authorize(Comment)
@@ -126,5 +127,9 @@ class CommentsController < ApplicationController
         @comment_votes = CommentVote.for_comments_and_user(@comments.select { |comment| comment.visible_to?(CurrentUser) }.map(&:id), CurrentUser.id)
       end
     end
+  end
+
+  def ensure_lockdown_disabled
+    access_denied if Security::Lockdown.comments_disabled? && !CurrentUser.is_staff?
   end
 end

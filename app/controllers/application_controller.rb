@@ -230,7 +230,20 @@ class ApplicationController < ActionController::Base
 
   def pundit_params_for(record)
     key = Pundit::PolicyFinder.new(record).param_key
-    key = record if key == "symbol" && record.is_a?(Symbol)
+    if key == "symbol"
+      wrapper = send(:_wrapper_options).try(:name)
+
+      if wrapper.present?
+        key = wrapper
+      elsif record.is_a?(Symbol)
+        key = record
+      elsif record.is_a?(Array) && record.last.is_a?(Symbol)
+        key = record.last
+      elsif record.respond_to?(:to_sym)
+        key = record.to_sym
+      end
+    end
+    Rails.logger.debug { "thekey: #{key}" }
     params.fetch(key, {})
   end
 

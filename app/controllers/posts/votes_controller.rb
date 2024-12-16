@@ -4,6 +4,7 @@ module Posts
   class VotesController < ApplicationController
     respond_to :html, only: %i[index]
     respond_to :json
+    before_action :ensure_lockdown_disabled
     skip_before_action :api_check
 
     def index
@@ -47,6 +48,12 @@ module Posts
       ids.each do |id|
         VoteManager::Posts.admin_unvote!(id)
       end
+    end
+
+    private
+
+    def ensure_lockdown_disabled
+      access_denied if Security::Lockdown.votes_disabled? && !CurrentUser.is_staff?
     end
   end
 end

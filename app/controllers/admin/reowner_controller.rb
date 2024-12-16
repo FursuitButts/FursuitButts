@@ -2,6 +2,8 @@
 
 module Admin
   class ReownerController < ApplicationController
+    wrap_parameters :reowner
+
     def new
       authorize(:reowner)
     end

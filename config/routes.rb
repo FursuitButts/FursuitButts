@@ -26,14 +26,22 @@ Rails.application.routes.draw do
     resource :stuck_dnp, controller: "stuck_dnp", only: %i[new create]
     resources :destroyed_posts, only: %i[index show update]
     resources :staff_notes, only: %i[index]
-    resources :danger_zone, only: [:index] do
-      collection do
-        put :uploading_limits
-        put :hide_pending_posts
-      end
-    end
     resources :audit_logs, only: %i[index]
   end
+
+  namespace :security do
+    root to: "dashboard#index"
+    resource :dashboard, only: %i[index]
+    resources :lockdown, only: %i[index] do
+      collection do
+        put :panic
+        put :enact
+        put :uploads_min_level
+        put :uploads_hide_pending
+      end
+    end
+  end
+
   resources :edit_histories, only: %i[index show] do
     get :diff, on: :collection
   end

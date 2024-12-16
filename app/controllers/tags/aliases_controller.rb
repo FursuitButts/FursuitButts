@@ -4,6 +4,7 @@ module Tags
   class AliasesController < ApplicationController
     respond_to :html, :json
     wrap_parameters :tag_alias
+    before_action :ensure_lockdown_disabled
 
     def index
       @tag_aliases = authorize(TagAlias).includes(:antecedent_tag, :consequent_tag, :approver).search(search_params(TagAlias)).paginate(params[:page], limit: params[:limit])
@@ -58,6 +59,10 @@ module Tags
       @tag_alias = authorize(TagAlias.find(params[:id]))
       @tag_alias.approve!(approver: CurrentUser.user)
       respond_with(@tag_alias, location: tag_alias_path(@tag_alias))
+    end
+
+    def ensure_lockdown_disabled
+      access_denied if Security::Lockdown.aiburs_disabled? && !CurrentUser.is_staff?
     end
   end
 end

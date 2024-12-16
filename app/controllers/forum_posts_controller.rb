@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 class ForumPostsController < ApplicationController
-  before_action :load_post, only: %i[edit show update destroy hide unhide warning mark_spam mark_not_spam]
   respond_to :html, :json
+  before_action :load_post, only: %i[edit show update destroy hide unhide warning mark_spam mark_not_spam]
+  before_action :ensure_lockdown_disabled, except: %i[index show search]
   skip_before_action :api_check
 
   def index
@@ -104,5 +105,9 @@ class ForumPostsController < ApplicationController
 
   def load_post
     @forum_post = ForumPost.includes(topic: %i[category]).find(params[:id])
+  end
+
+  def ensure_lockdown_disabled
+    access_denied if Security::Lockdown.forums_disabled? && !CurrentUser.is_staff?
   end
 end

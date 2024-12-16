@@ -7,6 +7,7 @@ module ForumPosts
     before_action :load_forum_post, except: %i[index delete]
     before_action :validate_forum_post, except: %i[index delete]
     before_action :validate_no_vote_on_own_post, only: %i[create]
+    before_action :ensure_lockdown_disabled
 
     def index
       @forum_post_votes = authorize(ForumPostVote).visible(CurrentUser.user).includes(:user, forum_post: %i[creator]).search(search_params(ForumPostVote)).paginate(params[:page], limit: 100)
@@ -57,6 +58,10 @@ module ForumPosts
 
     def validate_no_vote_on_own_post
       raise(User::PrivilegeError, "You cannot vote on your own requests") if @forum_post.creator == CurrentUser.user
+    end
+
+    def ensure_lockdown_disabled
+      access_denied if Security::Lockdown.votes_disabled? && !CurrentUser.is_staff?
     end
   end
 end

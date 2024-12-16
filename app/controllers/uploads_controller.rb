@@ -70,8 +70,6 @@ class UploadsController < ApplicationController
   private
 
   def ensure_uploads_enabled
-    if DangerZone.uploads_disabled?(CurrentUser.user)
-      access_denied("Uploads are disabled")
-    end
+    access_denied if Security::Lockdown.uploads_disabled? || CurrentUser.user.level < Security::Lockdown.uploads_min_level
   end
 end

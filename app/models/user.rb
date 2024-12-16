@@ -69,9 +69,8 @@ class User < ApplicationRecord
   end
 
   # Used for `before_action :<role>_only`. Must have a corresponding `is_<role>?` method.
-  Roles = Levels.constants.map(&:downcase) + [
-    :approver,
-  ]
+  Roles = Levels.constants.map(&:downcase) + %i[approver]
+  VALID_LEVELS = (Levels.constants - %i[ANONYMOUS LOCKED]).map { |v| Levels.const_get(v) }.freeze
 
   module Preferences
     mattr_accessor :settable, default: []

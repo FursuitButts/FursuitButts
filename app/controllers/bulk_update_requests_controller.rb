@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 class BulkUpdateRequestsController < ApplicationController
-  before_action :load_bulk_update_request, except: %i[new create index]
   respond_to :html, :json
+  before_action :load_bulk_update_request, except: %i[new create index]
+  before_action :ensure_lockdown_disabled, except: %i[index show]
 
   def index
     @bulk_update_requests = authorize(BulkUpdateRequest).search(search_params(BulkUpdateRequest)).includes(:forum_post, :creator, :approver).paginate(params[:page], limit: params[:limit])
@@ -53,5 +54,9 @@ class BulkUpdateRequestsController < ApplicationController
 
   def load_bulk_update_request
     @bulk_update_request = BulkUpdateRequest.find(params[:id])
+  end
+
+  def ensure_lockdown_disabled
+    access_denied if Security::Lockdown.aiburs_disabled? && !CurrentUser.is_staff?
   end
 end

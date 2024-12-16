@@ -72,6 +72,10 @@ class ApplicationPolicy
     user.is_admin?
   end
 
+  def lockdown?(type)
+    !(user.is_staff? || !Security::Lockdown.public_send("#{type}_disabled?"))
+  end
+
   def all?(*methods)
     methods.all? { |name| respond_to?(name) ? send(name) : false }
   end

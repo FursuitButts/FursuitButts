@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 class PoolsController < ApplicationController
+  before_action :ensure_lockdown_disabled, except: %i[index show gallery]
   respond_to :html, :json
 
   def index
@@ -63,5 +64,9 @@ class PoolsController < ApplicationController
     @pool.revert_to!(@version)
     flash[:notice] = "Pool reverted"
     respond_with(@pool, &:js)
+  end
+
+  def ensure_lockdown_disabled
+    access_denied if Security::Lockdown.pools_disabled? && !CurrentUser.is_staff?
   end
 end

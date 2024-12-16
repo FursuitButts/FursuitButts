@@ -5,6 +5,7 @@ module Comments
     respond_to :html, only: %i[index]
     respond_to :json
     skip_before_action :api_check
+    before_action :ensure_lockdown_disabled
 
     def index
       @comment_votes = authorize(CommentVote).visible(CurrentUser.user).includes(:user, comment: [:creator]).search(search_params(CommentVote)).paginate(params[:page], limit: 100)
@@ -48,6 +49,12 @@ module Comments
       ids.each do |id|
         VoteManager::Comments.admin_unvote!(id)
       end
+    end
+
+    private
+
+    def ensure_lockdown_disabled
+      access_denied if Security::Lockdown.votes_disabled? && !CurrentUser.is_staff?
     end
   end
 end

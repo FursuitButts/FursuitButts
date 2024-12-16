@@ -2,6 +2,7 @@
 
 class FavoritesController < ApplicationController
   respond_to :html, :json
+  before_action :ensure_lockdown_disabled, except: %i[index]
   skip_before_action :api_check
 
   def index
@@ -60,5 +61,9 @@ class FavoritesController < ApplicationController
     respond_to do |format|
       format.html { redirect_to(favorites_path, notice: "Your favorites are being cleared. Give it some time if you have a lot") }
     end
+  end
+
+  def ensure_lockdown_disabled
+    access_denied if Security::Lockdown.favorites_disabled? && !CurrentUser.is_staff?
   end
 end
