@@ -97,7 +97,9 @@ header#top {
       color: red;
 
       position: absolute;
-      top: -3px;
+      @include window-larger-than(800px) {
+        top: -3px;
+      }
     }
   }
 

@@ -279,6 +279,18 @@ class User < ApplicationRecord
         end
       end
 
+      # @param arguments [Array<String, Array<String>>] a list of names
+      # @return [Hash{String => Integer, nil}] a hash of normalized names to user IDs
+      def bulk_name_to_id(*arguments)
+        names = arguments.flatten.map { |n| normalize_name(n) }
+        results = names.index_with { |name| Cache.fetch("uni:#{name}") }.compact_blank
+        missing = names - results.keys
+        fetched = User.where("lower(name) IN (?)", missing).select(:id, :name).to_h { |u| [normalize_name(u.name), u.id] }
+        not_found = (missing - fetched.keys).index_with { nil }
+        fetched.each { |name, id| Cache.write("uni:#{name}", id, expires_in: 4.hours) }
+        { **results, **fetched, **not_found }
+      end
+
       def name_or_id_to_id(name)
         if name =~ /\A!\d+\z/
           return name[1..].to_i
