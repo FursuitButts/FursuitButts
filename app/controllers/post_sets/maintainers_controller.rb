@@ -12,7 +12,7 @@ module PostSets
     def create
       @set = PostSet.find(params[:post_set_id])
       authorize(@set, :add_maintainer?)
-      @user = User.find_by("lower(name) = ?", params[:username])
+      @user = User.find_by_normalized_name(params[:username])
       if @user.nil?
         notice("User #{params[:username]} not found")
         respond_to do |format|
