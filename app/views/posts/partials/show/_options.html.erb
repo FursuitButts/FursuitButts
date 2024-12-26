@@ -18,7 +18,7 @@
   <% if post.is_status_locked? %>
     <li><span id="status-locked-notice">Status locked</span></li>
   <% else %>
-    <% if post.is_active? && policy(PostFlag).create? %>
+    <% if !(post.is_deleted? || post.is_flagged?) && policy(PostFlag).create? %>
       <li><%= link_to("Flag", new_post_flag_path(post_flag: { post_id: post.id }), id: "flag") %></li>
     <% elsif post.is_appealable? && policy(PostAppeal).create? %>
       <li><%= link_to("Appeal Deletion", new_post_appeal_path(post_appeal: { post_id: post.id }), id: "appeal") %></li>
