@@ -14,11 +14,21 @@ class TicketsController < ApplicationController
   end
 
   def new
-    @ticket = authorize(Ticket.new(permitted_attributes(Ticket)))
+    authorize(Ticket)
+    @ticket = Ticket.new(permitted_attributes(Ticket))
+    if @ticket.model_type.present? && Ticket::MODEL_TYPES.exclude?(@ticket.model_type)
+      return render_expected_error(404, "Invalid ticket type")
+    end
+    authorize(@ticket)
   end
 
   def create
-    @ticket = authorize(Ticket.new(permitted_attributes(Ticket)))
+    authorize(Ticket)
+    @ticket = Ticket.new(permitted_attributes(Ticket))
+    if @ticket.model_type.present? && Ticket::MODEL_TYPES.exclude?(@ticket.model_type)
+      return render_expected_error(404, "Invalid ticket type")
+    end
+    authorize(@ticket)
     if @ticket.valid?
       @ticket.save
       @ticket.push_pubsub("create")
