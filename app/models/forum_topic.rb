@@ -5,7 +5,7 @@ class ForumTopic < ApplicationRecord
 
   belongs_to_creator
   belongs_to_updater
-  belongs_to :category, class_name: "ForumCategory"
+  belongs_to :category, class_name: "ForumCategory", counter_cache: "topic_count"
   belongs_to :merge_target, class_name: "ForumTopic", optional: true
   has_many :posts, -> { order("forum_posts.id asc") }, class_name: "ForumPost", foreign_key: "topic_id", dependent: :destroy
   has_one :original_post, -> { order("forum_posts.id asc") }, class_name: "ForumPost", foreign_key: "topic_id", inverse_of: :topic

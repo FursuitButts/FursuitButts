@@ -26,7 +26,7 @@ class ForumCategoryPolicy < ApplicationPolicy
   end
 
   def permitted_attributes
-    %i[name can_create can_reply can_view order]
+    %i[name can_create can_view description order]
   end
 
   def permitted_attributes_for_move_all_topics

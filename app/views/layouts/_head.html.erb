@@ -31,8 +31,8 @@
 <% end %>
 <%= auto_discovery_link_tag :atom, posts_path(format: "atom", tags: params[:tags]) %>
 
-<%= stylesheet_pack_tag "application", nonce: true %>
-<%= javascript_pack_tag "application", nonce: true, defer: false %>
+<%= stylesheet_pack_tag("application", nonce: true) %>
+<%= javascript_pack_tag("application", nonce: true, defer: false) %>
 
 <script type="application/ld+json">
 {

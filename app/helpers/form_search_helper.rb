@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 module FormSearchHelper
-  def form_search(path:, always_display: false, hideable: request.path.split("/")[2] != "search", method: :get, policy: nil, &)
+  def form_search(path:, always_display: false, hideable: request.path.split("/")[2] != "search", method: :get, policy: nil, hide_on_load: false, &)
     # dedicated search routes like /comments/search should always show
     search_params = params[:search] || {}
-    show_on_load = filled_form_fields(search_params, &).any? || always_display || !hideable
+    show_on_load = !hide_on_load && (filled_form_fields(search_params, &).any? || always_display || !hideable)
     form = simple_form_for(:search, {
       method:        method,
       url:           path,

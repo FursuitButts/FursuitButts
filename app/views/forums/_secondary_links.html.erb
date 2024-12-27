@@ -1,0 +1,10 @@
+<% content_for(:secondary_links) do %>
+  <li><%= render(partial: "forums/topics/quick_search") %></li>
+  <%= subnav_link_to("Listing", forums_path) %>
+  <%= subnav_link_to_if(policy(ForumTopic).create?, "New Topic", new_forum_topic_path) %>
+  <%= subnav_link_to_if(policy(TagAlias).create?, "Request Alias", new_tag_alias_path) %>
+  <%= subnav_link_to_if(policy(TagImplication).create?, "Request Implication", new_tag_implication_path) %>
+  <%= subnav_link_to_if(policy(BulkUpdateRequest).create?, "Request Bulk Update", new_bulk_update_request_path) %>
+  <%= subnav_link_to_if(policy(ForumCategory).any?(:create?, :update?, :destroy?), "Edit Categories", forum_categories_path) %>
+  <%= subnav_link_to("Help", help_page_path(id: "forums")) %>
+<% end %>

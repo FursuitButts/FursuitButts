@@ -1,0 +1,29 @@
+<%= render "search" %>
+<%= table_for(@forum_posts) do |t| %>
+  <% t.column("Topic") do |forum_post| %>
+    <%= link_to(forum_post.topic.title, forum_topic_path(forum_post.topic)) %>
+    <%= "(hidden)" if forum_post.topic.is_hidden? %>
+  <% end %>
+  <% t.column("Excerpt") do |forum_post| %>
+    <%= link_to(truncate(forum_post.body, length: 50), forum_post_path(forum_post)) %>
+    <% if forum_post.is_hidden? %>
+      <span<% if forum_post.hidden_at.present? %> title="<%= time_ago_in_words(forum_post.hidden_at) %> ago"<% end %>>(hidden)</span>
+    <% end %>
+  <% end %>
+  <% t.column("Creator") do |forum_post| %>
+    <%= link_to_user(forum_post.creator) %>
+    <% if policy(forum_post).can_see_ip_addr? %>
+      (<%= link_to_ip(forum_post.creator_ip_addr) %>)
+    <% end %>
+    <p><%= time_ago_in_words_tagged(forum_post.created_at) %></p>
+  <% end %>
+<% end %>
+
+<%= numbered_paginator(@forum_posts) %>
+
+<%= render "forums/topics/secondary_links" %>
+<%= latest_link(@forum_posts) %>
+
+<% content_for(:page_title) do %>
+  Forum Posts
+<% end %>

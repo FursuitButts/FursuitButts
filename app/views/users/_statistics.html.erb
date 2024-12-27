@@ -37,7 +37,7 @@
         <span>
           <%= presenter.forum_post_count(self) %>
           <%= link_to_enclosed("mentions", forum_posts_path(search: { body_matches: user.name })) %>
-          <%= link_to_enclosed_if(ForumPostVotePolicy.new(CurrentUser.user, user).index?, "#{user.forum_post_vote_count} votes", action: "index", controller: "forum_posts/votes", search: { user_name: user.name }) %>
+          <%= link_to_enclosed_if(ForumPostVotePolicy.new(CurrentUser.user, user).index?, "#{user.forum_post_vote_count} votes", action: "index", controller: "forums/posts/votes", search: { user_name: user.name }) %>
           <%= link_to_enclosed_if(policy(EditHistory).index?, "edits", edit_histories_path(search: { versionable_type: "ForumPost", user_id: user.id })) %>
         </span>
 

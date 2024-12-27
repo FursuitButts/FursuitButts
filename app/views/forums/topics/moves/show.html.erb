@@ -1,0 +1,11 @@
+<h1>Move Forum Topic</h1>
+<%= custom_form_for(@forum_topic, url: move_forum_topic_path(@forum_topic), method: :post) do |f| %>
+  <%= f.input(:category_id, label: "New Category", collection: @categories.map { |cat| [cat.name, cat.id] }, include_blank: false) %>
+  <%= f.submit("Move") %>
+<% end %>
+
+<%= render "forums/topics/secondary_links" %>
+
+<%= content_for(:page_title) do %>
+  Move Forum Topic
+<% end %>

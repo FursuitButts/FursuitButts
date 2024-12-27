@@ -2,8 +2,10 @@
 
 class ForumCategory < ApplicationRecord
   MAX_TOPIC_MOVE_COUNT = 1000
-  has_many :forum_topics, -> { order(id: :desc) }, foreign_key: :category_id
+  has_many :topics, -> { order(id: :desc) }, class_name: "ForumTopic", foreign_key: :category_id
+  has_many :posts, through: :topics
   validates :name, uniqueness: { case_sensitive: false }, length: { minimum: 3, maximum: 100 }
+  validates :description, length: { maximum: -> { FemboyFans.config.forum_category_description_max_size } }
 
   after_create :log_create
   after_update :log_update
@@ -29,7 +31,7 @@ class ForumCategory < ApplicationRecord
   end
 
   def prevent_destroy_if_topics
-    if forum_topics.any?
+    if topics.any?
       errors.add(:base, "Forum category cannot be deleted because it has topics")
       throw(:abort)
     end
@@ -79,11 +81,11 @@ class ForumCategory < ApplicationRecord
   end
 
   def can_move_topics?
-    forum_topics.count <= ForumCategory::MAX_TOPIC_MOVE_COUNT
+    topics.count <= ForumCategory::MAX_TOPIC_MOVE_COUNT
   end
 
   def move_all_topics(new_category, user: CurrentUser.user)
-    return if forum_topics.empty?
+    return if topics.empty?
     MoveForumCategoryTopicsJob.perform_later(user, self, new_category)
   end
 end

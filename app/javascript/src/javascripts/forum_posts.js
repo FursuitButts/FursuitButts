@@ -59,7 +59,7 @@ ForumPost.vote = function (evt, score) {
   };
   const id = $(evt.currentTarget).data("forum-id");
   $.ajax({
-    url: `/forum_posts/${id}/votes.json`,
+    url: `/forums/posts/${id}/votes.json`,
     type: "POST",
     dataType: "json",
     accept: "text/javascript",
@@ -80,7 +80,7 @@ ForumPost.vote_remove = function (evt) {
   evt.preventDefault();
   const id = $(evt.currentTarget).data("forum-id");
   $.ajax({
-    url: `/forum_posts/${id}/votes.json`,
+    url: `/forums/posts/${id}/votes.json`,
     type: "DELETE",
     dataType: "json",
     accept: "text/javascript",
@@ -98,7 +98,7 @@ ForumPost.quote = function (e) {
   const parent = $(e.target).parents("article.forum-post");
   const fpid = parent.data("forum-post-id");
   $.ajax({
-    url: `/forum_posts/${fpid}.json`,
+    url: `/forums/posts/${fpid}.json`,
     type: "GET",
     dataType: "json",
     accept: "text/javascript",
@@ -133,7 +133,7 @@ ForumPost.hide = function (e) {
   const parent = $(e.target).parents("article.forum-post");
   const fpid = parent.data("forum-post-id");
   $.ajax({
-    url: `/forum_posts/${fpid}/hide.json`,
+    url: `/forums/posts/${fpid}/hide.json`,
     type: "PUT",
     dataType: "json",
   }).done(function () {
@@ -152,7 +152,7 @@ ForumPost.unhide = function (e) {
   const parent = $(e.target).parents("article.forum-post");
   const fpid = parent.data("forum-post-id");
   $.ajax({
-    url: `/forum_posts/${fpid}/unhide.json`,
+    url: `/forums/posts/${fpid}/unhide.json`,
     type: "PUT",
     dataType: "json",
   }).done(function () {

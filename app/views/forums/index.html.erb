@@ -1,0 +1,18 @@
+<h1>Forum</h1>
+
+<%= render(partial: "forums/secondary_links") %>
+
+<%= table_for(@forum_categories) do |t| %>
+  <% t.column("Name") do |forum_category| %>
+    <h3><%= link_to(forum_category.name, forum_category_path(forum_category)) %></h3>
+    <p><%= format_text(forum_category.description, allow_color: false) %></p>
+  <% end %>
+  <% t.column(:topic_count, name: "Topics") %>
+  <% t.column(:post_count, name: "Posts") %>
+  <% t.column("Last Post") do |forum_category| %>
+    <% post = forum_category.posts.order(id: :asc).last %>
+    <%= link_to(post.topic.title, forum_topic_path(post.topic)) %><br>
+    <%= link_to("Go to post", forum_topic_path(post.topic, page: post.forum_topic_page, anchor: "forum_post_#{post.id}")) %> by <%= link_to_user(post.creator) %>
+    <p><%= time_ago_in_words_tagged(post.created_at, compact: true) %></p>
+  <% end %>
+<% end %>

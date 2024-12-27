@@ -1,0 +1,130 @@
+<%# locals: (forum_post:, original_forum_post_id:) -%>
+
+<% if forum_post.visible?(CurrentUser.user) %>
+  <article class="forum-post comment-post-grid" id="forum_post_<%= forum_post.id %>"
+           data-forum-post-id="<%= forum_post.id %>" data-creator="<%= forum_post.creator&.name&.downcase %>"
+           data-creator-id="<%= forum_post.creator_id %>"
+           data-is-hidden="<%= forum_post.id == original_forum_post_id ? @forum_topic.is_hidden? : forum_post.is_hidden? %>">
+    <div class="author-info">
+      <div class="name-rank">
+        <h4 class="author-name"><%= link_to_user forum_post.creator %></h4>
+        <%= forum_post.creator.level_string_pretty %>
+        <% if forum_post.is_hidden? %>
+          <span<% if forum_post.hidden_at.present? %> title="<%= time_ago_in_words(forum_post.hidden_at) %> ago"<% end %>>(hidden)</span>
+        <% end %>
+      </div>
+      <div class="avatar">
+        <%= user_avatar(forum_post.creator) %>
+      </div>
+      <div class="post-time">
+        <%= link_to time_ago_in_words_tagged(forum_post.created_at), forum_topic_path(forum_post.topic, page: forum_post.forum_topic_page, anchor: "forum_post_#{forum_post.id}") %>
+      </div>
+    </div>
+    <div class="content">
+      <div class="dtext-container">
+        <% if forum_post.is_aibur? %>
+          <%= format_text(tag_change_message(forum_post)) %>
+        <% end %>
+
+        <%= format_text(parse_embedded_tag_request_text(forum_post.body), allow_color: CurrentUser.id == forum_post.creator_id || (CurrentUser.is_anonymous? || !CurrentUser.disable_colors?)) %>
+      </div>
+      <%= render "application/update_notice", record: forum_post %>
+      <%= render "application/warned_notice", record: forum_post %>
+      <%= render "forums/posts/partials/common/merged_notice", record: forum_post %>
+      <div class="content-menu">
+        <menu>
+          <% if CurrentUser.user.is_member? && !@forum_topic&.is_stale_for?(CurrentUser.user) && params[:controller] != "forums/posts" %>
+            <li><%= link_to("Reply", "", class: "reply-link forum-post-reply-link") %>
+          <% end %>
+          <% if forum_post.is_original_post?(original_forum_post_id) %>
+            <% if forum_post.topic.is_hidden? && policy(forum_post.topic).unhide? %>
+              <li><%= link_to("Unhide", unhide_forum_topic_path(forum_post.topic.id), method: :put) %></li>
+            <% elsif policy(forum_post.topic).hide? %>
+              <li><%= link_to("Hide", hide_forum_topic_path(forum_post.topic.id), data: { confirm: "Are you sure you want to hide this forum topic?" }, method: :put) %></li>
+            <% end %>
+            <% if policy(forum_post.topic).destroy? %>
+              <li><%= link_to("Destroy", forum_topic_path(forum_post.topic), data: { confirm: "Are you sure you want to destroy this forum topic?" }, method: :delete) %></li>
+            <% end %>
+          <% else %>
+            <% if forum_post.is_hidden? && policy(forum_post).unhide? %>
+              <li><%= link_to("Unhide", "", class: "forum-post-unhide-link") %></li>
+            <% elsif !forum_post.is_hidden? && policy(forum_post).hide? %>
+              <li><%= link_to("Hide", "", class: "forum-post-hide-link") %></li>
+            <% end %>
+            <% if policy(forum_post).destroy? %>
+              <li><%= link_to("Destroy", forum_post_path(forum_post.id), data: { confirm: "Are you sure you want to destroy this forum post?" }, method: :delete) %></li>
+            <% end %>
+          <% end %>
+          <% if policy(forum_post).update? %>
+            <li>
+              <% if forum_post.is_original_post?(original_forum_post_id) %>
+                <%= link_to("Edit", edit_forum_topic_path(forum_post.topic), id: "edit_forum_topic_link_#{forum_post.topic.id}", class: "edit_forum_topic_link") %>
+              <% else %>
+                <%= link_to("Edit", edit_forum_post_path(forum_post.id), id: "edit_forum_post_link_#{forum_post.id}", class: "edit_forum_post_link") %>
+              <% end %>
+            </li>
+          <% end %>
+          <% if params[:controller] == "forums/posts" %>
+            <li><%= link_to("Parent", forum_topic_path(forum_post.topic, page: forum_post.forum_topic_page, anchor: "forum_post_#{forum_post.id}")) %></li>
+          <% end %>
+          <% if TicketPolicy.new(CurrentUser.user, forum_post).create? %>
+          <li><%= link_to("Report", model_new_ticket_path(model: forum_post)) %></li>
+          <% end %>
+          <% edits = policy(EditHistory).show? %>
+          <% mark = policy(forum_post).warning? %>
+          <% if edits || mark %>
+            <li>|</li>
+          <% end %>
+          <% if edits %>
+            <li><%= link_to("Show Edits", edit_history_path(id: forum_post.id, type: "ForumPost")) %></li>
+          <% end %>
+          <% if mark %>
+            <%= render "user_warnable/buttons", model: forum_post %>
+          <% end %>
+          <% if policy(forum_post).can_see_ip_addr? %>
+            <li>|</li>
+            <li class="ip-address">
+              <strong>IP</strong>
+              <span><%= link_to_ip forum_post.creator_ip_addr %></span>
+            </li>
+            <% if forum_post.is_spam? %>
+              <% unless policy(forum_post).can_see_ip_addr? %>
+                <li>|</li>
+              <% end %>
+              <li class="spam">
+                <% if forum_post.spam_ticket.present? %>
+                  <% sign = '<i class="spam-forum-post fa-solid fa-triangle-exclamation" title="This forum post has been detected as potential spam."></i>'.html_safe %>
+                  <% if CurrentUser.user.is_moderator? %>
+                    <%= link_to(sign, ticket_path(forum_post.spam_ticket)) %>
+                  <% else %>
+                    <%= sign %>
+                  <% end %>
+                <% else %>
+                  <i class="spam-forum-post fa-solid fa-triangle-exclamation" title="This forum post has been marked as spam."></i>
+                <% end %>
+              </li>
+              <% if policy(forum_post).mark_not_spam? %>
+                <li><%= link_to("Mark Not Spam", "", class: "forum-post-mark-not-spam-link item-mark-not-spam", data: { "item-route": "forums/posts", "item-id": forum_post.id }) %></li>
+              <% end %>
+            <% elsif policy(forum_post).mark_spam? %>
+              <li><%= link_to("Mark Spam", "", class: "forum-post-mark-spam-link item-mark-spam", data: { "item-route": "forums/posts", "item-id": forum_post.id }) %></li>
+            <% end %>
+          <% end %>
+          <% if forum_post.votable? %>
+            <%= render "forums/posts/votes/list", votes: forum_post.votes, forum_post: forum_post %>
+            <% if ForumPostVotePolicy.new(CurrentUser.user, forum_post).index? %>
+              <li><%= link_to("(List)", { controller: "forums/posts/votes", search: { forum_post_id: forum_post.id } }) %></li>
+            <% end %>
+          <% end %>
+        </menu>
+        <% if policy(forum_post).update? %>
+          <% if forum_post.is_original_post?(original_forum_post_id) %>
+            <%= render "forums/topics/form", forum_topic: forum_post.topic %>
+          <% else %>
+            <%= render "forums/posts/partials/edit/form", forum_post: forum_post %>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  </article>
+<% end %>

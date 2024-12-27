@@ -1,6 +1,0 @@
-<%= custom_form_for(@forum_category) do |f| %>
-  <%= f.input(:name, as: :string) %>
-  <%= f.input(:can_view, collection: user_levels_for_select(User::Levels::ANONYMOUS), include_blank: false) %>
-  <%= f.input(:can_create, collection: user_levels_for_select(User::Levels::ANONYMOUS), include_blank: false) %>
-  <%= f.button(:submit, "Submit", name: nil) %>
-<% end %>

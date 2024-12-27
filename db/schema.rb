@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_12_02_170148) do
+ActiveRecord::Schema[7.1].define(version: 2024_12_27_035943) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -280,6 +280,9 @@ ActiveRecord::Schema[7.1].define(version: 2024_12_02_170148) do
     t.integer "order", null: false
     t.integer "can_view", default: 0, null: false
     t.integer "can_create", default: 10, null: false
+    t.text "description", default: "", null: false
+    t.integer "topic_count", default: 0, null: false
+    t.integer "post_count", default: 0, null: false
     t.index "lower((name)::text)", name: "index_forum_categories_on_lower_name", unique: true
   end
 

@@ -1,0 +1,6 @@
+<%= form_tag(forum_topics_path, method: :get) do %>
+  <%= text_field("search", "title_matches", id: "quick_search_title_matches", placeholder: "Search Forum Topics") %>
+  <% if @category.present? %>
+    <%= hidden_field("search", "category_id", value: @category.id) %>
+  <% end %>
+<% end %>

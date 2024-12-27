@@ -369,6 +369,10 @@ module FemboyFans
       50_000
     end
 
+    def forum_category_description_max_size
+      250
+    end
+
     def note_max_size
       1_000
     end

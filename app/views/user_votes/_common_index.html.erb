@@ -1,7 +1,7 @@
 <%# locals: (type:, votes:, deletable: false, lockable: false) -%>
 
 <%# path is a string here because of duplicate routes %>
-<%= form_search(path: { controller: "#{type.model_type}s/votes", action: :index }, policy: policy(type)) do |f| %>
+<%= form_search(path: { controller: type.controller, action: :index }, policy: policy(type)) do |f| %>
   <%= f.user(:user, label: "Voter") %>
   <%= f.input(:"#{type.model_type}_id", label: "#{type.model_type.to_s.titleize} ID") %>
   <br>

@@ -44,9 +44,9 @@ services:
     healthcheck:
       # this healthcheck is only for the rails app, sidekiq needs to be separated to be healthchecked
       test: wget --no-verbose --tries=1 --spider http://127.0.0.1:9000/up || exit 1
-      interval: 15s
-      timeout: 5s
-      retries: 5
+      interval: 20s
+      timeout: 8s
+      retries: 10
     volumes:
       - .:/app
       - node_modules:/app/node_modules
@@ -240,7 +240,7 @@ services:
   # Discord integration
 
   discordbot:
-    image: ghcr.io/femboyfans/discordbot:db89701ea31ff810059fa222cf44f35484c30149
+    image: ghcr.io/femboyfans/discordbot:ffd0a7f1b3a1af7930dbf2c5e66e5234db4c7ed2
     environment:
       DISCORD_TOKEN: ${DISCORDBOT_DISCORD_TOKEN-}
       DISCORD_ID: ${DISCORDBOT_DISCORD_ID-}

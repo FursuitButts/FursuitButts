@@ -492,6 +492,10 @@ class User < ApplicationRecord
       PostVotePolicy.new(self, nil).create?
     end
 
+    def can_post_downvote?
+      can_post_vote? && older_than(3.days)
+    end
+
     def can_favorite?
       FavoritePolicy.new(self, nil).create?
     end

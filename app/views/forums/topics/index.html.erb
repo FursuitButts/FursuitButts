@@ -1,0 +1,26 @@
+<h1>
+  <% if @category.present? %>
+    Topics in <%= @category.name %>
+  <% else %>
+    Forum Topics
+  <% end %>
+</h1>
+
+<p>
+  Categories:
+  <%= link_to "All", forum_topics_path %>,
+  <%= ForumCategory.visible.ordered_categories.all.map { |rec| link_to_unless_current(rec.name, forum_topics_path(search: { category_id: rec.id })) }.join(", ").html_safe %>
+  <%= link_to " »", forums_path %>
+</p>
+
+<%= render(partial: "search") %>
+<%= render(partial: "listing", locals: { forum_topics: @forum_topics }) %>
+
+<%= numbered_paginator(@forum_topics) %>
+
+<%= render(partial: "secondary_links") %>
+<%= latest_link(@forum_topics) %>
+
+<% content_for(:page_title) do %>
+  Forum
+<% end %>

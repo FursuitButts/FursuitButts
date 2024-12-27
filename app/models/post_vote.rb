@@ -8,8 +8,8 @@ class PostVote < LockableUserVote
   end
 
   def validate_user_can_vote
-    if user.younger_than(3.days) && score == -1
-      errors.add(:user, "must be 3 days old to downvote posts")
+    if !user.can_post_downvote? && score == -1
+      errors.add(:user, "cannot downvote posts")
       return false
     end
     allowed = user.can_post_vote_with_reason

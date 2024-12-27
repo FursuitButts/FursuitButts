@@ -37,7 +37,7 @@ class UserInfo
       when :forum_post
         r.forum_posts_path(search: { creator_id: user.id })
       when :forum_vote
-        r.url_for(controller: "forum_posts/votes", action: :index, search: { user_id: user.id })
+        r.url_for(controller: "forums/posts/votes", action: :index, search: { user_id: user.id })
       when :note_edit
         r.note_versions_path(search: { updater_id: user.id })
       when :pool, :pool_edit, :pool_post_edit

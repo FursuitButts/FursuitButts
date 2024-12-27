@@ -8,6 +8,7 @@ class ForumPost < ApplicationRecord
   belongs_to_creator counter_cache: "forum_post_count"
   belongs_to_updater
   belongs_to :topic, class_name: "ForumTopic"
+  has_one :category, through: :topic
   belongs_to :original_topic, class_name: "ForumTopic", optional: true
   belongs_to :warning_user, class_name: "User", optional: true
   has_many :votes, class_name: "ForumPostVote"
@@ -17,6 +18,8 @@ class ForumPost < ApplicationRecord
   before_validation :initialize_is_hidden, on: :create
   before_create :auto_report_spam
   after_create :update_topic_updated_at_on_create
+  # no counter cache since we're more than one association away
+  after_create -> { category.increment!(:post_count) }
   before_destroy :validate_topic_is_unlocked
   after_destroy :update_topic_updated_at_on_destroy
   normalizes :body, with: ->(body) { body.gsub("\r\n", "\n") }
@@ -29,6 +32,7 @@ class ForumPost < ApplicationRecord
   validate :validate_category_allows_replies, on: :create
   validate :validate_creator_is_not_limited, on: :create
   validate :validate_not_aibur, if: :will_save_change_to_is_hidden?
+  after_destroy -> { category.decrement!(:post_count) }
   after_save :delete_topic_if_original_post
   after_update(if: ->(rec) { !rec.saved_change_to_is_hidden? && rec.updater_id != rec.creator_id && !rec.is_merging }) do |rec|
     ModAction.log!(:forum_post_update, rec, forum_topic_id: rec.topic_id, user_id: rec.creator_id)

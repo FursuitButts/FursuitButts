@@ -122,4 +122,12 @@ class UserVote < ApplicationRecord
   def visible?(user = CurrentUser.user)
     user.is_moderator? || user_id == user.id
   end
+
+  def self.controller
+    {
+      "CommentVote"   => "comments/votes",
+      "ForumPostVote" => "forums/posts/votes",
+      "PostVote"      => "posts/votes",
+    }.fetch(name)
+  end
 end

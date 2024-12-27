@@ -6,7 +6,7 @@ class MoveForumCategoryTopicsJob < ApplicationJob
   def perform(user, old_category, new_category)
     old_can_create = old_category.can_create
     CurrentUser.scoped(user) { old_category.update(can_create: User::Levels::LOCKED) }
-    old_category.forum_topics.find_each do |topic|
+    old_category.topics.find_each do |topic|
       topic.update_column(:category_id, new_category.id)
     end
   ensure

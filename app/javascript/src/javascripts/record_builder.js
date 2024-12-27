@@ -61,13 +61,13 @@ RecordBuilder.process_source = function (source) {
     .trim()
     .replace(/https?:\/\/femboy\.fan\//g, "/") // Make links relative
     .replace(/\/posts\/(\d+)#comment-(\d+)/g, "/comments/$2") // Convert comment links
-    .replace(/\/forum_topics\/(\d+)(?:\?page=\d+)?#forum_post_(\d+)/g, "/forum_posts/$2") // Convert forum post links
+    .replace(/\/forums\/topics\/(\d+)(?:\?page=\d+)?#forum_post_(\d+)/g, "/forums/posts/$2") // Convert forum post links
     .replace(/\?lr=\d+&/, "?") // Trim the tag history links
     .replace(/\?commit=Search&/, "?") // Get rid of the useless search parameter
 
     .replace(/post #(\d+)/, "/posts/$1")
     .replace(/comment #(\d+)/, "/comments/$1")
-    .replace(/topic #(\d+)/, "/forum_topics/$1")
+    .replace(/topic #(\d+)/, "/forums/topics/$1")
     .replace(/post changes #(\d+)/, "/posts/versions?search[post_id]=$1");
 };
 

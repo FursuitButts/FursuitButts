@@ -19,7 +19,7 @@ class ForumCategories {
       $editOrderLink.show();
       $sortableCategories.sortable("disable");
       $.ajax({
-        url: "/forum_categories/reorder.json",
+        url: "/forums/categories/reorder.json",
         type: "POST",
         headers: {
           "Content-Type": "application/json",

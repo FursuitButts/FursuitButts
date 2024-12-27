@@ -256,8 +256,8 @@ module ApplicationHelper
            when "wiki_pages", "wiki_pages/versions"
              %r{^/wiki_pages}
 
-           when "forum_topics", "forum_posts"
-             %r{^/forum_topics}
+           when "forums", "forums/topics", "forums/posts"
+             %r{^/forums}
 
            when "help"
              %r{^/help}

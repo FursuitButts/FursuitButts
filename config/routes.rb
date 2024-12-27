@@ -168,46 +168,50 @@ Rails.application.routes.draw do
       put :clear
     end
   end
-  resources :forum_posts do
-    resource :votes, controller: "forum_posts/votes", only: %i[create destroy]
-    member do
-      put :hide
-      put :unhide
-      put :warning
-      put :mark_spam
-      put :mark_not_spam
-    end
+  resources :forums, only: %i[index show] do
     collection do
-      get :search
-      resources :votes, controller: "forum_posts/votes", as: "forum_post_votes", only: %i[index] do
-        post :delete, on: :collection
+      resources :categories, controller: "forums/categories", as: "forum_categories", only: %i[index show new create edit update destroy] do
+        post :reorder, on: :collection
+        match :move_all_topics, via: %i[get post], on: :member
+      end
+      resources :posts, controller: "forums/posts", as: "forum_posts" do
+        resource :votes, controller: "forums/posts/votes", only: %i[create destroy]
+        member do
+          put :hide
+          put :unhide
+          put :warning
+          put :mark_spam
+          put :mark_not_spam
+        end
+        collection do
+          get :search
+          resources :votes, controller: "forums/posts/votes", as: "forum_post_votes", only: %i[index] do
+            post :delete, on: :collection
+          end
+        end
+      end
+      resources :topics, controller: "forums/topics", as: "forum_topics" do
+        member do
+          put :hide
+          put :unhide
+          put :lock
+          put :unlock
+          put :sticky
+          put :unsticky
+          put :subscribe
+          put :unsubscribe
+          put :mute
+          put :unmute
+          resource :merge, controller: "forums/topics/merges", as: "merge_forum_topic", only: %i[show create destroy] do
+            get :undo
+          end
+          resource :move, controller: "forums/topics/moves", as: "move_forum_topic", only: %i[show create]
+        end
+        collection do
+          put :mark_all_as_read
+        end
       end
     end
-  end
-  resources :forum_topics do
-    member do
-      put :hide
-      put :unhide
-      put :lock
-      put :unlock
-      put :sticky
-      put :unsticky
-      put :subscribe
-      put :unsubscribe
-      put :mute
-      put :unmute
-      resource :merge, controller: "forum_topics/merges", as: "merge_forum_topic", only: %i[show create destroy] do
-        get :undo
-      end
-      resource :move, controller: "forum_topics/moves", as: "move_forum_topic", only: %i[show create]
-    end
-    collection do
-      put :mark_all_as_read
-    end
-  end
-  resources :forum_categories, only: %i[index show new create edit update destroy] do
-    post :reorder, on: :collection
-    match :move_all_topics, via: %i[get post], on: :member
   end
   resources :help_pages, controller: "help", path: "help"
   resources :ip_bans, only: %i[index new create destroy]

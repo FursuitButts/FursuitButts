@@ -21,7 +21,7 @@ Disallow: /email
 Disallow: <%= favorites_path %>
 Disallow: <%= forum_categories_path %>
 Disallow: <%= forum_post_votes_path(forum_post_id: "*") %>
-Disallow: <%= url_for(controller: "forum_posts/votes", action: "index") %>
+Disallow: <%= url_for(controller: "forums/posts/votes", action: "index") %>
 Disallow: <%= ip_bans_path %>
 Disallow: <%= mascots_path %>
 Disallow: <%= mod_actions_path %>
