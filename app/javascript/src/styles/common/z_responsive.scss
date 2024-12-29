@@ -324,13 +324,15 @@
 
 @media screen and (max-width: 660px) {
   body.resp {
-    #c-forum-topics, #c-forum-posts {
+    #c-forums-topics, #c-forums-posts {
 
       .creator {
         display: none;
       }
+    }
 
-      .created-at {
+    #c-forums {
+      .topics, .posts {
         display: none;
       }
     }

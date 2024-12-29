@@ -59,14 +59,14 @@ div.list-of-forum-posts {
   }
 }
 
-.forum-post-votes-list {
+.forums-posts-votes-list {
   li {
     display: inline;
     margin-right: 1em;
   }
 }
 
-div#c-forum-topics {
+div#c-forums-topics {
   span.new {
     font-size: 80%;
     color: $forum-topic-new-color;
@@ -92,7 +92,7 @@ div#c-forum-topics {
   }
 }
 
-#c-forum-posts #a-index {
+#c-forums-posts #a-index {
   tr[data-is-hidden="true"], tr[data-topic-is-hidden="true"] {
     background-color: $background-article-hidden;
   }

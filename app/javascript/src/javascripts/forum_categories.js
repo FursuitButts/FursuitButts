@@ -45,7 +45,7 @@ class ForumCategories {
 
 
 $(function () {
-  if ($("#c-forum-categories #a-show").length) {
+  if ($("#c-forums-categories #a-show").length) {
     ForumCategories.initialize_listeners();
   }
 });

@@ -3,7 +3,7 @@ import Utility from "./utility";
 let ForumPost = {};
 
 ForumPost.initialize_all = function () {
-  if ($("#c-forum-topics #a-show,#c-forum-posts #a-show").length) {
+  if ($("#c-forums-topics #a-show,#c-forums-posts #a-show").length) {
     $(".edit_forum_post_link").on("click.danbooru", function (e) {
       var link_id = $(this).attr("id");
       var forum_post_id = link_id.match(/^edit_forum_post_link_(\d+)$/)[1];
@@ -29,7 +29,7 @@ ForumPost.initialize_all = function () {
 };
 
 ForumPost.reinitialize_all = function () {
-  if ($("#c-forum-topics #a-show,#c-forum-posts #a-show").length) {
+  if ($("#c-forums-topics #a-show,#c-forums-posts #a-show").length) {
     $(".edit_forum_post_link").off("click.danbooru");
     $(".edit_forum_topic_link").off("click.danbooru");
     $(".forum-post-reply-link").off("click");
