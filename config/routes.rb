@@ -171,8 +171,14 @@ Rails.application.routes.draw do
   resources :forums, only: %i[index show] do
     collection do
       resources :categories, controller: "forums/categories", as: "forum_categories", only: %i[index show new create edit update destroy] do
-        post :reorder, on: :collection
-        match :move_all_topics, via: %i[get post], on: :member
+        collection do
+          post :reorder
+          put :mark_all_as_read
+        end
+        member do
+          match :move_all_topics, via: %i[get post]
+          put :mark_as_read
+        end
       end
       resources :posts, controller: "forums/posts", as: "forum_posts" do
         resource :votes, controller: "forums/posts/votes", only: %i[create destroy]
@@ -202,13 +208,11 @@ Rails.application.routes.draw do
           put :unsubscribe
           put :mute
           put :unmute
+          put :mark_as_read
           resource :merge, controller: "forums/topics/merges", as: "merge_forum_topic", only: %i[show create destroy] do
             get :undo
           end
           resource :move, controller: "forums/topics/moves", as: "move_forum_topic", only: %i[show create]
-        end
-        collection do
-          put :mark_all_as_read
         end
       end
     end

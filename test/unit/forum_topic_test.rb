@@ -11,14 +11,14 @@ class ForumTopicTest < ActiveSupport::TestCase
     end
 
     context "#read_by?" do
-      context "with a populated @user.last_forum_read_at" do
+      context "with an existing visit" do
         setup do
-          @user.update_attribute(:last_forum_read_at, Time.now)
+          @user.forum_category_visits.find_or_create_by!(forum_category: @topic.category).update!(last_read_at: Time.now)
         end
 
-        context "and no visits for a topic" do
+        context "and last_post_created_at in the future" do
           setup do
-            @topic.update_column(:updated_at, 1.day.from_now)
+            @topic.update_column(:last_post_created_at, 1.day.from_now)
           end
 
           should "return false" do
@@ -31,14 +31,14 @@ class ForumTopicTest < ActiveSupport::TestCase
           end
         end
 
-        context "and a visit for a topic" do
+        context "and last_post_created_at in the past" do
           setup do
-            @topic.update_column(:updated_at, 1.day.from_now)
+            @topic.update_column(:last_post_created_at, 1.day.from_now)
           end
 
           context "that predates the topic" do
             setup do
-              create(:forum_topic_visit, user: @user, forum_topic: @topic, last_read_at: 16.hours.from_now)
+              @user.forum_category_visits.find_or_create_by!(forum_category: @topic.category).update!(last_read_at: 16.hours.from_now)
             end
 
             should "return false" do
@@ -53,7 +53,7 @@ class ForumTopicTest < ActiveSupport::TestCase
 
           context "that postdates the topic" do
             setup do
-              create(:forum_topic_visit, user: @user, forum_topic: @topic, last_read_at: 2.days.from_now)
+              @user.forum_category_visits.find_or_create_by!(forum_category: @topic.category).update!(last_read_at: 2.days.from_now)
             end
 
             should "return true" do
@@ -63,8 +63,8 @@ class ForumTopicTest < ActiveSupport::TestCase
         end
       end
 
-      context "with a blank @user.last_forum_read_at" do
-        context "and no visits" do
+      context "with no existing visit" do
+        context "and last_post_created_at in the future" do
           should "return false" do
             assert_equal(false, @topic.read_by?(@user))
           end
@@ -75,10 +75,10 @@ class ForumTopicTest < ActiveSupport::TestCase
           end
         end
 
-        context "and a visit" do
+        context "and last_post_created_at in the past" do
           context "that predates the topic" do
             setup do
-              create(:forum_topic_visit, user: @user, forum_topic: @topic, last_read_at: 1.day.ago)
+              @user.forum_category_visits.find_or_create_by!(forum_category: @topic.category).update!(last_read_at: 1.day.ago)
             end
 
             should "return false" do
@@ -93,7 +93,7 @@ class ForumTopicTest < ActiveSupport::TestCase
 
           context "that postdates the topic" do
             setup do
-              create(:forum_topic_visit, user: @user, forum_topic: @topic, last_read_at: 1.day.from_now)
+              @user.forum_category_visits.find_or_create_by!(forum_category: @topic.category).update!(last_read_at: 1.day.from_now)
             end
 
             should "return true" do
@@ -108,27 +108,29 @@ class ForumTopicTest < ActiveSupport::TestCase
       context "without a previous visit" do
         should "create a new visit" do
           @topic.mark_as_read!(@user)
-          @user.reload
-          assert_in_delta(@topic.updated_at.to_i, @user.last_forum_read_at.to_i, 1)
+          visit = @user.forum_category_visits.find_by(forum_category: @topic.category)
+          assert(visit)
+          assert_in_delta(@topic.updated_at.to_i, visit.last_read_at.to_i, 1)
         end
       end
 
       context "with a previous visit" do
         setup do
-          create(:forum_topic_visit, user: @user, forum_topic: @topic, last_read_at: 1.day.ago)
+          @user.forum_category_visits.find_or_create_by!(forum_category: @topic.category).update!(last_read_at: 1.day.ago)
         end
 
         should "update the visit" do
           @topic.mark_as_read!(@user)
-          @user.reload
-          assert_in_delta(@topic.updated_at.to_i, @user.last_forum_read_at.to_i, 1)
+          visit = @user.forum_category_visits.find_by(forum_category: @topic.category)
+          assert(visit)
+          assert_in_delta(@topic.updated_at.to_i, visit.last_read_at.to_i, 1)
         end
       end
     end
 
     context "constructed with nested attributes for its original post" do
       should "create a matching forum post" do
-        assert_difference(["ForumTopic.count", "ForumPost.count"], 1) do
+        assert_difference(%w[ForumTopic.count ForumPost.count], 1) do
           @topic = create(:forum_topic, title: "abc", original_post_attributes: { body: "abc" })
         end
       end
@@ -162,9 +164,7 @@ class ForumTopicTest < ActiveSupport::TestCase
 
     context "with multiple posts that has been deleted" do
       setup do
-        5.times do
-          create(:forum_post, topic_id: @topic.id)
-        end
+        create_list(:forum_post, 5, topic_id: @topic.id)
       end
 
       should "delete any associated posts" do

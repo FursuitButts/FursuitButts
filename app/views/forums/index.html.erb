@@ -4,7 +4,12 @@
 
 <%= table_for(@forum_categories) do |t| %>
   <% t.column("Name") do |forum_category| %>
-    <h3><%= link_to(forum_category.name, forum_category_path(forum_category)) %></h3>
+    <h3>
+      <% if forum_category.unread?(CurrentUser.user) %>
+        <span class="new">NEW</span>
+      <% end %>
+      <%= link_to(forum_category.name, forum_category_path(forum_category)) %>
+    </h3>
     <p><%= format_text(forum_category.description, allow_color: false) %></p>
   <% end %>
   <% t.column(:topic_count, name: "Topics", th: { class: "topics" }, td: { class: "topics" }) %>

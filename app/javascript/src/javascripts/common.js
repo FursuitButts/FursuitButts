@@ -22,6 +22,13 @@ function initSearch () {
   }
 }
 
+function initMarkAllAsRead () {
+  $("#subnav-mark-all-as-read-link").on("click.femboyfans", (event) => {
+    const link = $(event.currentTarget);
+    return confirm(`Are you sure that you want to mark all ${link.attr("data-item")} as read?`);
+  });
+}
+
 $(function () {
   $("#theme-switcher").change(function () {
     let theme = $(this).val();
@@ -75,6 +82,7 @@ $(function () {
     });
   });
 
+  initMarkAllAsRead();
   initSearch();
 });
 

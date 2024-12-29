@@ -107,8 +107,8 @@ class ForumTopic < ApplicationRecord
       q
     end
 
-    def unmuted
-      left_outer_joins(:statuses).where("(forum_topic_statuses.mute = ? AND forum_topic_statuses.user_id = ?) OR forum_topic_statuses.id IS NULL", false, CurrentUser.user.id)
+    def unmuted(user)
+      left_outer_joins(:statuses).where("(forum_topic_statuses.mute = ? AND forum_topic_statuses.user_id = ?) OR forum_topic_statuses.id IS NULL", false, user.id)
     end
 
     def sticky_first
@@ -154,53 +154,34 @@ class ForumTopic < ApplicationRecord
   end
 
   module VisitMethods
-    def read_by?(user = nil, mutes = nil)
-      user ||= CurrentUser.user
+    def read_by?(user = CurrentUser.user, mutes = nil)
+      return true if user.is_anonymous?
 
-      if mutes.present? && mutes.find { |m| m.forum_topic_id == id && m.mute }.present?
-        return true
-      end
+      return true if mutes.present? && mutes.find { |m| m.forum_topic_id == id && m.mute }.present?
 
       return true if user_mute(user)
+      last_read_at = category.last_read_at_for(user)
 
-      if user.last_forum_read_at && updated_at <= user.last_forum_read_at
-        return true
-      end
-
-      user.has_viewed_topic?(id, updated_at)
+      (last_read_at && last_post_created_at <= last_read_at) || false
     end
 
     def mark_as_read!(user = CurrentUser.user)
       return if user.is_anonymous?
 
-      match = ForumTopicVisit.where(user_id: user.id, forum_topic_id: id).first
-      if match
-        match.update_attribute(:last_read_at, updated_at)
-      else
-        ForumTopicVisit.create(user_id: user.id, forum_topic_id: id, last_read_at: updated_at)
-      end
-
-      has_unread_topics = ForumTopic.visible(user).where("forum_topics.updated_at >= ?", user.last_forum_read_at)
-                                    .joins("left join forum_topic_visits on (forum_topic_visits.forum_topic_id = forum_topics.id and forum_topic_visits.user_id = #{user.id})")
-                                    .where("(forum_topic_visits.id is null or forum_topic_visits.last_read_at < forum_topics.updated_at)")
-                                    .exists?
-      unless has_unread_topics
-        user.update_attribute(:last_forum_read_at, Time.now)
-        ForumTopicVisit.prune!(user)
-      end
+      category.mark_topic_as_read!(user, self)
     end
   end
 
   module SubscriptionMethods
     def user_subscription(user)
-      statuses.where(user_id: user.id, subscription: true).first
+      statuses.find_by(user_id: user.id, subscription: true)
     end
   end
 
   module MuteMethods
     # TODO: revisit muting, it may need to be further optimized or removed due to performance issues
     def user_mute(user)
-      statuses.where(user_id: user.id, mute: true).first
+      statuses.find_by(user_id: user.id, mute: true)
     end
   end
 

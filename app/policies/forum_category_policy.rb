@@ -2,7 +2,7 @@
 
 class ForumCategoryPolicy < ApplicationPolicy
   def show?
-    !record.is_a?(ForumCategory) || user.level >= record.can_view
+    min_level?
   end
 
   def create?
@@ -23,6 +23,18 @@ class ForumCategoryPolicy < ApplicationPolicy
 
   def move_all_topics?
     user.is_admin?
+  end
+
+  def mark_as_read?
+    unbanned? && min_level?
+  end
+
+  def mark_all_as_read?
+    unbanned?
+  end
+
+  def min_level?
+    !record.is_a?(ForumCategory) || user.level >= record.can_view
   end
 
   def permitted_attributes

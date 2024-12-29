@@ -2,7 +2,7 @@
 
 module Forums
   class CategoriesController < ApplicationController
-    before_action :load_forum_category, only: %i[show edit update destroy move_all_topics]
+    before_action :load_forum_category, only: %i[show edit update destroy move_all_topics mark_as_read]
     respond_to :html, :json
 
     def index
@@ -95,7 +95,25 @@ module Forums
       @new_forum_category = ForumCategory.find(permitted_attributes(ForumCategory)[:new_category_id])
       @forum_category.move_all_topics(@new_forum_category)
       respond_to do |format|
-        format.html { redirect_to(forum_categories_path, notice: "The category is now locked, topics be moved soon") }
+        format.html { redirect_to(forum_categories_path, notice: "The category is now locked, topics will be moved soon") }
+        format.json
+      end
+    end
+
+    def mark_as_read
+      authorize(ForumCategory)
+      @forum_category.mark_as_read!(CurrentUser.user)
+      respond_to do |format|
+        format.html { redirect_back(fallback_location: forum_category_path(@forum_category)) }
+        format.json
+      end
+    end
+
+    def mark_all_as_read
+      authorize(ForumCategory)
+      ForumCategory.mark_all_as_read!(CurrentUser.user)
+      respond_to do |format|
+        format.html { redirect_back(fallback_location: forums_path) }
         format.json
       end
     end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_12_27_035943) do
+ActiveRecord::Schema[7.1].define(version: 2024_12_29_224443) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -286,6 +286,15 @@ ActiveRecord::Schema[7.1].define(version: 2024_12_27_035943) do
     t.index "lower((name)::text)", name: "index_forum_categories_on_lower_name", unique: true
   end
 
+  create_table "forum_category_visits", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "forum_category_id", null: false
+    t.datetime "last_read_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.index ["forum_category_id"], name: "index_forum_category_visits_on_forum_category_id"
+    t.index ["last_read_at"], name: "index_forum_category_visits_on_last_read_at"
+    t.index ["user_id"], name: "index_forum_category_visits_on_user_id"
+  end
+
   create_table "forum_post_votes", force: :cascade do |t|
     t.integer "forum_post_id", null: false
     t.integer "user_id", null: false
@@ -333,17 +342,6 @@ ActiveRecord::Schema[7.1].define(version: 2024_12_27_035943) do
     t.index ["user_id"], name: "index_forum_topic_statuses_on_user_id"
   end
 
-  create_table "forum_topic_visits", id: :serial, force: :cascade do |t|
-    t.integer "user_id", null: false
-    t.integer "forum_topic_id", null: false
-    t.datetime "last_read_at", precision: nil
-    t.datetime "created_at", precision: nil, null: false
-    t.datetime "updated_at", precision: nil, null: false
-    t.index ["forum_topic_id"], name: "index_forum_topic_visits_on_forum_topic_id"
-    t.index ["last_read_at"], name: "index_forum_topic_visits_on_last_read_at"
-    t.index ["user_id"], name: "index_forum_topic_visits_on_user_id"
-  end
-
   create_table "forum_topics", id: :serial, force: :cascade do |t|
     t.integer "creator_id", null: false
     t.integer "updater_id", null: false
@@ -356,7 +354,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_12_27_035943) do
     t.datetime "updated_at", precision: nil, null: false
     t.integer "category_id", default: 0, null: false
     t.inet "creator_ip_addr", null: false
-    t.datetime "last_post_created_at"
+    t.datetime "last_post_created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.bigint "merge_target_id"
     t.datetime "merged_at"
     t.index "lower((title)::text) gin_trgm_ops", name: "index_forum_topics_on_lower_title_trgm", using: :gin
@@ -1213,6 +1211,8 @@ ActiveRecord::Schema[7.1].define(version: 2024_12_27_035943) do
   add_foreign_key "exception_logs", "users"
   add_foreign_key "favorites", "posts"
   add_foreign_key "favorites", "users"
+  add_foreign_key "forum_category_visits", "forum_categories"
+  add_foreign_key "forum_category_visits", "users"
   add_foreign_key "forum_post_votes", "forum_posts"
   add_foreign_key "forum_post_votes", "users"
   add_foreign_key "forum_posts", "forum_topics", column: "topic_id"
@@ -1221,8 +1221,6 @@ ActiveRecord::Schema[7.1].define(version: 2024_12_27_035943) do
   add_foreign_key "forum_posts", "users", column: "warning_user_id"
   add_foreign_key "forum_topic_statuses", "forum_topics"
   add_foreign_key "forum_topic_statuses", "users"
-  add_foreign_key "forum_topic_visits", "forum_topics"
-  add_foreign_key "forum_topic_visits", "users"
   add_foreign_key "forum_topics", "forum_categories", column: "category_id"
   add_foreign_key "forum_topics", "users", column: "creator_id"
   add_foreign_key "forum_topics", "users", column: "updater_id"

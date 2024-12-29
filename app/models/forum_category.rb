@@ -88,4 +88,40 @@ class ForumCategory < ApplicationRecord
     return if topics.empty?
     MoveForumCategoryTopicsJob.perform_later(user, self, new_category)
   end
+
+  def unread?(user)
+    return false if user.is_anonymous?
+    last_read_at = user.forum_category_visits.where(forum_category: self).first&.last_read_at
+    max_updated_at = topics.visible(user).unmuted(user).reorder(last_post_created_at: :desc).pick(:last_post_created_at)
+    return false if max_updated_at.nil?
+    return true if last_read_at.nil?
+    max_updated_at > last_read_at
+  end
+
+  def mark_topic_as_read!(user, topic)
+    return if user.is_anonymous?
+    visit = user.forum_category_visits.find_by(forum_category: self)
+    return if visit && visit.last_read_at >= topic.last_post_created_at
+    visit ||= user.forum_category_visits.create!(forum_category: self)
+    visit.update!(last_read_at: topic.last_post_created_at)
+  end
+
+  def mark_as_read!(user)
+    return if user.is_anonymous?
+    user.forum_category_visits.find_or_create_by!(forum_category: self).update!(last_read_at: Time.now)
+  end
+
+  def self.mark_all_as_read!(user)
+    ForumCategory.find_each do |category|
+      category.mark_as_read!(user)
+    end
+  end
+
+  def last_read_at_for(user)
+    user.forum_category_visits.select(:last_read_at).find_by(forum_category: self)&.last_read_at
+  end
+
+  def self.available_includes
+    %i[topics posts]
+  end
 end

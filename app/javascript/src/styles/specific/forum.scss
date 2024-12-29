@@ -67,12 +67,6 @@ div.list-of-forum-posts {
 }
 
 div#c-forums-topics {
-  span.new {
-    font-size: 80%;
-    color: $forum-topic-new-color;
-    margin-right: 0.5em;
-  }
-
   span.locked-topic {
     color: themed("color-link-last-page");
   }
@@ -95,5 +89,14 @@ div#c-forums-topics {
 #c-forums-posts #a-index {
   tr[data-is-hidden="true"], tr[data-topic-is-hidden="true"] {
     background-color: $background-article-hidden;
+  }
+}
+
+#c-forums #a-index, #c-forums-topics #a-index {
+  span.new {
+    font-size: 80%;
+    color: $forum-topic-new-color;
+    margin-right: 0.5em;
+    font-weight: normal;
   }
 }

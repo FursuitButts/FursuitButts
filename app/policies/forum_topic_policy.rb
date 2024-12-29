@@ -61,8 +61,8 @@ class ForumTopicPolicy < ApplicationPolicy
     min_level? && user.is_moderator?
   end
 
-  def mark_all_as_read?
-    true
+  def mark_as_read?
+    min_level? && unbanned?
   end
 
   def merge?

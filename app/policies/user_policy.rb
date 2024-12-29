@@ -61,7 +61,7 @@ class UserPolicy < ApplicationPolicy
 
     if record.id == user.id
       attr += User::Preferences.private_list + %i[
-        updated_at email last_logged_in_at last_forum_read_at
+        updated_at email last_logged_in_at
         recent_tags comment_threshold default_image_size
         favorite_tags blacklisted_tags time_zone per_page
         custom_style upload_notifications favorite_count followed_tags_list

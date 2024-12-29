@@ -5,6 +5,7 @@
   <%= subnav_link_to_if(policy(TagAlias).create?, "Request Alias", new_tag_alias_path) %>
   <%= subnav_link_to_if(policy(TagImplication).create?, "Request Implication", new_tag_implication_path) %>
   <%= subnav_link_to_if(policy(BulkUpdateRequest).create?, "Request Bulk Update", new_bulk_update_request_path) %>
+  <%= subnav_link_to_if(policy(ForumCategory).mark_as_read?, "Mark all as read", mark_all_as_read_forum_categories_path, method: :put, data: { shortcut: "shift+r", item: "forum categories" }) %>
   <%= subnav_link_to_if(policy(ForumCategory).any?(:create?, :update?, :destroy?), "Edit Categories", forum_categories_path) %>
   <%= subnav_link_to("Help", help_page_path(id: "forums")) %>
 <% end %>

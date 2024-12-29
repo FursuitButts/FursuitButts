@@ -21,7 +21,6 @@
 <meta name="enable-js-navigation" content="<%= CurrentUser.user.enable_keyboard_navigation %>">
 <meta name="enable-autocomplete" content="<%= CurrentUser.user.enable_autocomplete %>">
 <meta name="style-usernames" content="<%= CurrentUser.user.style_usernames? %>">
-<meta name="last-forum-read-at" content="<%= CurrentUser.user.last_forum_read_at %>">
 <% if CurrentUser.user.custom_style.present? %>
   <%= stylesheet_link_tag custom_style_users_path(md5: Digest::MD5.hexdigest(CurrentUser.user.custom_style)), media: "screen", nonce: true %>
 <% end %>

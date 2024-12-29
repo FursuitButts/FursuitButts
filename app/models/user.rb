@@ -198,7 +198,7 @@ class User < ApplicationRecord
   has_many :feedback, class_name: "UserFeedback", dependent: :destroy
   has_many :comments, foreign_key: "creator_id"
   has_many :forum_posts, -> { order("forum_posts.created_at, forum_posts.id") }, foreign_key: "creator_id"
-  has_many :forum_topic_visits
+  has_many :forum_category_visits
   has_many :tickets, foreign_key: "creator_id"
   has_many :note_versions, foreign_key: "updater_id"
   has_many :posts, foreign_key: "uploader_id"
@@ -558,17 +558,13 @@ class User < ApplicationRecord
   end
 
   module ForumMethods
-    def has_forum_been_updated?
+    def is_forum_unread?
       return false unless is_member?
-      max_updated_at = ForumTopic.visible(self).unmuted.order(updated_at: :desc).first&.updated_at
-      return false if max_updated_at.nil?
-      return true if last_forum_read_at.nil?
-      max_updated_at > last_forum_read_at
-    end
-
-    def has_viewed_topic?(id, last_updated)
-      @topic_views ||= forum_topic_visits.pluck(:forum_topic_id, :last_read_at).to_h
-      @topic_views.key?(id) && @topic_views[id] >= last_updated
+      last_post_created_at = ForumTopic.visible(self).unmuted(self).order(updated_at: :desc).pick(:last_post_created_at)
+      max_last_read_at = forum_category_visits.maximum(:last_read_at)
+      return false if last_post_created_at.nil?
+      return true if max_last_read_at.nil?
+      last_post_created_at > max_last_read_at
     end
   end
 

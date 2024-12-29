@@ -17,7 +17,11 @@
   <%= subnav_link_to_if(policy(TagAlias).create?, "Request alias", new_tag_alias_path) %>
   <%= subnav_link_to_if(policy(TagImplication).create?, "Request implication", new_tag_implication_path) %>
   <%= subnav_link_to_if(policy(BulkUpdateRequest).create?, "Request BUR", new_bulk_update_request_path) %>
-  <%= subnav_link_to_if(policy(ForumTopic).mark_all_as_read?, "Mark all as read", mark_all_as_read_forum_topics_path, method: :put, data: { shortcut: "shift+r" }) %>
+  <% if @category.present? %>
+    <%= subnav_link_to_if(policy(ForumCategory).mark_as_read?, "Mark all as read", mark_as_read_forum_category_path(@category), method: :put, data: { shortcut: "shift+r", item: "topics in this forum category" }) %>
+  <% else %>
+    <%= subnav_link_to_if(policy(ForumCategory).mark_all_as_read?, "Mark all as read", mark_all_as_read_forum_categories_path, method: :put, data: { shortcut: "shift+r", item: "forum categories" }) %>
+  <% end %>
 
   <%= subnav_link_to("Help", help_page_path(id: "forums")) %>
   <% ftpolicy = ForumTopicPolicy.new(CurrentUser.user, @forum_topic) %>

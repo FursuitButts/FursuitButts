@@ -155,6 +155,36 @@ module Forums
           assert_access(User::Levels::ADMIN, success_response: :redirect) { |user| post_auth move_all_topics_forum_category_path(@category3), user, params: { forum_category: { new_category_id: @category4.id } } }
         end
       end
+
+      context "mark_as_read action" do
+        should "work" do
+          assert_difference("ForumCategoryVisit.count", 1) do
+            put_auth mark_as_read_forum_category_path(@category), @admin
+            assert_redirected_to(forum_category_path(@category))
+          end
+          assert(@admin.forum_category_visits.exists?(forum_category: @category))
+        end
+
+        should "restrict access" do
+          assert_access(User::Levels::REJECTED, success_response: :redirect) { |user| put_auth mark_as_read_forum_category_path(@category), user }
+        end
+      end
+
+      context "mark_all_as_read action" do
+        should "work" do
+          assert_difference("ForumCategoryVisit.count", ForumCategory.count) do
+            put_auth mark_all_as_read_forum_categories_path, @admin
+            assert_redirected_to(forums_path)
+          end
+          ForumCategory.find_each do |category|
+            assert(@admin.forum_category_visits.exists?(forum_category: category))
+          end
+        end
+
+        should "restrict access" do
+          assert_access(User::Levels::REJECTED, success_response: :redirect) { |user| put_auth mark_all_as_read_forum_categories_path, user }
+        end
+      end
     end
   end
 end

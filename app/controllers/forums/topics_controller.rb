@@ -3,7 +3,7 @@
 module Forums
   class TopicsController < ApplicationController
     respond_to :html, :json
-    before_action :load_topic, except: %i[index new create mark_all_as_read]
+    before_action :load_topic, except: %i[index new create]
     before_action :ensure_lockdown_disabled, except: %i[index show]
     skip_before_action :api_check
 
@@ -114,19 +114,18 @@ module Forums
       respond_with(@forum_topic)
     end
 
-    def mark_all_as_read
-      authorize(ForumTopic)
-      CurrentUser.user.update_attribute(:last_forum_read_at, Time.now)
-      ForumTopicVisit.prune!(CurrentUser.user)
+    def mark_as_read
+      authorize(@forum_topic)
+      @forum_topic.mark_as_read!(CurrentUser.user)
       respond_to do |format|
-        format.html { redirect_to(forum_topics_path, notice: "All topics marked as read") }
+        format.html { redirect_back(fallback_location: forum_topic_path(@forum_topic)) }
         format.json
       end
     end
 
     def subscribe
       authorize(@forum_topic)
-      status = ForumTopicStatus.where(forum_topic_id: @forum_topic, user_id: CurrentUser.user.id).first
+      status = ForumTopicStatus.find_by(forum_topic_id: @forum_topic, user_id: CurrentUser.user.id)
       if status
         status.update(subscription: true, subscription_last_read_at: @forum_topic.updated_at, mute: false)
       else
@@ -137,14 +136,14 @@ module Forums
 
     def unsubscribe
       authorize(@forum_topic)
-      status = ForumTopicStatus.where(forum_topic_id: @forum_topic.id, user_id: CurrentUser.user.id, subscription: true).first
+      status = ForumTopicStatus.find_by(forum_topic_id: @forum_topic.id, user_id: CurrentUser.user.id, subscription: true)
       status&.destroy
       respond_with(@forum_topic)
     end
 
     def mute
       authorize(@forum_topic)
-      status = ForumTopicStatus.where(forum_topic_id: @forum_topic.id, user_id: CurrentUser.user.id).first
+      status = ForumTopicStatus.find_by(forum_topic_id: @forum_topic.id, user_id: CurrentUser.user.id)
       if status
         status.update(mute: true, subscription: false, subscription_last_read_at: nil)
       else
@@ -155,7 +154,7 @@ module Forums
 
     def unmute
       authorize(@forum_topic)
-      status = ForumTopicStatus.where(forum_topic_id: @forum_topic.id, user_id: CurrentUser.user.id, mute: true).first
+      status = ForumTopicStatus.find_by(forum_topic_id: @forum_topic.id, user_id: CurrentUser.user.id, mute: true)
       status&.destroy
       respond_with(@forum_topic)
     end

@@ -22,16 +22,16 @@ module Forums
           assert_response :success
         end
 
-        should "record a topic visit for html requests" do
+        should "record a category visit for html requests" do
           get_auth forum_topic_path(@forum_topic), @user
-          @user.reload
-          assert_not_nil(@user.last_forum_read_at)
+          assert(@forum_topic.read_by?(@user))
+          assert(@user.forum_category_visits.any?)
         end
 
-        should "not record a topic visit for non-html requests" do
+        should "not record a category visit for non-html requests" do
           get_auth forum_topic_path(@forum_topic), @user, params: { format: :json }
-          @user.reload
-          assert_nil(@user.last_forum_read_at)
+          assert_not(@forum_topic.read_by?(@user))
+          assert(@user.forum_category_visits.empty?)
         end
 
         should "restrict access" do
@@ -138,7 +138,7 @@ module Forums
         end
 
         should "cause the unread indicator to show" do
-          @other_user.update(last_forum_read_at: Time.now)
+          @other_user.forum_category_visits.find_or_create_by!(forum_category_id: FemboyFans.config.alias_implication_forum_category).update!(last_read_at: Time.now)
           get_auth posts_path, @other_user
           assert_select "#nav-forum.unread", false
 
@@ -327,6 +327,20 @@ module Forums
           assert_no_difference("ForumTopicStatus.count") do
             put_auth mute_forum_topic_path(@forum_topic), @user, params: { _method: "PUT" }
           end
+        end
+      end
+
+      context "mark_as_read action" do
+        should "work" do
+          assert_difference("ForumCategoryVisit.count", 1) do
+            put_auth mark_as_read_forum_topic_path(@forum_topic), @user
+            assert_redirected_to(forum_topic_path(@forum_topic))
+          end
+          assert(@user.forum_category_visits.exists?(forum_category: @forum_topic.category))
+        end
+
+        should "restrict access" do
+          assert_access(User::Levels::REJECTED, success_response: :redirect) { |user| put_auth mark_as_read_forum_topic_path(@forum_topic), user }
         end
       end
     end

@@ -601,7 +601,6 @@ components:
           required:
             - recent_tags
             - last_logged_in_at
-            - last_forum_read_at
             - email
             - comment_threshold
             - default_image_size
@@ -643,9 +642,6 @@ components:
             recent_tags:
               type: ["string", "null"]
             last_logged_in_at:
-              type: string
-              format: date-time
-            last_forum_read_at:
               type: string
               format: date-time
             email:
@@ -5965,6 +5961,37 @@ paths:
           $ref: "#/components/responses/MessageError"
         403:
           $ref: "#/components/responses/AccessDenied"
+  /forums/categories/{id}/mark_as_read.json:
+    put:
+      summary: Mark All Topics In Forum Category As Read
+      tags:
+        - Forum Categories
+      security:
+        - basicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the forum category.
+          schema:
+            type: number
+      responses:
+        204:
+          description: Success
+        403:
+          $ref: "#/components/responses/AccessDenied"
+  /forums/categories/mark_all_as_read.json:
+    put:
+      summary: Mark All Forum Categories As Read
+      tags:
+        - Forum Categories
+      security:
+        - basicAuth: []
+      responses:
+        204:
+          description: Success
+        403:
+          $ref: "#/components/responses/AccessDenied"
   # Forum Post
   /forums/posts.json:
     get:
@@ -6896,23 +6923,20 @@ paths:
           $ref: "#/components/responses/AccessDenied"
         404:
           $ref: "#/components/responses/NotFound"
-  /forums/topics/mark_all_as_read.json:
+  /forums/topics/{id}/mark_as_read.json:
     put:
-      summary: Mark All Forum Topics As Read
+      summary: Mark Topic As Read
       tags:
         - Forum Topics
       security:
         - basicAuth: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - category_id
-              properties:
-                category_id:
-                  type: number
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the forum topic.
+          schema:
+            type: number
       responses:
         204:
           description: Success
