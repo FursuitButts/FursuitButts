@@ -214,6 +214,7 @@ Rails.application.routes.draw do
           end
           resource :move, controller: "forums/topics/moves", as: "move_forum_topic", only: %i[show create]
         end
+        get :search, on: :collection
       end
     end
   end
