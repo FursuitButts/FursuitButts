@@ -955,6 +955,9 @@ class User < ApplicationRecord
           own_post_replaced_penalize_count: PostReplacement.penalized.for_uploader_on_approve(id).count,
           post_replacement_rejected_count:  post_replacements.rejected.count,
           ticket_count:                     Ticket.for_creator(id).count,
+          post_vote_count:                  post_votes.count,
+          comment_vote_count:               comment_votes.count,
+          forum_post_vote_count:            forum_post_votes.count,
         )
       end
     end

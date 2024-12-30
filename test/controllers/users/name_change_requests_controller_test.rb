@@ -6,12 +6,13 @@ module Users
   class NameChangeRequestsControllerTest < ActionDispatch::IntegrationTest
     context "The user name change requests controller" do
       setup do
-        @user = create(:trusted_user)
+        @user = create(:user)
+        @user2 = create(:user)
         @admin = create(:admin_user)
-        as(@user) do
+        as(@user2) do
           @change_request = UserNameChangeRequest.create!(
-            user_id:       @user.id,
-            original_name: @user.name,
+            user_id:       @user2.id,
+            original_name: @user2.name,
             desired_name:  "abc",
             change_reason: "hello",
           )
@@ -31,8 +32,19 @@ module Users
 
       context "create action" do
         should "work" do
-          post_auth user_name_change_requests_path, @user, params: { user_name_change_request: { desired_name: "zun" } }
+          post_auth user_name_change_requests_path, @user, params: { user_name_change_request: { desired_name: "xaxaxa" } }
           assert_response :success
+          @user.reload
+          assert_equal("xaxaxa", @user.name)
+        end
+
+        should "reset force_name_change flag" do
+          @user.update(force_name_change: true)
+          post_auth user_name_change_requests_path, @user, params: { user_name_change_request: { desired_name: "xaxaxa" } }
+          assert_response :success
+          @user.reload
+          assert_equal("xaxaxa", @user.name)
+          assert_equal(false, @user.force_name_change)
         end
 
         should "restrict access" do
@@ -42,14 +54,13 @@ module Users
 
       context "show action" do
         should "render" do
-          get_auth user_name_change_request_path(@change_request), @user
+          get_auth user_name_change_request_path(@change_request), @user2
           assert_response :success
         end
 
         context "when the current user is not an admin and does not own the request" do
           should "fail" do
-            @another_user = create(:user)
-            get_auth user_name_change_request_path(@change_request), @another_user
+            get_auth user_name_change_request_path(@change_request), @user
             assert_response :forbidden
           end
         end

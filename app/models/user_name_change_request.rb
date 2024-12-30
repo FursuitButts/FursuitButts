@@ -52,9 +52,9 @@ class UserNameChangeRequest < ApplicationRecord
     status == "pending"
   end
 
-  def approve!
-    update(status: "approved", approver_id: CurrentUser.user.id)
-    user.update_attribute(:name, desired_name)
+  def approve!(approver = CurrentUser.user)
+    update(status: "approved", approver_id: approver.id)
+    user.update(name: desired_name, force_name_change: false)
     body = "Your name change request has been approved. Be sure to log in with your new user name."
     Dmail.create_automated(title: "Name change request approved", body: body, to_id: user_id)
   end

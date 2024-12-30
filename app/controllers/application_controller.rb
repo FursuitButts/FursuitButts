@@ -243,7 +243,6 @@ class ApplicationController < ActionController::Base
         key = record.to_sym
       end
     end
-    Rails.logger.debug { "thekey: #{key}" }
     params.fetch(key, {})
   end
 
