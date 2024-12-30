@@ -33,7 +33,7 @@ module Users
       context "create action" do
         should "work" do
           post_auth user_name_change_requests_path, @user, params: { user_name_change_request: { desired_name: "xaxaxa" } }
-          assert_response :success
+          assert_redirected_to(user_name_change_request_path(UserNameChangeRequest.last))
           @user.reload
           assert_equal("xaxaxa", @user.name)
         end
@@ -41,7 +41,7 @@ module Users
         should "reset force_name_change flag" do
           @user.update(force_name_change: true)
           post_auth user_name_change_requests_path, @user, params: { user_name_change_request: { desired_name: "xaxaxa" } }
-          assert_response :success
+          assert_redirected_to(user_name_change_request_path(UserNameChangeRequest.last))
           @user.reload
           assert_equal("xaxaxa", @user.name)
           assert_equal(false, @user.force_name_change)
