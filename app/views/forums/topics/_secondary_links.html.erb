@@ -14,20 +14,7 @@
     <%= subnav_link_to_if(policy(ForumTopic).create?, "New", new_forum_topic_path) %>
   <% end %>
 
-  <% if params[:controller] == "forums/posts" %>
-    <% if params[:action] == "index" %>
-      <%= subnav_link_to("Search Topics", search_forum_topics_path) %>
-    <% else %>
-      <%= subnav_link_to("Search", search_forum_posts_path) %>
-    <% end %>
-  <% elsif params[:controller] == "forums/topics" %>
-    <% if params[:action] == "index" %>
-      <%= subnav_link_to("Search Posts", search_forum_posts_path) %>
-    <% else %>
-      <%= subnav_link_to("Search", search_forum_topics_path) %>
-    <% end %>
-  <% end %>
-
+  <%= subnav_link_to("Search", search_forums_path) %>
   <%= subnav_link_to_if(policy(TagAlias).create?, "Request alias", new_tag_alias_path) %>
   <%= subnav_link_to_if(policy(TagImplication).create?, "Request implication", new_tag_implication_path) %>
   <%= subnav_link_to_if(policy(BulkUpdateRequest).create?, "Request BUR", new_bulk_update_request_path) %>

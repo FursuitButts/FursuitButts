@@ -4,7 +4,7 @@ module Forums
   class PostsController < ApplicationController
     respond_to :html, :json
     before_action :load_post, only: %i[edit show update destroy hide unhide warning mark_spam mark_not_spam]
-    before_action :ensure_lockdown_disabled, except: %i[index show search]
+    before_action :ensure_lockdown_disabled, except: %i[index show]
     skip_before_action :api_check
 
     def index
@@ -34,10 +34,6 @@ module Forums
     def edit
       authorize(@forum_post)
       respond_with(@forum_post)
-    end
-
-    def search
-      authorize(ForumPost)
     end
 
     def create

@@ -7,4 +7,8 @@ class ForumsController < ApplicationController
     @forum_categories = authorize(ForumCategory).visible.ordered_categories.paginate(params[:page], limit: params[:limit] || 50)
     respond_with(@forum_categories)
   end
+
+  def search
+    authorize(ForumCategory)
+  end
 end

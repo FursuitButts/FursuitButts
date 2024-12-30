@@ -2,7 +2,7 @@
   <li><%= render(partial: "forums/topics/quick_search") %></li>
   <%= subnav_link_to("Listing", forums_path) %>
   <%= subnav_link_to("Topic Listing", forum_topics_path) %>
-  <%= subnav_link_to("Search", search_forum_posts_path) %>
+  <%= subnav_link_to("Search", search_forums_path) %>
   <%= subnav_link_to_if(policy(ForumTopic).create?, "New Topic", new_forum_topic_path) %>
   <%= subnav_link_to_if(policy(TagAlias).create?, "Request Alias", new_tag_alias_path) %>
   <%= subnav_link_to_if(policy(TagImplication).create?, "Request Implication", new_tag_implication_path) %>

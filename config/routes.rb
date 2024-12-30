@@ -170,6 +170,7 @@ Rails.application.routes.draw do
   end
   resources :forums, only: %i[index show] do
     collection do
+      get :search
       resources :categories, controller: "forums/categories", as: "forum_categories", only: %i[index show new create edit update destroy] do
         collection do
           post :reorder
@@ -190,7 +191,6 @@ Rails.application.routes.draw do
           put :mark_not_spam
         end
         collection do
-          get :search
           resources :votes, controller: "forums/posts/votes", as: "forum_post_votes", only: %i[index] do
             post :delete, on: :collection
           end
@@ -214,7 +214,6 @@ Rails.application.routes.draw do
           end
           resource :move, controller: "forums/topics/moves", as: "move_forum_topic", only: %i[show create]
         end
-        get :search, on: :collection
       end
     end
   end
