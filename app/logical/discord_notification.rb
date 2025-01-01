@@ -33,6 +33,8 @@ class DiscordNotification
     when EditHistory
       return if record.version == 1
       { color: YELLOW, title: "#{versionable_type.titleize} Edited", description: "Type: #{record.edit_type}", url: r.edit_history_url(id: record.versionable_id, type: record.versionable_type), author: a(record.updater) }
+    when Favorite
+      { color: GREEN, title: "Favorite Created", url: r.favorite_url(record), author: a(record.user) }
     when ForumPost
       return if record == record.topic.original_post
       { color: GREEN, title: "Forum Post Created", description: "Topic: [#{record.topic.title}](#{r.forum_topic_url(record.topic)})\nCategory: [#{record.category.name}](#{r.forum_category_url(record.category)})", url: r.forum_post_url(record), author: a(record.creator) }
@@ -55,7 +57,7 @@ class DiscordNotification
     when PostAppeal
       { color: GREEN, title: "Post Appeal Created", url: r.post_appeals_url(search: { id: record.id }), author: a(record.creator) }
     when PostEvent
-      { color: GREEN, title: "Post Event Created", url: r.post_events_url(search: { id: record.id }), author: a(record.creator) }
+      { color: GREEN, title: "Post Event Created", description: "Type: #{r.action}", url: r.post_events_url(search: { id: record.id }), author: a(record.creator) }
     when PostFlag
       { color: RED, title: "Post Flag Created", url: r.post_flags_url(search: { id: record.id }), author: a(record.creator) }
     when PostReplacement

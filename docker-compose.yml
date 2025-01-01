@@ -240,7 +240,7 @@ services:
   # Discord integration
 
   discordbot:
-    image: ghcr.io/femboyfans/discordbot:ffd0a7f1b3a1af7930dbf2c5e66e5234db4c7ed2
+    image: ghcr.io/femboyfans/discordbot:8b12e4861d6da64e70ec482b41001fddca8a1a18
     environment:
       DISCORD_TOKEN: ${DISCORDBOT_DISCORD_TOKEN-}
       DISCORD_ID: ${DISCORDBOT_DISCORD_ID-}
