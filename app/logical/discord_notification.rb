@@ -21,7 +21,7 @@ class DiscordNotification
       { color: GREEN, title: "Artist Created", description: "Name: #{record.name}", url: r.artist_url(record), author: a(record.creator) }
     when ArtistVersion
       return if record.version == 1
-      { color: YELLOW, title: "Artist Edited", description: "Name: #{record.previous.try(:name) || record.name}", url: r.artist_version_url(record), author: a(record.updater) }
+      { color: YELLOW, title: "Artist Edited", description: "Name: #{record.previous.try(:name) || record.name}", url: r.artist_versions_url(search: { artist_id: record.artist_id }, anchor: "artist-version-#{record.id}"), author: a(record.updater) }
     when Ban
       { color: RED, title: "User Banned", description: "User: #{u(record.user)}", url: r.ban_url(record), author: a(record.banner) }
     when BulkUpdateRequest
@@ -29,17 +29,17 @@ class DiscordNotification
     when Comment
       { color: GREEN, title: "Comment Created", url: r.comment_url(record), author: a(record.creator) }
     when CommentVote
-      { color: GREEN, title: "Comment Vote Created", url: r.url_for(controller: "comments/votes", action: "index", search: { id: record.id }), author: a(record.user) }
+      { color: GREEN, title: "Comment Vote Created", url: r.url_for(controller: "comments/votes", action: "index", search: { comment_id: record.comment_id }, anchor: "comment-#{record.id}"), author: a(record.user) }
     when EditHistory
       return if record.version == 1
-      { color: YELLOW, title: "#{versionable_type.titleize} Edited", description: "Type: #{record.edit_type}", url: r.edit_history_url(id: record.versionable_id, type: record.versionable_type), author: a(record.updater) }
+      { color: YELLOW, title: "#{versionable_type.titleize} Edited", description: "Type: #{record.edit_type}", url: r.edit_history_url(id: record.versionable_id, type: record.versionable_type, page: record.page, anchor: "edit-history-#{record.id}"), author: a(record.updater) }
     when Favorite
       { color: GREEN, title: "Favorite Created", url: r.favorite_url(record), author: a(record.user) }
     when ForumPost
       return if record == record.topic.original_post
       { color: GREEN, title: "Forum Post Created", description: "Topic: [#{record.topic.title}](#{r.forum_topic_url(record.topic)})\nCategory: [#{record.category.name}](#{r.forum_category_url(record.category)})", url: r.forum_post_url(record), author: a(record.creator) }
     when ForumPostVote
-      { color: GREEN, title: "Forum Post Vote Created", url: r.url_for(controller: "forums/posts/votes", action: "index", search: { id: record.id }), author: a(record.user) }
+      { color: GREEN, title: "Forum Post Vote Created", url: r.url_for(controller: "forums/posts/votes", action: "index", search: { forum_post_id: record.forum_post_id }, anchor: "forum-post-vote-#{record.id}"), author: a(record.user) }
     when ForumTopic
       { color: GREEN, title: "Forum Topic Created", description: "Category: [#{record.category.name}](#{r.forum_category_url(record.category)})", url: r.forum_topic_url(record), author: a(record.creator) }
     when Note
@@ -53,22 +53,22 @@ class DiscordNotification
       return if record.version == 1
       { color: YELLOW, title: "Pool Edited", url: r.pool_version_url(record), author: a(record.updater) }
     when Post
-      { color: GREEN, title: "Post Created", url: r.post_url(record), author: a(record.creator) }
+      { color: GREEN, title: "Post Created", url: r.post_url(record), author: a(record.uploader) }
     when PostAppeal
-      { color: GREEN, title: "Post Appeal Created", url: r.post_appeals_url(search: { id: record.id }), author: a(record.creator) }
+      { color: GREEN, title: "Post Appeal Created", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_appeals_url(search: { post_id: record.post_id }, anchor: "post-appeal-#{record.id}"), author: a(record.creator) }
     when PostEvent
-      { color: GREEN, title: "Post Event Created", description: "Type: #{r.action}", url: r.post_events_url(search: { id: record.id }), author: a(record.creator) }
+      { color: GREEN, title: "Post Event Created", description: "Type: #{record.action}\nPost: [#{record.id}](#{r.post_path(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
     when PostFlag
-      { color: RED, title: "Post Flag Created", url: r.post_flags_url(search: { id: record.id }), author: a(record.creator) }
+      { color: RED, title: "Post Flag Created", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_flags_url(search: { post_id: record.post_id }, anchor: "post-flag-#{record.id}"), author: a(record.creator) }
     when PostReplacement
-      { color: GREEN, title: "Post Replacement Created", url: r.post_replacements_url(search: { id: record.id }), author: a(record.creator) }
+      { color: GREEN, title: "Post Replacement Created", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_replacements_url(search: { post_id: record.post_id }, anchor: "post-replacement-#{record.id}"), author: a(record.creator) }
     when PostSet
       { color: GREEN, title: "Post Set Created", url: r.post_set_url(record), author: a(record.creator) }
     when PostVersion
       return if record.version == 1
-      { color: YELLOW, title: "Post Edited", url: r.post_version_url(record), author: a(record.updater) }
+      { color: YELLOW, title: "Post Edited", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_versions_url(search: { post_id: record.post_id }, anchor: "post-version-#{record.id}"), author: a(record.updater) }
     when PostVote
-      { color: GREEN, title: "Post Vote Created", url: r.url_for(controller: "posts/votes", action: "index", search: { id: record.id }), author: a(record.user) }
+      { color: GREEN, title: "Post Vote Created", url: r.url_for(controller: "posts/votes", action: "index", search: { post_id: record.post_id }, anchor: "post-vote-#{record.id}"), author: a(record.user) }
     when TagAlias
       { color: GREEN, title: "Tag Alias Created", description: "Antecedent: #{record.antecedent_name}\nConsequent: #{record.consequent_name}", url: r.tag_alias_url(record), author: a(record.creator) }
     when TagImplication
@@ -79,12 +79,12 @@ class DiscordNotification
       { color: GREEN, title: "User Created", description: "Name: #{record.name}", url: r.user_url(record), author: a(record) }
     when UserTextVersion
       return if record.version == 1
-      { color: YELLOW, title: "User Text Edited", url: r.user_text_versions_url(search: { user_id: record.user_id }), author: a(record.updater) }
+      { color: YELLOW, title: "User Text Edited", url: r.user_text_versions_url(search: { user_id: record.user_id }, anchor: "user-text-version-#{record.id}"), author: a(record.updater) }
     when WikiPage
       { color: GREEN, title: "Wiki Page Created", url: r.wiki_page_url(record), author: a(record.creator) }
     when WikiPageVersion
       return if record.version == 1
-      { color: YELLOW, title: "Wiki Page Edited", url: r.wiki_page_version_url(record), author: a(record.updater) }
+      { color: YELLOW, title: "Wiki Page Edited", url: r.wiki_page_versions_url(search: { user_id: record.user_id }, anchor: "wiki-page-version-#{record.id}"), author: a(record.updater) }
     end
   rescue Exception => e
     ExceptionLog.add!(e, source: "DiscordNotification#embed", record_type: record.class.name, record_id: record.id)
