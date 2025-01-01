@@ -790,6 +790,10 @@ module FemboyFans
       nil
     end
 
+    def discord_webhook_url
+      nil
+    end
+
     def ftp_hostname
     end
 

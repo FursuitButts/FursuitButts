@@ -3,6 +3,8 @@
 class ApplicationRecord < ActiveRecord::Base
   self.abstract_class = true
 
+  after_create -> { DiscordNotification.new(self).execute! }
+
   concerning :SearchMethods do
     class_methods do
       def paginate(page, options = {})
