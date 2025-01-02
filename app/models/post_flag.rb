@@ -21,6 +21,7 @@ class PostFlag < ApplicationRecord
   scope :by_users, -> { where.not(creator: User.system) }
   scope :by_system, -> { where(creator: User.system) }
   scope :in_cooldown, -> { by_users.where("created_at >= ?", COOLDOWN_PERIOD.ago) }
+  scope :pending, -> { by_users.where(is_resolved: false) }
 
   attr_accessor :parent_id, :reason_name, :force_flag
 

@@ -45,74 +45,74 @@ class DiscordNotification
     when Post
       embeds << { color: GREEN, title: "Post Created", url: r.post_url(record), author: a(record.uploader) }
     when PostAppeal
-      embeds << { color: GREEN, title: "Post Appeal Created", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_appeals_url(search: { post_id: record.post_id }, anchor: "post-appeal-#{record.id}"), author: a(record.creator) }
+      embeds << { color: GREEN, title: "Post Appeal Created", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_appeals_url(search: { post_id: record.post_id }, anchor: "post-appeal-#{record.id}"), author: a(record.creator) }
     when PostEvent
       case record.action
       when "deleted"
-        embeds << { color: RED, title: "Post Deleted", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
+        embeds << { color: RED, title: "Post Deleted", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
       when "undeleted"
-        embeds << { color: GREEN, title: "Post Undeleted", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
+        embeds << { color: GREEN, title: "Post Undeleted", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
       when "approved"
-        embeds << { color: GREEN, title: "Post Approved", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
+        embeds << { color: GREEN, title: "Post Approved", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
       when "unapproved"
-        embeds << { color: RED, title: "Post Unapproved", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
+        embeds << { color: RED, title: "Post Unapproved", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
       when "flag_created"
-        embeds << { color: RED, title: "Post Flag Created", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_flags_url(search: { post_id: record.post_id }, anchor: "post-flag-#{record.id}"), author: a(record.creator) }
+        embeds << { color: RED, title: "Post Flag Created", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_flags_url(search: { post_id: record.post_id }, anchor: "post-flag-#{record.id}"), author: a(record.creator) }
       when "flag_removed"
-        embeds << { color: GREEN, title: "Post Flag Removed", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_flags_url(search: { post_id: record.post_id }, anchor: "post-flag-#{record.id}"), author: a(record.creator) }
+        embeds << { color: GREEN, title: "Post Flag Removed", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_flags_url(search: { post_id: record.post_id }, anchor: "post-flag-#{record.id}"), author: a(record.creator) }
       when "favorites_moved"
-        embeds << { color: GREEN, title: "Post Favorites Moved", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
+        embeds << { color: GREEN, title: "Post Favorites Moved", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
       when "favorites_received"
-        embeds << { color: GREEN, title: "Post Favorites Received", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
+        embeds << { color: GREEN, title: "Post Favorites Received", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
       when "rating_locked"
-        embeds << { color: GREEN, title: "Post Rating Locked", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
+        embeds << { color: GREEN, title: "Post Rating Locked", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
       when "rating_unlocked"
-        embeds << { color: RED, title: "Post Rating Unlocked", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
+        embeds << { color: RED, title: "Post Rating Unlocked", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
       when "status_locked"
-        embeds << { color: GREEN, title: "Post Status Locked", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
+        embeds << { color: GREEN, title: "Post Status Locked", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
       when "status_unlocked"
-        embeds << { color: RED, title: "Post Status Unlocked", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
+        embeds << { color: RED, title: "Post Status Unlocked", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
       when "note_locked"
-        embeds << { color: GREEN, title: "Post Note Locked", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
+        embeds << { color: GREEN, title: "Post Note Locked", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
       when "note_unlocked"
-        embeds << { color: RED, title: "Post Note Unlocked", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
+        embeds << { color: RED, title: "Post Note Unlocked", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
       when "replacement_accepted"
-        embeds << { color: GREEN, title: "Post Replacement Accepted", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_replacements_url(search: { post_id: record.post_id }, anchor: "post-replacement-#{record.id}"), author: a(record.creator) }
+        embeds << { color: GREEN, title: "Post Replacement Accepted", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_replacements_url(search: { post_id: record.post_id }, anchor: "post-replacement-#{record.id}"), author: a(record.creator) }
       when "replacement_rejected"
-        embeds << { color: RED, title: "Post Replacement Rejected", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_replacements_url(search: { post_id: record.post_id }, anchor: "post-replacement-#{record.id}"), author: a(record.creator) }
+        embeds << { color: RED, title: "Post Replacement Rejected", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_replacements_url(search: { post_id: record.post_id }, anchor: "post-replacement-#{record.id}"), author: a(record.creator) }
       when "replacement_promoted"
-        embeds << { color: GREEN, title: "Post Replacement Promoted", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_replacements_url(search: { post_id: record.post_id }, anchor: "post-replacement-#{record.id}"), author: a(record.creator) }
+        embeds << { color: GREEN, title: "Post Replacement Promoted", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_replacements_url(search: { post_id: record.post_id }, anchor: "post-replacement-#{record.id}"), author: a(record.creator) }
       when "replacement_deleted"
-        embeds << { color: RED, title: "Post Replacement Deleted", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_replacements_url(search: { post_id: record.post_id }, anchor: "post-replacement-#{record.id}"), author: a(record.creator) }
+        embeds << { color: RED, title: "Post Replacement Deleted", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_replacements_url(search: { post_id: record.post_id }, anchor: "post-replacement-#{record.id}"), author: a(record.creator) }
       when "expunged"
-        embeds << { color: RED, title: "Post Expunged", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
+        embeds << { color: RED, title: "Post Expunged", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
       when "comment_disabled"
-        embeds << { color: RED, title: "Post Comment Disabled", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
+        embeds << { color: RED, title: "Post Comment Disabled", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
       when "comment_enabled"
-        embeds << { color: GREEN, title: "Post Comment Enabled", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
+        embeds << { color: GREEN, title: "Post Comment Enabled", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
       when "comment_locked"
-        embeds << { color: GREEN, title: "Post Comment Locked", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
+        embeds << { color: GREEN, title: "Post Comment Locked", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
       when "comment_unlocked"
-        embeds << { color: RED, title: "Post Comment Unlocked", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
+        embeds << { color: RED, title: "Post Comment Unlocked", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
       when "changed_bg_color"
-        embeds << { color: GREEN, title: "Post Background Color Changed", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
+        embeds << { color: GREEN, title: "Post Background Color Changed", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
       when "changed_thumbnail_frame"
-        embeds << { color: GREEN, title: "Post Thumbnail Frame Changed", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
+        embeds << { color: GREEN, title: "Post Thumbnail Frame Changed", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
       when "appeal_created"
-        embeds << { color: GREEN, title: "Post Appeal Created", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_appeals_url(search: { post_id: record.post_id }, anchor: "post-appeal-#{record.id}"), author: a(record.creator) }
+        embeds << { color: GREEN, title: "Post Appeal Created", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_appeals_url(search: { post_id: record.post_id }, anchor: "post-appeal-#{record.id}"), author: a(record.creator) }
       when "appeal_accepted"
-        embeds << { color: GREEN, title: "Post Appeal Accepted", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_appeals_url(search: { post_id: record.post_id }, anchor: "post-appeal-#{record.id}"), author: a(record.creator) }
+        embeds << { color: GREEN, title: "Post Appeal Accepted", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_appeals_url(search: { post_id: record.post_id }, anchor: "post-appeal-#{record.id}"), author: a(record.creator) }
       when "appeal_rejected"
-        embeds << { color: RED, title: "Post Appeal Rejected", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_appeals_url(search: { post_id: record.post_id }, anchor: "post-appeal-#{record.id}"), author: a(record.creator) }
+        embeds << { color: RED, title: "Post Appeal Rejected", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_appeals_url(search: { post_id: record.post_id }, anchor: "post-appeal-#{record.id}"), author: a(record.creator) }
       when "copied_notes"
-        embeds << { color: GREEN, title: "Post Notes Copied", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
+        embeds << { color: GREEN, title: "Post Notes Copied", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
       else
-        embeds << { color: GREEN, title: "Post Event Created", description: "Type: #{record.action}\nPost: [#{record.id}](#{r.post_path(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
+        embeds << { color: GREEN, title: "Post Event Created", description: "Type: #{record.action}\nPost: [#{record.id}](#{r.post_url(record)})", url: r.post_events_url(search: { post_id: record.post_id }, anchor: "post-event-#{record.id}"), author: a(record.creator) }
       end
     when PostFlag
-      embeds << { color: RED, title: "Post Flag Created", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_flags_url(search: { post_id: record.post_id }, anchor: "post-flag-#{record.id}"), author: a(record.creator) }
+      embeds << { color: RED, title: "Post Flag Created", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_flags_url(search: { post_id: record.post_id }, anchor: "post-flag-#{record.id}"), author: a(record.creator) }
     when PostReplacement
-      embeds << { color: GREEN, title: "Post Replacement Created", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_replacements_url(search: { post_id: record.post_id }, anchor: "post-replacement-#{record.id}"), author: a(record.creator) }
+      embeds << { color: GREEN, title: "Post Replacement Created", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_replacements_url(search: { post_id: record.post_id }, anchor: "post-replacement-#{record.id}"), author: a(record.creator) }
     when PostSet
       embeds << { color: GREEN, title: "Post Set Created", url: r.post_set_url(record), author: a(record.creator) }
     when PostVote
@@ -226,8 +226,6 @@ class DiscordNotification
       embeds << { color: YELLOW, title: "Post Updated", url: r.post_url(record), author: a(record.updater) }
     when PostSet
       embeds << { color: YELLOW, title: "Post Set Updated", url: r.post_set_url(record), author: a(record.updater) }
-    when User
-      embeds << { color: YELLOW, title: "User Updated", description: "Name: #{record.name}", url: r.user_url(record), author: a(record) }
     when WikiPage
       embeds << { color: YELLOW, title: "Wiki Page Updated", url: r.wiki_page_url(record), author: a(record.updater) }
     end

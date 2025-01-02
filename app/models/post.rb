@@ -1884,7 +1884,7 @@ class Post < ApplicationRecord
       end
       if saved_change_to_is_status_locked?
         action = is_status_locked? ? :status_locked : :status_unlocked
-        PostEvent.ad!(id, CurrentUser.user, action)
+        PostEvent.add!(id, CurrentUser.user, action)
       end
       if saved_change_to_is_note_locked?
         action = is_note_locked? ? :note_locked : :note_unlocked
