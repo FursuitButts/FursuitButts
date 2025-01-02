@@ -42,6 +42,7 @@ class DiscordNotification
       embeds << { color: GREEN, title: "Note Created", url: r.note_url(record), author: a(record.creator) }
     when Pool
       embeds << { color: GREEN, title: "Pool Created", url: r.pool_url(record), author: a(record.creator) }
+    when Post
       embeds << { color: GREEN, title: "Post Created", url: r.post_url(record), author: a(record.uploader) }
     when PostAppeal
       embeds << { color: GREEN, title: "Post Appeal Created", description: "Post: [#{record.id}](#{r.post_path(record)})", url: r.post_appeals_url(search: { post_id: record.post_id }, anchor: "post-appeal-#{record.id}"), author: a(record.creator) }
