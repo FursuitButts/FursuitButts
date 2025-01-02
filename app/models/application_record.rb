@@ -3,7 +3,9 @@
 class ApplicationRecord < ActiveRecord::Base
   self.abstract_class = true
 
-  after_create -> { DiscordNotification.new(self).execute! }
+  after_create -> { DiscordNotification.new(self, :create).execute! }
+  after_update -> { DiscordNotification.new(self, :update).execute! }
+  after_destroy -> { DiscordNotification.new(self, :destroy).execute! }
 
   concerning :SearchMethods do
     class_methods do
