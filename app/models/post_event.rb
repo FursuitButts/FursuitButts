@@ -48,7 +48,12 @@ class PostEvent < ApplicationRecord
     options.reject { |action| MOD_ONLY_SEARCH_ACTIONS.any?(actions[action]) }
   end
 
-  def self.add(post_id, creator, action, data = {})
+  def self.add(...)
+    Rails.logger.warn("PostEvent: use PostEvent.add! instead of PostEvent.add")
+    add!(...)
+  end
+
+  def self.add!(post_id, creator, action, data = {})
     create!(post_id: post_id, creator: creator, action: action.to_s, extra_data: data)
   end
 
@@ -90,7 +95,7 @@ class PostEvent < ApplicationRecord
   module ApiMethods
     # whitelisted data attributes
     def allowed_data
-      %w[reason parent_id child_id bg_color replacement_id old_md5 new_md5 source_post_id md5 note_count]
+      %w[reason parent_id child_id bg_color post_replacement_id old_md5 new_md5 source_post_id md5 note_count post_appeal_id post_flag_id]
     end
 
     def serializable_hash(*)

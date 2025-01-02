@@ -341,9 +341,10 @@ class Post < ApplicationRecord
     end
 
     def unflag!
+      post_flag_id = flags.pending.last&.id
       flags.each(&:resolve!)
       update(is_flagged: false)
-      PostEvent.add(id, CurrentUser.user, :flag_removed)
+      PostEvent.add!(id, CurrentUser.user, :flag_removed, post_flag_id: post_flag_id)
     end
 
     def approved_by?(user)
@@ -351,7 +352,7 @@ class Post < ApplicationRecord
     end
 
     def unapprove!
-      PostEvent.add(id, CurrentUser.user, :unapproved)
+      PostEvent.add!(id, CurrentUser.user, :unapproved)
       update(approver: nil, is_pending: true)
       uploader.notify_for_upload(self, :post_unapprove) if uploader_id != CurrentUser.id
     end
@@ -371,7 +372,7 @@ class Post < ApplicationRecord
       if uploader == approver
         update(is_pending: false)
       else
-        PostEvent.add(id, CurrentUser.user, :approved)
+        PostEvent.add!(id, CurrentUser.user, :approved)
         approvals.create(user: approver)
         update(approver: approver, is_pending: false)
         uploader.notify_for_upload(self, :post_approve) if uploader_id != CurrentUser.id
@@ -1329,8 +1330,8 @@ class Post < ApplicationRecord
       return if parent.nil?
 
       FavoriteManager.give_to_parent!(self)
-      PostEvent.add(id, CurrentUser.user, :favorites_moved, { parent_id: parent_id })
-      PostEvent.add(parent_id, CurrentUser.user, :favorites_received, { child_id: id })
+      PostEvent.add!(id, CurrentUser.user, :favorites_moved, parent_id: parent_id)
+      PostEvent.add!(parent_id, CurrentUser.user, :favorites_received, child_id: id)
     end
 
     def give_votes_to_parent
@@ -1409,7 +1410,7 @@ class Post < ApplicationRecord
 
       # transaction do
       Post.without_timeout do
-        PostEvent.add(id, CurrentUser.user, :expunged)
+        PostEvent.add!(id, CurrentUser.user, :expunged)
 
         reset_followers_on_destroy
         update_children_on_destroy
@@ -1461,7 +1462,7 @@ class Post < ApplicationRecord
           )
           decrement_tag_post_counts
           move_files_on_delete
-          PostEvent.add(id, CurrentUser.user, :deleted, { reason: reason })
+          PostEvent.add!(id, CurrentUser.user, :deleted, reason: reason)
           uploader.notify_for_upload(self, :post_delete) if uploader_id != CurrentUser.id
         end
       end
@@ -1504,7 +1505,7 @@ class Post < ApplicationRecord
         increment_tag_post_counts
         save
         approvals.create(user: CurrentUser.user)
-        PostEvent.add(id, CurrentUser.user, :undeleted)
+        PostEvent.add!(id, CurrentUser.user, :undeleted)
         appeals.pending.map(&:accept!)
         uploader.notify_for_upload(self, :post_undelete) if uploader_id != CurrentUser.id
       end
@@ -1601,7 +1602,7 @@ class Post < ApplicationRecord
           note.copy_to(other_post)
         end
 
-        PostEvent.add(other_post.id, CurrentUser.user, :copied_notes, { source_post_id: other_post.id, note_count: notes.active.count })
+        PostEvent.add!(other_post.id, CurrentUser.user, :copied_notes, source_post_id: other_post.id, note_count: notes.active.count)
         copy_tags.each do |tag|
           other_post.remove_tag(tag)
           other_post.add_tag(tag) if has_tag?(tag)
@@ -1879,29 +1880,29 @@ class Post < ApplicationRecord
     def create_post_events
       if saved_change_to_is_rating_locked?
         action = is_rating_locked? ? :rating_locked : :rating_unlocked
-        PostEvent.add(id, CurrentUser.user, action)
+        PostEvent.add!(id, CurrentUser.user, action)
       end
       if saved_change_to_is_status_locked?
         action = is_status_locked? ? :status_locked : :status_unlocked
-        PostEvent.add(id, CurrentUser.user, action)
+        PostEvent.ad!(id, CurrentUser.user, action)
       end
       if saved_change_to_is_note_locked?
         action = is_note_locked? ? :note_locked : :note_unlocked
-        PostEvent.add(id, CurrentUser.user, action)
+        PostEvent.add!(id, CurrentUser.user, action)
       end
       if saved_change_to_is_comment_disabled?
         action = is_comment_disabled? ? :comment_disabled : :comment_enabled
-        PostEvent.add(id, CurrentUser.user, action)
+        PostEvent.add!(id, CurrentUser.user, action)
       end
       if saved_change_to_is_comment_locked?
         action = is_comment_locked? ? :comment_locked : :comment_unlocked
-        PostEvent.add(id, CurrentUser.user, action)
+        PostEvent.add!(id, CurrentUser.user, action)
       end
       if saved_change_to_bg_color?
-        PostEvent.add(id, CurrentUser.user, :changed_bg_color, { bg_color: bg_color })
+        PostEvent.add!(id, CurrentUser.user, :changed_bg_color, bg_color: bg_color)
       end
       if saved_change_to_thumbnail_frame?
-        PostEvent.add(id, CurrentUser.user, :changed_thumbnail_frame, { old_thumbnail_frame: thumbnail_frame_before_last_save, new_thumbnail_frame: thumbnail_frame })
+        PostEvent.add!(id, CurrentUser.user, :changed_thumbnail_frame, old_thumbnail_frame: thumbnail_frame_before_last_save, new_thumbnail_frame: thumbnail_frame)
       end
     end
   end

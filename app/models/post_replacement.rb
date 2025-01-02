@@ -103,7 +103,7 @@ class PostReplacement < ApplicationRecord
 
   module StorageMethods
     def remove_files
-      PostEvent.add(post_id, CurrentUser.user, :replacement_deleted, { replacement_id: id, md5: md5, storage_id: storage_id })
+      PostEvent.add!(post_id, CurrentUser.user, :replacement_deleted, post_replacement_id: id, md5: md5, storage_id: storage_id)
       FemboyFans.config.storage_manager.delete_replacement(self)
     end
 
@@ -197,7 +197,7 @@ class PostReplacement < ApplicationRecord
 
       processor = UploadService::Replacer.new(post: post, replacement: self)
       processor.process!(penalize_current_uploader: penalize_current_uploader)
-      PostEvent.add(post.id, CurrentUser.user, :replacement_accepted, { replacement_id: id, old_md5: post.md5, new_md5: md5 })
+      PostEvent.add!(post.id, CurrentUser.user, :replacement_accepted, post_replacement_id: id, old_md5: post.md5, new_md5: md5)
       creator.notify_for_upload(self, :replacement_approve) if creator_id != CurrentUser.id
       post.update_index
     end
@@ -227,7 +227,7 @@ class PostReplacement < ApplicationRecord
         new_upload = processor.start!
         if new_upload.valid? && new_upload.post&.valid?
           update_attribute(:status, "promoted")
-          PostEvent.add(new_upload.post.id, CurrentUser.user, :replacement_promoted, { source_post_id: post.id })
+          PostEvent.add!(new_upload.post.id, CurrentUser.user, :replacement_promoted, source_post_id: post.id, post_replacement_id: id)
         end
         new_upload
       end
@@ -242,7 +242,7 @@ class PostReplacement < ApplicationRecord
         return
       end
 
-      PostEvent.add(post.id, user, :replacement_rejected, { replacement_id: id })
+      PostEvent.add!(post.id, user, :replacement_rejected, post_replacement_id: id)
       update(status: "rejected", rejector: user, rejection_reason: reason)
       User.where(id: creator_id).update_all("post_replacement_rejected_count = post_replacement_rejected_count + 1")
       creator.notify_for_upload(self, :replacement_reject) if creator_id != CurrentUser.id

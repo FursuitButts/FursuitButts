@@ -25,7 +25,7 @@ class PostAppeal < ApplicationRecord
   end
 
   def create_post_event
-    PostEvent.add(post_id, creator, :appeal_created)
+    PostEvent.add!(post_id, creator, :appeal_created, post_appeal_id: id)
   end
 
   def validate_creator_is_not_limited
@@ -42,13 +42,13 @@ class PostAppeal < ApplicationRecord
 
   def accept!
     update!(status: :accepted)
-    PostEvent.add(post_id, CurrentUser.user, :appeal_accepted)
+    PostEvent.add!(post_id, CurrentUser.user, :appeal_accepted, post_appeal_id: id)
     creator.notify_for_upload(self, :appeal_accept) if creator_id != CurrentUser.id
   end
 
   def reject!
     update!(status: :rejected)
-    PostEvent.add(post_id, CurrentUser.user, :appeal_rejected)
+    PostEvent.add!(post_id, CurrentUser.user, :appeal_rejected, post_appeal_id: id)
     creator.notify_for_upload(self, :appeal_reject) if creator_id != CurrentUser.id
   end
 

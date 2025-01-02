@@ -174,7 +174,7 @@ class PostFlag < ApplicationRecord
 
   def create_post_event
     # Deletions also create flags, but they create a deletion event instead
-    PostEvent.add(post.id, CurrentUser.user, :flag_created, { reason: reason }) unless is_deletion
+    PostEvent.add!(post.id, CurrentUser.user, :flag_created, reason: reason, post_flag_id: id) unless is_deletion
   end
 
   def self.available_includes

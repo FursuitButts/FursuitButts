@@ -25,7 +25,7 @@
     <p><%= time_ago_in_words_tagged(event.created_at, compact: true) %></p>
   <% end %>
   <% t.column("Info", th: { class: "col-expand" }) do |event| %>
-    <%= format_text event.format_description %>
+    <%= format_text(event.format_description) %>
   <% end %>
 <% end %>
 
