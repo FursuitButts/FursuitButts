@@ -68,8 +68,16 @@ class UserInfo
     @throttles ||= User::LimitMethods.throttles.to_h { |throttle| [throttle.name, Throttle.new(user, throttle)] }
   end
 
+  def api
+    {
+      limit:     user.remaining_api_limit,
+      remaining: user.api_burst_limit,
+    }
+  end
+
   def serializable_hash(*)
     {
+      api:       api,
       throttles: throttles.map(&:second),
     }
   end

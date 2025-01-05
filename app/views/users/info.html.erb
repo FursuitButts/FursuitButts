@@ -29,3 +29,19 @@
     </tr>
   <% end %>
 </table>
+
+<h1>API</h1>
+<table class="striped">
+  <thead>
+  <tr>
+    <th width="50%">Limit</th>
+    <th>Remaining</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td><%= @info.api[:limit] %></td>
+    <td><%= @info.api[:remaining] %></td>
+  </tr>
+  </tbody>
+</table>
