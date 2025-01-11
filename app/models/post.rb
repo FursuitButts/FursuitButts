@@ -791,6 +791,10 @@ class Post < ApplicationRecord
         tags << "webm"
       end
 
+      if is_mp4?
+        tags << "mp4"
+      end
+
       unless is_gif?
         tags -= ["animated_gif"]
       end
