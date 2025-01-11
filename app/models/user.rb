@@ -322,9 +322,7 @@ class User < ApplicationRecord
       end
 
       def find_by_normalized_name!(name)
-        user = find_by_normalized_name(name)
-        raise(ActiveRecord::RecordNotFound) if user.blank?
-        user
+        find_by_normalized_name(name) || raise(ActiveRecord::RecordNotFound)
       end
 
       def find_by_normalized_name_or_id(name)
@@ -333,6 +331,22 @@ class User < ApplicationRecord
         else
           find_by(name: name)
         end
+      end
+
+      def find_by_current_or_former_name(name)
+        find_by_normalized_name(name) || find_by_former_name(name)
+      end
+
+      def find_by_current_or_former_name!(name)
+        find_by_current_or_former_name(name) || raise(ActiveRecord::RecordNotFound)
+      end
+
+      def find_by_former_name(name)
+        UserNameChangeRequest.where("lower(original_name) = ?", User.normalize_name(name)).includes(:user).order(id: :desc).first&.user
+      end
+
+      def find_by_former_name!(name)
+        find_by_former_name(name) || raise(ActiveRecord::RecordNotFound)
       end
 
       def normalize_name(name)

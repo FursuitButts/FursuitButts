@@ -7,7 +7,7 @@ class UsersController < ApplicationController
 
   def index
     if params[:name].present?
-      @user = User.find_by_normalized_name!(User.normalize_name(params[:name])) # rubocop:disable Rails/DynamicFindBy
+      @user = User.find_by_current_or_former_name!(User.normalize_name(params[:name])) # rubocop:disable Rails/DynamicFindBy
       redirect_to(user_path(@user, n: params[:n]))
     else
       @users = User.search(search_params(User)).paginate(params[:page], limit: params[:limit])
