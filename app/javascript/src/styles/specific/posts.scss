@@ -6,7 +6,7 @@
 article.post-preview {
   box-sizing: border-box;
   height: auto;
-  width: 194px;
+  width: 180px;
   margin: 0 10px 10px 0;
   overflow: hidden;
   text-align: center;
@@ -242,20 +242,20 @@ article.post-preview {
 
 div#c-posts {
   .source-link {
-    overflow:hidden;
-    text-overflow:ellipsis;
-    white-space:nowrap;
-    max-width:190px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 190px;
   }
   .source-link:hover {
     a {
       background: themed("color-background");
     }
-    overflow:visible;
-    height:auto;
-    z-index:2;
+    overflow: visible;
+    height: auto;
+    z-index: 2;
     position: relative;
-    max-width:none;
+    max-width: none;
   }
 
 

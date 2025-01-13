@@ -201,7 +201,7 @@
       width: 100%;
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 1vw;
+      gap: 0.5rem;
       align-items: center;
       justify-content: space-evenly;
     }
@@ -220,11 +220,14 @@
 
       img {
         max-height: 150px;
-        max-width: 100cqw;
+        max-width: 100%;
       }
 
       .desc {
         font-size: 100%;
+        .post-score-views {
+          display: none;
+        }
       }
     }
 
@@ -234,7 +237,7 @@
           height: auto;
           max-height: none;
           max-width: fit-content;
-          width: 100cqw;
+          width: 100%;
 
           &.has-cropped-false {
             object-fit: cover;

@@ -88,19 +88,19 @@ module PostsHelper
     post_score_icon_negative = "↓"
     post_score_icon_neutral = "↕"
     post_score_icon = "#{post_score_icon_positive if post.score > 0}#{post_score_icon_negative if post.score < 0}#{post_score_icon_neutral if post.score == 0}"
-    score = tag.span(class: "post-score-classes-#{post.id} #{score_class(post.score)}") do
+    score = tag.span(class: "post-score-score post-score-classes-#{post.id} #{score_class(post.score)}") do
       icon = tag.span(post_score_icon, class: "post-score-icon-#{post.id}", data: { "icon-positive": post_score_icon_positive, "icon-negative": post_score_icon_negative, "icon-neutral": post_score_icon_neutral })
       amount = tag.span(post.score, class: "post-score-score-#{post.id}")
       icon + amount
     end
-    favs = tag.span(class: "post-score-faves-classes-#{post.id}") do
+    favs = tag.span(class: "post-score-faves post-score-faves-classes-#{post.id}") do
       icon = tag.span("♥", class: "post-score-faves-icon-#{post.id}")
       amount = tag.span(post.fav_count, class: "post-score-faves-faves-#{post.id}")
       icon + amount
     end
     comments = tag.span("C#{post.visible_comment_count(CurrentUser)}", class: "post-score-comments")
     rating = tag.span(post.rating.upcase, class: "post-score-rating")
-    views = tag.span(class: "post-score-views-classes-#{post.id}") do
+    views = tag.span(class: "post-score-views post-score-views-classes-#{post.id}") do
       icon = tag.i("", class: "fa-regular fa-eye")
       amount = tag.span(" #{views == :daily ? 'D' : 'T'}#{'U' if CurrentUser.user.unique_views?}#{(views == :daily ? post.daily_views : post.total_views) || 0}", class: "post-score-views-views-#{post.id}")
       icon + amount
