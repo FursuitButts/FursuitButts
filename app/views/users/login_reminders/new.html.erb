@@ -4,13 +4,9 @@
 
 <p>If you didn't supply a valid email address, you are out of luck.</p>
 
-<%= form_tag(users_login_reminder_path, class: "simple_form") do %>
-  <div class="input email required">
-    <label for="user_email" class="required">Email</label>
-    <%= email_field(:user, :email) %>
-  </div>
-
-  <%= submit_tag "Submit" %>
+<%= custom_form_for(:user, url: users_login_reminder_path) do |f| %>
+  <%= f.input(:email) %>
+  <%= f.submit("Submit") %>
 <% end %>
 
 <%= render "sessions/secondary_links" %>

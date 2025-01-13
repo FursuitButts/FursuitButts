@@ -6,7 +6,7 @@ module Users
     end
 
     def create
-      @user = User.with_email(params[:user][:email]).first
+      @user = User.with_email(params.dig(:user, :email)).first
       if @user
         LoginReminderMailer.notice(@user).deliver_now
       end

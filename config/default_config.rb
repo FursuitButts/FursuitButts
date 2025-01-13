@@ -413,8 +413,12 @@ module FemboyFans
       50_000
     end
 
-    def pool_post_limit(_user)
-      1_000
+    def pool_post_limit(user)
+      if user.is_admin?
+        Float::INFINITY
+      else
+        1_000
+      end
     end
 
     def set_post_limit(user)
@@ -446,14 +450,14 @@ module FemboyFans
         "jpg"  => 100.megabytes,
         "png"  => 100.megabytes,
         "webp" => 100.megabytes,
-        "gif"  => 20.megabytes,
+        "gif"  => 30.megabytes,
         "webm" => 100.megabytes,
         "mp4"  => 100.megabytes,
       }
     end
 
     def max_apng_file_size
-      20.megabytes
+      30.megabytes
     end
 
     def max_mascot_file_sizes
@@ -474,22 +478,22 @@ module FemboyFans
 
     # Measured in seconds
     def max_video_duration
-      3600
+      30.minutes
     end
 
     # Maximum resolution (width * height) of an upload. Default: 441 megapixels (21000x21000 pixels).
     def max_image_resolution
-      15_000 * 15_000
+      21_000 * 21_000
     end
 
     # Maximum width of an upload.
     def max_image_width
-      15_000
+      40_000
     end
 
     # Maximum height of an upload.
     def max_image_height
-      15_000
+      40_000
     end
 
     def max_tags_per_post
@@ -651,7 +655,7 @@ module FemboyFans
 
     def can_user_see_post?(user, post)
       # TODO: appealed posts should be visible, but this makes it far too easy to get the contents of deleted posts at a moments notice
-      return true if user.is_janitor? # || post.is_appealed?
+      return true if user.is_staff? # || post.is_appealed?
       !post.is_deleted?
     end
 
@@ -881,6 +885,7 @@ module FemboyFans
       end
     end
 
+    # Prevents Aliases/BURs from copying non-general categories from antecedent tags to large consequent tags
     def alias_category_change_cutoff
       10_000
     end

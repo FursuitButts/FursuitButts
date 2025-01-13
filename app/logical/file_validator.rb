@@ -62,7 +62,7 @@ class FileValidator
 
   def validate_duration(video)
     if video.duration > FemboyFans.config.max_video_duration
-      record.errors.add(:base, "video must not be longer than #{FemboyFans.config.max_video_duration} seconds")
+      record.errors.add(:base, "video must not be longer than #{FemboyFans.config.max_video_duration / 1.minute} minutes")
     end
   end
 
