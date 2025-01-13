@@ -806,6 +806,7 @@ class User < ApplicationRecord
     end
 
     def can_upload_with_reason
+      return true if is_owner?
       return :REJ_UPLOAD_HOURLY if hourly_upload_limit <= 0 && !FemboyFans.config.disable_throttles?
       return true if unrestricted_uploads? || is_admin?
       return :REJ_UPLOAD_NEWBIE if younger_than(3.days)
