@@ -178,11 +178,7 @@ Layout/HashAlignment:
   EnforcedColonStyle: table
 
 Rails/DynamicFindBy:
-  Enabled: true
-  AllowedMethods:
-    - find_by_normalized_name_or_id
-    - find_by_normalized_name
-    - find_by_name_list
+  Enabled: false
 
 Rails/TimeZoneAssignment:
   Enabled: true

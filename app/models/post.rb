@@ -890,7 +890,7 @@ class Post < ApplicationRecord
           end
 
         when /^-pool:(.+)$/i
-          pool = Pool.find_by_name($1) # rubocop:disable Rails/DynamicFindBy
+          pool = Pool.find_by_name($1)
           if pool
             pool.remove!(self)
             if pool.errors.any?
@@ -908,7 +908,7 @@ class Post < ApplicationRecord
           end
 
         when /^(?:new)?pool:(.+)$/i
-          pool = Pool.find_by_name($1) # rubocop:disable Rails/DynamicFindBy
+          pool = Pool.find_by_name($1)
           if pool
             pool.add!(self)
             if pool.errors.any?
