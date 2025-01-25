@@ -25,7 +25,6 @@ Rails.application.routes.draw do
     resource :reowner, controller: "reowner", only: %i[new create]
     resource :stuck_dnp, controller: "stuck_dnp", only: %i[new create]
     resources :destroyed_posts, only: %i[index show update]
-    resources :staff_notes, only: %i[index]
     resources :audit_logs, only: %i[index]
   end
 
@@ -327,7 +326,8 @@ Rails.application.routes.draw do
       resource :move_favorites, controller: "posts/move_favorites", as: "move_favorites_post", only: %i[show create]
     end
   end
-  resources(:qtags, path: "q", only: %i[show])
+  resources :qtags, path: "q", only: %i[show]
+  resources :staff_notes, only: %i[index]
   resources :rules, only: %i[index new create edit update destroy] do
     collection do
       get :order
@@ -384,7 +384,7 @@ Rails.application.routes.draw do
   resources :users, except: %i[edit update] do
     resource :password, only: %i[edit], controller: "users/passwords"
     resources :api_keys, controller: "api_keys"
-    resources :staff_notes, only: %i[index new create destroy undelete update], controller: "admin/staff_notes" do
+    resources :staff_notes, only: %i[index new create destroy undelete update], controller: "staff_notes" do
       put :undelete
     end
     resources :text_versions, only: %i[index], to: "moderator/user_text_versions#for_user"
