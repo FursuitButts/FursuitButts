@@ -62,7 +62,9 @@ Rails.application.routes.draw do
       end
     end
   end
-  resources :api_keys
+  resources :api_keys do
+    get :usage, on: :member
+  end
   resources :popular, only: %i[index] do
     collection do
       get :uploads

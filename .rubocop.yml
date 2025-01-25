@@ -198,9 +198,7 @@ Lint/RescueException:
   Enabled: false
 
 Lint/StructNewOverride:
-  Enabled: true
-  Exclude:
-    - app/logical/moderator/dashboard/queries/*.rb
+  Enabled: false
 
 Style/RedundantAssignment:
   Enabled: false

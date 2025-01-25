@@ -43,7 +43,9 @@
       <%= safe_join(api_key.permitted_ip_addresses, "<br>".html_safe).presence || "All" %>
     <% end %>
 
-    <% t.column(:uses) %>
+    <% t.column(:uses) do |api_key| %>
+      <%= link_to(number_with_delimiter(api_key.uses), usage_api_key_path(api_key)) %>
+    <% end %>
 
     <% t.column("Last Used") do |api_key| %>
       <%= time_ago_in_words_tagged api_key.last_used_at %>
@@ -62,8 +64,9 @@
     <% end %>
 
     <% t.column(column: "control") do |api_key| %>
-      <%= link_to "Edit", edit_api_key_path(api_key) %>
-      | <%= link_to "Delete", api_key, method: :delete %>
+      <%= link_to("Usage", usage_api_key_path(api_key)) %>
+      | <%= link_to("Edit", edit_api_key_path(api_key)) %>
+      | <%= link_to("Delete", api_key, method: :delete) %>
     <% end %>
   <% end %>
 

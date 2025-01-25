@@ -1,0 +1,21 @@
+<%= render "secondary_links" %>
+
+<h1>API Key Usage: <%= @api_key.name %></h1>
+
+<%= table_for(@usages) do |t| %>
+  <% t.column(:date) do |usage| %>
+    <%= compact_time(DateTime.parse(usage.date))%>
+  <% end %>
+  <% t.column(:ip_address) %>
+  <% t.column("Action") do |usage| %>
+    <code><%= usage.controller %>#<%= usage.action %></code>
+  <% end %>
+  <% t.column(:method) %>
+  <% t.column(:request_uri, th: { width: "60%" }) %>
+<% end %>
+
+<%= numbered_paginator(@usages) %>
+
+<%= content_for(:page_title) do %>
+  API Key Usage
+<% end %>

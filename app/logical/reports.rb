@@ -9,9 +9,20 @@ module Reports
     !Rails.env.test? && FemboyFans.config.reports_enabled?
   end
 
-  def get(path)
-    response = Faraday.new(FemboyFans.config.faraday_options.deep_merge(headers: { authorization: "Bearer #{jwt_signature(path)}" })).get("#{FemboyFans.config.reports_server_internal}#{path}")
+  def request(method, path, body = nil)
+    conn = Faraday.new(FemboyFans.config.faraday_options.deep_merge(headers: { authorization: "Bearer #{jwt_signature(path)}", content_type: "application/json" })) do |c|
+      c.use(Faraday::Response::RaiseError)
+    end
+    response = conn.public_send(method, "#{FemboyFans.config.reports_server_internal}#{path}", body&.to_json)
     JSON.parse(response.body)
+  end
+
+  def get(path)
+    request(:get, path)
+  end
+
+  def post(path, body)
+    request(:post, path, body)
   end
 
   # Integer
@@ -22,7 +33,8 @@ module Reports
     Cache.fetch("pv-#{post_id}-#{d}-#{unique}", expires_in: 1.minute) do
       get("/views/#{post_id}?#{q}")["data"].to_i
     end
-  rescue Faraday::ConnectionFailed, Faraday::TimeoutError
+  rescue Faraday::ConnectionFailed, Faraday::TimeoutError, Faraday::ServerError => e
+    ExceptionLog.add!(e, source: "Reports#get_post_views", args: get_arguments(binding))
     0
   end
 
@@ -34,7 +46,8 @@ module Reports
     Cache.fetch("pv-rank-#{d}-#{unique}", expires_in: 1.minute) do
       get("/views/rank?#{q}")["data"]
     end
-  rescue Faraday::ConnectionFailed, Faraday::TimeoutError
+  rescue Faraday::ConnectionFailed, Faraday::TimeoutError, Faraday::ServerError => e
+    ExceptionLog.add!(e, source: "Reports#get_post_views_rank", args: get_arguments(binding))
     []
   end
 
@@ -44,7 +57,8 @@ module Reports
     Cache.fetch("ps-rank-#{date}", expires_in: 1.minute) do
       get("/searches/rank?date=#{date.strftime('%Y-%m-%d')}&limit=#{limit}")["data"]
     end
-  rescue Faraday::ConnectionFailed, Faraday::TimeoutError
+  rescue Faraday::ConnectionFailed, Faraday::TimeoutError, Faraday::ServerError => e
+    ExceptionLog.add!(e, source: "Reports#get_post_searches_rank", args: get_arguments(binding))
     []
   end
 
@@ -54,7 +68,8 @@ module Reports
     Cache.fetch("ms-rank", expires_in: 1.minute) do
       get("/searches/missed/rank?limit=#{limit}")["data"]
     end
-  rescue Faraday::ConnectionFailed, Faraday::TimeoutError
+  rescue Faraday::ConnectionFailed, Faraday::TimeoutError, Faraday::ServerError => e
+    ExceptionLog.add!(e, source: "Reports#get_missed_searches_rank", args: get_arguments(binding))
     []
   end
 
@@ -66,8 +81,34 @@ module Reports
       q = { date: d, unique: unique, posts: ids.join(",") }.compact_blank.to_query
       get("/views/bulk?#{q}")["data"]
     end.compact_blank.to_h { |x| [x["post"], x["count"]] }
-  rescue Faraday::ConnectionFailed, Faraday::TimeoutError
+  rescue Faraday::ConnectionFailed, Faraday::TimeoutError, Faraday::ServerError => e
+    ExceptionLog.add!(e, source: "Reports#get_bulk_post_views", args: get_arguments(binding))
     {}
+  end
+
+  def log_api_key_usage(key_id, controller, action, method, request_uri, ip_address)
+    return false unless enabled?
+    post("/api_key_usages", { msg: generate_body_signature(purpose: "api-key-usages", ip_address: ip_address, key_id: key_id, action: action, controller: controller, method: method, request_uri: request_uri) })
+  rescue Faraday::ConnectionFailed, Faraday::TimeoutError, Faraday::ServerError => e
+    ExceptionLog.add!(e, source: "Reports#log_api_key_usage", args: get_arguments(binding))
+    false
+  end
+
+  # Hash { "action" => "show",  "controller" => "posts", "date" => "0000-00-00", "ip_address" => "127.0.0.1", "method" => "GET", "request_uri" => "/posts/1.json" }[]
+  # @return [UsageData]
+  def get_api_key_usages(key_id, date: nil, limit: LIMIT, page: 1)
+    return UsageData.new(0, []) unless enabled?
+    page += 1 if page == 0
+    d = date&.strftime("%Y-%m-%d")
+    q = { date: d, limit: limit, page: page }.compact_blank.to_query
+    r = get("/api_key_usages/#{key_id}?#{q}")
+    data = r["data"].each_with_object([]) do |x, arr|
+      arr << ApiKeyUsage.new(*x.transform_keys(&:to_sym).values_at(*ApiKeyUsage.members))
+    end
+    UsageData.new(r["count"], data)
+  rescue Faraday::ConnectionFailed, Faraday::TimeoutError, Faraday::ServerError => e
+    ExceptionLog.add!(e, source: "Reports#get_api_key_usages", args: get_arguments(binding))
+    UsageData.new(0, [])
   end
 
   def jwt_signature(url)
@@ -80,9 +121,25 @@ module Reports
     }, FemboyFans.config.report_key, "HS256")
   end
 
+  def generate_body_signature(purpose:, ip_address:, **values)
+    verifier = ActiveSupport::MessageVerifier.new(FemboyFans.config.report_key, serializer: JSON, digest: "SHA256")
+    verifier.generate({ ip_address: ip_address, **values }, purpose: purpose)
+  end
+
+  def get_arguments(binding)
+    method(caller_locations(2, 1)[0].label).parameters.to_h do |_, name|
+      [name, binding.local_variable_get(name)]
+    end
+  end
+
   PostView = Struct.new(:id, :post_id, :ip_address, :date)
   MissedSearch = Struct.new(:id, :tags, :page, :date)
   Search = Struct.new(:id, :tags, :page, :date)
+  ApiKeyUsage = Struct.new(:action, :controller, :date, :ip_address, :method, :request_uri)
+
+  # @member count [Integer]
+  # @member data [Array(ApiKeyUsage)]
+  UsageData = Struct.new(:count, :data)
 
   def get_all_post_views
     ClickHouse.connection.select_all("SELECT post_id, COUNT(*) as count FROM post_views GROUP BY (post_id)").to_h { |v| [v["post_id"], v["count"]] }

@@ -181,8 +181,7 @@ module PostsHelper
   end
 
   def generate_report_signature(purpose:, **values)
-    verifier = ActiveSupport::MessageVerifier.new(FemboyFans.config.report_key, serializer: JSON, digest: "SHA256")
-    verifier.generate({ ip_address: request.remote_ip, **values }, purpose: purpose)
+    Reports.generate_body_signature(purpose: purpose, ip_address: request.remote_ip, **values)
   end
 
   def view_count_js(post)

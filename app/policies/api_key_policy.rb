@@ -17,6 +17,10 @@ class ApiKeyPolicy < ApplicationPolicy
     unbanned? && (!record.is_a?(ApiKey) || record.user_id == user.id)
   end
 
+  def usage?
+    unbanned?
+  end
+
   def permitted_attributes
     [:name, :permitted_ip_addresses, { permissions: [] }]
   end

@@ -125,13 +125,14 @@ class SessionLoader
 
   def update_last_ip_addr
     return if CurrentUser.is_anonymous?
-    return if CurrentUser.user.last_ip_addr == @request.remote_ip
-    CurrentUser.user.update_attribute(:last_ip_addr, @request.remote_ip)
+    return if CurrentUser.user.last_ip_addr == request.remote_ip
+    CurrentUser.user.update_attribute(:last_ip_addr, request.remote_ip)
   end
 
   def update_api_key(api_key)
     api_key.increment!(:uses, touch: :last_used_at)
     api_key.update!(last_ip_address: request.remote_ip)
+    Reports.log_api_key_usage(api_key.id, request.params[:controller], request.params[:action], request.request_method, request.fullpath, request.remote_ip)
   end
 
   def set_time_zone
