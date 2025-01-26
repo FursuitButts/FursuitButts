@@ -38,6 +38,7 @@ export { default as Autocomplete } from "../src/javascripts/autocomplete.js.erb"
 export { default as Blacklist } from "../src/javascripts/blacklists.js";
 export { default as Block } from "../src/javascripts/blocks.js";
 export { default as Comment } from "../src/javascripts/comments.js";
+export { default as CurrentUser } from "../src/javascripts/models/CurrentUser.js";
 export { default as DText } from "../src/javascripts/dtext.js";
 export { default as MFA } from "../src/javascripts/mfa.js";
 export { default as Note } from "../src/javascripts/notes.js";
