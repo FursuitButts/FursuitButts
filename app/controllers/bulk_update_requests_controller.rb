@@ -33,7 +33,7 @@ class BulkUpdateRequestsController < ApplicationController
   def update
     authorize(@bulk_update_request)
     @bulk_update_request.should_validate = true
-    @bulk_update_request.update(permitted_attributes(BulkUpdateRequest))
+    @bulk_update_request.update(permitted_attributes(@bulk_update_request))
     notice("Bulk update request updated")
     respond_with(@bulk_update_request)
   end

@@ -24,7 +24,7 @@ class MascotsController < ApplicationController
 
   def update
     @mascot = authorize(Mascot.find(params[:id]))
-    @mascot.update(permitted_attributes(Mascot))
+    @mascot.update(permitted_attributes(@mascot))
     respond_with(@mascot, location: mascots_path)
   end
 

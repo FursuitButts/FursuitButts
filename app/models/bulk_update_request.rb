@@ -102,7 +102,7 @@ class BulkUpdateRequest < ApplicationRecord
         forum_post = forum_topic.posts.first
         update(forum_topic_id: forum_topic.id, forum_post_id: forum_post.id)
       end
-      forum_post.update(tag_change_request: self)
+      forum_post.update(tag_change_request: self, allow_voting: true)
     end
 
     def reject!(rejector = User.system)

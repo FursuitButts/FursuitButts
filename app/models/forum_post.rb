@@ -20,6 +20,8 @@ class ForumPost < ApplicationRecord
   after_create :update_topic_updated_at_on_create
   # no counter cache since we're more than one association away
   after_create -> { category.increment!(:post_count) }
+  after_create :log_create
+  after_update :log_update
   before_destroy :validate_topic_is_unlocked
   after_destroy :update_topic_updated_at_on_destroy
   normalizes :body, with: ->(body) { body.gsub("\r\n", "\n") }
@@ -33,18 +35,12 @@ class ForumPost < ApplicationRecord
   validate :validate_creator_is_not_limited, on: :create
   validate :validate_not_aibur, if: :will_save_change_to_is_hidden?
   after_destroy -> { category.decrement!(:post_count) }
+  after_destroy :log_destroy
   after_save :delete_topic_if_original_post
-  after_update(if: ->(rec) { !rec.saved_change_to_is_hidden? && rec.updater_id != rec.creator_id && !rec.is_merging }) do |rec|
-    ModAction.log!(:forum_post_update, rec, forum_topic_id: rec.topic_id, user_id: rec.creator_id)
-  end
-  after_update(if: ->(rec) { rec.saved_change_to_is_hidden? }) do |rec|
-    ModAction.log!(rec.is_hidden ? :forum_post_hide : :forum_post_unhide, rec, forum_topic_id: rec.topic_id, user_id: rec.creator_id)
-  end
-  after_destroy do |rec|
-    ModAction.log!(:forum_post_delete, rec, forum_topic_id: rec.topic_id, user_id: rec.creator_id)
-  end
 
   attr_accessor :bypass_limits, :is_merging
+
+  scope :votable, -> { where(allow_voting: true) }
 
   module SearchMethods
     def topic_title_matches(title)
@@ -106,10 +102,45 @@ class ForumPost < ApplicationRecord
     end
   end
 
-  extend SearchMethods
+  module LogMethods
+    def log_create
+      log_voting_change if saved_change_to_allow_voting?
+    end
 
-  def votable?
-    is_aibur?
+    def log_update
+      log_voting_change if saved_change_to_allow_voting?
+
+      if saved_change_to_is_hidden?
+        ModAction.log!(is_hidden? ? :forum_post_hide : :forum_post_unhide, self, forum_topic_id: topic_id, user_id: creator_id)
+      end
+
+      if !saved_change_to_is_hidden? && updater_id != creator_id && !is_merging
+        ModAction.log!(:forum_post_update, self, forum_topic_id: topic_id, user_id: creator_id)
+      end
+    end
+
+    def log_destroy
+      ModAction.log!(:forum_post_delete, self, forum_topic_id: topic_id, user_id: creator_id)
+    end
+
+    def log_voting_change
+      if allow_voting?
+        save_version("enabled_voting")
+      else
+        save_version("disabled_voting")
+      end
+    end
+  end
+
+  extend SearchMethods
+  include LogMethods
+
+  def has_voting?
+    allow_voting?
+  end
+
+  def voting_active?
+    has_voting? && (!is_aibur? || tag_change_request.is_pending?)
   end
 
   def is_aibur?

@@ -43,7 +43,7 @@ module Tags
       @tag_alias = authorize(TagAlias.find(params[:id]))
 
       if @tag_alias.is_pending? && @tag_alias.editable_by?(CurrentUser.user)
-        @tag_alias.update(permitted_attributes(TagAlias))
+        @tag_alias.update(permitted_attributes(@tag_alias))
       end
 
       respond_with(@tag_alias)

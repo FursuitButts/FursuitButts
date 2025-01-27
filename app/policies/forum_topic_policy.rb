@@ -78,7 +78,9 @@ class ForumTopicPolicy < ApplicationPolicy
   end
 
   def permitted_attributes
-    attr = [:title, :category_id, { original_post_attributes: %i[id body] }]
+    opattr = %i[id body]
+    opattr += %i[allow_voting] if !record.try(:original_post).is_a?(ForumPost) || (!record.original_post.is_aibur? && (user.is_admin? || !record.original_post.allow_voting?)) # Disallow users disabling voting
+    attr = [:title, :category_id, { original_post_attributes: opattr }]
     attr += %i[is_sticky is_locked] if user.is_moderator?
     attr
   end

@@ -17,21 +17,17 @@ module Forums
 
       def create
         authorize(@forum_post, policy_class: ForumPostVotePolicy)
-        raise(User::PrivilegeError, "You are not allowed to vote on tag change requests.") if CurrentUser.user.no_aibur_voting?
-        @forum_post_vote = @forum_post.votes.find_by(user: CurrentUser.user)
-        if @forum_post_vote.present?
-          @forum_post_vote.update(score: params[:score]) if @forum_post_vote.score != params[:score]
-        else
-          @forum_post_vote = @forum_post.votes.create(score: params[:score])
-          raise(User::PrivilegeError, @forum_post_vote.errors.full_messages.join("; ")) unless @forum_post_vote.errors.empty?
-        end
+        raise(User::PrivilegeError, "You are not allowed to vote on tag change requests.") if @forum_post.is_aibur? && CurrentUser.user.no_aibur_voting?
+        raise(User::PrivilegeError, "You cannot vote on completed tag change requests.") if @forum_post.is_aibur? && !@forum_post.tag_change_request.is_pending?
+        @forum_post_vote = VoteManager::ForumPosts.vote!(user: CurrentUser.user, forum_post: @forum_post, score: params[:score])
         respond_with(@forum_post_vote) do |fmt|
           fmt.json { render(json: @forum_post_vote, code: 201) }
         end
       end
 
       def destroy
-        authorize(ForumPostVote)
+        authorize(@forum_post, policy_class: ForumPostVotePolicy)
+        raise(User::PrivilegeError, "You cannot unvote on completed tag change requests.") if @forum_post.is_aibur? && !@forum_post.tag_change_request.is_pending?
         VoteManager::ForumPosts.unvote!(forum_post: @forum_post, user: CurrentUser.user)
       rescue UserVote::Error => e
         render_expected_error(422, e)
@@ -54,7 +50,7 @@ module Forums
 
       def validate_forum_post
         raise(User::PrivilegeError) unless @forum_post.visible?(CurrentUser.user)
-        render_expected_error(400, "Forum post does not allow votes.") unless @forum_post.votable?
+        render_expected_error(400, "Forum post does not allow votes.") unless @forum_post.has_voting?
       end
 
       def validate_no_vote_on_own_post

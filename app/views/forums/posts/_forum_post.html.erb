@@ -110,7 +110,7 @@
               <li><%= link_to("Mark Spam", "", class: "forum-post-mark-spam-link item-mark-spam", data: { "item-route": "forums/posts", "item-id": forum_post.id }) %></li>
             <% end %>
           <% end %>
-          <% if forum_post.votable? %>
+          <% if forum_post.has_voting? %>
             <%= render "forums/posts/votes/list", votes: forum_post.votes, forum_post: forum_post %>
             <% if ForumPostVotePolicy.new(CurrentUser.user, forum_post).index? %>
               <li><%= link_to("(List)", { controller: "forums/posts/votes", search: { forum_post_id: forum_post.id } }) %></li>

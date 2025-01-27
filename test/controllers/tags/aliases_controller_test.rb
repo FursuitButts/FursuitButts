@@ -22,21 +22,17 @@ module Tags
       end
 
       context "create action" do
-        should "create a forum post" do
-          assert_difference("ForumTopic.count", 1) do
+        should "work" do
+          assert_difference({ "ForumTopic.count" => 1, "TagAlias.count" => 1 }) do
             post_auth tag_aliases_path, @user, params: { tag_alias: { antecedent_name: "aaa", consequent_name: "bbb", reason: "ccccc" } }
           end
           topic = ForumTopic.last
           post = topic.posts.last
-          assert_redirected_to(forum_topic_path(topic, page: post.forum_topic_page, anchor: "forum_post_#{post.id}"))
-        end
-
-        should "create a pending alias" do
-          assert_difference("ForumTopic.count") do
-            post_auth tag_aliases_path, @user, params: { tag_alias: { antecedent_name: "aaa", consequent_name: "bbb", reason: "ccccc" } }
-          end
-          topic = ForumTopic.last
-          post = topic.posts.last
+          ta = TagAlias.last
+          assert_equal("pending", ta.status)
+          assert_equal("TagAlias", post.tag_change_request_type)
+          assert_equal(ta.id, post.tag_change_request_id)
+          assert_equal(true, post.allow_voting?)
           assert_redirected_to(forum_topic_path(topic, page: post.forum_topic_page, anchor: "forum_post_#{post.id}"))
         end
 

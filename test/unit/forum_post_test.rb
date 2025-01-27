@@ -14,12 +14,12 @@ class ForumPostTest < ActiveSupport::TestCase
       setup do
         @post = build(:forum_post, topic_id: @topic.id, body: "[[aaa]] -> [[bbb]]")
         @tag_alias = create(:tag_alias, forum_post: @post)
-        @post.update_columns(tag_change_request_id: @tag_alias.id, tag_change_request_type: "TagAlias")
+        @post.update_columns(tag_change_request_id: @tag_alias.id, tag_change_request_type: "TagAlias", allow_voting: true)
         @mod = create(:moderator_user)
       end
 
       should "be votable" do
-        assert(@post.votable?)
+        assert(@post.has_voting?)
       end
 
       should "only be hidable by moderators" do

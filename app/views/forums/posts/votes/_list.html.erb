@@ -12,7 +12,7 @@
     <%= render "forums/posts/votes/vote", vote: vote, forum_post: forum_post, votable: false %>
   <% end %>
 
-  <% if forum_post.tag_change_request&.is_pending? && votable && forum_post.tag_change_request.creator != CurrentUser.user %>
+  <% if forum_post.voting_active? && votable && forum_post.creator != CurrentUser.user %>
     <%= render "forums/posts/votes/add_vote", forum_post: forum_post, show: !own_vote %>
   <% end %>
 </ul>

@@ -57,7 +57,7 @@ class AvoidPostingsController < ApplicationController
   end
 
   def update
-    authorize(@avoid_posting).update(permitted_attributes(AvoidPosting))
+    authorize(@avoid_posting).update(permitted_attributes(@avoid_posting))
     notice(@avoid_posting.valid? ? "Avoid posting entry updated" : @avoid_posting.errors.full_messages.join("; "))
     respond_with(@avoid_posting)
   end

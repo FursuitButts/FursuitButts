@@ -9,6 +9,7 @@ module Forums
         @user = create(:user)
         @other_user = create(:user)
         @mod = create(:moderator_user)
+        @admin = create(:admin_user)
         as(@user) do
           @forum_topic = create(:forum_topic, title: "my forum topic", original_post_attributes: { body: "alias xxx -> yyy" })
           @forum_post = @forum_topic.original_post
@@ -19,7 +20,7 @@ module Forums
         setup do
           as(@user) do
             @tag_alias = create(:tag_alias, forum_post: @forum_post, status: "pending")
-            @forum_post.update_columns(tag_change_request_id: @tag_alias.id, tag_change_request_type: "TagAlias")
+            @forum_post.update(tag_change_request: @tag_alias, allow_voting: true)
             @vote = create(:forum_post_vote, forum_post: @forum_post, score: 1)
             @forum_post.reload
           end
@@ -131,6 +132,50 @@ module Forums
         end
       end
 
+      context "update action" do
+        should "should allow enabling allow_voting" do
+          assert_difference("EditHistory.count", 2) do
+            put_auth forum_post_path(@forum_post), @user, params: { format: :json, forum_post: { allow_voting: true } }
+            assert_response :success
+          end
+          assert_equal("enabled_voting", EditHistory.last.edit_type)
+          assert_equal(true, @forum_post.reload.has_voting?)
+        end
+
+        should "not allow users to disable allow_voting" do
+          @forum_post.update_columns(allow_voting: true)
+          assert_no_difference("EditHistory.count") do
+            put_auth forum_post_path(@forum_post), @user, params: { format: :json, forum_post: { allow_voting: false } }
+            assert_response :bad_request
+          end
+          assert_equal(true, @forum_post.reload.has_voting?)
+          assert_equal("found unpermitted parameter: :allow_voting", @response.parsed_body["message"])
+        end
+
+        should "allow admins to disable allow_voting" do
+          @forum_post.update_columns(allow_voting: true)
+          assert_difference("EditHistory.count", 2) do
+            put_auth forum_post_path(@forum_post), @admin, params: { format: :json, forum_post: { allow_voting: false } }
+            assert_response :success
+          end
+          assert_equal("disabled_voting", EditHistory.last.edit_type)
+          assert_equal(false, @forum_post.reload.has_voting?)
+        end
+
+        should "not allow admins to disable allow_voting on TCRs" do
+          as(@user) do
+            @ta = create(:tag_alias, forum_post: @forum_post)
+            @forum_post.update(tag_change_request: @ta, allow_voting: true)
+          end
+          assert_no_difference("EditHistory.count") do
+            put_auth forum_post_path(@forum_post), @admin, params: { format: :json, forum_post: { allow_voting: false } }
+            assert_response :bad_request
+          end
+          assert_equal(true, @forum_post.reload.has_voting?)
+          assert_equal("found unpermitted parameter: :allow_voting", @response.parsed_body["message"])
+        end
+      end
+
       context "new action" do
         should "render" do
           get_auth new_forum_post_path, @user, params: { forum_post: { topic_id: @forum_topic.id } }
@@ -148,6 +193,15 @@ module Forums
             post_auth forum_posts_path, @user, params: { forum_post: { body: "xaxaxa", topic_id: @forum_topic.id } }
             assert_redirected_to(forum_topic_path(ForumPost.last.topic, page: ForumPost.last.forum_topic_page, anchor: "forum_post_#{ForumPost.last.id}"))
           end
+        end
+
+        should "work with allow_voting=true" do
+          assert_difference({ "ForumPost.count" => 1, "EditHistory.count" => 2 }) do
+            post_auth forum_posts_path, @user, params: { forum_post: { body: "xaxaxa", topic_id: @forum_topic.id, allow_voting: true } }
+            assert_redirected_to(forum_topic_path(ForumPost.last.topic, page: ForumPost.last.forum_topic_page, anchor: "forum_post_#{ForumPost.last.id}"))
+          end
+          assert_equal("enabled_voting", EditHistory.last.edit_type)
+          assert_equal(true, ForumPost.last.has_voting?)
         end
 
         should "not create a new forum post if topic is stale" do

@@ -52,7 +52,7 @@ module Forums
 
     def update
       authorize(@forum_topic)
-      @forum_topic.assign_attributes(permitted_attributes(ForumTopic))
+      @forum_topic.assign_attributes(permitted_attributes(@forum_topic))
       @forum_topic.save(touch: false)
       respond_with(@forum_topic)
     end

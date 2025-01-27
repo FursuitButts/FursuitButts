@@ -11,8 +11,13 @@ module Forums
           as(@user) do
             @topic = create(:forum_topic, original_post_attributes: { body: "test" })
             @forum_post = @topic.original_post
-            ta = create(:tag_alias, forum_post: @forum_post)
-            @forum_post.update(tag_change_request: ta)
+            @ta = create(:tag_alias, forum_post: @forum_post, antecedent_name: "aaa", consequent_name: "bbb", status: "pending")
+            @forum_post.update(tag_change_request: @ta, allow_voting: true)
+            @topic2 = create(:forum_topic, original_post_attributes: { body: "test2" })
+            @forum_post2 = @topic2.original_post
+            @ti = create(:tag_implication, forum_post: @forum_post2, antecedent_name: "ccc", consequent_name: "ddd", status: "pending")
+            @forum_post2.update(tag_change_request: @ti, allow_voting: true)
+            @forum_post3 = create(:forum_post, topic: @topic, allow_voting: false)
           end
 
           @user2 = create(:user)
@@ -56,13 +61,35 @@ module Forums
             assert_equal(1, @forum_post.votes.find_by(user: @user2)&.score)
           end
 
-          should "not allow voting is user is forbidden" do
+          should "not allow voting if user is forbidden" do
             as(@admin) { @user2.update(no_aibur_voting: true) }
             post_auth forum_post_votes_path(@forum_post), @user2, params: { score: 1, format: :json }
             assert_response :forbidden
             assert_equal("Access Denied: You are not allowed to vote on tag change requests.", @response.parsed_body["reason"])
 
             assert_nil(@forum_post.votes.find_by(user: @user2))
+          end
+
+          should "not allow voting if allow_voting=false" do
+            post_auth forum_post_votes_path(@forum_post3), @user2, params: { score: 1, format: :json }
+            assert_response(:bad_request)
+            assert_equal("Forum post does not allow votes.", @response.parsed_body["message"])
+
+            assert_nil(@forum_post3.votes.find_by(user: @user2))
+          end
+
+          should "not allow voting on non-pending requests" do
+            @ta.update_columns(status: "active")
+            post_auth forum_post_votes_path(@forum_post), @user2, params: { score: 1, format: :json }
+            assert_response(:forbidden)
+            assert_equal("Access Denied: You cannot vote on completed tag change requests.", @response.parsed_body["reason"])
+
+            @ti.update_columns(status: "deleted")
+            post_auth forum_post_votes_path(@forum_post2), @user2, params: { score: -1, format: :json }
+            assert_response(:forbidden)
+            assert_equal("Access Denied: You cannot vote on completed tag change requests.", @response.parsed_body["reason"])
+
+            assert_nil(@forum_post2.votes.find_by(user: @user2))
           end
 
           should "restrict access" do

@@ -28,7 +28,7 @@ module Rules
 
     def update
       @category = authorize(RuleCategory.find(params[:id]))
-      @category.update(permitted_attributes(RuleCategory))
+      @category.update(permitted_attributes(@category))
       notice(@category.errors.any? ? @category.errors.full_messages.join(";") : "Category updated")
       respond_with(@category, location: rules_path)
     end

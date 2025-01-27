@@ -19,7 +19,7 @@ module Users
 
     def update
       authorize(@dmail, policy_class: DmailFilterPolicy)
-      @dmail_filter.update(permitted_attributes(DmailFilter))
+      @dmail_filter.update(permitted_attributes(@dmail_filter))
       respond_with(@dmail_filter) do |format|
         format.html do
           notice("Filter updated")

@@ -74,7 +74,9 @@ class BulkUpdateRequestTest < ActiveSupport::TestCase
       assert_equal(@bur.forum_topic_id, @topic.id)
       assert_equal(@bur.forum_post_id, @topic.posts.first.id)
       assert_equal(@bur.id, @bur.forum_post.tag_change_request_id)
+      assert_equal(true, @bur.forum_post.allow_voting)
       assert_equal("BulkUpdateRequest", @bur.forum_post.tag_change_request_type)
+      assert_equal(@bur.id, @bur.forum_post.tag_change_request_id)
     end
 
     should "create a post in an existing topic" do
@@ -85,7 +87,9 @@ class BulkUpdateRequestTest < ActiveSupport::TestCase
       assert_equal(@bur.forum_topic_id, @topic.id)
       assert_equal(@bur.forum_post_id, @topic.posts.second.id)
       assert_equal(@bur.id, @bur.forum_post.tag_change_request_id)
+      assert_equal(true, @bur.forum_post.allow_voting)
       assert_equal("BulkUpdateRequest", @bur.forum_post.tag_change_request_type)
+      assert_equal(@bur.id, @bur.forum_post.tag_change_request_id)
     end
 
     should "not create a topic when skip_forum is true" do

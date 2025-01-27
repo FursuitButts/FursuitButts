@@ -4,6 +4,17 @@ module VoteManager
   module ForumPosts
     module_function
 
+    def vote!(user:, forum_post:, score:)
+      forum_post_vote = forum_post.votes.find_by(user: user)
+      if forum_post_vote.present?
+        forum_post_vote.update(score: params[:score]) if forum_post_vote.score != params[:score]
+      else
+        forum_post_vote = forum_post.votes.create(score: score)
+        raise(User::PrivilegeError, forum_post_vote.errors.full_messages.join("; ")) unless forum_post_vote.errors.empty?
+      end
+      forum_post_vote
+    end
+
     def unvote!(user:, forum_post:)
       ForumPostVote.transaction(**ISOLATION) do
         ForumPostVote.uncached do

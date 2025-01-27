@@ -34,10 +34,6 @@ module Forums
           assert(@user.forum_category_visits.empty?)
         end
 
-        should "restrict access" do
-          assert_access(User::Levels::ANONYMOUS) { |user| get_auth forum_topic_path(@forum_topic), user }
-        end
-
         should "have the correct page number" do
           FemboyFans.config.stubs(:records_per_page).returns(2)
           assert_equal(1, @forum_topic.last_page)
@@ -56,6 +52,10 @@ module Forums
           assert_select "#forum_post_#{@forum_posts.third.id}"
           assert_equal([1, 2, 2], @forum_posts.map(&:forum_topic_page))
           assert_equal(2, @forum_topic.last_page)
+        end
+
+        should "restrict access" do
+          assert_access(User::Levels::ANONYMOUS) { |user| get_auth forum_topic_path(@forum_topic), user }
         end
       end
 
@@ -114,6 +114,50 @@ module Forums
         end
       end
 
+      context "update action" do
+        should "should allow enabling allow_voting" do
+          assert_difference("EditHistory.count", 2) do
+            put_auth forum_topic_path(@forum_topic), @user, params: { format: :json, forum_topic: { original_post_attributes: { id: @forum_topic.original_post.id, allow_voting: true } } }
+            assert_response :success
+          end
+          assert_equal("enabled_voting", EditHistory.last.edit_type)
+          assert_equal(true, @forum_topic.original_post.reload.has_voting?)
+        end
+
+        should "not allow users to disable allow_voting" do
+          @forum_topic.original_post.update_columns(allow_voting: true)
+          assert_no_difference("EditHistory.count") do
+            put_auth forum_topic_path(@forum_topic), @user, params: { format: :json, forum_topic: { original_post_attributes: { id: @forum_topic.original_post.id, allow_voting: false } } }
+            assert_response :bad_request
+          end
+          assert_equal(true, @forum_topic.original_post.reload.has_voting?)
+          assert_equal("found unpermitted parameter: :allow_voting", @response.parsed_body["message"])
+        end
+
+        should "allow admins to disable allow_voting" do
+          @forum_topic.original_post.update_columns(allow_voting: true)
+          assert_difference("EditHistory.count", 2) do
+            put_auth forum_topic_path(@forum_topic), @admin, params: { format: :json, forum_topic: { original_post_attributes: { id: @forum_topic.original_post.id, allow_voting: false } } }
+            assert_response :success
+          end
+          assert_equal("disabled_voting", EditHistory.last.edit_type)
+          assert_equal(false, @forum_topic.original_post.reload.has_voting?)
+        end
+
+        should "not allow admins to disable allow_voting on TCRs" do
+          as(@user) do
+            @ta = create(:tag_alias, forum_post: @forum_post)
+            @forum_topic.original_post.update(tag_change_request: @ta, allow_voting: true)
+          end
+          assert_no_difference("EditHistory.count") do
+            put_auth forum_topic_path(@forum_topic), @admin, params: { format: :json, forum_topic: { original_post_attributes: { id: @forum_topic.original_post.id, allow_voting: false } } }
+            assert_response :bad_request
+          end
+          assert_equal(true, @forum_topic.original_post.reload.has_voting?)
+          assert_equal("found unpermitted parameter: :allow_voting", @response.parsed_body["message"])
+        end
+      end
+
       context "new action" do
         should "render" do
           get_auth new_forum_topic_path, @user
@@ -146,6 +190,18 @@ module Forums
 
           get_auth posts_path, @other_user
           assert_select "#nav-forum.unread"
+        end
+
+        should "allow setting allow_voting=true" do
+          assert_difference({ "ForumPost.count" => 1, "ForumTopic.count" => 1, "EditHistory.count" => 2 }) do
+            post_auth forum_topics_path, @user, params: { forum_topic: { title: "bababa", category_id: FemboyFans.config.alias_implication_forum_category, original_post_attributes: { body: "xaxaxa", allow_voting: true } } }
+            @forum_topic = ForumTopic.last
+            assert_redirected_to(forum_topic_path(@forum_topic))
+          end
+
+          assert_equal("enabled_voting", EditHistory.last.edit_type)
+          assert_equal(true, @forum_topic.original_post.allow_voting?)
+          assert_redirected_to(forum_topic_path(@forum_topic))
         end
       end
 

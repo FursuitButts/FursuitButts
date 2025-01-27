@@ -8,16 +8,18 @@ class EditHistory < ApplicationRecord
   store_accessor :extra_data, *VALUES
 
   EDIT_MAP = {
-    hide:         "Hidden",
-    unhide:       "Unhidden",
-    stick:        "Stickied",
-    unstick:      "Unstickied",
-    mark_warning: "Marked For Warning",
-    wark_record:  "Marked For Record",
-    mark_ban:     "Marked For Ban",
-    unmark:       "Unmarked",
-    merge:        "Merged",
-    unmerge:      "Unmerged",
+    hide:            "Hidden",
+    unhide:          "Unhidden",
+    stick:           "Stickied",
+    unstick:         "Unstickied",
+    mark_warning:    "Marked For Warning",
+    wark_record:     "Marked For Record",
+    mark_ban:        "Marked For Ban",
+    unmark:          "Unmarked",
+    merge:           "Merged",
+    unmerge:         "Unmerged",
+    voting_enabled:  "Voting Enabled",
+    voting_disabled: "Voting Disabled",
   }.freeze
 
   KNOWN_TYPES = %i[
@@ -25,18 +27,7 @@ class EditHistory < ApplicationRecord
     forum_post
   ].freeze
 
-  KNOWN_EDIT_TYPES = %i[
-    hide
-    unhide
-    stick
-    unstick
-    mark_warning
-    mark_record
-    mark_ban
-    unmark
-    merge
-    unmerge
-  ].freeze
+  KNOWN_EDIT_TYPES = EDIT_MAP.keys
 
   CONTENTFUL_TYPES = %w[original edit].freeze
 

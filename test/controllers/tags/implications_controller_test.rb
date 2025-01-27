@@ -28,15 +28,23 @@ module Tags
           end
           topic = ForumTopic.last
           post = topic.posts.last
+          assert_equal("TagImplication", post.tag_change_request_type)
+          assert_equal(TagImplication.last.id, post.tag_change_request_id)
+          assert_equal(true, post.allow_voting?)
           assert_redirected_to(forum_topic_path(topic, page: post.forum_topic_page, anchor: "forum_post_#{post.id}"))
         end
 
-        should "create a pending implication" do
-          assert_difference("ForumTopic.count") do
+        should "work" do
+          assert_difference({ "ForumTopic.count" => 1, "TagImplication.count" => 1 }) do
             post_auth tag_implications_path, @user, params: { tag_implication: { antecedent_name: "foo", consequent_name: "bar", reason: "blah blah" } }
           end
           topic = ForumTopic.last
           post = topic.posts.last
+          ti = TagImplication.last
+          assert_equal("pending", ti.status)
+          assert_equal("TagImplication", post.tag_change_request_type)
+          assert_equal(ti.id, post.tag_change_request_id)
+          assert_equal(true, post.allow_voting?)
           assert_redirected_to(forum_topic_path(topic, page: post.forum_topic_page, anchor: "forum_post_#{post.id}"))
         end
 

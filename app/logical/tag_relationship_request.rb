@@ -36,12 +36,12 @@ class TagRelationshipRequest
 
       unless skip_forum
         if forum_topic.present?
-          forum_post = @forum_topic.posts.create(tag_change_request: @tag_relationship, body: "Reason: #{reason}")
+          forum_post = @forum_topic.posts.create(tag_change_request: @tag_relationship, body: "Reason: #{reason}", allow_voting: true)
         else
           @forum_topic = build_forum_topic
           @forum_topic.save
           forum_post = @forum_topic.posts.first
-          forum_post.update(tag_change_request: @tag_relationship)
+          forum_post.update(tag_change_request: @tag_relationship, allow_voting: true)
         end
 
         @tag_relationship.forum_topic_id = @forum_topic.id

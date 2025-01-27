@@ -43,7 +43,7 @@ module Tags
       @tag_implication = authorize(TagImplication.find(params[:id]))
 
       if @tag_implication.is_pending? && @tag_implication.editable_by?(CurrentUser.user)
-        @tag_implication.update(permitted_attributes(TagImplication))
+        @tag_implication.update(permitted_attributes(@tag_implication))
       end
 
       respond_with(@tag_implication)

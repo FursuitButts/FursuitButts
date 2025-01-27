@@ -15,7 +15,7 @@ module Admin
 
     def update
       @destroyed_post = authorize(DestroyedPost.find_by!(post_id: params[:id]))
-      @destroyed_post.update(permitted_attributes(DestroyedPost))
+      @destroyed_post.update(permitted_attributes(@destroyed_post))
       flash[:notice] = @destroyed_post.notify? ? "Re-uploads of that post will now notify admins" : "Re-uploads of that post will no longer notify admins"
       redirect_to(admin_destroyed_posts_path)
     end

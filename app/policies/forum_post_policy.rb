@@ -50,7 +50,13 @@ class ForumPostPolicy < ApplicationPolicy
   end
 
   def permitted_attributes_for_create
-    super + %i[topic_id]
+    super + %i[topic_id allow_voting]
+  end
+
+  def permitted_attributes_for_update
+    attr = super
+    attr += %i[allow_voting] if !record.is_a?(ForumPost) || (!record.is_aibur? && (user.is_admin? || !record.allow_voting?)) # Disallow users disabling voting
+    attr
   end
 
   def permitted_search_params

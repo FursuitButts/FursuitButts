@@ -48,7 +48,7 @@ module Forums
 
     def update
       authorize(@forum_post)
-      @forum_post.update(permitted_attributes(ForumPost))
+      @forum_post.update(permitted_attributes(@forum_post))
       respond_with(@forum_post, location: forum_topic_path(@forum_post.topic, page: @forum_post.forum_topic_page, anchor: "forum_post_#{@forum_post.id}"))
     end
 

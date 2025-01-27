@@ -32,7 +32,7 @@ module Rules
     def update
       @quick = authorize(QuickRule.find(params[:id]))
       @rules = Rule.joins(:category).order("rule_categories.order, rules.order")
-      @quick.update(permitted_attributes(QuickRule))
+      @quick.update(permitted_attributes(@quick))
       notice(@quick.errors.any? ? @quick.errors.full_messages.join(", ") : "Quick rule updated")
       respond_with(@quick, location: quick_rules_path)
     end

@@ -180,6 +180,11 @@ Layout/HashAlignment:
 Rails/DynamicFindBy:
   Enabled: false
 
+Lint/UselessAssignment:
+  Enabled: true
+  Exclude:
+    - lib/generators/**/*.rb
+
 Rails/TimeZoneAssignment:
   Enabled: true
   Exclude:
