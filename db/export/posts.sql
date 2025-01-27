@@ -43,7 +43,7 @@ SELECT id,
        framecount,
        thumbnail_frame,
        original_tag_string,
-       tag_count_voice_actor,
+       tag_count_contributor,
        tag_count_gender,
        qtags,
        upload_url

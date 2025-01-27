@@ -32,7 +32,7 @@ module TagCategory
 
   GENERAL = Category.new(0, "general", %w[gen])
   ARTIST = Category.new(1, "artist", %w[art], header: "Artists", exclusion: FemboyFans.config.artist_exclusion_tags, formatstr: "created by %s")
-  VOICE_ACTOR = Category.new(2, "voice_actor", %w[va], header: "Voice Actors", suffix: "_(va)")
+  CONTRIBUTOR = Category.new(2, "contributor", %w[cont], header: "Contributors")
   COPYRIGHT = Category.new(3, "copyright", %w[copy co], header: "Copyrights", limit: 1, formatstr: "(%s)")
   CHARACTER = Category.new(4, "character", %w[char ch oc], header: "Characters", limit: 5, regex: /^(.+?)(?:_\(.+\))?$/)
   SPECIES = Category.new(5, "species", %w[spec])
@@ -96,7 +96,7 @@ module TagCategory
     end
   end
 
-  SPLIT_HEADER_LIST = %w[invalid artist voice_actor copyright character species gender general meta lore].freeze
-  CATEGORIZED_LIST = %w[invalid artist voice_actor copyright character species gender meta general lore].freeze
+  SPLIT_HEADER_LIST = %w[invalid artist contributor copyright character species gender general meta lore].freeze
+  CATEGORIZED_LIST = %w[invalid artist contributor copyright character species gender meta general lore].freeze
   HUMANIZED_LIST = %w[character copyright artist].freeze
 end

@@ -18,7 +18,7 @@ module GitHelper
   end
 
   def self.short_hash
-    hash[0..8]
+    @hash[0..8]
   end
 
   def self.commit_url(commit_hash)
@@ -34,6 +34,6 @@ module GitHelper
   end
 
   def self.short_public_hash
-    public_hash[0..8]
+    @public_hash[0..8]
   end
 end

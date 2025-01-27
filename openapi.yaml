@@ -197,7 +197,7 @@ x-constants:
   - &tag-categories
     - 0 # general
     - 1 # artist
-    - 2 # voice actor
+    - 2 # contributor
     - 3 # copyright
     - 4 # character
     - 5 # species
@@ -1963,7 +1963,7 @@ components:
           required:
             - general
             - artist
-            - voice_actor
+            - contributor
             - copyright
             - character
             - species
@@ -1980,7 +1980,7 @@ components:
               type: array
               items:
                 type: string
-            voice_actor:
+            contributor:
               type: array
               items:
                 type: string
@@ -2970,7 +2970,7 @@ components:
         - total_tags
         - general_tags
         - artist_tags
-        - voice_actor_tags
+        - contributor_tags
         - copyright_tags
         - character_tags
         - species_tags
@@ -3086,7 +3086,7 @@ components:
           type: number
         artist_tags:
           type: number
-        voice_actor_tags:
+        contributor_tags:
           type: number
         copyright_tags:
           type: number

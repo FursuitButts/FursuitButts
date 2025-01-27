@@ -41,7 +41,7 @@ class TagTest < ActiveSupport::TestCase
     should "have convenience methods for all categories" do
       assert_equal(0, TagCategory.general)
       assert_equal(1, TagCategory.artist)
-      assert_equal(2, TagCategory.voice_actor)
+      assert_equal(2, TagCategory.contributor)
       assert_equal(3, TagCategory.copyright)
       assert_equal(4, TagCategory.character)
       assert_equal(5, TagCategory.species)
@@ -70,7 +70,7 @@ class TagTest < ActiveSupport::TestCase
       mapping = [
         [0, %w[general gen unknown]],
         [1, %w[artist art]],
-        [2, %w[voice_actor va]],
+        [2, %w[contributor cont]],
         [3, %w[copyright copy co]],
         [4, %w[character char ch oc]],
         [5, %w[species spec]],
