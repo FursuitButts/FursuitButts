@@ -5,11 +5,11 @@
     <%= rank["count"] %>
   <% end %>
   <% t.column("Tag") do |rank| %>
-    <%= link_to(rank["tag"], posts_path(tags: rank["tag"])) %>
+    <%= link_to(rank["tag"], posts_path(tags: rank["tag"]), class: "category-#{@tags[rank["tag"]].try(:category_id) || 0}") %>
   <% end %>
 <% end %>
 
-<%= render partial: "popular/secondary_links" %>
+<%= render(partial: "popular/secondary_links") %>
 
 <% content_for(:page_title) do %>
   Popular Searches for <%= date_range_description(@date, @scale, @min_date, @max_date) %>

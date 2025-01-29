@@ -5,13 +5,11 @@
     <%= tag.follower_count %>
   <% end %>
   <% t.column("Tag") do |tag| %>
-    <%= link_to(tag.name, posts_path(tags: tag.name)) %>
+    <%= link_to(tag.name, posts_path(tags: tag.name), class: "category-#{tag.category_id}") %>
   <% end %>
 <% end %>
 
-</table>
-
-<%= render partial: "popular/secondary_links" %>
+<%= render(partial: "popular/secondary_links") %>
 
 <% content_for(:page_title) do %>
   Most Followed Tags

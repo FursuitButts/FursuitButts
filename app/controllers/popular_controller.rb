@@ -23,6 +23,7 @@ class PopularController < ApplicationController
   def searches
     @date, @scale, @min_date, @max_date = parse_date(params, scales: %w[day])
     @ranking = Reports.get_post_searches_rank(@date, limit: limit).first(limit)
+    @tags = Tag.find_by_name_list(@ranking.pluck("tag"))
     respond_with(@ranking, &format_json(@ranking))
   end
 
