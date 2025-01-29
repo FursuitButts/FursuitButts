@@ -2,6 +2,13 @@ FROM ruby:3.3.1-alpine3.19 AS ruby-builder
 
 RUN apk --no-cache add build-base cmake git glib-dev postgresql15-dev gcompat
 
+COPY lib/dtext_rb/ lib/dtext_rb/
+
+RUN <<EOS
+  cd lib/dtext_rb
+  bin/install
+EOS
+
 COPY Gemfile Gemfile.lock ./
 RUN gem i foreman && BUNDLE_IGNORE_CONFIG=true bundle install -j$(nproc) \
  && rm -rf /usr/local/bundle/cache/*.gem \

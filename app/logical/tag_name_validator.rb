@@ -4,7 +4,7 @@ class TagNameValidator < ActiveModel::EachValidator
   def validate_each(record, attribute, value)
     normalized = Tag.normalize_name(value)
 
-    unless value.has_balanced_parens?
+    unless normalized.has_balanced_parens?
       record.errors.add(attribute, "'#{value}' cannot have unbalanced parentheses")
     end
 

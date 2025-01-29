@@ -6,3 +6,4 @@
 !/yarn.lock
 !/Gemfile
 !/Gemfile.lock
+!/lib/dtext_rb

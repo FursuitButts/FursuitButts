@@ -2005,7 +2005,7 @@ class PostTest < ActiveSupport::TestCase
 
     should "return posts for the tagcount:<n> metatags" do
       as(create(:admin_user)) do
-        @post = create(:post, tag_string: "artist:wokada copyright:vocaloid char:hatsune_miku twintails meta:hi lore:test_(lore) va:test_(va) gender:male")
+        @post = create(:post, tag_string: "artist:wokada copyright:vocaloid char:hatsune_miku twintails meta:hi lore:test_(lore) cont:test_(va) gender:male")
       end
 
       assert_tag_match([@post], "tagcount:8")
@@ -2016,7 +2016,7 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match([@post], "gentags:1")
       assert_tag_match([@post], "metatags:1")
       assert_tag_match([@post], "lortags:1")
-      assert_tag_match([@post], "vatags:1")
+      assert_tag_match([@post], "conttags:1")
       assert_tag_match([@post], "gendertags:1")
       assert_tag_match([], "gentags:0")
     end
