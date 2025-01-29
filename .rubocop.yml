@@ -11,6 +11,8 @@ AllCops:
   NewCops: enable
   SuggestExtensions:
     rubocop-factory_bot: false
+  Exclude:
+    - 'lib/dtext_rb/**/*'
 
 Bundler/OrderedGems:
   Enabled: false
