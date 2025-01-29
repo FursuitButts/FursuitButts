@@ -1,6 +1,6 @@
 FROM ruby:3.3.1-alpine3.19 AS ruby-builder
 
-RUN apk --no-cache add build-base cmake git glib-dev postgresql15-dev gcompat
+RUN apk --no-cache add build-base cmake git glib-dev postgresql15-dev gcompat ragel
 
 COPY lib/dtext_rb/ lib/dtext_rb/
 

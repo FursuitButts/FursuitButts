@@ -20,23 +20,52 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Set up Docker Buildx
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Build
+      - name: Build FemboyFans Image
         uses: docker/build-push-action@v4
         with:
           cache-from: type=gha
-          cache-to: type=gha,mode=max
+          load: true
           tags: femboyfans
+          outputs: type=docker,dest=/tmp/femboyfans.tar
+
+      - name: Upload FemboyFans Image
+        uses: actions/upload-artifact@v4
+        with:
+          name: femboyfans
+          path: /tmp/femboyfans.tar
+
+      - name: Build DText Image
+        uses: docker/build-push-action@v4
+        with:
+          context: "{{defaultContext}}:lib/dtext_rb"
+          cache-from: type=gha
+          load: true
+          tags: dtext
+          outputs: type=docker,dest=/tmp/dtext.tar
+
+
+      - name: Upload DText Image
+        uses: actions/upload-artifact@v4
+        with:
+          name: dtext
+          path: /tmp/dtext.tar
 
   rubocop:
     runs-on: ubuntu-22.04
     needs: docker-build
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: ./.github/prepare-docker-image
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      - name: Load FemboyFans Image
+        uses: ./.github/load-docker-image
+        with:
+          name: femboyfans
 
       - name: Run Rubocop
         run: $DOCKER_RUN rubocop --format github
@@ -46,8 +75,12 @@ jobs:
     needs: docker-build
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: ./.github/prepare-docker-image
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      - name: Load FemboyFans Image
+        uses: ./.github/load-docker-image
+        with:
+          name: femboyfans
 
       - name: Run ESLint
         run: $DOCKER_RUN linter
@@ -57,8 +90,12 @@ jobs:
     needs: docker-build
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: ./.github/prepare-docker-image
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      - name: Load FemboyFans Image
+        uses: ./.github/load-docker-image
+        with:
+          name: femboyfans
 
       - name: Create DB
         run: $DOCKER_RUN --entrypoint bin/rails tests db:create
@@ -71,7 +108,6 @@ jobs:
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v3
-        if: always()
         with:
           name: test-results
           path: log/test.log
@@ -81,3 +117,18 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: FemboyFans/FemboyFans
+
+  dtext-tests:
+    runs-on: ubuntu-22.04
+    needs: docker-build
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      - name: Load DText Image
+        uses: ./.github/load-docker-image
+        with:
+          name: dtext
+
+      - name: Run Tests
+        run: $DOCKER_RUN dtext bin/rake test

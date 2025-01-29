@@ -288,6 +288,13 @@ services:
     profiles:
       - tests
 
+  dtext:
+    build:
+      context: lib/dtext_rb
+    image: dtext
+    profiles:
+      - tests
+
   rubocop:
     image: femboyfans
     volumes:

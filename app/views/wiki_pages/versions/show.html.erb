@@ -8,7 +8,7 @@
   <% end %>
   <% if @wiki_page_version.protection_level.present? %>
     <% name = User::Levels.id_to_name(@wiki_page_version.protection_level) %>
-    <div class="wiki-page-protection">Edited are restricted to <%= link_to(name.titlecase, help_page_path(id: "accounts", anchor: name.downcase), class: "#{User::Levels.level_class(name)} with-style") %> users and above.</div>
+    <div class="wiki-page-protection">Edites are restricted to <%= link_to(name.titlecase, help_page_path(id: "accounts", anchor: name.downcase), class: "#{User::Levels.level_class(name)} with-style") %> users and above.</div>
   <% end %>
 
   <div id="wiki-page-body" class="dtext dtext-container">

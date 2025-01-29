@@ -1,0 +1,24 @@
+
+name: Load Docker Image
+description: Load Docker Image
+
+inputs:
+  name:
+    description: The name of the image to load
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Download Image
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ inputs.name }}
+        path: /tmp
+    - name: Load Docker image
+      shell: bash
+      run: |
+        docker load --input /tmp/${{ inputs.name }}.tar
+    - name: Set docker run command
+      run: echo "DOCKER_RUN=docker compose run -e CI=true" >> "$GITHUB_ENV"
+      shell: bash
