@@ -2067,6 +2067,21 @@ class Post < ApplicationRecord
     false
   end
 
+  def reupload_url
+    h = Rails.application.routes.url_helpers
+    others = TagCategory.category_names - %w[artist character species]
+    options = {
+      "sources": source_array.join(" "),
+      "tags-artist": artist_tags.map(&:name).join(" "),
+      "tags-character": character_tags.map(&:name).join(" "),
+      "tags-species": species_tags.map(&:name).join(" "),
+      "tags": others.map { |type| public_send("#{type}_tags") }.flatten.map(&:name).join(" "),
+      "rating": rating,
+      "rating_locked": is_rating_locked? && policy(CurrentUser.user).can_use_attribute?(:is_rating_locked, :update) ? true : nil,
+    }.compact_blank
+    h.new_upload_url(**options)
+  end
+
   def reload(options = nil)
     super
     reset_tag_array_cache

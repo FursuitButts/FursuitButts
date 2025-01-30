@@ -15,6 +15,9 @@
   <% if PostReplacementPolicy.new(CurrentUser.user, post).create? %>
     <li><%= link_to("Replace image", new_post_replacement_path(post_id: post.id), id: "replace-image") %></li>
   <% end %>
+  <% if CurrentUser.user.is_member? %>
+    <li><%= link_to("Reupload image", post.reupload_url, id: "reupload-image") %></li>
+  <% end %>
   <% if post.is_status_locked? %>
     <li><span id="status-locked-notice">Status locked</span></li>
   <% else %>
