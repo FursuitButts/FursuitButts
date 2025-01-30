@@ -52,6 +52,7 @@ class TagSetPresenter < Presenter
   def inline_tag_list_html(link_type = :tag)
     html = TagCategory::CATEGORIZED_LIST.map do |category|
       tags_for_category(category).map do |tag|
+        category = tag.antecedent_alias&.consequent_tag&.category || category
         %(<li class="category-#{tag.category}">#{tag_link(tag, tag.name, link_type)}</li>)
       end.join
     end.join

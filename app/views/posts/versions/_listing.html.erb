@@ -48,7 +48,7 @@
               <p class="dtext-container"><%= format_text(post_version.description) %></p>
             </div>
           </div>
-        <% elsif post_version.description_changed && post_version.version != 1%>
+        <% elsif post_version.description_changed && post_version.version != 1 %>
           <em>Cleared</em>
         <% end %>
       </div>
@@ -57,10 +57,10 @@
       </div>
       <div class="pv-actions pv-content">
         <% if policy(post_version).undo? && post_version.undoable? %>
-          <%= link_to "Undo", undo_post_version_path(post_version), method: :put %>
+          <%= link_to("Undo", undo_post_version_path(post_version), method: :put) %>
         <% end %>
         <% if params.dig(:search, :post_id).present? && policy(post_version.post).revert? %>
-          | <%= link_to "Revert to", revert_post_path(post_version.post_id, version_id: post_version.id, format: :json), class: "revert-item-link", data: { noun: "post" } %>
+          | <%= link_to("Revert to", revert_post_path(post_version.post_id, version_id: post_version.id, format: :json), class: "revert-item-link", data: { noun: "post" }) %>
         <% end %>
       </div>
       <div class="pv-tags-label pv-label">
