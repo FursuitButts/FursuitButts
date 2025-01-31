@@ -114,6 +114,8 @@ class User < ApplicationRecord
     NO_AIBUR_VOTING                  = pref(1 << 27, settable: false, private: false)
     EMAIL_VERIFIED                   = pref(1 << 28, settable: false, public: true)
     UNIQUE_VIEWS                     = pref(1 << 29)
+    FORUM_UNREAD_BUBBLE              = pref(1 << 30)
+    FORUM_UNREAD_ITALIC              = pref(1 << 31)
 
     def self.map
       constants.to_h { |name| [name.to_s.downcase, const_get(name)] }
@@ -1233,6 +1235,29 @@ class User < ApplicationRecord
 
   def compact_uploader?
     post_upload_count >= 10 && enable_compact_uploader?
+  end
+
+  def enable_forum_unread?
+    forum_unread_bubble? || forum_unread_italic?
+  end
+
+  def forum_unread_form
+    return "bubble" if forum_unread_bubble?
+    return "italic" if forum_unread_italic?
+    false
+  end
+
+  def forum_unread_form=(val)
+    if val == "bubble"
+      self.forum_unread_bubble = true
+      self.forum_unread_italic = false
+    elsif val == "italic"
+      self.forum_unread_bubble = false
+      self.forum_unread_italic = true
+    else
+      self.forum_unread_bubble = false
+      self.forum_unread_italic = false
+    end
   end
 
   def enable_hover_zoom_shift?

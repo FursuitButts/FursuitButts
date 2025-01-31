@@ -116,6 +116,7 @@ module FemboyFans
       user.hover_zoom_shift           = true
       user.hover_zoom_sticky_shift    = true
       user.go_to_recent_forum_post    = true
+      user.forum_unread_bubble        = true
       user.upload_notifications       = User.upload_notifications_options
       user.email_verified             = !enable_email_verification?
       user.level                      = User::Levels::RESTRICTED if user_approvals_enabled? && user.level == User::Levels::MEMBER

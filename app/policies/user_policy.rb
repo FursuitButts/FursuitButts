@@ -34,7 +34,7 @@ class UserPolicy < ApplicationPolicy
   end
 
   def permitted_attributes_for_update
-    attr = super + %i[enable_hover_zoom_form] + [upload_notifications: []]
+    attr = super + %i[enable_hover_zoom_form forum_unread_form] + [upload_notifications: []]
     attr += %i[profile_about profile_artinfo avatar_id] if unbanned? # Prevent editing when banned
     attr += %i[enable_compact_uploader] if CurrentUser.post_active_count >= FemboyFans.config.compact_uploader_minimum_posts
     attr

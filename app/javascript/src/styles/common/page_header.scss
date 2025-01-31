@@ -89,7 +89,7 @@ header#top {
       color: $page-header-sign-in-link-color;
     }
 
-    li.unread a::after {
+    li.unread a::after, li.forum-updated a[data-form="bubble"]::after {
       content: unicode('f111');
       @include FontAwesomeFamily;
       font-weight: 900;
@@ -100,6 +100,10 @@ header#top {
       @include window-larger-than(800px) {
         top: -3px;
       }
+    }
+
+    li.forum-updated a[data-form="italic"] {
+      font-style: italic;
     }
   }
 

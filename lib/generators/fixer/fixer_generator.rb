@@ -6,7 +6,7 @@ class FixerGenerator < Rails::Generators::NamedBase
 
   def create_fixer
     elastic = options["elasticsearch"]
-    id = Dir["db/fixes/*.rb"].map { |f| File.basename(f, ".rb") }.max.to_i + 1
+    id = Dir["db/fixes/*.rb"].map { |f| File.basename(f, ".rb").split("_").first }.max.to_i + 1
     if elastic
       copy_file("fixer_elastic.rb", "db/fixes/#{id}_1_#{file_name}.rb", mode: :preserve)
       copy_file("fixer.rb", "db/fixes/#{id}_2_#{file_name}.rb", mode: :preserve)

@@ -130,6 +130,9 @@
 
     <%= f.input(:go_to_recent_forum_post, label: "Go To Recent Forum Post", as: :select, collection: [%w[No false], %w[Yes true]], include_blank: false,
                 hint: "When enabled, clicking on a forum topic will take you to the most recent post.") %>
+
+    <%= f.input(:forum_unread_form, label: "Forum Unread Indicator", as: :select, collection: [%w[Bubble bubble], %w[Italic italic], %w[None false]], include_blank: false,
+                hint: "When set to bubble, a red bubble will be shown near \"Forum\" when any topic is unrad. When set to italic, \"Forum\" will be in italic.") %>
   </fieldset>
 
   <fieldset id="security-settings-section">
