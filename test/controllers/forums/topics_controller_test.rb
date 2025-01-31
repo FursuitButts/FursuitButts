@@ -184,12 +184,12 @@ module Forums
         should "cause the unread indicator to show" do
           @other_user.forum_category_visits.find_or_create_by!(forum_category_id: FemboyFans.config.alias_implication_forum_category).update!(last_read_at: Time.now)
           get_auth posts_path, @other_user
-          assert_select "#nav-forum.unread", false
+          assert_select "#nav-forum.forum-updated", false
 
           post_auth forum_topics_path, @user, params: { forum_topic: { title: "bababa", category_id: FemboyFans.config.alias_implication_forum_category, original_post_attributes: { body: "xaxaxa" } } }
 
           get_auth posts_path, @other_user
-          assert_select "#nav-forum.unread"
+          assert_select "#nav-forum.forum-updated"
         end
 
         should "allow setting allow_voting=true" do
