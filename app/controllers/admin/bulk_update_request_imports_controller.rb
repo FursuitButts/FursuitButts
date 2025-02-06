@@ -9,6 +9,7 @@ module Admin
     def create
       bparams = params[:batch].presence || params
       @importer = authorize(BulkUpdateRequestImporter.new(bparams[:script], bparams[:forum_id]))
+      @importer.validate!(CurrentUser.user)
       begin
         BulkUpdateRequest.transaction { @importer.process! }
       rescue BulkUpdateRequestImporter::Error => e

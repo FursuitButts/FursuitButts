@@ -222,7 +222,7 @@ export default {
       const objectUrl = URL.createObjectURL(file);
       this.disableURLUpload = true;
       this.uploadValueChanged(file);
-      this.previewChanged(objectUrl, file.type === "video/webm");
+      this.previewChanged(objectUrl, ["video/mp4", "video/webm"].includes(file.type));
     },
     uploadValueChanged(value) {
       this.$emit("uploadValueChanged", value);

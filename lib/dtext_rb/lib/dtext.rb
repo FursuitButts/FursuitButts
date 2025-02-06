@@ -2,7 +2,6 @@
 
 require "dtext/dtext"
 require "dtext/version"
-require "dtext/ruby"
 
 begin
   require "zeitwerk"

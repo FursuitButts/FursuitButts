@@ -3,7 +3,6 @@
 <% elsif post.loginblocked? %>
   <p>You must be logged in to view this image. <%= link_to "(learn more)", help_page_path(id: "global_blacklist") %></p>
 <% elsif post.safeblocked? -%>
-  <%# TODO: convert name & url to config option %>
   <p>This image is unavailable in safe mode (<%= FemboyFans.config.app_name %>). Go
     to <%= link_to(FemboyFans.config.canonical_app_name, FemboyFans.config.canonical_app_url) %> or disable safe mode to view.</p>
 <% elsif post.is_video? -%>

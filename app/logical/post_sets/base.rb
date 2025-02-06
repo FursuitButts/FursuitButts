@@ -10,10 +10,6 @@ module PostSets
       ""
     end
 
-    def ad_tag_string
-      ""
-    end
-
     def fill_tag_types(posts)
       tag_array = []
       posts.each do |p|

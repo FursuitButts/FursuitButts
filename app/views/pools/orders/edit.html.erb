@@ -11,7 +11,7 @@
   <% end %>
 </ul>
 
-<%= custom_form_for(@pool, format: :js, html: { id: "ordering-form" }) do |f| %>
+<%= custom_form_for(@pool, html: { id: "ordering-form" }) do |f| %>
   <%= submit_tag "Save" %>
 <% end %>
 
