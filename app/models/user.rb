@@ -141,10 +141,18 @@ class User < ApplicationRecord
       value = const_get(value) unless value.is_a?(Integer)
       Math.log2(value).to_i
     end
+
+    def self.to_list(prefs)
+      map.filter { |_name, value| prefs & value == value }.keys.map(&:to_sym)
+    end
   end
 
   include FemboyFans::HasBitFlags
   has_bit_flags(Preferences.map, field: "bit_prefs")
+
+  def prefs_list
+    Preferences.to_list(bit_prefs)
+  end
 
   attr_accessor :password, :old_password, :validate_email_format, :is_admin_edit
 

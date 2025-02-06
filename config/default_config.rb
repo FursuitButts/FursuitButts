@@ -779,8 +779,14 @@ module FemboyFans
       { "720p" => [1280, 720], "480p" => [640, 480] }
     end
 
+    # TODO: merge image samples into rescales
+    # FIXME: image rescales have NOT been tested well and are likely NOT fully implemented, sample generation really need to be redone from scratch
     def image_rescales
-      []
+      {}
+    end
+
+    def replacement_thumbnail_width
+      300
     end
 
     def janitor_reports_discord_webhook_url
@@ -894,6 +900,7 @@ module FemboyFans
 
   class EnvironmentConfiguration
     def custom_configuration
+      return CustomConfiguration.new if Rails.env.development? # no caching in dev
       @custom_configuration ||= CustomConfiguration.new
     end
 

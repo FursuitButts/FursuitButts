@@ -35,6 +35,13 @@ module StorageManager
         new_path = file_path(post, post.file_ext, type, protected: true)
         move_file(path, new_path)
       end
+
+      FemboyFans.config.image_rescales.each_key do |k|
+        path = file_path(post, "webp", :scaled, protected: false, scale_factor: k.to_s)
+        new_path = file_path(post, "webp", :scaled, protected: true, scale_factor: k.to_s)
+        move_file(path, new_path)
+      end
+
       return unless post.is_video?
       FemboyFans.config.video_rescales.each_key do |k|
         %w[mp4 webm].each do |ext|
@@ -43,8 +50,8 @@ module StorageManager
           move_file(path, new_path)
         end
       end
-      path = file_path(post, "mp4", :original, protected: false)
-      new_path = file_path(post, "mp4", :original, protected: true)
+      path = file_path(post, post.is_webm? ? "mp4" : "webm", :original, protected: false)
+      new_path = file_path(post, post.is_webm? ? "mp4" : "webm", :original, protected: true)
       move_file(path, new_path)
     end
 
@@ -54,6 +61,13 @@ module StorageManager
         new_path = file_path(post, post.file_ext, type, protected: false)
         move_file(path, new_path)
       end
+
+      FemboyFans.config.image_rescales.each_key do |k|
+        path = file_path(post, "webp", :scaled, protected: true, scale_factor: k.to_s)
+        new_path = file_path(post, "webp", :scaled, protected: false, scale_factor: k.to_s)
+        move_file(path, new_path)
+      end
+
       return unless post.is_video?
       FemboyFans.config.video_rescales.each_key do |k|
         %w[mp4 webm].each do |ext|
@@ -62,8 +76,9 @@ module StorageManager
           move_file(path, new_path)
         end
       end
-      path = file_path(post, "mp4", :original, protected: true)
-      new_path = file_path(post, "mp4", :original, protected: false)
+
+      path = file_path(post, post.is_webm? ? "mp4" : "webm", :original, protected: true)
+      new_path = file_path(post, post.is_webm? ? "mp4" : "webm", :original, protected: false)
       move_file(path, new_path)
     end
 

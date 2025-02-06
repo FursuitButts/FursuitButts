@@ -154,7 +154,7 @@ class PostReplacement < ApplicationRecord
     def write_storage_file
       self.storage_id = SecureRandom.hex(16)
       FemboyFans.config.storage_manager.store_replacement(replacement_file, self, :original)
-      thumbnail_file = PostThumbnailer.generate_thumbnail(replacement_file, is_video? ? :video : :image, frame: nil)
+      thumbnail_file = PostThumbnailer.generate_replacement_thumbnail(replacement_file, is_video? ? :video : :image, frame: nil)
       FemboyFans.config.storage_manager.store_replacement(thumbnail_file, self, :preview)
     ensure
       thumbnail_file.try(:close!)

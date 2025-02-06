@@ -10,7 +10,12 @@ module GitHelper
       @hash = ""
     end
 
-    @public_hash = `git merge-base internal/master upstream/master`.strip
+    # show-ref exits 0 if ref exists, 1 otherwise
+    if system("git show-ref --quiet internal/master")
+      @public_hash = `git merge-base internal/master upstream/master`.strip
+    else
+      @public_hash = @hash
+    end
   end
 
   def self.hash

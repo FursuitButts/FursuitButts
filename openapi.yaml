@@ -1825,8 +1825,7 @@ components:
         - created_at
         - updated_at
         - file
-        - preview
-        - sample
+        - samples
         - score
         - views
         - tags
@@ -1880,61 +1879,6 @@ components:
               type: string
             url:
               type: ["string", "null"]
-        preview:
-          type: object
-          required:
-            - width
-            - height
-            - url
-          properties:
-            width:
-              type: number
-            height:
-              type: number
-            url:
-              type: ["string", "null"]
-        sample:
-          type: object
-          required:
-            - has
-            - height
-            - width
-            - url
-            - alternates
-          properties:
-            has:
-              type: boolean
-            height:
-              type: ["number", "null"]
-            width:
-              type: ["number", "null"]
-            url:
-              type: ["string", "null"]
-            alternates:
-              type: object
-              properties:
-                480p:
-                  $ref: "#/components/schemas/PostSampleAlternate"
-                720p:
-                  $ref: "#/components/schemas/PostSampleAlternate"
-                original:
-                  $ref: "#/components/schemas/PostSampleAlternate"
-        crop:
-          type: object
-          required:
-            - has
-            - width
-            - height
-            - url
-          properties:
-            has:
-              type: boolean
-            width:
-              type: number
-            height:
-              type: number
-            url:
-              type: ["string", "null"]
         score:
           type: object
           required:
@@ -1948,6 +1892,10 @@ components:
               type: number
             total:
               type: number
+        samples:
+          type: array
+          items:
+            $ref: "#/components/schemas/PostSample"
         views:
           type: object
           required:
@@ -2399,29 +2347,42 @@ components:
           type: string
         file_url:
           type: ["string", "null"]
-    PostSampleAlternate:
+    PostSample:
       type: object
       required:
+        - ext
+        - md5
+        - size
         - type
-        - height
+        - video
         - width
-        - urls
+        - height
+        - url
       properties:
+        ext:
+          type: string
+        md5:
+          type: string
+        size:
+          type: number
         type:
           type: string
           enum:
-            video
-        height:
-          type: number
+            - original
+            - 720p
+            - 480p
+            - preview
+            - crop
+            - large
+        video:
+          type: boolean
         width:
           type: number
-        urls:
-          type: array
-          items:
-            - type: ["string", "null"]
-              format: "uri"
-            - type: ["string", "null"]
-              format: "uri"
+        height:
+          type: number
+        url:
+          type: ["string", "null"]
+          format: uri
     PostSet:
       type: object
       required:
@@ -2942,6 +2903,8 @@ components:
         - webm_posts
         - average_file_size
         - total_file_size
+        - posts_file_size
+        - samples_file_size
         - average_posts_per_day
         - total_users
         - anonymous_users
@@ -3029,6 +2992,10 @@ components:
         average_file_size:
           type: string
         total_file_size:
+          type: number
+        posts_file_size:
+          type: number
+        samples_file_size:
           type: number
         average_posts_per_day:
           type: number

@@ -55,7 +55,7 @@ class UploadService
           upload.update(status: "processing")
 
           upload.file = Utils.get_file_for_upload(upload, file: upload.file)
-          Utils.process_file(upload, upload.file, original_post_id: post.id)
+          Utils.process_file(upload, upload.file)
 
           upload.save!
         rescue Exception => e
@@ -104,8 +104,11 @@ class UploadService
 
         # Everything went through correctly, the old files can now be removed
         if md5_changed
+          samples_data = Utils.generate_samples(upload, upload.file, deleted: post.is_deleted?)
           Post.delete_files(post.id, previous_md5, previous_file_ext, force: true)
-          post.generated_samples = nil
+          post.generated_samples = []
+          post.samples_data = samples_data
+          post.save
         end
       end
       if post.is_video?

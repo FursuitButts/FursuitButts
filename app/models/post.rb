@@ -88,6 +88,23 @@ class Post < ApplicationRecord
 
   IMAGE_TYPES = %i[original large preview crop].freeze
 
+  def self.file_sizes
+    results = Post.connection.execute(<<~SQL.squish).first
+      SELECT
+        AVG(file_size) as average_size,
+        SUM(file_size) AS posts_size,
+        SUM((row->>'size')::bigint) AS samples_size
+      FROM posts, LATERAL jsonb_array_elements(samples_data) row;
+    SQL
+
+    {
+      total:   results["posts_size"] + results["samples_size"],
+      average: results["average_size"],
+      posts:   results["posts_size"],
+      samples: results["samples_size"],
+    }
+  end
+
   module Ratings
     SAFE = "s"
     QUESTIONABLE = "q"
@@ -131,12 +148,8 @@ class Post < ApplicationRecord
       storage_manager.open_file(self, type)
     end
 
-    def tagged_large_file_url
-      storage_manager.file_url(self, :large)
-    end
-
-    def file_url
-      storage_manager.file_url(self, :original)
+    def file_url(type = :original)
+      storage_manager.file_url(self, type)
     end
 
     def file_url_ext(ext)
@@ -149,11 +162,11 @@ class Post < ApplicationRecord
 
     def large_file_url
       return file_url unless has_large?
-      storage_manager.file_url(self, :large)
+      file_url(:large)
     end
 
     def preview_file_url
-      storage_manager.file_url(self, :preview)
+      file_url(:preview)
     end
 
     def reverse_image_url
@@ -163,6 +176,10 @@ class Post < ApplicationRecord
 
     def file_path
       storage_manager.file_path(self, file_ext, :original, protected: is_deleted?)
+    end
+
+    def crop_file_path
+      storage_manager.file_path(self, file_ext, :crop, protected: is_deleted?)
     end
 
     def large_file_path
@@ -241,14 +258,11 @@ class Post < ApplicationRecord
     end
 
     def has_sample_size?(scale)
-      (generated_samples || []).include?(scale)
+      generated_samples.include?(scale)
     end
 
     def scaled_sample_dimensions(box)
-      ratio = [box[0] / image_width.to_f, box[1] / image_height.to_f].min
-      width = [[image_width * ratio, 2].max.ceil, box[0]].min & ~1
-      height = [[image_height * ratio, 2].max.ceil, box[1]].min & ~1
-      [width, height]
+      UploadService::Utils.scaled_sample_dimensions(box, image_width, image_height)
     end
 
     def generate_video_samples(later: false)
@@ -261,7 +275,7 @@ class Post < ApplicationRecord
 
     def regenerate_video_samples!
       # force code to assume no samples exist
-      update_column(:generated_samples, nil)
+      update_columns(generated_samples: [], samples_data: [])
       generate_video_samples(later: true)
     end
 
@@ -275,13 +289,21 @@ class Post < ApplicationRecord
 
     def regenerate_image_samples!
       file = self.file
-      preview_file, crop_file, sample_file = ::PostThumbnailer.generate_resizes(file, image_height, image_width, is_video? ? :video : :image, frame: thumbnail_frame)
+      preview_file, crop_file, sample_file, scaled, data = ::PostThumbnailer.generate_resizes(file, image_height, image_width, is_video? ? :video : :image, frame: thumbnail_frame)
       storage_manager.store_file(sample_file, self, :large) if sample_file.present?
       storage_manager.store_file(preview_file, self, :preview) if preview_file.present?
       storage_manager.store_file(crop_file, self, :crop) if crop_file.present?
-      update({ has_cropped: crop_file.present? })
+      scaled.each do |scale, sfile|
+        storage_manager.store(sfile, storage_manager.file_path(md5, "webp", :scaled, protected: is_deleted?, scale_factor: scale))
+      end
+      update(has_cropped: crop_file.present?)
+      update_samples_data(data)
     ensure
       file.close
+    end
+
+    def update_samples_data(data)
+      update_column(:samples_data, (data + samples_data).map { |s| s.transform_keys(&:to_s) }.uniq { |s| [s["type"], s["ext"]] })
     end
   end
 
@@ -1651,38 +1673,22 @@ class Post < ApplicationRecord
       attributes
     end
 
-    def alternate_samples
-      alternates = {}
-      FemboyFans.config.video_rescales.each do |k, v|
-        next unless has_sample_size?(k)
-        dims = scaled_sample_dimensions(v)
-        alternates[k] = {
-          type:   "video",
-          height: dims[1],
-          width:  dims[0],
-          urls:   visible? ? [scaled_url_ext(k, "webm"), scaled_url_ext(k, "mp4")] : [nil, nil],
-        }
+    def samples
+      scaled = (FemboyFans.config.video_rescales.keys + FemboyFans.config.image_rescales.keys)
+      samples_data.inject([]) do |result, element|
+        if visible?
+          if element["type"] == "original"
+            element["url"] = file_url_ext(element["ext"])
+          elsif scaled.include?(element["type"])
+            element["url"] = scaled_url_ext(element["type"], element["ext"])
+          else
+            element["url"] = file_url(element["type"].to_sym)
+          end
+        else
+          element["url"] = nil
+        end
+        result << element
       end
-      if has_sample_size?("original")
-        fixed_dims = scaled_sample_dimensions([image_width, image_height])
-        alternates["original"] = {
-          type:   "video",
-          height: fixed_dims[1],
-          width:  fixed_dims[0],
-          urls:   visible? ? [nil, file_url_ext("mp4")] : [nil, nil],
-        }
-      end
-      FemboyFans.config.image_rescales.each do |k, v|
-        next unless has_sample_size?(k)
-        dims = scaled_sample_dimensions(v)
-        alternates[k] = {
-          type:   "image",
-          height: dims[1],
-          width:  dims[0],
-          url:    visible? ? scaled_url_ext(k, "webp") : nil,
-        }
-      end
-      alternates
     end
 
     def status
@@ -1698,7 +1704,6 @@ class Post < ApplicationRecord
     end
 
     def serializable_hash(*)
-      preview_height, preview_width = preview_dimensions
       {
         id:              id,
         created_at:      created_at,
@@ -1711,24 +1716,7 @@ class Post < ApplicationRecord
           md5:    md5,
           url:    visible? ? file_url : nil,
         },
-        preview:         {
-          width:  preview_width,
-          height: preview_height,
-          url:    visible? ? preview_file_url : nil,
-        },
-        sample:          {
-          has:        has_large?,
-          height:     large_image_height,
-          width:      large_image_width,
-          url:        visible? ? large_file_url : nil,
-          alternates: alternate_samples,
-        },
-        crop:            {
-          has:    has_cropped?,
-          height: FemboyFans.config.small_image_width,
-          width:  FemboyFans.config.small_image_width,
-          url:    visible? ? crop_file_url : nil,
-        },
+        samples:         samples,
         score:           {
           up:    up_score,
           down:  down_score,

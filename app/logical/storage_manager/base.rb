@@ -63,14 +63,21 @@ module StorageManager
         delete(file_path(md5, file_ext, type, protected: false))
         delete(file_path(md5, file_ext, type, protected: true))
       end
+
+      FemboyFans.config.image_rescales.each_key do |k|
+        delete(file_path(md5, "webp", :scaled, protected: false, scale_factor: k.to_s))
+        delete(file_path(md5, "webp", :scaled, protected: true, scale_factor: k.to_s))
+      end
+
       FemboyFans.config.video_rescales.each_key do |k|
         %w[mp4 webm].each do |ext|
           delete(file_path(md5, ext, :scaled, protected: false, scale_factor: k.to_s))
           delete(file_path(md5, ext, :scaled, protected: true, scale_factor: k.to_s))
         end
       end
-      delete(file_path(md5, "mp4", :original, protected: false))
-      delete(file_path(md5, "mp4", :original, protected: true))
+
+      delete(file_path(md5, post.is_webm? ? "mp4" : "webm", :original, protected: false))
+      delete(file_path(md5, post.is_webm? ? "mp4" : "webm", :original, protected: true))
     end
 
     def delete_replacement(replacement)

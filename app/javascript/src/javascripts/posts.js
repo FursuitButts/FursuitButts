@@ -576,9 +576,12 @@ Post.resize_video = function (post, target_size) {
   let desired_classes = [];
 
   function original_sources () {
-    target_sources.push({type: "video/webm; codecs=\"vp9\"", url: post?.file?.url});
-    if (typeof post?.sample?.alternates?.original !== "undefined")
-      target_sources.push({type: "video/mp4", url: post?.sample?.alternates?.original?.urls[1]});
+    const webm = post.file.ext === "webm";
+    target_sources.push({ type: webm ? "video/webm; codecs=\"vp9\"" : "video/mp4", url: post?.file?.url });
+    const original = post.samples.find(s => s.type === "original" && s.ext === (webm ? "mp4" : "webm"));
+    if (typeof original !== "undefined") {
+      target_sources.push({ type: webm ? "video/mp4" : "video/webm; codecs=\"vp9\"", url: original.url });
+    }
   }
 
   switch (target_size) {
@@ -595,11 +598,13 @@ Post.resize_video = function (post, target_size) {
       break;
     default: {
       $notice.show();
-      const alternate = post?.sample?.alternates[target_size];
-      target_sources.push({type: "video/webm; codecs=\"vp9\"", url: alternate.urls[0]});
-      target_sources.push({type: "video/mp4", url: alternate.urls[1]});
+      const samples = post.samples.filter(s => s.type === target_size);
+      const webm = samples.find(s => s.ext === "webm");
+      const mp4 = samples.find(s => s.ext === "mp4");
+      target_sources.push({ type: "video/webm; codecs=\"vp9\"", url: webm.url });
+      target_sources.push({ type: "video/mp4", url: mp4.url });
       desired_classes.push("fit-window");
-      update_resize_percentage(post?.sample?.alternates[target_size]?.width, post?.file?.width);
+      update_resize_percentage(webm.width, post.file.width);
       break;
     }
   }
@@ -651,14 +656,16 @@ Post.resize_image = function (post, target_size) {
     case "large":
       $notice.show();
       desired_classes.push("fit-window");
-      desired_url = post?.sample?.url;
-      update_resize_percentage(post?.sample?.width, post?.file?.width);
+      const large = post?.samples?.find(s => s.type === "large")
+      desired_url = large?.url;
+      update_resize_percentage(large?.width, post?.file?.width);
       break;
     default:
       $notice.show();
       desired_classes.push("fit-window");
-      desired_url = post?.sample?.alternates[target_size]?.url;
-      update_resize_percentage(post?.sample?.alternates[target_size]?.width, post?.file?.width);
+      const sample = post?.samples?.find(s => s.type === target_size);
+      desired_url = sample?.url;
+      update_resize_percentage(sample?.width, post?.file?.width);
       break;
   }
   $image.removeClass();
@@ -714,16 +721,16 @@ function update_size_selector (choice) {
 }
 
 function most_relevant_sample_size (post) {
-  let samples = Object.entries(Post.currentPost().sample.alternates);
-  samples = samples.filter((x) => x[0] !== "original");
+  let samples = Post.currentPost().samples;
+  samples = samples.filter((x) => !["original", "preview", "large", "crop"].includes(x.type));
   if (samples.length === 0) {
     return "fit";
   }
   if (post?.file?.width <= 1280 && post?.file?.height <= 720) {
     return "fit"; // Don't force people onto 480p samples for <720 videos.
   }
-  const differences = samples.map((x) => [x[0], Math.abs(window.outerHeight - x[1].height) * Math.abs(window.outerWidth - x[1].width)]).sort((a, b) => (a[1] < b[1] ? -1 : 1));
-  return differences[0][0];
+  const differences = samples.map((x) => [x.type, Math.abs(window.outerHeight - x.height) * Math.abs(window.outerWidth - x.width)]).sort((a, b) => (a[1] < b[1] ? -1 : 1));
+  return differences[0].type;
 }
 
 Post.initialize_resize = function () {

@@ -114,35 +114,6 @@ class PostPresenter < Presenter
   end
 
   def self.post_attribute_attribute(post)
-    alternate_samples = {}
-    FemboyFans.config.video_rescales.each do |k, v|
-      next unless post.has_sample_size?(k)
-      dims = post.scaled_sample_dimensions(v)
-      alternate_samples[k] = {
-        type:   "video",
-        height: dims[1],
-        width:  dims[0],
-        urls:   post.visible? ? [post.scaled_url_ext(k, "webm"), post.scaled_url_ext(k, "mp4")] : [nil, nil],
-      }
-    end
-    if post.has_sample_size?("original")
-      alternate_samples["original"] = {
-        type:   "video",
-        height: post.image_height,
-        width:  post.image_width,
-        urls:   post.visible? ? [nil, post.file_url_ext("mp4")] : [nil, nil],
-      }
-    end
-    FemboyFans.config.image_rescales.each do |k, v|
-      next unless post.has_sample_size?(k)
-      dims = post.scaled_sample_dimensions(v)
-      alternate_samples[k] = {
-        type:   "image",
-        height: dims[1],
-        width:  dims[0],
-        url:    post.visible? ? post.scaled_url_ext(k, "webp") : nil,
-      }
-    end
     {
       id:            post.id,
       created_at:    post.created_at,
@@ -181,13 +152,7 @@ class PostPresenter < Presenter
         md5:    post.md5,
         url:    post.visible? ? post.file_url : nil,
       },
-      sample:        {
-        has:        post.has_large?,
-        height:     post.large_image_height,
-        width:      post.large_image_width,
-        url:        post.visible? ? post.large_file_url : nil,
-        alternates: alternate_samples,
-      },
+      samples:       post.samples,
       sources:       post.source&.split('\n'),
       tags:          post.tag_string.split,
       locked_tags:   post.locked_tags&.split || [],

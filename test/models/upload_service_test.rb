@@ -66,7 +66,7 @@ class UploadServiceTest < ActiveSupport::TestCase
         end
 
         should "return the dimensions" do
-          w, h = @upload.calculate_dimensions(@path)
+          w, h = UploadService::Utils.calculate_dimensions(@path)
           assert_operator(w, :==, 512)
           assert_operator(h, :==, 512)
         end
@@ -79,7 +79,7 @@ class UploadServiceTest < ActiveSupport::TestCase
         end
 
         should "return the dimensions" do
-          w, h = @upload.calculate_dimensions(@path)
+          w, h = UploadService::Utils.calculate_dimensions(@path)
           assert_operator(w, :==, 300)
           assert_operator(h, :==, 300)
         end
@@ -92,7 +92,7 @@ class UploadServiceTest < ActiveSupport::TestCase
         end
 
         should "find the dimensions" do
-          w, h = @upload.calculate_dimensions(@path)
+          w, h = UploadService::Utils.calculate_dimensions(@path)
           assert_operator(w, :>, 0)
           assert_operator(h, :>, 0)
         end
@@ -229,7 +229,7 @@ class UploadServiceTest < ActiveSupport::TestCase
         end
 
         should "generate a video" do
-          sample = PostThumbnailer.generate_video_preview_for(@path, 100)
+          sample = PostThumbnailer.generate_video_sample_for(@path, width: 100)
           assert_operator(File.size(sample.path), :>, 0)
           sample.close
           sample.unlink
@@ -242,7 +242,7 @@ class UploadServiceTest < ActiveSupport::TestCase
         end
 
         should "generate a video" do
-          sample = PostThumbnailer.generate_video_preview_for(@path, 100)
+          sample = PostThumbnailer.generate_video_sample_for(@path, width: 100)
           assert_operator(File.size(sample.path), :>, 0)
           sample.close
           sample.unlink

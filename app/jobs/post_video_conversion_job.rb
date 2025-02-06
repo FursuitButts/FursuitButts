@@ -15,13 +15,14 @@ class PostVideoConversionJob < ApplicationJob
         logger.info("Exiting as not a video")
         next
       end
-      samples = generate_video_samples(post)
+      samples, data = generate_video_samples(post)
       post.reload # Needed to prevent moving files into undeleted folder if the post is deleted while samples are being generated.
       move_videos(post, samples)
       post.reload
-      known_samples = post.generated_samples || []
+      known_samples = post.generated_samples
       known_samples += samples.keys.map(&:to_s)
       post.update_column(:generated_samples, known_samples.uniq)
+      post.update_samples_data(data)
     end
   end
 
@@ -43,13 +44,18 @@ class PostVideoConversionJob < ApplicationJob
 
   def generate_video_samples(post)
     outputs = {}
+    data = []
     FemboyFans.config.video_rescales.each do |size, dims|
       next if post.image_width <= dims[0] && post.image_height <= dims[1]
-      scaled_dims = post.scaled_sample_dimensions(dims)
-      outputs[size] = generate_scaled_video(post.file_path, scaled_dims)
+      width, height = scaled_dims = post.scaled_sample_dimensions(dims)
+      webm_file, mp4_file = outputs[size] = generate_scaled_video(post.file_path, scaled_dims)
+      data << { type: size, width: width, height: height, size: webm_file.size, md5: Digest::MD5.file(webm_file.path).hexdigest, ext: "webm", video: true } if webm_file.present?
+      data << { type: size, width: width, height: height, size: mp4_file.size, md5: Digest::MD5.file(mp4_file.path).hexdigest, ext: "mp4", video: true } if mp4_file.present?
     end
-    outputs[:original] = generate_scaled_video(post.file_path, post.scaled_sample_dimensions([post.image_width, post.image_height]), format: post.is_webm? ? :mp4 : :webm)
-    outputs
+    webm_file, mp4_file = outputs[:original] = generate_scaled_video(post.file_path, post.scaled_sample_dimensions([post.image_width, post.image_height]), format: post.is_webm? ? :mp4 : :webm)
+    file = post.is_webm? ? webm_file : mp4_file
+    data << { type: "original", width: post.image_width, height: post.image_height, size: file.size, md5: Digest::MD5.file(file.path).hexdigest, ext: post.is_webm? ? "mp4" : "webm", video: true }
+    [outputs, data]
   end
 
   def generate_scaled_video(infile, dimensions, format: :both)

@@ -38,8 +38,11 @@ module StatsUpdater
     stats[:webp_posts] = Post.tag_match("status:any type:webp").count_only
     stats[:webm_posts] = Post.tag_match("status:any type:webm").count_only
     stats[:mp4_posts] = Post.tag_match("status:any type:mp4").count_only
-    stats[:average_file_size] = Post.average("file_size")
-    stats[:total_file_size] = Post.sum("file_size")
+    sizes = Post.file_sizes
+    stats[:total_file_size] = sizes[:total]
+    stats[:posts_file_size] = sizes[:posts]
+    stats[:samples_file_size] = sizes[:samples]
+    stats[:average_file_size] = sizes[:average]
     stats[:average_posts_per_day] = daily_average.call(stats[:total_posts])
 
     ### Users ###

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_01_27_230137) do
+ActiveRecord::Schema[7.1].define(version: 2025_02_06_010144) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -730,7 +730,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_01_27_230137) do
     t.bigserial "change_seq", null: false
     t.integer "tag_count_lore", default: 0, null: false
     t.string "bg_color"
-    t.string "generated_samples", array: true
+    t.string "generated_samples", default: [], null: false, array: true
     t.decimal "duration"
     t.boolean "is_comment_disabled", default: false, null: false
     t.text "original_tag_string", default: "", null: false
@@ -742,6 +742,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_01_27_230137) do
     t.integer "framecount"
     t.integer "thumbnail_frame"
     t.integer "tag_count_contributor", default: 0, null: false
+    t.jsonb "samples_data", default: [], null: false
     t.index "string_to_array(tag_string, ' '::text)", name: "index_posts_on_string_to_array_tag_string", using: :gin
     t.index ["change_seq"], name: "index_posts_on_change_seq", unique: true
     t.index ["created_at"], name: "index_posts_on_created_at"
