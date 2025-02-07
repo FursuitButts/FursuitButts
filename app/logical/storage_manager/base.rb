@@ -76,8 +76,8 @@ module StorageManager
         end
       end
 
-      delete(file_path(md5, post.is_webm? ? "mp4" : "webm", :original, protected: false))
-      delete(file_path(md5, post.is_webm? ? "mp4" : "webm", :original, protected: true))
+      delete(file_path(md5, file_ext == "webm" ? "mp4" : "webm", :original, protected: false))
+      delete(file_path(md5, file_ext == "webm" ? "mp4" : "webm", :original, protected: true))
     end
 
     def delete_replacement(replacement)

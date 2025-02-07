@@ -1,10 +1,10 @@
-const { webpackConfig, merge } = require('@rails/webpacker')
-const babelConfig = require('@rails/webpacker/package/rules/babel')
-const vueConfig = require('./loaders/vue')
+const { webpackConfig, merge } = require("@rails/webpacker");
+const babelConfig = require("@rails/webpacker/package/rules/babel");
+const vueConfig = require("./loaders/vue");
 
 const customConfig = {
   resolve: {
-    extensions: ['.css'],
+    extensions: [".css"],
     alias: {
       "jquery": "jquery/src/jquery",
     },
@@ -13,21 +13,21 @@ const customConfig = {
     rules: [
       {
         test: /\.erb$/,
-        loader: 'rails-erb-loader'
-      }
-    ]
+        loader: "rails-erb-loader",
+      },
+    ],
   },
   output: {
-    library: ["Danbooru"]
+    library: ["Danbooru"],
   },
   optimization: {
-    runtimeChunk: false
+    runtimeChunk: false,
   },
-  target: ['web', 'es5']
-}
+  target: ["web", "es5"],
+};
 
 // Force babel-loader to transpile vue
 babelConfig.exclude = /node_modules\/(?!(@vue|vue-loader)\/).*/;
 babelConfig.include.push(/node_modules\/(@vue|vue-loader)\//);
 
-module.exports = merge(vueConfig, webpackConfig, customConfig)
+module.exports = merge(vueConfig, webpackConfig, customConfig);

@@ -1,7 +1,7 @@
 /* eslint no-console:0 */
 /* global require */
 
-function importAll(r) {
+function importAll (r) {
   r.keys().forEach(r);
 }
 
@@ -32,7 +32,7 @@ require("../src/styles/base.scss");
 
 importAll(require.context("../src/javascripts", true, /\.js(\.erb)?$/));
 
-require.context("../../../public/images", true)
+require.context("../../../public/images", true);
 
 export { default as Autocomplete } from "../src/javascripts/autocomplete.js.erb";
 export { default as Blacklist } from "../src/javascripts/blacklists.js";
@@ -66,11 +66,11 @@ export { default as Uploader } from "../src/javascripts/uploader.js";
 export { default as VoteManager } from "../src/javascripts/vote_manager.js";
 export { default as HoverZoom } from "../src/javascripts/hover_zoom.js";
 
-function inError(msg) {
+function inError (msg) {
   $(window).trigger("danbooru:error", msg);
 }
 
-function inNotice(msg) {
+function inNotice (msg) {
   $(window).trigger("danbooru:notice", msg);
 }
 

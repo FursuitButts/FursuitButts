@@ -656,7 +656,7 @@ Post.resize_image = function (post, target_size) {
     case "large":
       $notice.show();
       desired_classes.push("fit-window");
-      const large = post?.samples?.find(s => s.type === "large")
+      const large = post?.samples?.find(s => s.type === "large");
       desired_url = large?.url;
       update_resize_percentage(large?.width, post?.file?.width);
       break;
