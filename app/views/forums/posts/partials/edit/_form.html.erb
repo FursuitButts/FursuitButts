@@ -1,6 +1,6 @@
 <%= error_messages_for("forum_post") %>
 
-<%= custom_form_for(forum_post) do |f| %>
+<%= custom_form_for(forum_post, policy: policy(forum_post)) do |f| %>
   <%= f.input(:body, as: :dtext, limit: FemboyFans.config.forum_post_max_size) %>
   <%= f.input(:allow_voting, label: "Voting", hint: "Enables voting on the post. This should be used sparingly, and cannot be disabled once enabled.") %>
   <%= f.button(:submit, "Submit") %>
