@@ -17,7 +17,7 @@ module PostThumbnailer
         next if width <= w && height <= h
         swidth, sheight = UploadService::Utils.scaled_sample_dimensions([w, h], width, height)
         sfile = generate_video_sample_for(file.path, width: swidth, frame: frame)
-        next unless sfile.present?
+        next if sfile.blank?
         scaled[size] = sfile
         sample_data << { type: size, width: swidth, height: sheight, size: sfile.size, md5: Digest::MD5.file(sfile.path).hexdigest, ext: "webp", video: false }
       end
@@ -32,7 +32,7 @@ module PostThumbnailer
         next if width <= w && height <= h
         swidth, sheight = UploadService::Utils.scaled_sample_dimensions([w, h], width, height)
         sfile = FemboyFans::ImageResizer.resize(file, swidth, sheight, 87)
-        next unless sfile.present?
+        next if sfile.blank?
         scaled[size] = sfile
         sample_data << { type: size, width: swidth, height: sheight, size: sfile.size, md5: Digest::MD5.file(sfile.path).hexdigest, ext: "webp", video: false }
       end
@@ -79,7 +79,7 @@ module PostThumbnailer
   def generate_video_sample_for(video, width: nil, frame: nil)
     output_file = Tempfile.new(%w[video-preview .webp], binmode: true)
     if frame.blank? || frame == 0
-      opt = %W[-vf thumbnail]
+      opt = %w[-vf thumbnail]
     else
       opt = %W[-vf select=eq(n\\,#{frame - 1})]
     end
