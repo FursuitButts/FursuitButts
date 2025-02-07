@@ -641,6 +641,7 @@ Post.resize_image = function (post, target_size) {
   $notice.hide();
   let desired_url = "";
   let desired_classes = [];
+  let sample;
   switch (target_size) {
     case "original":
       desired_url = post?.file?.url;
@@ -656,14 +657,14 @@ Post.resize_image = function (post, target_size) {
     case "large":
       $notice.show();
       desired_classes.push("fit-window");
-      const large = post?.samples?.find(s => s.type === "large");
-      desired_url = large?.url;
-      update_resize_percentage(large?.width, post?.file?.width);
+      sample = post?.samples?.find(s => s.type === "large");
+      desired_url = sample?.url;
+      update_resize_percentage(sample?.width, post?.file?.width);
       break;
     default:
       $notice.show();
       desired_classes.push("fit-window");
-      const sample = post?.samples?.find(s => s.type === target_size);
+      sample = post?.samples?.find(s => s.type === target_size);
       desired_url = sample?.url;
       update_resize_percentage(sample?.width, post?.file?.width);
       break;
