@@ -5,6 +5,10 @@ class ForumPostPolicy < ApplicationPolicy
     min_level?
   end
 
+  def new?
+    min_level? && (!record.is_a?(ForumPost) || !record.topic.present? || record.topic.can_reply?(user))
+  end
+
   def create?
     min_level? && (!record.is_a?(ForumPost) || (record.topic.present? && record.topic.can_reply?(user)))
   end

@@ -5,9 +5,13 @@ class CustomFormBuilder < SimpleForm::FormBuilder
     @policy ||= @options[:policy]
   end
 
+  def policy_action
+    @policy_action ||= (@options[:policy_action] || lookup_action)
+  end
+
   def input(attribute_name, options = {}, &)
     ipolicy = options.delete(:policy)
-    if ipolicy != false && (ipolicy || policy).present? && !(ipolicy || policy).can_use_attribute?(attribute_name, lookup_action)
+    if ipolicy != false && (ipolicy || policy).present? && !(ipolicy || policy).can_use_attribute?(attribute_name, policy_action)
       return "".html_safe
     end
     options = insert_autocomplete(options)
