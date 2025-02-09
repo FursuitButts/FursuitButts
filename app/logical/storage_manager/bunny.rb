@@ -16,7 +16,7 @@ module StorageManager
       super(host, port, user, password, **options)
     end
 
-    def protected_params(url, _post, _secret:)
+    def protected_params(url, _post, _secret: nil)
       user_id = CurrentUser.id
       time = (Time.now + 15.minutes).to_i
       hash = Digest::SHA2.base64digest("#{secret_token}#{url}#{time}token_path=#{url}&user=#{user_id}")
