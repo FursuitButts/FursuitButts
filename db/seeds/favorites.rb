@@ -10,12 +10,16 @@ MAX_FAVORITES = Post.count
 users.each_with_index do |user, i|
   CurrentUser.scoped(user) do
     count = rand(MIN_FAVORITES..MAX_FAVORITES)
-    step = count > 5000 ? 500 : count > 1000 ? 250 : 100
+    step = if count > 5000
+             500
+           else
+             count > 1000 ? 250 : 100
+           end
     puts "Creating #{count} favorites for #{user.name} (#{i + 1}/#{users.count})"
     favorites = []
     votes = []
     Post.select(:id, :fav_string, :vote_string).limit(count).order("RANDOM()").find_each.with_index do |post, ii|
-      puts "  #{ii}/#{count}" if ii % step == 0
+      puts("  #{ii}/#{count}") if ii % step == 0
       fav = false
       vote = false
       unless post.is_favorited?(CurrentUser.user)
@@ -28,7 +32,7 @@ users.each_with_index do |user, i|
       # VoteManager::Posts.vote!(user: CurrentUser.user, post: post, score: rand(1..100) > 90 ? -1 : 1)
       unless post.is_voted?(CurrentUser.user)
         score = rand(1..100) > 90 ? -1 : 1
-        #PostVote.create(user: CurrentUser.user, score: score, post_id: post.id)
+        # PostVote.create(user: CurrentUser.user, score: score, post_id: post.id)
         votes << { user_id: CurrentUser.user.id, user_ip_addr: CurrentUser.ip_addr, score: score, post_id: post.id }
         post.append_user_to_vote_string(user.id, score == -1 ? "down" : "up")
         vote = true

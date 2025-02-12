@@ -6,7 +6,7 @@ class CustomFormBuilder < SimpleForm::FormBuilder
   end
 
   def policy_action
-    @policy_action ||= (@options[:policy_action] || lookup_action)
+    @policy_action ||= @options[:policy_action] || lookup_action
   end
 
   def input(attribute_name, options = {}, &)
