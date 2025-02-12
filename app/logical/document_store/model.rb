@@ -5,17 +5,19 @@ module DocumentStore
     def self.included(klass)
       klass.include(Proxy)
 
+      klass.attr_accessor(:skip_index_update)
+
       klass.document_store.index_name = "#{klass.model_name.plural}_#{Rails.env}"
 
-      klass.after_commit(on: [:create]) do
+      klass.after_commit(on: %i[create], unless: :skip_index_update) do
         document_store.update_index(refresh: Rails.env.test?.to_s)
       end
 
-      klass.after_commit(on: [:update]) do
+      klass.after_commit(on: %i[update], unless: :skip_index_update) do
         update_index
       end
 
-      klass.after_commit(on: [:destroy]) do
+      klass.after_commit(on: %i[destroy], unless: :skip_index_update) do
         document_store.delete_document(refresh: Rails.env.test?.to_s)
       end
     end

@@ -76,20 +76,22 @@ class User < ApplicationRecord
     mattr_accessor :settable, default: []
     mattr_accessor :private, default: []
     mattr_accessor :public, default: []
+    mattr_accessor :anonymous, default: []
 
-    def self.pref(value, settable: true, private: true, public: false)
+    def self.pref(value, settable: true, private: true, public: false, anonymous: settable)
       self.settable << value if settable
       self.private << value if private
       self.public << value if public
+      self.anonymous << value if anonymous
       value
     end
 
     DESCRIPTION_COLLAPSED_INITIALLY  = pref(1 << 0)
     HIDE_COMMENTS                    = pref(1 << 1)
     SHOW_HIDDEN_COMMENTS             = pref(1 << 2)
-    RECEIVE_EMAIL_NOTIFICATIONS      = pref(1 << 3)
+    RECEIVE_EMAIL_NOTIFICATIONS      = pref(1 << 3, anonymous: false)
     ENABLE_KEYBOARD_NAVIGATION       = pref(1 << 4)
-    ENABLE_PRIVACY_MODE              = pref(1 << 5)
+    ENABLE_PRIVACY_MODE              = pref(1 << 5, anonymous: false)
     STYLE_USERNAMES                  = pref(1 << 6)
     ENABLE_AUTOCOMPLETE              = pref(1 << 7)
     CAN_APPROVE_POSTS                = pref(1 << 8, settable: false, public: true)
@@ -98,8 +100,8 @@ class User < ApplicationRecord
     ENABLE_SAFE_MODE                 = pref(1 << 11)
     DISABLE_RESPONSIVE_MODE          = pref(1 << 12)
     NO_FLAGGING                      = pref(1 << 13, settable: false, private: false)
-    DISABLE_USER_DMAILS              = pref(1 << 14, public: true)
-    ENABLE_COMPACT_UPLOADER          = pref(1 << 15, settable: false)
+    DISABLE_USER_DMAILS              = pref(1 << 14, public: true, anonymous: false)
+    ENABLE_COMPACT_UPLOADER          = pref(1 << 15, settable: false, anonymous: false)
     NO_REPLACEMENTS                  = pref(1 << 16, settable: false, private: false)
     MOVE_RELATED_THUMBNAILS          = pref(1 << 17)
     ENABLE_HOVER_ZOOM                = pref(1 << 18)
@@ -135,6 +137,10 @@ class User < ApplicationRecord
 
     def self.public_list
       map.filter { |_name, value| public.include?(value) }.keys.map(&:to_sym)
+    end
+
+    def self.anonymous_list
+      map.filter { |_name, value| anonymous.include?(value) }.keys.map(&:to_sym)
     end
 
     def self.index(value)

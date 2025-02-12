@@ -3,19 +3,25 @@
 
 require File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "config", "environment"))
 
-users = User.left_joins(:followed_tags).where("tag_followers.user_id": nil).order("RANDOM()").limit(1000)
+users = User.left_joins(:followed_tags).where("tag_followers.user_id": nil, "level": User::Levels::MEMBER).limit(1000).order("users.id asc")
 
 total = users.count
+MIN_FOLLOWS = 15
+MAX_FOLLOWS = FemboyFans.config.followed_tag_limit(User.new(level: User::Levels::MEMBER))
 users.each_with_index do |user, i|
+  count = rand(MIN_FOLLOWS..MAX_FOLLOWS)
+  puts "Creating #{count} follows for #{user.name} (#{i + 1}/#{total})"
+  documents = []
   CurrentUser.scoped(user) do
-    count = rand(15..150)
-    puts "Creating #{count} follows for #{user.name} (#{i + 1}/#{total})"
     Tag.where("post_count > 0").order("RANDOM()").limit(count).each do |tag|
-      posts = Post.tag_match_system("#{tag.name} order:id_desc").limit(50).to_a
+      posts = Post.sql_raw_tag_match(tag.name).limit(50).pluck(:id)
       next if posts.empty?
       offset = rand(0..posts.length - 1)
-      user.followed_tags.create!(tag: tag, last_post_id: posts[offset].id)
+      # user.followed_tags.create!(tag: tag, last_post_id: posts[offset].id)
+      documents << { tag_id: tag.id, last_post_id: posts[offset], user_id: user.id }
     end
+    TagFollower.insert_all(documents)
+    CurrentUser.user.update_columns(followed_tag_count: TagFollower.for_user(CurrentUser.user.id).count)
   end
-  TagFollower.recount_all!
 end
+TagFollower.recount_all!

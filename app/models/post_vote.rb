@@ -2,6 +2,7 @@
 
 class PostVote < LockableUserVote
   validate :validate_user_can_vote
+  validates :post_id, uniqueness: { scope: :user_id }
 
   def self.model_creator_column
     :uploader

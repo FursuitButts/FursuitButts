@@ -5,6 +5,7 @@ class Favorite < ApplicationRecord
 
   belongs_to :post
   belongs_to :user, counter_cache: "favorite_count"
+  validates :post_id, uniqueness: { scope: :user_id }
   scope :for_user, ->(user_id) { where(user_id: user_id.to_i) }
   scope :for_posts, ->(post_ids) { where(post_id: post_ids) }
 
