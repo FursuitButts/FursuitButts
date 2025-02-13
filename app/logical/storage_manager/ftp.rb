@@ -5,12 +5,12 @@ require "net/ftp"
 module StorageManager
   class Ftp < StorageManager::Base
     TEMP_DIR = "/tmp"
-    attr_reader :host, :port, :user, :password
+    attr_reader :host, :port, :username, :password
 
-    def initialize(host, port, user, password, **options)
+    def initialize(host:, port:, username:, password:, **options)
       @host = host
       @port = port
-      @user = user
+      @username = username
       @password = password
       super(**options)
     end
@@ -18,7 +18,7 @@ module StorageManager
     def open_ftp
       ftp = Net::FTP.open(host, {
         port:     port,
-        username: user,
+        username: username,
         password: password,
       })
       if block_given?
