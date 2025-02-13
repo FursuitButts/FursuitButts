@@ -45,17 +45,20 @@ class PostVideoConversionJob < ApplicationJob
   def generate_video_samples(post)
     outputs = {}
     data = []
+    file = post.file
     FemboyFans.config.video_rescales.each do |size, dims|
       next if post.image_width <= dims[0] && post.image_height <= dims[1]
       width, height = scaled_dims = post.scaled_sample_dimensions(dims)
-      webm_file, mp4_file = outputs[size] = generate_scaled_video(post.file_path, scaled_dims)
+      webm_file, mp4_file = outputs[size] = generate_scaled_video(file.path, scaled_dims)
       data << { type: size, width: width, height: height, size: webm_file.size, md5: Digest::MD5.file(webm_file.path).hexdigest, ext: "webm", video: true } if webm_file.present?
       data << { type: size, width: width, height: height, size: mp4_file.size, md5: Digest::MD5.file(mp4_file.path).hexdigest, ext: "mp4", video: true } if mp4_file.present?
     end
-    webm_file, mp4_file = outputs[:original] = generate_scaled_video(post.file_path, post.scaled_sample_dimensions([post.image_width, post.image_height]), format: post.is_webm? ? :mp4 : :webm)
+    webm_file, mp4_file = outputs[:original] = generate_scaled_video(file.path, post.scaled_sample_dimensions([post.image_width, post.image_height]), format: post.is_webm? ? :mp4 : :webm)
     file = post.is_webm? ? webm_file : mp4_file
     data << { type: "original", width: post.image_width, height: post.image_height, size: file.size, md5: Digest::MD5.file(file.path).hexdigest, ext: post.is_webm? ? "mp4" : "webm", video: true }
     [outputs, data]
+  ensure
+    file.close
   end
 
   def generate_scaled_video(infile, dimensions, format: :both)

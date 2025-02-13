@@ -144,8 +144,8 @@ class Post < ApplicationRecord
       FemboyFans.config.storage_manager
     end
 
-    def file(type = :original)
-      storage_manager.open_file(self, type)
+    def file(type = :original, scale_factor: nil)
+      storage_manager.open_file(self, type, protected: is_deleted?, scale_factor: scale_factor)
     end
 
     def file_url(type = :original)

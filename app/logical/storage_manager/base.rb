@@ -85,8 +85,8 @@ module StorageManager
       delete(replacement_path(replacement.storage_id, replacement.file_ext, :preview))
     end
 
-    def open_file(post, type)
-      open(file_path(post.md5, post.file_ext, type)) # rubocop:disable Security/Open
+    def open_file(post, type, protected: false, scale_factor: nil)
+      open(file_path(post.md5, post.file_ext, type, protected: protected, scale_factor: scale_factor)) # rubocop:disable Security/Open
     end
 
     def move_file_delete(post)
