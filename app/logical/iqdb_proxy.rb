@@ -25,7 +25,10 @@ module IqdbProxy
   def update_post(post)
     return unless post.has_preview?
 
-    thumb = generate_thumbnail(post.preview_file_path)
+    thumb = nil
+    post.preview_file do |file|
+      thumb = generate_thumbnail(file.path)
+    end
     raise(Error, "failed to generate thumb for #{post.id}") unless thumb
 
     response = make_request("/images/#{post.id}", :post, get_channels_data(thumb))

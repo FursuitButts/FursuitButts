@@ -45,10 +45,6 @@ class UploadService
 
       upload.validate!(:file)
       upload.tag_string = "#{upload.tag_string} #{Utils.automatic_tags(upload, file)}"
-
-      # in case this upload never finishes processing, we need to delete the
-      # distributed files in the future
-      UploadDeleteFilesJob.set(wait: 24.hours).perform_later(upload.md5, upload.file_ext, upload.id)
     end
 
     def generate_samples(upload, file, deleted: false)

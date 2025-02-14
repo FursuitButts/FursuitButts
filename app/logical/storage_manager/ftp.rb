@@ -56,12 +56,20 @@ module StorageManager
       end
     end
 
-    def open(path)
+    def open(path, &)
       file = Tempfile.new(binmode: true)
       open_ftp do |ftp|
         ftp.getbinaryfile(path, file)
       end
-      file
+      if block_given?
+        begin
+          yield(file)
+        ensure
+          file.close
+        end
+      else
+        file
+      end
     end
 
     def move_file_delete(post)
@@ -79,7 +87,7 @@ module StorageManager
 
       return unless post.is_video?
       FemboyFans.config.video_rescales.each do |k|
-        %w[mp4 webm].each do |ext|
+        Post::VIDEO_EXTENSIONS.each do |ext|
           path = file_path(post, ext, :scaled, scale_factor: k.to_s, protected: false)
           new_path = file_path(post, ext, :scaled, protected: true, scale_factor: k.to_s)
           move_file(path, new_path)
@@ -105,7 +113,7 @@ module StorageManager
 
       return unless post.is_video?
       FemboyFans.config.video_rescales.each do |k|
-        %w[mp4 webm].each do |ext|
+        Post::VIDEO_EXTENSIONS.each do |ext|
           path = file_path(post, ext, :scaled, protected: true, scale_factor: k.to_s)
           new_path = file_path(post, ext, :scaled, protected: false, scale_factor: k.to_s)
           move_file(path, new_path)

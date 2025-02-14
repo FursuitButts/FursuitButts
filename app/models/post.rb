@@ -8,6 +8,9 @@ class Post < ApplicationRecord
   # Tags to copy when copying notes.
   NOTE_COPY_TAGS = %w[translated partially_translated translation_check translation_request].freeze
   ASPECT_RATIO_REGEX = /^\d+:\d+$/
+  VIDEO_EXTENSIONS = %w[webm mp4].freeze
+  IMAGE_EXTENSIONS = %w[png jpg gif webp].freeze
+  EXTENSIONS = (IMAGE_EXTENSIONS + VIDEO_EXTENSIONS).freeze
 
   module Flags
     HAS_CROPPED              = 1 << 0
@@ -144,12 +147,24 @@ class Post < ApplicationRecord
       FemboyFans.config.storage_manager
     end
 
-    def file(type = :original, scale_factor: nil)
-      storage_manager.open_file(self, type, protected: is_deleted?, scale_factor: scale_factor)
+    def file(type = :original, scale_factor: nil, &)
+      storage_manager.open_file(self, type, protected: is_deleted?, scale_factor: scale_factor, &)
     end
 
-    def file_url(type = :original)
-      storage_manager.file_url(self, type)
+    def preview_file(&)
+      file(:preview, &)
+    end
+
+    def crop_file(&)
+      file(:crop, &)
+    end
+
+    def large_file(&)
+      file(:large, &)
+    end
+
+    def file_url(type = :original, scale_factor: nil)
+      storage_manager.file_url(self, type, scale_factor: scale_factor)
     end
 
     def file_url_ext(ext)
@@ -157,7 +172,7 @@ class Post < ApplicationRecord
     end
 
     def scaled_url_ext(scale, ext)
-      storage_manager.file_url_ext(self, :scaled, ext, scale: scale)
+      storage_manager.file_url_ext(self, :scaled, ext, scale_factor: scale)
     end
 
     def large_file_url
@@ -238,7 +253,7 @@ class Post < ApplicationRecord
     end
 
     def has_preview?
-      is_image? || is_video?
+      has_sample_size?("preview")
     end
 
     def has_dimensions?
@@ -274,8 +289,7 @@ class Post < ApplicationRecord
     end
 
     def regenerate_video_samples!
-      # force code to assume no samples exist
-      update_columns(generated_samples: [], samples_data: [])
+      clear_video_samples!
       generate_video_samples(later: true)
     end
 
@@ -288,6 +302,7 @@ class Post < ApplicationRecord
     end
 
     def regenerate_image_samples!
+      clear_image_samples!
       file = self.file
       preview_file, crop_file, sample_file, scaled, data = ::PostThumbnailer.generate_resizes(file, image_height, image_width, is_video? ? :video : :image, frame: thumbnail_frame)
       storage_manager.store_file(sample_file, self, :large) if sample_file.present?
@@ -302,8 +317,25 @@ class Post < ApplicationRecord
       file.close
     end
 
+    def clear_image_samples!
+      data = samples_data.reject { |s| s["image"] }
+      samples = data.pluck("type").uniq
+      update_columns(generated_samples: samples, samples_data: data)
+    end
+
+    def clear_video_samples!
+      data = samples_data.reject { |s| s["video"] }
+      samples = data.pluck("type").uniq
+      update_columns(generated_samples: samples, samples_data: data)
+    end
+
+    def clear_samples!
+      update_columns(generated_samples: [], samples_data: [])
+    end
+
     def update_samples_data(data)
-      update_column(:samples_data, (data + samples_data).map { |s| s.transform_keys(&:to_s) }.uniq { |s| [s["type"], s["ext"]] })
+      samples = (data + samples_data).map { |s| s.transform_keys(&:to_s) }.uniq { |s| [s["type"], s["ext"]] }
+      update_columns(generated_samples: samples.pluck("type").uniq, samples_data: samples)
     end
   end
 
@@ -313,10 +345,11 @@ class Post < ApplicationRecord
     end
 
     def has_large?
-      return true if is_video?
-      return false if is_gif?
-      return false if has_tag?("animated_gif", "animated_png")
-      is_image? && image_width.present? && image_width > FemboyFans.config.large_image_width
+      # return true if is_video?
+      # return false if is_gif?
+      # return false if has_tag?("animated_gif", "animated_png")
+      # is_image? && image_width.present? && image_width > FemboyFans.config.large_image_width
+      has_sample_size?("large")
     end
 
     def has_large

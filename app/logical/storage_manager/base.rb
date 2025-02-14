@@ -40,7 +40,7 @@ module StorageManager
     end
 
     # Return a readonly copy of the file located at the given path.
-    def open(path)
+    def open(path, &)
       raise(NotImplementedError, "open not implemented")
     end
 
@@ -70,7 +70,7 @@ module StorageManager
       end
 
       FemboyFans.config.video_rescales.each_key do |k|
-        %w[mp4 webm].each do |ext|
+        Post::VIDEO_EXTENSIONS.each do |ext|
           delete(file_path(md5, ext, :scaled, protected: false, scale_factor: k.to_s))
           delete(file_path(md5, ext, :scaled, protected: true, scale_factor: k.to_s))
         end
@@ -85,8 +85,8 @@ module StorageManager
       delete(replacement_path(replacement.storage_id, replacement.file_ext, :preview))
     end
 
-    def open_file(post, type, protected: false, scale_factor: nil)
-      open(file_path(post.md5, post.file_ext, type, protected: protected, scale_factor: scale_factor)) # rubocop:disable Security/Open
+    def open_file(post, type, protected: false, scale_factor: nil, &)
+      open(file_path(post.md5, post.file_ext, type, protected: protected, scale_factor: scale_factor), &) # rubocop:disable Security/Open
     end
 
     def move_file_delete(post)
@@ -104,9 +104,9 @@ module StorageManager
       "?auth=#{hmac}&expires=#{time}&uid=#{user_id}"
     end
 
-    def file_url_ext(post, type, ext, scale: nil)
+    def file_url_ext(post, type, ext, scale_factor: nil)
       subdir = subdir_for(post.md5)
-      file = file_name(post.md5, ext, type, scale_factor: scale)
+      file = file_name(post.md5, ext, type, scale_factor: scale_factor)
       base = post.protect_file? ? "#{base_path}/#{protected_prefix}" : base_path
 
       return "#{root_url}/images/download-preview.png" if type == :preview && !post.has_preview?
@@ -126,8 +126,8 @@ module StorageManager
       end
     end
 
-    def file_url(post, type)
-      file_url_ext(post, type, post.file_ext)
+    def file_url(post, type, scale_factor: nil)
+      file_url_ext(post, type, post.file_ext, scale_factor: scale_factor)
     end
 
     def replacement_url(replacement, image_size = :original)

@@ -25,8 +25,17 @@ module StorageManager
       FileUtils.rm_f(path)
     end
 
-    def open(path)
-      File.open(path, "r", binmode: true)
+    def open(path, &)
+      file = File.open(path, "r", binmode: true)
+      if block_given?
+        begin
+          yield(file)
+        ensure
+          file.close
+        end
+      else
+        file
+      end
     end
 
     def move_file_delete(post)
@@ -44,7 +53,7 @@ module StorageManager
 
       return unless post.is_video?
       FemboyFans.config.video_rescales.each_key do |k|
-        %w[mp4 webm].each do |ext|
+        Post::VIDEO_EXTENSIONS.each do |ext|
           path = file_path(post, ext, :scaled, protected: false, scale_factor: k.to_s)
           new_path = file_path(post, ext, :scaled, protected: true, scale_factor: k.to_s)
           move_file(path, new_path)
@@ -70,7 +79,7 @@ module StorageManager
 
       return unless post.is_video?
       FemboyFans.config.video_rescales.each_key do |k|
-        %w[mp4 webm].each do |ext|
+        Post::VIDEO_EXTENSIONS.each do |ext|
           path = file_path(post, ext, :scaled, protected: true, scale_factor: k.to_s)
           new_path = file_path(post, ext, :scaled, protected: false, scale_factor: k.to_s)
           move_file(path, new_path)

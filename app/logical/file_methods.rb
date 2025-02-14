@@ -2,7 +2,7 @@
 
 module FileMethods
   def is_image?
-    is_png? || is_jpg? || is_gif? || is_webp?
+    Post::IMAGE_EXTENSIONS.include?(file_ext)
   end
 
   def is_png?
@@ -30,7 +30,7 @@ module FileMethods
   end
 
   def is_video?
-    is_webm? || is_mp4?
+    Post::VIDEO_EXTENSIONS.include?(file_ext)
   end
 
   def is_animated_png?(file_path)

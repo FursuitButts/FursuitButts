@@ -15,22 +15,22 @@ class PostVideoConversionJob < ApplicationJob
         logger.info("Exiting as not a video")
         next
       end
-      samples, data = generate_video_samples(post)
+      file = post.file
+      samples, data = generate_video_samples(post, file)
       post.reload # Needed to prevent moving files into undeleted folder if the post is deleted while samples are being generated.
       move_videos(post, samples)
       post.reload
-      known_samples = post.generated_samples
-      known_samples += samples.keys.map(&:to_s)
-      post.update_column(:generated_samples, known_samples.uniq)
       post.update_samples_data(data)
     end
+  ensure
+    file.close!
   end
 
   def move_videos(post, samples)
     md5 = post.md5
     sm = FemboyFans.config.storage_manager
     samples.each do |name, named_samples|
-      next if name == :original
+      next if name.to_s == "original"
       webm_path = sm.file_path(md5, "webm", :scaled, protected: post.is_deleted?, scale_factor: name.to_s)
       sm.store(named_samples[0], webm_path)
       named_samples[0].close!
@@ -42,10 +42,9 @@ class PostVideoConversionJob < ApplicationJob
     samples[:original].each(&:close!)
   end
 
-  def generate_video_samples(post)
+  def generate_video_samples(post, file)
     outputs = {}
     data = []
-    file = post.file
     FemboyFans.config.video_rescales.each do |size, dims|
       next if post.image_width <= dims[0] && post.image_height <= dims[1]
       width, height = scaled_dims = post.scaled_sample_dimensions(dims)
@@ -57,8 +56,6 @@ class PostVideoConversionJob < ApplicationJob
     file = post.is_webm? ? webm_file : mp4_file
     data << { type: "original", width: post.image_width, height: post.image_height, size: file.size, md5: Digest::MD5.file(file.path).hexdigest, ext: post.is_webm? ? "mp4" : "webm", video: true }
     [outputs, data]
-  ensure
-    file.close
   end
 
   def generate_scaled_video(infile, dimensions, format: :both)
