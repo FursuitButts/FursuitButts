@@ -21,9 +21,9 @@ class PostVideoConversionJob < ApplicationJob
       move_videos(post, samples)
       post.reload
       post.update_samples_data(data)
+    ensure
+      file.close!
     end
-  ensure
-    file.close!
   end
 
   def move_videos(post, samples)
