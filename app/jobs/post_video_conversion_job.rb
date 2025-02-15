@@ -38,7 +38,8 @@ class PostVideoConversionJob < ApplicationJob
       sm.store(named_samples[1], mp4_path)
       named_samples[1].close!
     end
-    sm.store(samples[:original][1], sm.file_path(md5, post.is_webm? ? "mp4" : "webm", :original, protected: post.is_deleted?))
+    file = post.is_webm? ? samples[:original][1] : samples[:original][0]
+    sm.store(file, sm.file_path(md5, post.is_webm? ? "mp4" : "webm", :original, protected: post.is_deleted?))
     samples[:original].each(&:close!)
   end
 
@@ -53,7 +54,7 @@ class PostVideoConversionJob < ApplicationJob
       data << { type: size, width: width, height: height, size: mp4_file.size, md5: Digest::MD5.file(mp4_file.path).hexdigest, ext: "mp4", video: true } if mp4_file.present?
     end
     webm_file, mp4_file = outputs[:original] = generate_scaled_video(file.path, post.scaled_sample_dimensions([post.image_width, post.image_height]), format: post.is_webm? ? :mp4 : :webm)
-    file = post.is_webm? ? webm_file : mp4_file
+    file = post.is_webm? ? mp4_file : webm_file
     data << { type: "original", width: post.image_width, height: post.image_height, size: file.size, md5: Digest::MD5.file(file.path).hexdigest, ext: post.is_webm? ? "mp4" : "webm", video: true }
     [outputs, data]
   end
