@@ -356,6 +356,13 @@ class Post < ApplicationRecord
       !!has_large?
     end
 
+    def supports_large?
+      return true if is_video?
+      return false if is_gif?
+      return false if has_tag?("animated_gif", "animated_png")
+      is_image? && image_width.present? && image_width > FemboyFans.config.large_image_width
+    end
+
     def large_image_width
       if has_large?
         [FemboyFans.config.large_image_width, image_width].min
