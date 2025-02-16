@@ -97,7 +97,7 @@ module StorageManager
       raise(NotImplementedError, "move_file_undelete not implemented")
     end
 
-    def protected_params(url, _post, secret: FemboyFans.config.protected_file_secret)
+    def protected_params(url, secret: FemboyFans.config.protected_file_secret)
       user_id = CurrentUser.id
       time = (Time.now + 15.minutes).to_i
       hmac = Digest::MD5.base64digest("#{time} #{url} #{user_id} #{secret}").tr("+/", "-_").gsub("==", "")
@@ -120,7 +120,7 @@ module StorageManager
                "#{base}/#{subdir}#{file}"
              end
       if post.protect_file?
-        "#{base_url}#{path}#{protected_params(path, post)}"
+        "#{base_url}#{path}#{protected_params(path, secret: FemboyFans.config.protected_file_secret)}"
       else
         "#{base_url}#{path}"
       end
@@ -135,7 +135,7 @@ module StorageManager
       file = "#{replacement.storage_id}#{'_thumb' if image_size == :preview}.#{replacement.file_ext}"
       base = "#{base_path}/#{replacement_prefix}"
       path = "#{base}/#{subdir}#{file}"
-      "#{base_url}#{path}#{protected_params(path, nil, secret: FemboyFans.config.replacement_file_secret)}"
+      "#{base_url}#{path}#{protected_params(path, secret: FemboyFans.config.replacement_file_secret)}"
     end
 
     def root_url

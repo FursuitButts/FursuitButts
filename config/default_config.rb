@@ -817,9 +817,6 @@ module FemboyFans
     def ftp_password
     end
 
-    def bunny_secret_token
-    end
-
     def ticket_quick_response_buttons
       [
         { name: "Handled", text: "Handled, thank you." },
