@@ -16,6 +16,7 @@ class UserEvent < ApplicationRecord
     password_reset:                          400,
     password_change:                         500,
     email_change:                            600,
+    email_verify:                            650,
     mfa_enable:                              700,
     mfa_update:                              710,
     mfa_disable:                             720,
