@@ -11,7 +11,7 @@
   <%= f.input(:profile_about, as: :dtext, label: "About", limit: FemboyFans.config.user_about_max_size, allow_color: true) %>
   <%= f.input(:profile_artinfo, as: :dtext, label: "Commission Info", limit: FemboyFans.config.user_about_max_size, allow_color: true) %>
   <%= f.input(:base_upload_limit) %>
-  <%= f.input(:level, collection: user_levels_for_select(@user.level)) %>
+  <%= f.input(:level, collection: user_levels_for_select(current: @user.level)) %>
   <%= f.input(:unrestricted_uploads, collection: [%w[Yes true], %w[No false]], label: "Unrestricted Uploads") %>
   <%= f.input(:can_approve_posts, collection: [%w[Yes true], %w[No false]], label: "Approve Posts") %>
   <%= f.input(:no_flagging, collection: [%w[Yes true], %w[No false]], label: "Banned From Flagging") %>
