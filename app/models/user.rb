@@ -116,8 +116,8 @@ class User < ApplicationRecord
     NO_AIBUR_VOTING                  = pref(1 << 27, settable: false, private: false)
     EMAIL_VERIFIED                   = pref(1 << 28, settable: false, public: true)
     UNIQUE_VIEWS                     = pref(1 << 29)
-    FORUM_UNREAD_BUBBLE              = pref(1 << 30)
-    FORUM_UNREAD_ITALIC              = pref(1 << 31)
+    FORUM_UNREAD_BUBBLE              = pref(1 << 30, private: false)
+    FORUM_UNREAD_ITALIC              = pref(1 << 31, private: false)
 
     def self.map
       constants.to_h { |name| [name.to_s.downcase, const_get(name)] }

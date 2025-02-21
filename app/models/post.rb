@@ -1800,6 +1800,7 @@ class Post < ApplicationRecord
         thumbnail_frame: thumbnail_frame,
         qtags:           qtags,
         upload_url:      upload_url,
+        min_edit_level:  min_edit_level,
       }
     end
   end

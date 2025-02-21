@@ -635,9 +635,11 @@ components:
             - hover_zoom_sticky_shift
             - hover_zoom_play_audio
             - show_post_uploader
-            - unique_views
             - go_to_recent_forum_post
             - disable_colors
+            - unique_views
+            - forum_unread_bubble
+            - forum_unread_italic
             - upload_notifications
           properties:
             recent_tags:
@@ -711,11 +713,15 @@ components:
               type: boolean
             show_post_uploader:
               type: boolean
-            unique_views:
-              type: boolean
             go_to_recent_forum_post:
               type: boolean
             disable_colors:
+              type: boolean
+            unique_views:
+              type: boolean
+            forum_unread_bubble:
+              type: boolean
+            forum_unread_italic:
               type: boolean
             upload_notifications:
               type: array
@@ -1849,6 +1855,7 @@ components:
         - framecount
         - thumbnail_frame
         - upload_url
+        - min_edit_level
       properties:
         id:
           type: number
@@ -2047,6 +2054,8 @@ components:
           type: ["number", "null"]
         upload_url:
           type: string
+        min_edit_level:
+          type: number
     PostAppeal:
       type: object
       required:
@@ -2217,6 +2226,30 @@ components:
           type: number
           description: |
             Valid for: `set_min_edit_level`
+        post_flag_id:
+          type: number
+          description: |
+            Valid for: `flag_created`, `flag_removed`
+        post_appeal_id:
+          type: number
+          description: |
+            Valid for: `appeal_created`, `appeal_accepted`, `appeal_rejected`
+        post_replacement_id:
+          type: number
+          description: |
+            Valid for: `replacement_accepted`, `replacement_rejected`, `replacement_promoted`, `replacement_deleted`
+        old_md5:
+          type: number
+          description: |
+            Valid for: `replacement_accepted`
+        md5:
+          type: number
+          description: |
+            Valid for: `replacement_accepted`, `replacement_deleted`
+        storage_id:
+          type: string
+          description: |
+            Valid for: `replacement_deleted`
     PostFlag:
       type: object
       required:
@@ -12583,11 +12616,15 @@ paths:
                   type: boolean
                 show_post_uploader:
                   type: boolean
-                unique_views:
-                  type: boolean
                 go_to_recent_forum_post:
                   type: boolean
                 disable_colors:
+                  type: boolean
+                unique_views:
+                  type: boolean
+                forum_unread_bubble:
+                  type: boolean
+                forum_unread_italic:
                   type: boolean
             upload_notifications:
               type: array
