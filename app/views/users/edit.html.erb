@@ -176,7 +176,7 @@
       $("#edit-options a:not(#delete-account)").on("click", function(e) {
         var $target = $(e.target);
         $("h2 a").removeClass("active");
-        $("#basic-settings-section,#advanced-settings-section,#enhancement-settings-section,#security-section").hide();
+        $("#basic-settings-section,#advanced-settings-section,#enhancement-settings-section,#security-settingssection").hide();
         $target.addClass("active");
         $($target.attr("href") + "-section").show();
         e.preventDefault();
