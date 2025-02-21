@@ -19,6 +19,7 @@ class Pool < ApplicationRecord
   validate :user_not_posts_limited, on: :update, if: :post_ids_changed?
   validate :validate_name, if: :name_changed?
   validate :updater_can_remove_posts
+  validate :post_not_edit_restricted
   validate :validate_number_of_posts
   before_validation :normalize_post_ids
   before_validation :normalize_name
@@ -197,6 +198,7 @@ class Pool < ApplicationRecord
     return if post.nil?
     return if post.id.nil?
     return if contains?(post.id)
+    return unless post.can_edit?(CurrentUser.user)
 
     with_lock do
       reload
@@ -220,6 +222,7 @@ class Pool < ApplicationRecord
   def remove!(post)
     return unless contains?(post.id)
     return unless CurrentUser.user.can_remove_from_pools?
+    return unless post.can_edit?(CurrentUser.user)
 
     with_lock do
       reload
@@ -346,6 +349,17 @@ class Pool < ApplicationRecord
     removed = post_ids_was - post_ids
     if removed.any? && !CurrentUser.user.can_remove_from_pools?
       errors.add(:base, "You cannot removes posts from pools within the first week of sign up")
+    end
+  end
+
+  def post_not_edit_restricted
+    removed = post_ids_was - post_ids
+    added = post_ids - post_ids_was
+    posts = Post.select(:id, :min_edit_level).where(id: removed + added)
+    posts.each do |post|
+      unless post.can_edit?(CurrentUser.user)
+        errors.add(:base, "post ##{post.id} is edit restricted")
+      end
     end
   end
 

@@ -71,6 +71,22 @@ class PoolsControllerTest < ActionDispatch::IntegrationTest
         end
       end
 
+      context "min_edit_level" do
+        setup do
+          as(@user) { @post2 = create(:post, min_edit_level: User::Levels::TRUSTED) }
+        end
+
+        should "prevent adding posts when the editors level is lower" do
+          post_auth pools_path, @user, params: { pool: { name: "xxx", description: "abc", post_ids: [@post.id, @post2.id] }, format: :json }
+          assert_response :unprocessable_entity
+        end
+
+        should "allow adding posts when the editors level is higher" do
+          post_auth pools_path, @mod, params: { pool: { name: "xxx", description: "abc", post_ids: [@post.id, @post2.id] }, format: :json }
+          assert_response :success
+        end
+      end
+
       should "restrict access" do
         assert_access(User::Levels::MEMBER, success_response: :redirect) { |user| post_auth pools_path, user, params: { pool: { name: SecureRandom.hex(6) } } }
       end
@@ -97,6 +113,37 @@ class PoolsControllerTest < ActionDispatch::IntegrationTest
       should "not allow updating unpermitted attributes" do
         put_auth pool_path(@pool), @user, params: { pool: { post_count: -42 } }
         assert_equal(0, @pool.post_count)
+      end
+
+      context "min_edit_level" do
+        setup do
+          as(@user) do
+            @post2 = create(:post, min_edit_level: User::Levels::TRUSTED)
+            @post3 = create(:post)
+            @pool.add!(@post3)
+            @post3.update_column(:min_edit_level, User::Levels::TRUSTED)
+          end
+        end
+
+        should "prevent adding posts when the editors level is lower" do
+          put_auth pool_path(@pool), @user, params: { pool: { name: "xyz", post_ids: [@post2.id] }, format: :json }
+          assert_response :unprocessable_entity
+        end
+
+        should "allow adding posts when the editors level is higher" do
+          put_auth pool_path(@pool), @mod, params: { pool: { name: "xyz", post_ids: [@post2.id] }, format: :json }
+          assert_response :success
+        end
+
+        should "prevent removing posts when the editors level is lower" do
+          put_auth pool_path(@pool), @user, params: { pool: { name: "xyz", post_ids: [@post.id] }, format: :json }
+          assert_response :unprocessable_entity
+        end
+
+        should "allow removing posts when the editors level is higher" do
+          put_auth pool_path(@pool), @mod, params: { pool: { name: "xyz", post_ids: [@post.id] }, format: :json }
+          assert_response :success
+        end
       end
 
       should "restrict access" do

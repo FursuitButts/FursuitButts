@@ -29,6 +29,8 @@ class PostEventDecorator < ApplicationDecorator
       "\"appeal ##{vals['post_appeal_id']}\":/posts/appeals?search[id]=#{vals['post_appeal_id']}"
     when "replacement_accepted", "replacement_rejected"
       "\"replacement ##{vals['post_replacement_id']}\":/posts/replacements?search[id]=#{vals['post_replacement_id']}"
+    when "set_min_edit_level"
+      "To: [b]#{User::Levels.id_to_name(vals['min_edit_level'])}[/b]"
     end
   end
 end

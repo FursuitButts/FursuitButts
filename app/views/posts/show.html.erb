@@ -112,11 +112,11 @@
       <div id="image-add-buttons">
         <%# TODO: find some way to remove the whitespace that's being inserted here, then return the margin to 0.5 %>
         <%= link_to_if(policy(PostSet).add_posts?, "+ Set", "#", id: "set", class: "button btn-neutral") { "" } %>
-        <%= link_to_if(policy(Pool).update?, "+ Pool", "#", id: "pool", class: "button btn-neutral") { "" } %>
+        <%= link_to_if(policy(@post).add_to_pool?, "+ Pool", "#", id: "pool", class: "button btn-neutral") { "" } %>
       </div>
       <div id="image-note-buttons">
         <%= link_to("Notes: ON", "#", id: "toggle-notes-button", class: "button btn-neutral") %>
-        <% if policy(Note).create? %>
+        <% if policy(Note.new(post: @post)).create? %>
           <% if @post.is_note_locked? %>
             <%= link_to("Notes Locked", "#", class: "button btn-neutral") %>
           <% else %>
@@ -197,6 +197,10 @@
   <%= render "posts/partials/common/inline_blacklist" %>
 
   <menu id="post-sections">
+    <% if @post.is_edit_protected? %>
+      <% name = User::Levels.id_to_name(@post.min_edit_level) %>
+      <div class="post-protection">Edits are restricted to <%= link_to(name, help_page_path(id: "accounts", anchor: name.downcase), class: "#{User::Levels.level_class(name)} with-style") %> users and above.</div>
+    <% end %>
     <% unless CurrentUser.hide_comments? %>
       <li class="active"><a href="#comments">Comments</a></li>
     <% end %>

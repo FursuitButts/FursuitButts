@@ -4,6 +4,7 @@ class Post < ApplicationRecord
   class RevertError < StandardError; end
   class DeletionError < StandardError; end
   class TimeoutError < StandardError; end
+  class EditRestrictedError < StandardError; end
 
   # Tags to copy when copying notes.
   NOTE_COPY_TAGS = %w[translated partially_translated translation_check translation_request].freeze
@@ -1932,6 +1933,9 @@ class Post < ApplicationRecord
       if saved_change_to_thumbnail_frame?
         PostEvent.add!(id, CurrentUser.user, :changed_thumbnail_frame, old_thumbnail_frame: thumbnail_frame_before_last_save, new_thumbnail_frame: thumbnail_frame)
       end
+      if saved_change_to_min_edit_level?
+        PostEvent.add!(id, CurrentUser.user, :set_min_edit_level, min_edit_level: min_edit_level)
+      end
     end
   end
 
@@ -2189,6 +2193,15 @@ class Post < ApplicationRecord
 
   def flaggable_for_guidelines?(_user)
     true
+  end
+
+  def is_edit_protected?
+    min_edit_level != User::Levels::MEMBER
+  end
+
+  def can_edit?(user)
+    return true if user == User.system
+    user.level >= min_edit_level
   end
 
   def visible_comment_count(user)

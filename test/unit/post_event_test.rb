@@ -112,6 +112,10 @@ class PostEventTest < ActiveSupport::TestCase
         @post.copy_notes_to(@post2)
       end
 
+      assert_post_events_created(@admin, :set_min_edit_level) do
+        @post.update(min_edit_level: User::Levels::TRUSTED)
+      end
+
       assert_post_events_created(@admin, :expunged) do
         @post.expunge!
       end

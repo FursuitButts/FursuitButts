@@ -190,6 +190,7 @@ x-constants:
     - appeal_accepted
     - appeal_rejected
     - copied_notes
+    - set_min_edit_level
   - &ratings
     - s
     - q
@@ -2212,6 +2213,10 @@ components:
           type: number
           description: |
             Valid for: `copied_notes`
+        min_edit_level:
+          type: number
+          description: |
+            Valid for: `set_min_edit_level`
     PostFlag:
       type: object
       required:

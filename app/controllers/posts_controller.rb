@@ -80,6 +80,7 @@ class PostsController < ApplicationController
     @post = authorize(Post.find(params[:id]))
     ensure_can_edit(@post)
     @other_post = Post.find(params[:other_post_id].to_i)
+    raise(User::PrivilegeError, "post ##{@other_post.id} is edit restricted") unless policy(@other_post).min_level?
     @post.copy_notes_to(@other_post)
 
     if @post.errors.any?
@@ -103,7 +104,7 @@ class PostsController < ApplicationController
   def mark_as_translated
     @post = authorize(Post.find(params[:id]))
     ensure_can_edit(@post)
-    @post.mark_as_translated(mark_as_translated_params)
+    @post.mark_as_translated(permitted_attributes(@post))
     respond_with_post_after_update(@post)
   end
 
@@ -318,9 +319,5 @@ class PostsController < ApplicationController
     recent_pool_ids << pool.id.to_s
     recent_pool_ids = recent_pool_ids.slice(1, 5) if recent_pool_ids.size > 5
     session[:recent_pool_ids] = recent_pool_ids.uniq.join(",")
-  end
-
-  def mark_as_translated_params
-    (params.extract!(:translation_check, :translation_check).presence || params.require(:post)).permit(:translation_check, :translation_check)
   end
 end

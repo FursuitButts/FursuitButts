@@ -258,6 +258,11 @@ div#c-posts {
     max-width: none;
   }
 
+  .post-protection {
+    color: var(--color-text-muted);
+    margin-bottom: 0.25em;
+    font-size: 85%;
+  }
 
   .fav-buttons {
     font-size: 14pt;

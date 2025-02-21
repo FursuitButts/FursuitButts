@@ -33,6 +33,7 @@ class PostEvent < ApplicationRecord
     appeal_accepted:         26,
     appeal_rejected:         27,
     copied_notes:            28,
+    set_min_edit_level:      29,
   }
 
   MOD_ONLY_SEARCH_ACTIONS = [
@@ -95,7 +96,7 @@ class PostEvent < ApplicationRecord
   module ApiMethods
     # whitelisted data attributes
     def allowed_data
-      %w[reason parent_id child_id bg_color post_replacement_id old_md5 new_md5 source_post_id md5 note_count post_appeal_id post_flag_id]
+      %w[reason parent_id child_id bg_color post_replacement_id old_md5 new_md5 source_post_id md5 note_count post_appeal_id post_flag_id min_edit_level]
     end
 
     def serializable_hash(*)

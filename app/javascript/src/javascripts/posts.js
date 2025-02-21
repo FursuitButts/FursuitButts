@@ -481,7 +481,7 @@ Post.initialize_links = function () {
     var other_post_id = parseInt(prompt("Enter the ID of the post to copy all notes to:"), 10);
 
     if (other_post_id !== null) {
-      $.ajax("/posts/" + current_post_id + "/copy_notes", {
+      $.ajax(`/posts/${current_post_id}/copy_notes.json`, {
         type: "PUT",
         data: {
           other_post_id: other_post_id,

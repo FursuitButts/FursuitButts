@@ -8,7 +8,7 @@ class NotesControllerTest < ActionDispatch::IntegrationTest
       @user = create(:user)
       as(@user) do
         @post = create(:post)
-        @note = create(:note, body: "000")
+        @note = create(:note, body: "000", post: @post)
       end
     end
 
@@ -58,6 +58,23 @@ class NotesControllerTest < ActionDispatch::IntegrationTest
         end
       end
 
+      context "min_edit_level" do
+        setup do
+          @post.update_columns(min_edit_level: User::Levels::TRUSTED)
+          @admin = create(:admin_user)
+        end
+
+        should "prevent edits when the editors level is lower" do
+          post_auth notes_path, @user, params: { note: { x: 0, y: 0, width: 10, height: 10, body: "abc", post_id: @post.id }, format: :json }
+          assert_response :forbidden
+        end
+
+        should "allow edits when the editors level is higher" do
+          post_auth notes_path, @admin, params: { note: { x: 0, y: 0, width: 10, height: 10, body: "abc", post_id: @post.id }, format: :json }
+          assert_response :success
+        end
+      end
+
       should "restrict access" do
         assert_access(User::Levels::MEMBER, success_response: :redirect) { |user| post_auth notes_path, user, params: { note: { x: 0, y: 0, width: 10, height: 10, body: "abc", post_id: @post.id } } }
       end
@@ -77,6 +94,23 @@ class NotesControllerTest < ActionDispatch::IntegrationTest
         assert_not_equal(@other.id, @note.reload.post_id)
       end
 
+      context "min_edit_level" do
+        setup do
+          @post.update_columns(min_edit_level: User::Levels::TRUSTED)
+          @admin = create(:admin_user)
+        end
+
+        should "prevent edits when the editors level is lower" do
+          put_auth note_path(@note), @user, params: { note: { body: "xyz" }, format: :json }
+          assert_response :forbidden
+        end
+
+        should "allow edits when the editors level is higher" do
+          put_auth note_path(@note), @admin, params: { note: { body: "xyz" }, format: :json }
+          assert_response :success
+        end
+      end
+
       should "restrict access" do
         assert_access(User::Levels::MEMBER, success_response: :redirect) { |user| put_auth note_path(@note), user, params: { note: { body: "xyz" } } }
       end
@@ -86,6 +120,23 @@ class NotesControllerTest < ActionDispatch::IntegrationTest
       should "destroy a note" do
         delete_auth note_path(@note), @user
         assert_equal(false, @note.reload.is_active?)
+      end
+
+      context "min_edit_level" do
+        setup do
+          @post.update_columns(min_edit_level: User::Levels::TRUSTED)
+          @admin = create(:admin_user)
+        end
+
+        should "prevent edits when the editors level is lower" do
+          delete_auth note_path(@note), @user, params: { format: :json }
+          assert_response :forbidden
+        end
+
+        should "allow edits when the editors level is higher" do
+          delete_auth note_path(@note), @admin, params: { format: :json }
+          assert_response :success
+        end
       end
 
       should "restrict access" do
@@ -117,6 +168,23 @@ class NotesControllerTest < ActionDispatch::IntegrationTest
         put_auth revert_note_path(@note), @user, params: { version_id: @note2.versions.first.id }
         assert_not_equal(@note.reload.body, @note2.body)
         assert_response :missing
+      end
+
+      context "min_edit_level" do
+        setup do
+          @post.update_columns(min_edit_level: User::Levels::TRUSTED)
+          @admin = create(:admin_user)
+        end
+
+        should "prevent edits when the editors level is lower" do
+          put_auth revert_note_path(@note), @user, params: { version_id: @note.versions.first.id, format: :json }
+          assert_response :forbidden
+        end
+
+        should "allow edits when the editors level is higher" do
+          put_auth revert_note_path(@note), @admin, params: { version_id: @note.versions.first.id, format: :json }
+          assert_response :success
+        end
       end
 
       should "restrict access" do

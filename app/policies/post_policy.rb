@@ -9,6 +9,10 @@ class PostPolicy < ApplicationPolicy
     show?
   end
 
+  def update?
+    member? && min_level?
+  end
+
   def update_iqdb?
     user.is_admin?
   end
@@ -18,7 +22,7 @@ class PostPolicy < ApplicationPolicy
   end
 
   def revert?
-    member?
+    member? && min_level?
   end
 
   def copy_notes?
@@ -26,7 +30,7 @@ class PostPolicy < ApplicationPolicy
   end
 
   def mark_as_translated?
-    member?
+    member? && min_level?
   end
 
   def regenerate_thumbnails?
@@ -62,11 +66,11 @@ class PostPolicy < ApplicationPolicy
   end
 
   def add_to_pool?
-    member?
+    member? && min_level?
   end
 
   def remove_from_pool?
-    member?
+    member? && min_level?
   end
 
   def favorites?
@@ -79,6 +83,10 @@ class PostPolicy < ApplicationPolicy
 
   def change_locked_tags?
     user.is_admin?
+  end
+
+  def min_level?
+    !record.is_a?(Post) || record.can_edit?(user)
   end
 
   def permitted_attributes_for_update
@@ -94,7 +102,7 @@ class PostPolicy < ApplicationPolicy
     attr += %i[is_rating_locked thumbnail_frame] if user.is_trusted?
     attr += %i[is_note_locked bg_color] if user.is_janitor?
     attr += %i[is_comment_locked] if user.is_moderator?
-    attr += %i[is_status_locked is_comment_disabled locked_tags hide_from_anonymous hide_from_search_engines] if user.is_admin?
+    attr += %i[is_status_locked is_comment_disabled locked_tags hide_from_anonymous hide_from_search_engines min_edit_level] if user.is_admin?
     attr
   end
 
@@ -104,7 +112,7 @@ class PostPolicy < ApplicationPolicy
   end
 
   def permitted_attributes_for_mark_as_translated
-    %i[]
+    %i[translation_check partially_translated]
   end
 
   def permitted_search_params_for_uploaders

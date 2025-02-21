@@ -128,6 +128,22 @@ class PostsControllerTest < ActionDispatch::IntegrationTest
         assert_same_elements(["Thumbnail frame must be between 1 and 150", "Thumbnail frame must be in first 10% of video"], @response.parsed_body[:message]&.split("; "))
       end
 
+      context "min_edit_level" do
+        setup do
+          @post.update_column(:min_edit_level, User::Levels::TRUSTED)
+        end
+
+        should "prevent edits when the editors level is lower" do
+          put_auth post_path(@post), @user, params: { post: { tag_string: "test" }, format: :json }
+          assert_response :forbidden
+        end
+
+        should "allow edits when the editors level is higher" do
+          put_auth post_path(@post), @admin, params: { post: { tag_string: "test" }, format: :json }
+          assert_response :success
+        end
+      end
+
       should "restrict access" do
         assert_access(User::Levels::MEMBER, success_response: :redirect) { |user| put_auth post_path(@post), user, params: { post: { tag_string: "bbb" } } }
       end
@@ -158,6 +174,22 @@ class PostsControllerTest < ActionDispatch::IntegrationTest
         @post.reload
         assert_not_equal(@post.tag_string, @post2.tag_string)
         assert_response :missing
+      end
+
+      context "min_edit_level" do
+        setup do
+          @post.update_column(:min_edit_level, User::Levels::TRUSTED)
+        end
+
+        should "prevent edits when the editors level is lower" do
+          put_auth revert_post_path(@post), @user, params: { version_id: @post.versions.first.id, format: :json }
+          assert_response :forbidden
+        end
+
+        should "allow edits when the editors level is higher" do
+          put_auth revert_post_path(@post), @admin, params: { version_id: @post.versions.first.id, format: :json }
+          assert_response :success
+        end
       end
 
       should "restrict access" do
@@ -265,6 +297,22 @@ class PostsControllerTest < ActionDispatch::IntegrationTest
         assert_same_elements(%w[foo], @pool.reload.artist_names)
       end
 
+      context "min_edit_level" do
+        setup do
+          @post.update_columns(min_edit_level: User::Levels::TRUSTED)
+        end
+
+        should "prevent edits when the editors level is lower" do
+          post_auth add_to_pool_post_path(@post), @user, params: { pool_id: @pool.id, format: :json }
+          assert_response :forbidden
+        end
+
+        should "allow edits when the editors level is higher" do
+          post_auth add_to_pool_post_path(@post), @admin, params: { pool_id: @pool.id, format: :json }
+          assert_response :success
+        end
+      end
+
       should "restrict access" do
         assert_access(User::Levels::MEMBER, success_response: :redirect) { |user| post_auth add_to_pool_post_path(@post), user, params: { pool_id: @pool.id } }
       end
@@ -301,6 +349,22 @@ class PostsControllerTest < ActionDispatch::IntegrationTest
         post_auth remove_from_pool_post_path(@post), @user, params: { pool_id: @pool.id, format: :json }
         perform_enqueued_jobs(only: UpdatePoolArtistsJob)
         assert_equal([], @pool.reload.artist_names)
+      end
+
+      context "min_edit_level" do
+        setup do
+          @post.update_columns(min_edit_level: User::Levels::TRUSTED)
+        end
+
+        should "prevent edits when the editors level is lower" do
+          post_auth remove_from_pool_post_path(@post), @user, params: { pool_id: @pool.id, format: :json }
+          assert_response :forbidden
+        end
+
+        should "allow edits when the editors level is higher" do
+          post_auth remove_from_pool_post_path(@post), @admin, params: { pool_id: @pool.id, format: :json }
+          assert_response :success
+        end
       end
 
       should "restrict access" do

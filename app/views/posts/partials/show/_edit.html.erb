@@ -39,6 +39,9 @@
 
 
   <%= f.input(:parent_id, as: :string, label: "Parent", input_html: { size: 5 }) %>
+  <% if can_use_attribute?(post, :min_edit_level) %>
+    <%= f.input(:min_edit_level, as: :select, collection: user_levels_for_select, label: "Minimum Editor Level", include_blank: false, hint: "Users must be at this level or higher to edit the post.") %>
+  <% end %>
   <%= f.input(:source, as: :text, label: "Sources", input_html: { size: "60x5", spellcheck: false }) %>
 
   <div class="input">

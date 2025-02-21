@@ -743,6 +743,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_02_06_010144) do
     t.integer "thumbnail_frame"
     t.integer "tag_count_contributor", default: 0, null: false
     t.jsonb "samples_data", default: [], null: false
+    t.integer "min_edit_level", default: 10, null: false
     t.index "string_to_array(tag_string, ' '::text)", name: "index_posts_on_string_to_array_tag_string", using: :gin
     t.index ["change_seq"], name: "index_posts_on_change_seq", unique: true
     t.index ["created_at"], name: "index_posts_on_created_at"
