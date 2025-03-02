@@ -649,6 +649,14 @@ module FemboyFans
       "internal:ban_notice"
     end
 
+    def user_approved_wiki_page
+      "internal:user_approved"
+    end
+
+    def user_rejected_wiki_page
+      "internal:user_rejected"
+    end
+
     # The number of posts displayed per page.
     def records_per_page
       100

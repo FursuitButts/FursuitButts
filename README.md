@@ -96,6 +96,8 @@ These wik/help pages are expected to exist, as they are linked to or used in var
 * internal:ban_notice (sub: %BAN_REASON%, %BAN_USER%)
 * internal:restricted_notice
 * internal:rejected_notice
+* internal:user_approved (sub: %USER_ID%, %USER_NAME%)
+* internal:user_rejected (sub: %USER_ID%, %USER_NAME%)
 * howto:sites_and_sources
 * howto:tag_genders
 

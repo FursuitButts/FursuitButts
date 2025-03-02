@@ -24,6 +24,6 @@ module WikiPagesHelper
   end
 
   def safe_wiki(title)
-    WikiPage.titled(title) || WikiPage.new(body: "The wiki page \"#{title}\" was not found.")
+    WikiPage.safe_wiki(title)
   end
 end

@@ -335,6 +335,10 @@ class WikiPage < ApplicationRecord
     persisted? && (protection_level.blank? || user.level >= protection_level)
   end
 
+  def self.safe_wiki(title)
+    titled(title) || new(body: "The wiki page \"#{title}\" was not found.")
+  end
+
   def self.available_includes
     %i[artist dtext_links help_page tag]
   end
