@@ -39,7 +39,7 @@ class UserApproval < ApplicationRecord
 
       update(status: "approved")
       user.update(level: User::Levels::MEMBER)
-      text = WikiPage.safe_wiki(FemboyFans.config.user_approved_wiki_page).gsub("%USER_NAME%", CurrentUser.name).gsub("%USER_ID%", CurrentUser.id)
+      text = WikiPage.safe_wiki(FemboyFans.config.user_approved_wiki_page).body.gsub("%USER_NAME%", CurrentUser.name).gsub("%USER_ID%", CurrentUser.id.to_s)
       Dmail.create_automated(to: user, title: "Your account has been approved", body: text)
       ModAction.log!(:user_approve, self, user_id: user.id)
     end
@@ -50,7 +50,7 @@ class UserApproval < ApplicationRecord
 
       update(status: "rejected")
       user.update(level: User::Levels::REJECTED)
-      text = WikiPage.safe_wiki(FemboyFans.config.user_rejected_wiki_page).gsub("%USER_NAME%", CurrentUser.name).gsub("%USER_ID%", CurrentUser.id)
+      text = WikiPage.safe_wiki(FemboyFans.config.user_rejected_wiki_page).body.gsub("%USER_NAME%", CurrentUser.name).gsub("%USER_ID%", CurrentUser.id.to_s)
       Dmail.create_automated(to: user, title: "Your account has been rejected", body: text)
       ModAction.log!(:user_reject, self, user_id: user.id)
     end
