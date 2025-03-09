@@ -251,13 +251,13 @@ module PostIndex
         views = Reports.get_views_for_posts(post_ids)
         batch.map! do |p|
           {
-            index: {
-              _id:  p.id,
-              data: {
-                views: views[p.id] || 0,
-              },
-            },
-          }
+             update: {
+               _id: p.id,
+               data: {
+                 doc: { views: views[p.id] || 0 },
+               }
+             },
+           }
         end
 
         client.bulk({
