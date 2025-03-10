@@ -1,4 +1,9 @@
 <%= table_for(bulk_update_requests) do |t| %>
+  <% t.column("Votes") do |request| %>
+    <% if request.forum_post_id.present? %>
+      <%= render(partial: "forums/posts/votes/overview", locals: { votes: request.forum_post.votes, forum_post: request.forum_post }) %>
+    <% end %>
+  <% end %>
   <% t.column("Creator") do |request| %>
     <%= link_to_user(request.creator) %>
     <% if policy(request).can_see_ip_addr? %>

@@ -7,9 +7,15 @@ class ForumPostVote < UserVote
   validate :validate_user_is_not_limited, on: :create
   scope :by, ->(user_id) { where(user_id: user_id) }
   scope :excluding_user, ->(user_id) { where.not(user_id: user_id) }
+  scope :for_forum_post, ->(forum_post_id) { where(forum_post_id: forum_post_id) }
+  after_commit :update_forum_post_scores
+
+  def update_forum_post_scores
+    ForumPost.update_scores(id: forum_post_id)
+  end
 
   def self.vote_types
-    [%w[Downvote -1 redtext], %w[Meh 0 yellowtext], %w[Upvote 1 greentext]]
+    [%w[Downvote -1 text-red], %w[Meh 0 text-yellow], %w[Upvote 1 text-green]]
   end
 
   def self.model_creator_column
@@ -31,7 +37,7 @@ class ForumPostVote < UserVote
 
   def vote_type
     if score == 0
-      "locked"
+      "meh"
     else
       super
     end

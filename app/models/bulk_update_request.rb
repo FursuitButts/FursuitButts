@@ -52,12 +52,19 @@ class BulkUpdateRequest < ApplicationRecord
       q = q.attribute_matches(:title, params[:title_matches])
       q = q.attribute_matches(:script, params[:script_matches])
 
-      params[:order] ||= "status_desc"
       case params[:order]
       when "updated_at_desc"
         q = q.order(updated_at: :desc)
       when "updated_at_asc"
         q = q.order(updated_at: :asc)
+      when "rating_desc"
+        q = q.left_joins(:forum_post).order("forum_posts.percentage_score DESC, bulk_update_requests.id DESC")
+      when "rating_asc"
+        q = q.left_joins(:forum_post).order("forum_posts.percentage_score ASC, bulk_update_requests.id DESC")
+      when "score_desc"
+        q = q.left_joins(:forum_post).order("forum_posts.total_score DESC, bulk_update_requests.id DESC")
+      when "score_asc"
+        q = q.left_joins(:forum_post).order("forum_posts.total_score ASC, bulk_update_requests.id DESC")
       else
         q = q.apply_basic_order(params)
       end

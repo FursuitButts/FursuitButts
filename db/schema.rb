@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_02_06_010144) do
+ActiveRecord::Schema[7.1].define(version: 2025_03_10_001915) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -324,6 +324,12 @@ ActiveRecord::Schema[7.1].define(version: 2025_02_06_010144) do
     t.bigint "original_topic_id"
     t.datetime "merged_at"
     t.boolean "allow_voting", default: false, null: false
+    t.integer "total_score", default: 0, null: false
+    t.decimal "percentage_score", default: "0.0", null: false
+    t.integer "total_votes", default: 0, null: false
+    t.integer "up_votes", default: 0, null: false
+    t.integer "down_votes", default: 0, null: false
+    t.integer "meh_votes", default: 0, null: false
     t.index "lower(body) gin_trgm_ops", name: "index_forum_posts_on_lower_body_trgm", using: :gin
     t.index "to_tsvector('english'::regconfig, body)", name: "index_forum_posts_on_to_tsvector_english_body", using: :gin
     t.index ["creator_id"], name: "index_forum_posts_on_creator_id"

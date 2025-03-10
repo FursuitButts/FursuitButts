@@ -169,6 +169,14 @@ class TagRelationship < ApplicationRecord
         q = q.order("antecedent_name asc, consequent_name asc")
       when "tag_count"
         q = q.join_consequent.order("consequent_tag.post_count desc, antecedent_name asc, consequent_name asc")
+      when "rating_desc"
+        q = q.left_joins(:forum_post).order("forum_posts.percentage_score DESC, #{table_name}.id DESC")
+      when "rating_asc"
+        q = q.left_joins(:forum_post).order("forum_posts.percentage_score ASC, #{table_name}.id DESC")
+      when "score_desc"
+        q = q.left_joins(:forum_post).order("forum_posts.total_score DESC, #{table_name}.id DESC")
+      when "score_asc"
+        q = q.left_joins(:forum_post).order("forum_posts.total_score ASC, #{table_name}.id DESC")
       else
         q = q.apply_basic_order(params)
       end

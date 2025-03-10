@@ -997,7 +997,14 @@ components:
         - is_spam
         - mentions
         - creator_name
-        - creator_id
+        - updater_name
+        - allow_voting
+        - total_score
+        - percentage_score
+        - total_votes
+        - up_votes
+        - down_votes
+        - meh_votes
       properties:
         id:
           type: number
@@ -1051,6 +1058,20 @@ components:
           type: string
         updater_name:
           type: string
+        allow_voting:
+          type: boolean
+        total_score:
+          type: number
+        percentage_score:
+          type: string
+        total_votes:
+          type: number
+        up_votes:
+          type: number
+        down_votes:
+          type: number
+        meh_votes:
+          type: number
     ForumPostVote:
       allOf:
         - $ref: "#/components/schemas/UserVote"
@@ -4634,6 +4655,10 @@ paths:
               - id_desc
               - status_desc
               - updated_at_asc
+              - rating_desc
+              - rating_asc
+              - score_desc
+              - score_asc
         - name: search[creator_id]
           in: query
           schema:
@@ -6014,6 +6039,12 @@ paths:
             enum:
               - id_asc
               - id_desc
+              - updated_at_desc
+              - updated_at_asc
+              - rating_desc
+              - rating_asc
+              - score_desc
+              - score_asc
         - in: query
           name: search[creator_id]
           schema:
@@ -6070,6 +6101,8 @@ paths:
                   type: string
                 topic_id:
                   type: number
+                allow_voting:
+                  type: boolean
       responses:
         201:
           description: Success
@@ -6129,6 +6162,8 @@ paths:
               properties:
                 body:
                   type: string
+                allow_voting:
+                  type: boolean
       responses:
         204:
           description: Success
@@ -11298,6 +11333,10 @@ paths:
               - updated_at
               - name
               - tag_count
+              - rating_desc
+              - rating_asc
+              - score_desc
+              - score_asc
         - in: query
           name: search[name_matches]
           schema:
@@ -11501,6 +11540,10 @@ paths:
               - updated_at
               - name
               - tag_count
+              - rating_desc
+              - rating_asc
+              - score_desc
+              - score_asc
         - in: query
           name: search[name_matches]
           schema:

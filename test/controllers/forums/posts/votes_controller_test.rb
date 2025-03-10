@@ -92,6 +92,24 @@ module Forums
             assert_nil(@forum_post2.votes.find_by(user: @user2))
           end
 
+          should "update the forum post's scores" do
+            pct = ->(val) { ActiveSupport::NumberHelper.number_to_percentage(val, precision: 2, strip_insignificant_zeros: true) }
+            assert_equal(0, @forum_post.total_score)
+            assert_equal("0%", pct.call(@forum_post.percentage_score))
+            as(create(:user)) { create(:forum_post_vote, forum_post: @forum_post, score: 1) }
+            as(create(:user)) { create(:forum_post_vote, forum_post: @forum_post, score: 1) }
+
+            @forum_post.reload
+            assert_equal(2, @forum_post.total_score)
+            assert_equal("100%", pct.call(@forum_post.percentage_score))
+            post_auth forum_post_votes_path(@forum_post), @user2, params: { score: -1, format: :json }
+            assert_response :success
+
+            @forum_post.reload
+            assert_equal(1, @forum_post.total_score)
+            assert_equal("66.67%", pct.call(@forum_post.percentage_score))
+          end
+
           should "restrict access" do
             assert_access(User::Levels::MEMBER, anonymous_response: :forbidden) { |user| post_auth forum_post_votes_path(@forum_post), user, params: { score: 1, format: :json } }
           end

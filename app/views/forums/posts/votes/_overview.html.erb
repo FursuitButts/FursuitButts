@@ -1,0 +1,15 @@
+<%# locals: (votes:, forum_post:) -%>
+
+<% vote_counts = votes.group_by(&:score).transform_values(&:count).values_at(1, 0, -1).map(&:to_i) %>
+
+<ul class="forum-post-votes-overview forum-post-votes" id="forum-post-vote-overview-for-<%= forum_post.id %>">
+  <% if votes.count > 0 %>
+    <% { "fa-thumbs-up vote-score-up" => vote_counts[0], "fa-face-meh vote-score-meh" => vote_counts[1], "fa-thumbs-down vote-score-down" => vote_counts[2] }.each do |icon, count| %>
+      <%= count %>
+      <%= tag.i(class: "fa-regular #{icon}") %>
+    <% end %>
+    <span class="forum-post-vote-rating">
+    (<span class="<%= forum_post.percentage_score >= 50 ? "text-green" : "text-red" %>" title="Total: <%= votes.count %>, Sum: <%= format("%+d", forum_post.total_score) %>"><%= number_to_percentage(forum_post.percentage_score, precision: 2, strip_insignificant_zeros: true) %></span>)
+  </span>
+  <% end %>
+</ul>

@@ -1,3 +1,25 @@
+.forum-post-votes {
+  .vote-score-up {
+    color: palette("text-green");
+  }
+
+  .vote-score-meh {
+    color: palette("text-yellow");
+  }
+
+  .vote-score-down {
+    color: palette("text-red");
+  }
+
+  .forum-post-vote-rating {
+    margin-left: 0.5rem;
+  }
+
+  &.forum-post-votes-overview {
+    margin-top: 0.3rem;
+  }
+}
+
 div.list-of-forum-posts {
   article {
     margin: 1em 0em;
@@ -16,18 +38,6 @@ div.list-of-forum-posts {
 
     &[data-is-hidden="true"] {
       background-color: $background-article-hidden;
-    }
-
-    .vote-score-up {
-      color: palette("text-green");
-    }
-
-    .vote-score-meh {
-      color: palette("text-yellow");
-    }
-
-    .vote-score-down {
-      color: palette("text-red");
     }
 
     div.content-menu {
@@ -52,8 +62,9 @@ div.list-of-forum-posts {
       }
 
       .forum-post-votes-list {
-        margin-top: 0.5em;
+        margin-top: 0.3em;
         margin-left: 0.2em;
+        margin-bottom: 0.2rem;
       }
     }
   }

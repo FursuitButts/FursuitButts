@@ -98,7 +98,24 @@ class ForumPost < ApplicationRecord
 
       q = q.attribute_matches(:is_hidden, params[:is_hidden])
 
-      q.apply_basic_order(params)
+      case params[:order]
+        when "updated_at_desc"
+          q = q.order(updated_at: :desc)
+        when "updated_at_asc"
+          q = q.order(updated_at: :asc)
+        when "rating_desc"
+          q = q.order(percentage_score: :desc, id: :desc)
+        when "rating_asc"
+          q = q.order(percentage_score: :asc, id: :desc)
+        when "score_desc"
+          q = q.order(total_score: :desc, id: :desc)
+        when "score_asc"
+          q = q.order(total_score: :asc, id: :desc)
+        else
+          q.apply_basic_order(params)
+      end
+
+      q
     end
   end
 
@@ -328,5 +345,39 @@ class ForumPost < ApplicationRecord
 
   def is_merged?
     merged_at.present?
+  end
+
+  def self.update_scores(id: nil)
+    if id.present? && ForumPostVote.for_forum_post(id).count == 0
+      ForumPost.where(id: id).update_all("total_score = 0, percentage_score = 0, total_votes = 0, up_votes = 0, down_votes = 0, meh_votes = 0")
+      return
+    end
+    # yes, I spent far too long on this
+    query = <<~SQL.squish.strip
+      UPDATE forum_posts
+      SET total_score = votes.total_score,
+          percentage_score = CASE
+              WHEN votes.total_count > 0
+              THEN (votes.up_count * 100.0) / votes.total_count
+              ELSE 0
+          END,
+          total_votes = votes.total_count,
+          up_votes = votes.up_count,
+          down_votes = votes.down_count,
+          meh_votes = votes.meh_count
+      FROM (
+          SELECT forum_post_id,
+                 SUM(score) AS total_score,
+                 COUNT(*) AS total_count,
+                 COUNT(*) FILTER (WHERE score = 1) AS up_count,
+                 COUNT(*) FILTER (WHERE score = -1) AS down_count,
+                 COUNT(*) FILTER (WHERE score = 0) AS meh_count
+          FROM forum_post_votes
+          #{id ? "WHERE forum_post_id = #{id}" : ''}
+          GROUP BY forum_post_id
+      ) AS votes
+      WHERE forum_posts.id = votes.forum_post_id;
+    SQL
+    ForumPost.connection.execute(query)
   end
 end
