@@ -16,14 +16,14 @@ module VoteManager
         CommentVote.transaction(**ISOLATION) do
           CommentVote.uncached do
             score_modifier = score
-            @vote = CommentVote.where(user_id: user.id, comment_id: comment.id).first
+            @vote = comment.votes.where(user: user).first
             if @vote
               raise(UserVote::Error, "Vote is locked") if @vote.is_locked?
               raise(VoteManager::NeedUnvoteError) if @vote.score == score
               score_modifier *= 2
               @vote.destroy
             end
-            @vote = CommentVote.create!(user_id: user.id, score: score, comment_id: comment.id)
+            @vote = comment.votes.create!(user: user, score: score)
             Comment.where(id: comment.id).update_all("score = score + #{score_modifier}")
           end
         end
@@ -42,11 +42,12 @@ module VoteManager
     def unvote!(user:, comment:, force: false)
       CommentVote.transaction(**ISOLATION) do
         CommentVote.uncached do
-          vote = CommentVote.where(user_id: user.id, comment_id: comment.id).first
-          raise(VoteManager::NoVoteError) unless vote
-          raise(UserVote::Error, "You can't remove locked votes") if vote.is_locked? && !force
-          CommentVote.where(user_id: user.id, comment_id: comment.id).delete_all
-          Comment.where(id: comment.id).update_all("score = score - #{vote.score}")
+          votes = comment.votes.where(user: user)
+          raise(VoteManager::NoVoteError) unless votes.any?
+          raise(UserVote::Error, "You can't remove locked votes") if votes.any?(&:is_locked?) && !force
+          score = votes.first.score
+          votes.destroy_all
+          Comment.where(id: comment.id).update_all("score = score - #{score}")
         end
       end
     rescue VoteManager::NoVoteError

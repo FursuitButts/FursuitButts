@@ -42,7 +42,7 @@ class VoteManager {
 
   selectedVotes () {
     return $("#votes-table>tbody>tr.selected").map(function () {
-      return $(this).attr("id").substr(1);
+      return $(this).attr("data-id");
     }).get();
   }
 

@@ -18,9 +18,9 @@ module VoteManager
     def unvote!(user:, forum_post:)
       ForumPostVote.transaction(**ISOLATION) do
         ForumPostVote.uncached do
-          vote = ForumPostVote.where(user_id: user.id, forum_post_id: forum_post.id).first
-          raise(VoteManager::NoVoteError) unless vote
-          ForumPostVote.where(user_id: user.id, forum_post_id: forum_post.id).delete_all
+          votes = forum_post.votes.where(user: user)
+          raise(VoteManager::NoVoteError) unless votes.any?
+          votes.destroy_all
         end
       end
     rescue VoteManager::NoVoteError

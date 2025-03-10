@@ -14,13 +14,13 @@ module VoteManager
         raise(UserVote::Error, "You do not have permission to downvote") if user.is_pending? && score == -1
         PostVote.transaction(**ISOLATION) do
           PostVote.uncached do
-            @vote = PostVote.where(user_id: user.id, post_id: post.id).first
+            @vote = post.votes.where(user: user).first
             if @vote
               raise(UserVote::Error, "Vote is locked") if @vote.is_locked?
               raise(VoteManager::NeedUnvoteError) if @vote.score == score
               @vote.destroy
             end
-            @vote = PostVote.create!(user: user, score: score, post: post)
+            @vote = post.votes.create!(user: user, score: score)
             post.append_user_to_vote_string(user.id, %w[down locked up].fetch(score + 1))
             post.do_not_version_changes = true
             post.save
@@ -44,10 +44,10 @@ module VoteManager
       begin
         PostVote.transaction(**ISOLATION) do
           PostVote.uncached do
-            vote = PostVote.where(user_id: user.id, post_id: post.id).first
-            raise(VoteManager::NoVoteError) unless vote
-            raise(UserVote::Error, "You can't remove locked votes") if vote.is_locked? && !force
-            post.votes.where(user: user).delete_all
+            votes = post.votes.where(user: user)
+            raise(VoteManager::NoVoteError) unless votes.any?
+            raise(UserVote::Error, "You can't remove locked votes") if votes.any?(&:is_locked?) && !force
+            votes.destroy_all
             post.delete_user_from_vote_string(user.id)
             post.do_not_version_changes = true
             post.save
@@ -87,6 +87,8 @@ module VoteManager
       unvote!(post: vote.post, user: vote.user, force: true)
     end
 
+    # TODO: this can likely be optimized to just update post ids
+    # if later optimized, ensure the vote string is updated
     def give_to_parent!(post)
       parent = post.parent
       return false unless parent
