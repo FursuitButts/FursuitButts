@@ -99,20 +99,20 @@ class ForumPost < ApplicationRecord
       q = q.attribute_matches(:is_hidden, params[:is_hidden])
 
       case params[:order]
-        when "updated_at_desc"
-          q = q.order(updated_at: :desc)
-        when "updated_at_asc"
-          q = q.order(updated_at: :asc)
-        when "rating_desc"
-          q = q.order(percentage_score: :desc, id: :desc)
-        when "rating_asc"
-          q = q.order(percentage_score: :asc, id: :desc)
-        when "score_desc"
-          q = q.order(total_score: :desc, id: :desc)
-        when "score_asc"
-          q = q.order(total_score: :asc, id: :desc)
-        else
-          q.apply_basic_order(params)
+      when "updated_at_desc"
+        q = q.order(updated_at: :desc)
+      when "updated_at_asc"
+        q = q.order(updated_at: :asc)
+      when "rating_desc"
+        q = q.order(percentage_score: :desc, id: :desc)
+      when "rating_asc"
+        q = q.order(percentage_score: :asc, id: :desc)
+      when "score_desc"
+        q = q.order(total_score: :desc, id: :desc)
+      when "score_asc"
+        q = q.order(total_score: :asc, id: :desc)
+      else
+        q.apply_basic_order(params)
       end
 
       q
