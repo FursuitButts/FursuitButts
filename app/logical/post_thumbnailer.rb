@@ -43,7 +43,7 @@ module PostThumbnailer
       sample_data << { type: stype, width: width, height: height, size: sfile.size, md5: Digest::MD5.file(sfile.path).hexdigest, ext: UploadService::Utils.file_header_to_file_ext(sfile.path), video: false }
     end
 
-    [preview_file, crop_file, sample_file, scaled, sample_data]
+    [preview_file, crop_file, sample_file, scaled, sample_data.map { |s| s.transform_keys(&:to_s) }]
   end
 
   def generate_replacement_thumbnail(file, type, frame: nil)
