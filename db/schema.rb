@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_03_10_001915) do
+ActiveRecord::Schema[7.1].define(version: 2025_03_16_020401) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -750,6 +750,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_10_001915) do
     t.integer "tag_count_contributor", default: 0, null: false
     t.jsonb "samples_data", default: [], null: false
     t.integer "min_edit_level", default: 10, null: false
+    t.string "typed_tag_string", default: "", null: false
     t.index "string_to_array(tag_string, ' '::text)", name: "index_posts_on_string_to_array_tag_string", using: :gin
     t.index ["change_seq"], name: "index_posts_on_change_seq", unique: true
     t.index ["created_at"], name: "index_posts_on_created_at"

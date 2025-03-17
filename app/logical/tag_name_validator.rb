@@ -23,6 +23,8 @@ class TagNameValidator < ActiveModel::EachValidator
       record.errors.add(attribute,  "'#{value}' cannot contain percent signs ('%')")
     when /\\/
       record.errors.add(attribute,  "'#{value}' cannot contain back slashes ('\\')")
+    when /\|/
+      record.errors.add(attribute,  "'#{value}' cannot contain back pipes ('|')")
     when /\A~/
       record.errors.add(attribute,  "'#{value}' cannot begin with a tilde ('~')")
     when /\A-/

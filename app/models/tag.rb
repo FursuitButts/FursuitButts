@@ -22,6 +22,16 @@ class Tag < ApplicationRecord
 
   attr_accessor :reason
 
+  TagCategory.categories.each do |category|
+    scope(category.name, -> { where(category: category.id) })
+    next unless category != TagCategory::INVALID # We can't this because we would override the internal "invalid?" method
+    define_singleton_method("#{category.name}?") do |record|
+      record.category == category.id
+    end
+  end
+
+  scope :invalid, -> { where(category: TagCategory::INVALID) }
+
   module CountMethods
     extend ActiveSupport::Concern
 
@@ -103,9 +113,8 @@ class Tag < ApplicationRecord
     def update_category_post_counts!
       Post.with_timeout(30_000, nil) do
         Post.sql_raw_tag_match(name).find_each do |post|
-          post.set_tag_counts(disable_cache: false)
-          categories = TagCategory.category_names.to_h { |x| ["tag_count_#{x}", post.send("tag_count_#{x}")] }.update("tag_count" => post.tag_count)
-          post.update(**categories)
+          post.update_typed_tags # does not save
+          post.save!
           post.update_pool_artists
           post.update_index
         end

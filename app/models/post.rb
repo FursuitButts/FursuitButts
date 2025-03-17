@@ -53,7 +53,6 @@ class Post < ApplicationRecord
   validate :updater_can_change_rating
   validate :validate_thumbnail_frame
   before_save :update_tag_post_counts, if: :should_process_tags?
-  before_save :set_tag_counts, if: :should_process_tags?
   before_save :update_qtags, if: :will_save_change_to_description?
   after_update :regenerate_image_samples, if: :saved_change_to_thumbnail_frame?
   after_save :create_post_events
@@ -563,18 +562,34 @@ class Post < ApplicationRecord
       Tag.where(name: tag_array_was)
     end
 
-    TagCategory.category_names.each do |name|
-      define_method("#{name}_tags") do
-        tags.select { |t| t.category == TagCategory.get(name).id }
+    TagCategory.categories.each do |category|
+      define_method("#{category.name}_tags") do
+        Tag.where(name: send("#{category.name}_tag_array"))
       end
 
-      define_method("#{name}_tags_was") do
-        tags_was.select { |t| t.category == TagCategory.get(name).id }
+      define_method("#{category.name}_tags_was") do
+        Tag.where(name: send("#{category.name}_tag_array_was"))
+      end
+
+      define_method("#{category.name}_tags_before_last_save") do
+        Tag.where(name: send("#{category.name}_tag_array_before_last_save"))
+      end
+
+      define_method("#{category.name}_tag_array") do
+        typed_tags(category.id)
+      end
+
+      define_method("#{category.name}_tag_array_was") do
+        typed_tags_was(category.id)
+      end
+
+      define_method("#{category.name}_tag_array_before_last_save") do
+        typed_tags_before_last_save(category.id)
       end
     end
 
     def added_tags
-      tags - tags_was
+      tag_array - tag_array_was
     end
 
     def decrement_tag_post_counts
@@ -595,7 +610,7 @@ class Post < ApplicationRecord
     end
 
     def update_pool_artists
-      return unless artist_tags != artist_tags_was
+      return unless artist_tag_array != artist_tag_array_before_last_save
       UpdatePoolArtistsJob.perform_later(id)
     end
 
@@ -628,16 +643,6 @@ class Post < ApplicationRecord
 
     def inc_tag_count(category)
       set_tag_count(category, send("tag_count_#{category}") + 1)
-    end
-
-    def set_tag_counts(disable_cache: true)
-      self.tag_count = 0
-      TagCategory.category_names.each { |x| set_tag_count(x, 0) }
-      categories = Tag.categories_for(tag_array, disable_cache: disable_cache)
-      categories.each_value do |category|
-        self.tag_count += 1
-        inc_tag_count(TagCategory.reverse_mapping[category])
-      end
     end
 
     def merge_old_changes
@@ -696,10 +701,10 @@ class Post < ApplicationRecord
     def set_tag_string(string)
       self.tag_string = string
       reset_tag_array_cache
+      update_typed_tags(string)
     end
 
     def tag_count_not_insane
-      return if do_not_version_changes || automated_edit
       return if do_not_version_changes || automated_edit
 
       max_count = FemboyFans.config.max_tags_per_post
@@ -739,7 +744,8 @@ class Post < ApplicationRecord
       normalized_tags = normalized_tags.compact.uniq
       normalized_tags = Tag.find_or_create_by_name_list(normalized_tags)
       normalized_tags = remove_invalid_tags(normalized_tags)
-      set_tag_string(normalized_tags.map(&:name).uniq.sort.join(" "))
+      normalized_tags = normalized_tags.map(&:name).uniq.sort.join(" ")
+      set_tag_string(normalized_tags)
     end
 
     def remove_aspect_ratio_tags(tags)
@@ -1078,10 +1084,12 @@ class Post < ApplicationRecord
 
     def add_tag(tag)
       set_tag_string("#{tag_string} #{tag}")
+      update_typed_tag(tag, Tag.category_for(tag))
     end
 
     def remove_tag(tag)
       set_tag_string((tag_array - Array(tag)).join(" "))
+      delete_typed_tag(tag)
     end
 
     def inject_tag_categories(tag_cats)
@@ -1095,16 +1103,68 @@ class Post < ApplicationRecord
       @tag_categories ||= Tag.categories_for(tag_array)
     end
 
-    def typed_tags(category_id)
-      @typed_tags ||= {}
-      @typed_tags[category_id] ||= tag_array.select do |tag|
-        tag_categories[tag] == category_id
-      end
+    def typed_tags(category_id = nil)
+      @typed_tags ||= typed_tag_string.split.map { |t| t.split("|").reverse }.uniq(&:first).to_h.transform_values(&:to_i)
+      return @typed_tags.select { |_k, v| category_id == v }.keys if category_id
+      @typed_tags
+    end
+
+    def typed_tags_was(category_id)
+      @typed_tags_was ||= typed_tag_string_was.split.map { |t| t.split("|").reverse }.uniq(&:first).to_h.transform_values(&:to_i)
+      return @typed_tags_was.select { |_k, v| category_id == v }.keys if category_id
+      @typed_tags_was
+    end
+
+    def typed_tags_before_last_save(category_id)
+      @typed_tag_string_before_last_save ||= (typed_tag_string_before_last_save || "").split.map { |t| t.split("|").reverse }.uniq(&:first).to_h.transform_values(&:to_i)
+      return @typed_tag_string_before_last_save.select { |_k, v| category_id == v }.keys if category_id
+      @typed_tag_string_before_last_save
     end
 
     def copy_tags_to_parent
       return if parent_id.blank?
       parent.tag_string += " #{tag_string}"
+    end
+
+    def update_typed_tags(tags = tag_string)
+      self.typed_tag_string = Tag.where(name: tags.split).select(:name, :category).map { |t| "#{t.category}|#{t.name}" }.join(" ")
+      reset_typed_tags_cache
+      clean_typed_tag_string!
+    end
+
+    def reset_typed_tags_cache
+      @typed_tags = nil
+      @typed_tags_was = nil
+      @typed_tag_string_before_last_save = nil
+    end
+
+    def update_typed_tag(name, category)
+      return delete_typed_tag(name) if category.nil?
+      typed = typed_tag_string
+      if typed.match(/(?:\A| )(\d+)\|#{name}(?:\Z| )/)
+        return if $1.to_i == category
+        typed.gsub!(/(?:\A| )\d+\|#{name}(?:\Z| )/, " ")
+      end
+      typed += " #{category}|#{name}"
+      self.typed_tag_string = typed.strip
+      clean_typed_tag_string!
+    end
+
+    def delete_typed_tag(name)
+      typed = typed_tag_string
+      typed.gsub!(/(?:\A| )\d+\|#{name}(?:\Z| )/, " ")
+      self.typed_tag_string = typed.strip
+      clean_typed_tag_string!
+    end
+
+    def clean_typed_tag_string!
+      array = typed_tag_string.split.uniq { |t| t.split("|").last }
+      self.typed_tag_string = array.join(" ")
+      TagCategory.categories.each do |category|
+        count = array.count { |t| t.start_with?("#{category.id}|") }
+        send("tag_count_#{category.name}=", count)
+      end
+      self.tag_count = array.count
     end
   end
 
@@ -1963,7 +2023,7 @@ class Post < ApplicationRecord
 
     def added_tags_are_valid
       # Load this only once since it isn't cached
-      added = added_tags
+      added = Tag.where(name: added_tags)
       added_invalid_tags = added.select { |t| t.category == TagCategory.invalid }
       new_tags = added.select { |t| t.post_count <= 0 }
       new_general_tags = new_tags.select { |t| t.category == TagCategory.general }
@@ -2011,15 +2071,15 @@ class Post < ApplicationRecord
 
     def has_artist_tag
       return unless new_record?
-      return if tags.any? { |t| t.category == TagCategory.artist }
+      return if tags.artist.any?
 
-      warnings.add(:base, 'Artist tag is required. "Click here":/help/tags#catchange if you need help changing the category of an tag. Ask on the forum if you need naming help')
+      warnings.add(:base, 'Artist tag is required. "Click here":/help/tags#categorychange if you need help changing the category of an tag. Ask on the forum if you need naming help')
     end
 
     def has_enough_tags
       return unless new_record?
 
-      if tags.count { |t| t.category == TagCategory.general } < 10
+      if tags.general.count < 10
         warnings.add(:base, "Uploads must have at least 10 general tags. Read the \"Tagging Checklist\":/help/tagging_checklist for information on tagging your uploads")
       end
     end
@@ -2101,10 +2161,10 @@ class Post < ApplicationRecord
     others = TagCategory.category_names - %w[artist character species]
     options = {
       "sources":        source_array.join(" "),
-      "tags-artist":    artist_tags.map(&:name).join(" "),
-      "tags-character": character_tags.map(&:name).join(" "),
-      "tags-species":   species_tags.map(&:name).join(" "),
-      "tags":           others.map { |type| public_send("#{type}_tags") }.flatten.map(&:name).join(" "),
+      "tags-artist":    artist_tag_array.join(" "),
+      "tags-character": character_tags.join(" "),
+      "tags-species":   species_tag_array.join(" "),
+      "tags":           others.map { |type| public_send("#{type}_tags") }.flatten.join(" "),
       "rating":         rating,
       "rating_locked":  is_rating_locked? && policy(CurrentUser.user).can_use_attribute?(:is_rating_locked, :update) ? true : nil,
       "description":    description,
@@ -2153,11 +2213,11 @@ class Post < ApplicationRecord
   end
 
   def avoid_posting_artists
-    AvoidPosting.active.joins(:artist).where("artists.name": artist_tags.map(&:name))
+    AvoidPosting.active.joins(:artist).where("artists.name": artist_tag_array)
   end
 
   def followed_tags(user)
-    user.followed_tags.where(tag: tags)
+    user.followed_tags.joins(:tag).where("tags.name": tag_array)
   end
 
   def download_filename

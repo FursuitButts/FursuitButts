@@ -78,3 +78,5 @@ gem "rotp", "~> 6.3"
 gem "rqrcode", "~> 2.2"
 
 gem "click_house", "~> 2.1"
+
+gem "after_commit_everywhere", "~> 1.6"

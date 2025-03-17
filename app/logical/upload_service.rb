@@ -70,7 +70,7 @@ class UploadService
       p.samples_data = sample_data
       p.generated_samples = sample_data.pluck("type").uniq
 
-      if !upload.uploader.unrestricted_uploads? || (!upload.uploader.can_approve_posts? && p.avoid_posting_artists.any?) || (!upload.uploader.can_approve_posts? && p.avoid_posting_artists.any?) || upload.upload_as_pending?
+      if !upload.uploader.unrestricted_uploads? || (!upload.uploader.can_approve_posts? && p.avoid_posting_artists.any?) || upload.upload_as_pending?
         p.is_pending = true
       end
     end
