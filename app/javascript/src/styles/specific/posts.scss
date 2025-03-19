@@ -322,6 +322,7 @@ div#c-posts {
         display: grid;
         justify-items: center;
         max-height: 50vh;
+        ovferflow-y: auto;
         @include scrollbars;
       }
     }
