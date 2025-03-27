@@ -22,7 +22,7 @@ class Ticket < ApplicationRecord
   validate :validate_model_exists, on: :create
   validate :validate_creator_is_not_limited, on: :create
 
-  scope :for_creator, ->(uid) { where("creator_id = ?", uid) }
+  scope :for_creator, ->(uid) { where(creator_id: uid) }
   scope :automated, -> { for_creator(User.system.id) }
   scope :spam, -> { automated.where(reason: "Spam.") }
 
