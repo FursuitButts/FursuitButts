@@ -5,10 +5,9 @@ class BansController < ApplicationController
   respond_to :json, only: %i[index show]
 
   def index
-    @bans = authorize(Ban).search(search_params(Ban)).paginate(params[:page], limit: params[:limit])
-    respond_with(@bans) do |format|
-      format.html { @bans = @bans.includes(:user, :banner) }
-    end
+    @bans = authorize(Ban).html_includes(request, :user, :banner)
+                          .search(search_params(Ban))
+                          .paginate(params[:page], limit: params[:limit])
   end
 
   def show

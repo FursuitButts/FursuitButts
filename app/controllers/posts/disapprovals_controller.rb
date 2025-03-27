@@ -6,7 +6,9 @@ module Posts
     respond_to :html, :json
 
     def index
-      @post_disapprovals = authorize(PostDisapproval).includes(:user).search(search_params(PostDisapproval)).paginate(params[:page], limit: params[:limit])
+      @post_disapprovals = authorize(PostDisapproval).html_includes(request, :user)
+                                                     .search(search_params(PostDisapproval))
+                                                     .paginate(params[:page], limit: params[:limit])
       respond_with(@post_disapprovals)
     end
 

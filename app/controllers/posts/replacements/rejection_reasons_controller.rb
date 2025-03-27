@@ -7,7 +7,8 @@ module Posts
       respond_to :html, :json
 
       def index
-        @reasons = authorize(PostReplacementRejectionReason).order(order: :asc)
+        @reasons = authorize(PostReplacementRejectionReason).html_includes(request, :creator)
+                                                            .order(order: :asc)
         respond_with(@reasons)
       end
 

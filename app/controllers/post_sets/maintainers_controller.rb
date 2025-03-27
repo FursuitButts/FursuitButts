@@ -6,7 +6,9 @@ module PostSets
     respond_to :js, except: %i[index]
 
     def index
-      @invites = authorize(PostSetMaintainer).where(user_id: CurrentUser.id).order(updated_at: :desc).includes(:post_set)
+      @invites = authorize(PostSetMaintainer).html_includes(request, :post_set)
+                                             .where(user_id: CurrentUser.id)
+                                             .order(updated_at: :desc)
     end
 
     def create

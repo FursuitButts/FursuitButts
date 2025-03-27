@@ -5,7 +5,8 @@ class TakedownsController < ApplicationController
   before_action :load_takedown, except: %i[index new create count_matching_posts]
 
   def index
-    @takedowns = authorize(Takedown).search(search_params(Takedown)).paginate(params[:page], limit: params[:limit])
+    @takedowns = authorize(Takedown).search(search_params(Takedown))
+                                    .paginate(params[:page], limit: params[:limit])
     respond_with(@takedowns)
   end
 

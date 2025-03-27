@@ -6,14 +6,9 @@ module Posts
 
     def index
       @search_params = search_params(PostAppeal)
-      @post_appeals = authorize(PostAppeal).search(@search_params).paginate(params[:page], limit: params[:limit])
-
-      if request.format.html?
-        @post_appeals = @post_appeals.includes(:creator, post: %i[appeals uploader approver])
-      else
-        @post_appeals = @post_appeals.includes(:post)
-      end
-
+      @post_appeals = authorize(PostAppeal).html_includes(request, :creator, post: %i[appeals uploader approver])
+                                           .search(@search_params)
+                                           .paginate(params[:page], limit: params[:limit])
       respond_with(@post_appeals)
     end
 

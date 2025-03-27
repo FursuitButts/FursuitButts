@@ -24,6 +24,7 @@ class Ticket < ApplicationRecord
 
   scope :for_creator, ->(uid) { where("creator_id = ?", uid) }
   scope :automated, -> { for_creator(User.system.id) }
+  scope :spam, -> { automated.where(reason: "Spam.") }
 
   attr_accessor :record_type, :send_update_dmail
 

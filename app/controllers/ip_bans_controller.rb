@@ -4,7 +4,9 @@ class IpBansController < ApplicationController
   respond_to :html, :json
 
   def index
-    @ip_bans = authorize(IpBan).includes(:creator).search(search_params(IpBan)).paginate(params[:page], limit: params[:limit])
+    @ip_bans = authorize(IpBan).html_includes(request, :creator)
+                               .search(search_params(IpBan))
+                               .paginate(params[:page], limit: params[:limit])
     respond_with(@ip_bans)
   end
 

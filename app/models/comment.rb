@@ -34,6 +34,7 @@ class Comment < ApplicationRecord
   has_many :votes, class_name: "CommentVote", dependent: :destroy
   has_many :tickets, as: :model
   has_many :versions, class_name: "EditHistory", as: :versionable, dependent: :destroy
+  has_one :spam_ticket, -> { spam }, class_name: "Ticket", as: :model
 
   scope :deleted, -> { where(is_hidden: true) }
   scope :undeleted, -> { where(is_hidden: false) }
@@ -258,10 +259,6 @@ class Comment < ApplicationRecord
     update!(is_spam: false)
     return if spam_ticket.blank?
     SpamDetector.new(self, user_ip: creator_ip_addr.to_s).ham!
-  end
-
-  def spam_ticket
-    tickets.where(creator: User.system, reason: "Spam.").first
   end
 
   def self.available_includes

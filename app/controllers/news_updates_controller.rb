@@ -4,7 +4,9 @@ class NewsUpdatesController < ApplicationController
   respond_to :html, :json
 
   def index
-    @news_updates = authorize(NewsUpdate).includes(:creator).order("id desc").paginate(params[:page], limit: params[:limit])
+    @news_updates = authorize(NewsUpdate).html_includes(request, :creator)
+                                         .order("id desc")
+                                         .paginate(params[:page], limit: params[:limit])
     respond_with(@news_updates)
   end
 

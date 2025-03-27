@@ -6,7 +6,8 @@ module Posts
     respond_to :html, :json
 
     def index
-      @reasons = authorize(PostDeletionReason).order(order: :asc)
+      @reasons = authorize(PostDeletionReason).html_includes(request, :creator)
+                                              .order(order: :asc)
       respond_with(@reasons)
     end
 

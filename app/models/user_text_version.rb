@@ -139,7 +139,8 @@ class UserTextVersion < ApplicationRecord
       if params[:changes]
         q = q.where("? = ANY(text_changes)", params[:changes])
       end
-      q
+
+      q.apply_basic_order(params)
     end
   end
 

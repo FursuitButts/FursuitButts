@@ -121,7 +121,9 @@ class CommentsController < ApplicationController
 
   def index_by_comment
     @comments = Comment.visible(CurrentUser.user)
-    @comments = @comments.search(search_params(Comment)).paginate(params[:page], limit: params[:limit])
+                       .html_includes(request, :post, :creator, :spam_ticket)
+                       .search(search_params(Comment))
+                       .paginate(params[:page], limit: params[:limit])
     respond_with(@comments) do |format|
       format.html do
         @comment_votes = CommentVote.for_comments_and_user(@comments.select { |comment| comment.visible_to?(CurrentUser) }.map(&:id), CurrentUser.id)

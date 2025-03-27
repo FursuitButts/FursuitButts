@@ -7,15 +7,16 @@ class PostSetsController < ApplicationController
   def index
     authorize(PostSet)
     sp = search_params(PostSet)
-    @post_sets = PostSet.all
-    @post_sets = @post_sets.visible(CurrentUser.user) unless CurrentUser.is_moderator?
+    @post_sets = PostSet.visible(CurrentUser.user)
     if sp[:post_id].present?
       @post_sets = @post_sets.where_has_post(sp[:post_id].to_i)
     elsif sp[:maintainer_id].present?
       @post_sets = @post_sets.where_has_maintainer(sp[:maintainer_id].to_i)
     end
 
-    @post_sets = @post_sets.search(sp).paginate(params[:page], limit: params[:limit])
+    @post_sets = @post_sets.html_includes(request, :creator)
+                           .search(sp)
+                           .paginate(params[:page], limit: params[:limit])
 
     respond_with(@post_sets)
   end

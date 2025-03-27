@@ -12,7 +12,10 @@ module Posts
 
     def index
       params[:search][:post_id] = params.delete(:post_id) if params.key?(:post_id)
-      @post_replacements = authorize(PostReplacement).includes(:post).visible(CurrentUser.user).search(search_params).paginate(params[:page], limit: params[:limit])
+      @post_replacements = authorize(PostReplacement).html_includes(request, :post, :creator)
+                                                     .visible(CurrentUser.user)
+                                                     .search(search_params(PostReplacement))
+                                                     .paginate(params[:page], limit: params[:limit])
 
       respond_with(@post_replacements)
     end

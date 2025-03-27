@@ -15,7 +15,7 @@
   <% t.column(:topic_count, name: "Topics", th: { class: "topics" }, td: { class: "topics" }) %>
   <% t.column(:post_count, name: "Posts", th: { class: "posts" }, td: { class: "posts" }) %>
   <% t.column("Last Post") do |forum_category| %>
-    <% post = forum_category.posts.order(id: :asc).last %>
+    <% post = forum_category.last_post %>
     <% if post %>
       <%= link_to(post.topic.title, forum_topic_path(post.topic)) %><br>
       <%= link_to("Go to post", forum_topic_path(post.topic, page: post.forum_topic_page, anchor: "forum_post_#{post.id}")) %> by <%= link_to_user(post.creator) %>

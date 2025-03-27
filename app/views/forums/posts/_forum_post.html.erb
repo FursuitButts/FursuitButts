@@ -17,7 +17,7 @@
         <%= user_avatar(forum_post.creator) %>
       </div>
       <div class="post-time">
-        <%= link_to time_ago_in_words_tagged(forum_post.created_at), forum_topic_path(forum_post.topic, page: forum_post.forum_topic_page, anchor: "forum_post_#{forum_post.id}") %>
+        <%= link_to time_ago_in_words_tagged(forum_post.created_at), forum_topic_path(forum_post.topic_id, page: forum_post.forum_topic_page, anchor: "forum_post_#{forum_post.id}") %>
       </div>
     </div>
     <div class="content">
@@ -38,12 +38,12 @@
           <% end %>
           <% if forum_post.is_original_post?(original_forum_post_id) %>
             <% if forum_post.topic.is_hidden? && policy(forum_post.topic).unhide? %>
-              <li><%= link_to("Unhide", unhide_forum_topic_path(forum_post.topic.id), method: :put) %></li>
+              <li><%= link_to("Unhide", unhide_forum_topic_path(forum_post.topic_id), method: :put) %></li>
             <% elsif policy(forum_post.topic).hide? %>
-              <li><%= link_to("Hide", hide_forum_topic_path(forum_post.topic.id), data: { confirm: "Are you sure you want to hide this forum topic?" }, method: :put) %></li>
+              <li><%= link_to("Hide", hide_forum_topic_path(forum_post.topic_id), data: { confirm: "Are you sure you want to hide this forum topic?" }, method: :put) %></li>
             <% end %>
             <% if policy(forum_post.topic).destroy? %>
-              <li><%= link_to("Destroy", forum_topic_path(forum_post.topic), data: { confirm: "Are you sure you want to destroy this forum topic?" }, method: :delete) %></li>
+              <li><%= link_to("Destroy", forum_topic_path(forum_post.topic_id), data: { confirm: "Are you sure you want to destroy this forum topic?" }, method: :delete) %></li>
             <% end %>
           <% else %>
             <% if forum_post.is_hidden? && policy(forum_post).unhide? %>
@@ -58,14 +58,14 @@
           <% if policy(forum_post).update? %>
             <li>
               <% if forum_post.is_original_post?(original_forum_post_id) %>
-                <%= link_to("Edit", edit_forum_topic_path(forum_post.topic), id: "edit_forum_topic_link_#{forum_post.topic.id}", class: "edit_forum_topic_link") %>
+                <%= link_to("Edit", edit_forum_topic_path(forum_post.topic_id), id: "edit_forum_topic_link_#{forum_post.topic_id}", class: "edit_forum_topic_link") %>
               <% else %>
                 <%= link_to("Edit", edit_forum_post_path(forum_post.id), id: "edit_forum_post_link_#{forum_post.id}", class: "edit_forum_post_link") %>
               <% end %>
             </li>
           <% end %>
           <% if params[:controller] == "forums/posts" %>
-            <li><%= link_to("Parent", forum_topic_path(forum_post.topic, page: forum_post.forum_topic_page, anchor: "forum_post_#{forum_post.id}")) %></li>
+            <li><%= link_to("Parent", forum_topic_path(forum_post.topic_id, page: forum_post.forum_topic_page, anchor: "forum_post_#{forum_post.id}")) %></li>
           <% end %>
           <% if TicketPolicy.new(CurrentUser.user, forum_post).create? %>
           <li><%= link_to("Report", model_new_ticket_path(model: forum_post)) %></li>

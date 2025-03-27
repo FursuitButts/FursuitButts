@@ -5,7 +5,11 @@ class DmailsController < ApplicationController
   respond_to :json, except: %i[new create]
 
   def index
-    @query = authorize(Dmail).active.visible.for_folder(params[:folder]).search(search_params(Dmail))
+    @query = authorize(Dmail).html_includes(request, :from, :to, :owner)
+                             .active
+                             .visible
+                             .for_folder(params[:folder])
+                             .search(search_params(Dmail))
     @dmails = @query.paginate(params[:page], limit: params[:limit])
     respond_with(@dmails)
   end

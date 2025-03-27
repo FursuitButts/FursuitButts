@@ -13,7 +13,9 @@ class WikiPagesController < ApplicationController
       end
       redirect_to(wiki_page_path(@wiki_page))
     end
-    @wiki_pages = WikiPage.search(search_params(WikiPage)).paginate(params[:page], limit: params[:limit])
+    @wiki_pages = WikiPage.html_includes(request, :updater)
+                          .search(search_params(WikiPage))
+                          .paginate(params[:page], limit: params[:limit])
     respond_with(@wiki_pages)
   end
 

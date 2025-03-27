@@ -11,12 +11,13 @@ module Forums
       params[:search] ||= {}
       params[:search][:order] ||= "sticky" if request.format.html?
 
-      @query = authorize(ForumTopic).visible(CurrentUser.user).search(search_params(ForumTopic))
+      @query = authorize(ForumTopic).html_includes(request, :creator, :updater, :category, posts: :creator)
+                                    .visible(CurrentUser.user)
+                                    .search(search_params(ForumTopic))
       @forum_topics = @query.paginate(params[:page], limit: params[:limit] || 50)
 
       respond_with(@forum_topics) do |format|
         format.html do
-          @forum_topics = @forum_topics.includes(:creator, :updater, :category, posts: :creator).load
           # TODO: revisit muting, it may need to be further optimized or removed due to performance issues
           @mutes = ForumTopicStatus.where(forum_topic: @forum_topics, user: CurrentUser.user, mute: true).load
           @category = ForumCategory.find_by(id: params.dig(:search, :category_id)) if params.dig(:search, :category_id).present?
@@ -29,7 +30,11 @@ module Forums
       if request.format.html?
         @forum_topic.mark_as_read!(CurrentUser.user)
       end
-      @forum_posts = ForumPost.permitted(CurrentUser.user).includes(topic: [:category]).search(topic_id: @forum_topic.id).reorder("forum_posts.id").paginate(params[:page])
+      @forum_posts = ForumPost.html_includes(request, :creator, :spam_ticket, topic: %i[category original_post])
+                              .permitted(CurrentUser.user)
+                              .search(topic_id: @forum_topic.id)
+                              .reorder("forum_posts.id")
+                              .paginate(params[:page])
       respond_with(@forum_topic)
     end
 

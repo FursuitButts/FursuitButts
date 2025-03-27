@@ -41,7 +41,8 @@ module Rules
     end
 
     def order
-      @categories = authorize(RuleCategory).order(:order)
+      @categories = authorize(RuleCategory).html_includes(request, :creator)
+                                           .order(:order)
     end
 
     def reorder

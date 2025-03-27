@@ -11,6 +11,7 @@ module Posts
       )
       respond_with(@events) do |format|
         format.json do
+          # FIXME: prevents using only parameter
           render(json: Draper.undecorate(@events))
         end
       end

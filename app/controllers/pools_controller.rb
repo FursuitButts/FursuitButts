@@ -5,7 +5,8 @@ class PoolsController < ApplicationController
   respond_to :html, :json
 
   def index
-    @pools = authorize(Pool).search(search_params(Pool)).paginate(params[:page], limit: params[:limit])
+    @pools = authorize(Pool).search(search_params(Pool))
+                            .paginate(params[:page], limit: params[:limit])
     respond_with(@pools) do |format|
       format.json do
         render(json: @pools.to_json)

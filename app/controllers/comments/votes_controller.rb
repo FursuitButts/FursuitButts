@@ -8,7 +8,10 @@ module Comments
     before_action :ensure_lockdown_disabled
 
     def index
-      @comment_votes = authorize(CommentVote).visible(CurrentUser.user).includes(:user, comment: [:creator]).search(search_params(CommentVote)).paginate(params[:page], limit: 100)
+      @comment_votes = authorize(CommentVote).html_includes(request, :user, comment: %i[creator post])
+                                             .visible(CurrentUser.user)
+                                             .search(search_params(CommentVote))
+                                             .paginate(params[:page], limit: 100)
       respond_with(@comment_votes)
     end
 

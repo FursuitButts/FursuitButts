@@ -5,7 +5,9 @@ module Admin
     respond_to :html, :json
 
     def index
-      @audit_logs = authorize(StaffAuditLog).search(search_params(StaffAuditLog)).paginate(params[:page], limit: params[:limit])
+      @audit_logs = authorize(StaffAuditLog).html_includes(request, :user)
+                                            .search(search_params(StaffAuditLog))
+                                            .paginate(params[:page], limit: params[:limit])
       respond_with(@audit_logs)
     end
   end

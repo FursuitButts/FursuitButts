@@ -4,7 +4,9 @@ class EmailBlacklistsController < ApplicationController
   respond_to :html, :json, :js
 
   def index
-    @blacklists = authorize(EmailBlacklist).search(search_params(EmailBlacklist)).paginate(params[:page], limit: params[:limit])
+    @blacklists = authorize(EmailBlacklist).html_includes(request, :creator)
+                                           .search(search_params(EmailBlacklist))
+                                           .paginate(params[:page], limit: params[:limit])
     respond_with(@blacklists)
   end
 

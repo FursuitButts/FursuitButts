@@ -9,7 +9,9 @@ class UploadsController < ApplicationController
   end
 
   def index
-    @uploads = authorize(Upload).search(search_params(Upload)).includes(:post, :uploader).paginate(params[:page], limit: params[:limit])
+    @uploads = authorize(Upload).html_includes(request, :post, :uploader)
+                                .search(search_params(Upload))
+                                .paginate(params[:page], limit: params[:limit])
     respond_with(@uploads)
   end
 

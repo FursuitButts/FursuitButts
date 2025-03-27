@@ -4,6 +4,8 @@ class ForumCategory < ApplicationRecord
   MAX_TOPIC_MOVE_COUNT = 1000
   has_many :topics, -> { order(id: :desc) }, class_name: "ForumTopic", foreign_key: :category_id
   has_many :posts, through: :topics
+  has_one :last_topic, -> { order(id: :desc) }, class_name: "ForumTopic", foreign_key: :category_id
+  has_one :last_post, through: :last_topic
   validates :name, uniqueness: { case_sensitive: false }, length: { minimum: 3, maximum: 100 }
   validates :description, length: { maximum: -> { FemboyFans.config.forum_category_description_max_size } }
 

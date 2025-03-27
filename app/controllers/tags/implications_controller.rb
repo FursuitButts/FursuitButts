@@ -7,7 +7,9 @@ module Tags
     before_action :ensure_lockdown_disabled
 
     def index
-      @tag_implications = authorize(TagImplication).includes(:antecedent_tag, :consequent_tag, :approver).search(search_params(TagImplication)).paginate(params[:page], limit: params[:limit])
+      @tag_implications = authorize(TagImplication).html_includes(request, :antecedent_tag, :consequent_tag, :approver, :creator)
+                                                   .search(search_params(TagImplication))
+                                                   .paginate(params[:page], limit: params[:limit])
       respond_with(@tag_implications)
     end
 

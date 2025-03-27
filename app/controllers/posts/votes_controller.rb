@@ -8,7 +8,10 @@ module Posts
     skip_before_action :api_check
 
     def index
-      @post_votes = authorize(PostVote).visible(CurrentUser.user).includes(:user).search(search_params(PostVote)).paginate(params[:page], limit: 100)
+      @post_votes = authorize(PostVote).html_includes(request, :user)
+                                       .visible(CurrentUser.user)
+                                       .search(search_params(PostVote))
+                                       .paginate(params[:page], limit: 100)
       respond_with(@post_votes)
     end
 

@@ -5,7 +5,8 @@ class UploadWhitelistsController < ApplicationController
   before_action :load_whitelist, only: %i[edit update destroy]
 
   def index
-    @whitelists = authorize(UploadWhitelist).search(search_params(UploadWhitelist)).paginate(params[:page], limit: params[:limit])
+    @whitelists = authorize(UploadWhitelist).search(search_params(UploadWhitelist))
+                                            .paginate(params[:page], limit: params[:limit])
     respond_with(@whitelists)
   end
 

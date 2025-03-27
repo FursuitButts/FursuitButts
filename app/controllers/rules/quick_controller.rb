@@ -45,7 +45,8 @@ module Rules
     end
 
     def order
-      @quick = authorize(QuickRule).order(:order)
+      @quick = authorize(QuickRule).html_includes(request, :rule)
+                                   .order(:order)
       respond_with(@quick)
     end
 

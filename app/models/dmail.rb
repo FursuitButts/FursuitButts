@@ -15,6 +15,7 @@ class Dmail < ApplicationRecord
   belongs_to :from, class_name: "User"
   belongs_to :respond_to, class_name: "User", optional: true
   has_many :tickets, as: :model
+  has_one :spam_ticket, -> { spam }, class_name: "Ticket", as: :model
 
   after_initialize :initialize_attributes, if: :new_record?
   before_create :auto_report_spam
@@ -290,10 +291,6 @@ class Dmail < ApplicationRecord
     update!(is_spam: false)
     return if spam_ticket.blank?
     SpamDetector.new(self, user_ip: creator_ip_addr.to_s).ham!
-  end
-
-  def spam_ticket
-    tickets.where(creator: User.system, reason: "Spam.").first
   end
 
   def update_recipient

@@ -4,7 +4,10 @@ class TicketsController < ApplicationController
   respond_to :html, :json, except: %i[create new]
 
   def index
-    @tickets = authorize(Ticket).visible(CurrentUser.user).visible(CurrentUser.user).search(search_params(Ticket)).paginate(params[:page], limit: params[:limit])
+    @tickets = authorize(Ticket).html_includes(request, :creator, :accused, :claimant, :model)
+                                .visible(CurrentUser.user)
+                                .search(search_params(Ticket))
+                                .paginate(params[:page], limit: params[:limit])
     respond_with(@tickets)
   end
 

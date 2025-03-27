@@ -4,7 +4,9 @@ class DtextLinksController < ApplicationController
   respond_to :html, :json
 
   def index
-    @dtext_links = authorize(DtextLink).search(search_params(DtextLink)).paginate(params[:page], limit: params[:limit])
+    @dtext_links = authorize(DtextLink).html_includes(request, :model)
+                                       .search(search_params(DtextLink))
+                                       .paginate(params[:page], limit: params[:limit])
     respond_with(@dtext_links)
   end
 end

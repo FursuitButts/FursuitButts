@@ -6,7 +6,9 @@ class AvoidPostingsController < ApplicationController
   helper_method :search_params
 
   def index
-    @avoid_postings = authorize(AvoidPosting).search(search_params(AvoidPosting)).paginate(params[:page], limit: params[:limit])
+    @avoid_postings = authorize(AvoidPosting).html_includes(request, :artist, :creator)
+                                             .search(search_params(AvoidPosting))
+                                             .paginate(params[:page], limit: params[:limit])
     respond_with(@avoid_postings)
   end
 

@@ -7,7 +7,9 @@ module Users
 
     def index
       authorize(@user, policy_class: UserBlockPolicy)
-      @blocks = UserBlock.where(user_id: params[:user_id]).paginate(params[:page], limit: params[:limit])
+      @blocks = UserBlock.html_includes(request, :target)
+                         .where(user_id: params[:user_id])
+                         .paginate(params[:page], limit: params[:limit])
       respond_with(@blocks)
     end
 

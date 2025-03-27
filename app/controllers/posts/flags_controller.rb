@@ -6,8 +6,9 @@ module Posts
 
     def index
       @search_params = search_params(PostFlag)
-      @post_flags = authorize(PostFlag).search(@search_params).includes(:creator, post: %i[flags uploader approver])
-      @post_flags = @post_flags.paginate(params[:page], limit: params[:limit])
+      @post_flags = authorize(PostFlag).html_includes(request, :creator, post: %i[flags uploader approver])
+                                       .search(@search_params)
+                                       .paginate(params[:page], limit: params[:limit])
       respond_with(@post_flags)
     end
 

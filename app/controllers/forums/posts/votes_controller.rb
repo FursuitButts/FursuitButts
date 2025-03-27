@@ -11,7 +11,10 @@ module Forums
       before_action :ensure_lockdown_disabled
 
       def index
-        @forum_post_votes = authorize(ForumPostVote).visible(CurrentUser.user).includes(:user, forum_post: %i[creator]).search(search_params(ForumPostVote)).paginate(params[:page], limit: 100)
+        @forum_post_votes = authorize(ForumPostVote).html_includes(request, :user, forum_post: %i[creator])
+                                                    .visible(CurrentUser.user)
+                                                    .search(search_params(ForumPostVote))
+                                                    .paginate(params[:page], limit: 100)
         respond_with(@forum_post_votes)
       end
 

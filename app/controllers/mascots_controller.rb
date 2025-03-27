@@ -4,7 +4,8 @@ class MascotsController < ApplicationController
   respond_to :html, :json
 
   def index
-    @mascots = authorize(Mascot).search(search_params(Mascot)).paginate(params[:page], limit: params[:limit])
+    @mascots = authorize(Mascot).search(search_params(Mascot))
+                                .paginate(params[:page], limit: params[:limit])
     respond_with(@mascots)
   end
 

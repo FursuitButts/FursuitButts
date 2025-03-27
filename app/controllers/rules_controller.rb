@@ -43,7 +43,7 @@ class RulesController < ApplicationController
   end
 
   def order
-    authorize(Rule)
+    authorize(Rule).html_includes(request, :creator)
   end
 
   def reorder
@@ -94,6 +94,6 @@ class RulesController < ApplicationController
   private
 
   def load_categories
-    @categories = RuleCategory.order(:order)
+    @categories = RuleCategory.html_includes(request, :creator, rules: :creator).order(:order)
   end
 end

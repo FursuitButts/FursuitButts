@@ -8,7 +8,9 @@ class StaffNotesController < ApplicationController
     @user = User.find_by(id: params[:user_id])
     sparams = search_params(StaffNote)
     sparams[:user_id] = params[:user_id] if @user
-    @notes = authorize(StaffNote).search(sparams).includes(:user, :creator).paginate(params[:page], limit: params[:limit])
+    @notes = authorize(StaffNote).html_includes(request, :user, :creator)
+                                 .search(sparams)
+                                 .paginate(params[:page], limit: params[:limit])
     respond_with(@notes)
   end
 

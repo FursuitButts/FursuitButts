@@ -5,7 +5,9 @@ module Admin
     respond_to :html
 
     def index
-      @destroyed_posts = authorize(DestroyedPost).search(search_params(DestroyedPost)).paginate(params[:page], limit: params[:limit])
+      @destroyed_posts = authorize(DestroyedPost).html_includes(request, :destroyer, :uploader)
+                                                 .search(search_params(DestroyedPost))
+                                                 .paginate(params[:page], limit: params[:limit])
     end
 
     def show

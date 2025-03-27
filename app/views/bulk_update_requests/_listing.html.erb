@@ -19,8 +19,8 @@
   <% end %>
   <% t.column("Forum") do |request| %>
     <% if request.forum_post_id.present? && request.forum_post.present? %>
-      <%= link_to(request.forum_topic_id, forum_topic_path(request.forum_topic_id, page: request.forum_post.forum_topic_page, anchor: "forum_post_#{request.forum_post.id}")) %>
-    <% elsif request.forum_topic_id.present? && request.forum_topic.present? %>
+      <%= link_to(request.forum_topic_id, forum_topic_path(request.forum_topic_id, page: request.forum_post.forum_topic_page, anchor: "forum_post_#{request.forum_post_id}")) %>
+    <% elsif request.forum_topic_id.present? %>
       <%= link_to(request.forum_topic_id, forum_topic_path(request.forum_topic_id)) %>
     <% end %>
   <% end %>
@@ -34,7 +34,7 @@
       | <%= link_to("Approve", approve_bulk_update_request_path(request), "method": :post, "data-confirm": "Are you sure you want to approve this bulk update request?") %>
     <% end %>
     <% if request.policy(CurrentUser.user).reject? %>
-      | <%= link_to("Reject", request, "method": :delete, "data-confirm": "Are you sure you want to reject this bulk update request?") %>
+      | <%= link_to("Reject", bulk_update_request_path(request), "method": :delete, "data-confirm": "Are you sure you want to reject this bulk update request?") %>
     <% end %>
     <% if request.policy(CurrentUser.user).update? %>
       | <%= link_to("Edit", edit_bulk_update_request_path(request), "data-shortcut": "e") %>

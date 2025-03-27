@@ -7,8 +7,9 @@ class ForumTopic < ApplicationRecord
   belongs_to_updater
   belongs_to :category, class_name: "ForumCategory", counter_cache: "topic_count"
   belongs_to :merge_target, class_name: "ForumTopic", optional: true
-  has_many :posts, -> { order("forum_posts.id asc") }, class_name: "ForumPost", foreign_key: "topic_id", dependent: :destroy
-  has_one :original_post, -> { order("forum_posts.id asc") }, class_name: "ForumPost", foreign_key: "topic_id", inverse_of: :topic
+  has_many :posts, -> { order(id: :asc) }, class_name: "ForumPost", foreign_key: "topic_id", dependent: :destroy
+  has_one :original_post, -> { order(id: :asc) }, class_name: "ForumPost", foreign_key: "topic_id", inverse_of: :topic
+  has_one :last_post, -> { order(id: :desc) }, class_name: "ForumPost", foreign_key: "topic_id", inverse_of: :topic
   has_many :statuses, class_name: "ForumTopicStatus"
   before_validation :initialize_is_hidden, on: :create
   validate :category_valid

@@ -14,6 +14,7 @@ class ForumPost < ApplicationRecord
   has_many :votes, class_name: "ForumPostVote"
   has_many :tickets, as: :model
   has_many :versions, class_name: "EditHistory", as: :versionable, dependent: :destroy
+  has_one :spam_ticket, -> { spam }, class_name: "Ticket", as: :model
   belongs_to :tag_change_request, polymorphic: true, optional: true
   before_validation :initialize_is_hidden, on: :create
   before_create :auto_report_spam
@@ -329,10 +330,6 @@ class ForumPost < ApplicationRecord
     update!(is_spam: false)
     return if spam_ticket.blank?
     SpamDetector.new(self, user_ip: creator_ip_addr.to_s).ham!
-  end
-
-  def spam_ticket
-    tickets.where(creator: User.system, reason: "Spam.").first
   end
 
   def self.available_includes

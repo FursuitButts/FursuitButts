@@ -5,7 +5,9 @@ module Users
     respond_to :html, :json
 
     def index
-      @change_requests = authorize(UserNameChangeRequest).search(search_params(UserNameChangeRequest)).paginate(params[:page], limit: params[:limit])
+      @change_requests = authorize(UserNameChangeRequest).html_includes(request, :user, :approver)
+                                                         .search(search_params(UserNameChangeRequest))
+                                                         .paginate(params[:page], limit: params[:limit])
       respond_with(@change_requests)
     end
 

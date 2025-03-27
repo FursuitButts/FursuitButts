@@ -29,7 +29,7 @@ class StaticController < ApplicationController
   end
 
   def not_found
-    render("static/404", formats: [:html], status: 404)
+    render("static/404", formats: %i[html], status: 404)
   end
 
   def error

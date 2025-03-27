@@ -7,7 +7,10 @@ class ApiKeysController < ApplicationController
 
   def index
     params[:search][:user_id] ||= params[:user_id]
-    @api_keys = authorize(ApiKey).visible(CurrentUser.user).search(search_params(ApiKey)).paginate(params[:page], limit: params[:limit])
+    @api_keys = authorize(ApiKey).includes_if(params[:user_id].blank?, :user)
+                                 .visible(CurrentUser.user)
+                                 .search(search_params(ApiKey))
+                                 .paginate(params[:page], limit: params[:limit])
     respond_with(@api_keys)
   end
 

@@ -5,7 +5,8 @@ class TagsController < ApplicationController
   respond_to :html, :json
 
   def index
-    @tags = authorize(Tag).search(search_params(Tag)).paginate(params[:page], limit: params[:limit])
+    @tags = authorize(Tag).search(search_params(Tag))
+                          .paginate(params[:page], limit: params[:limit])
     respond_with(@tags)
   end
 

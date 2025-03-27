@@ -10,13 +10,9 @@ class UsersController < ApplicationController
       @user = User.find_by_current_or_former_name!(User.normalize_name(params[:name]))
       redirect_to(user_path(@user, n: params[:n]))
     else
-      @users = User.search(search_params(User)).paginate(params[:page], limit: params[:limit])
-      respond_with(@users) do |format|
-        format.json do
-          render(json: @users.to_json)
-          expires_in(params[:expiry].to_i.days) if params[:expiry]
-        end
-      end
+      @users = User.search(search_params(User))
+                   .paginate(params[:page], limit: params[:limit])
+      respond_with(@users)
     end
   end
 

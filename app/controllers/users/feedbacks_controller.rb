@@ -5,7 +5,9 @@ module Users
     respond_to :html, :json
 
     def index
-      @user_feedbacks = authorize(UserFeedback).search(search_params(UserFeedback)).paginate(params[:page], limit: params[:limit])
+      @user_feedbacks = authorize(UserFeedback).html_includes(request, :user, :creator)
+                                               .search(search_params(UserFeedback))
+                                               .paginate(params[:page], limit: params[:limit])
       respond_with(@user_feedbacks)
     end
 

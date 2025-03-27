@@ -525,6 +525,7 @@ class ApplicationRecord < ActiveRecord::Base
 
   include HasDtextLinks
   include ApiMethods
+  include ConditionalIncludes
 
   def self.override_route_key(value)
     define_singleton_method(:model_name) do

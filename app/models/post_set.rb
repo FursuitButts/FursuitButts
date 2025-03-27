@@ -53,9 +53,9 @@ class PostSet < ApplicationRecord
   end
 
   def self.visible(user = CurrentUser.user)
-    return where("is_public = true") if user.nil?
+    return where(is_public: true) if user.nil?
     return all if user.is_moderator?
-    where("is_public = true OR creator_id = ?", user.id)
+    where(is_public: true).or.where(creator_id: user.id)
   end
 
   def self.owned(user = CurrentUser.user)
