@@ -1,6 +1,28 @@
 # frozen_string_literal: true
 
 module PostIndex
+  PostData = Struct.new(:id, :pool_ids, :post_set_ids, :commenter_ids, :comment_count, :noter_ids, :note_bodies, :fav_user_ids, :upvote_user_ids, :downvote_user_ids, :child_post_ids, :disapprover_ids, :disapproval_count, :deleter_id, :deletion_reason, :has_pending_appeals, :has_pending_replacements, :has_verified_artist, keyword_init: true) do
+    def initialize(**options)
+      %i[pool_ids post_set_ids commenter_ids noter_ids note_bodies fav_user_ids upvote_user_ids downvote_user_ids child_post_ids disapprover_ids].each do |key|
+        next unless options.key?(key)
+        value = parse_pg_array(options[key])
+        if key.to_s.ends_with?("_ids") && !value.nil?
+          options[key] = value.map(&:to_i)
+        else
+          options[key] = value
+        end
+      end
+      super(**options)
+    end
+
+    def parse_pg_array(str)
+      return [] if str.blank?
+      content = str[1..-2]
+      elements = content.scan(/"([^"]*)"|([^,]+)/).map { |quoted, unquoted| quoted || unquoted }
+      elements.map { |e| e == "NULL" ? nil : e }
+    end
+  end
+
   def self.included(base)
     base.document_store.index = {
       settings: {
@@ -99,128 +121,51 @@ module PostIndex
       relation = relation.where(options[:query])           if options[:query]
 
       # PG returns {array,results,like,this}, so we need to parse it
-      array_parse = proc do |pid, array|
-        [pid, array[1..-2].split(",")]
-      end
 
       relation.find_in_batches(batch_size: batch_size) do |batch| # rubocop:disable Metrics/BlockLength
         post_ids = batch.map(&:id).join(",")
 
-        comments_sql = <<-SQL.squish
-          SELECT post_id, count(*) FROM comments
-          WHERE post_id IN (#{post_ids})
-          GROUP BY post_id
-        SQL
-        pools_sql = <<-SQL.squish
-          SELECT post_id, ( SELECT COALESCE(array_agg(id), '{}'::int[]) FROM pools WHERE post_ids @> ('{}'::int[] || post_id) )
-          FROM (SELECT unnest('{#{post_ids}}'::int[])) as input_list(post_id);
-        SQL
-        sets_sql = <<-SQL.squish
-          SELECT post_id, ( SELECT COALESCE(array_agg(id), '{}'::int[]) FROM post_sets WHERE post_ids @> ('{}'::int[] || post_id) )
-          FROM (SELECT unnest('{#{post_ids}}'::int[])) as input_list(post_id);
-        SQL
-        commenter_sql = <<-SQL.squish
-          SELECT post_id, array_agg(distinct creator_id) FROM comments
-          WHERE post_id IN (#{post_ids}) AND is_hidden = false
-          GROUP BY post_id
-        SQL
-        noter_sql = <<-SQL.squish
-          SELECT post_id, array_agg(distinct creator_id) FROM notes
-          WHERE post_id IN (#{post_ids}) AND is_active = true
-          GROUP BY post_id
-        SQL
-        faves_sql = <<-SQL.squish
-          SELECT post_id, array_agg(user_id) FROM favorites
-          WHERE post_id IN (#{post_ids})
-          GROUP BY post_id
-        SQL
-        votes_sql = <<-SQL.squish
-          SELECT post_id, array_agg(user_id), array_agg(score) FROM post_votes
-          WHERE post_id IN (#{post_ids})
-          GROUP BY post_id
-        SQL
-        child_sql = <<-SQL.squish
-          SELECT parent_id, array_agg(id) FROM posts
-          WHERE parent_id IN (#{post_ids})
-          GROUP BY parent_id
-        SQL
-        note_sql = <<-SQL.squish
-          SELECT post_id, body FROM notes
-          WHERE post_id IN (#{post_ids}) AND is_active = true
-        SQL
-        deletion_sql = <<-SQL.squish
-          SELECT pf.post_id, pf.creator_id, LOWER(pf.reason) as reason FROM
-            (SELECT MAX(id) as mid, post_id
-             FROM post_flags
-             WHERE post_id IN (#{post_ids}) AND is_resolved = false AND is_deletion = true
-             GROUP BY post_id) pfi
-          INNER JOIN post_flags pf ON pf.id = pfi.mid;
-        SQL
-        pending_replacements_sql = <<-SQL.squish
-          SELECT DISTINCT p.id, CASE WHEN pr.post_id IS NULL THEN false ELSE true END FROM posts p
-            LEFT OUTER JOIN post_replacements pr ON p.id = pr.post_id AND pr.status = 'pending'
-          WHERE p.id IN (#{post_ids})
-        SQL
-        disapprovals_sql = <<-SQL.squish
-          SELECT post_id, array_agg(user_id) FROM post_disapprovals
-          WHERE post_id IN (#{post_ids})
-          GROUP BY post_id
-        SQL
-        verified_artists_sql = <<-SQL.squish
-          SELECT name, linked_user_id FROM artists WHERE linked_user_id IS NOT NULL
-        SQL
-
-        # Run queries
-        conn = ApplicationRecord.connection
-        deletions        = conn.execute(deletion_sql)
-        deleter_ids      = deletions.values.to_h { |p, did, _dr| [p, did] }
-        del_reasons      = deletions.values.to_h { |p, _did, dr| [p, dr] }
-        comment_counts   = conn.execute(comments_sql).values.to_h
-        pool_ids         = conn.execute(pools_sql).values.map(&array_parse).to_h
-        set_ids          = conn.execute(sets_sql).values.map(&array_parse).to_h
-        fave_ids         = conn.execute(faves_sql).values.map(&array_parse).to_h
-        commenter_ids    = conn.execute(commenter_sql).values.map(&array_parse).to_h
-        noter_ids        = conn.execute(noter_sql).values.map(&array_parse).to_h
-        child_ids        = conn.execute(child_sql).values.map(&array_parse).to_h
-        disapprovers     = conn.execute(disapprovals_sql).values.map(&array_parse).to_h
-        verified_artists = conn.execute(verified_artists_sql).values.to_h
-        notes            = Hash.new { |h, k| h[k] = [] }
-        conn.execute(note_sql).values.each { |p, b| notes[p] << b } # rubocop:disable Style/HashEachMethods
-        pending_replacements = conn.execute(pending_replacements_sql).values.to_h
-        views = Reports.get_views_for_posts(post_ids.split(","))
-
-        # Special handling for votes to do it with one query
-        vote_ids = conn.execute(votes_sql).values.map do |pid, uids, scores|
-          uids   = uids[1..-2].split(",").map(&:to_i)
-          scores = scores[1..-2].split(",").map(&:to_i)
-          [pid.to_i, uids.zip(scores)]
-        end
-
-        # rubocop:disable Style/HashTransformValues
-        upvote_ids   = vote_ids.to_h { |pid, user| [pid, user.reject { |_uid, s| s <= 0 }.map { |uid, _| uid }] }
-        downvote_ids = vote_ids.to_h { |pid, user| [pid, user.reject { |_uid, s| s >= 0 }.map { |uid, _| uid }] }
-        # rubocop:enable Style/HashTransformValues
+        data                     = get_data(Post.where(id: post_ids))
+        pool_ids                 = data.to_h { |d| [d.id, d.pool_ids] }
+        post_set_ids             = data.to_h { |d| [d.id, d.post_set_ids] }
+        commenter_ids            = data.to_h { |d| [d.id, d.commenter_ids] }
+        comment_counts           = data.to_h { |d| [d.id, d.comment_count] }
+        noter_ids                = data.to_h { |d| [d.id, d.noter_ids] }
+        note_bodies              = data.to_h { |d| [d.id, d.note_bodies] }
+        fav_user_ids             = data.to_h { |d| [d.id, d.fav_user_ids] }
+        upvote_user_ids          = data.to_h { |d| [d.id, d.upvote_user_ids] }
+        downvote_user_ids        = data.to_h { |d| [d.id, d.downvote_user_ids] }
+        child_post_ids           = data.to_h { |d| [d.id, d.child_post_ids] }
+        disapprover_ids          = data.to_h { |d| [d.id, d.disapprover_ids] }
+        disapproval_counts       = data.to_h { |d| [d.id, d.disapproval_count] }
+        deleter_ids              = data.to_h { |d| [d.id, d.deleter_id] }
+        deletion_reasons         = data.to_h { |d| [d.id, d.deletion_reason] }
+        has_pending_replacements = data.to_h { |d| [d.id, d.has_pending_replacements] }
+        has_pending_appeals      = data.to_h { |d| [d.id, d.has_pending_appeals] }
+        has_verified_artist      = data.to_h { |d| [d.id, d.has_verified_artist] }
+        views                    = Reports.get_views_for_posts(post_ids.split(","))
 
         empty = []
-        batch.map! do |p|
+        batch.map! do |p| # rubocop:disable Metrics/BlockLength
           index_options = {
             comment_count:            comment_counts[p.id] || 0,
             pools:                    pool_ids[p.id] || empty,
-            sets:                     set_ids[p.id] || empty,
-            faves:                    fave_ids[p.id] || empty,
-            upvotes:                  upvote_ids[p.id] || empty,
-            downvotes:                downvote_ids[p.id] || empty,
-            children:                 child_ids[p.id] || empty,
+            sets:                     post_set_ids[p.id] || empty,
+            faves:                    fav_user_ids[p.id] || empty,
+            upvotes:                  upvote_user_ids[p.id] || empty,
+            downvotes:                downvote_user_ids[p.id] || empty,
+            children:                 child_post_ids[p.id] || empty,
             commenters:               commenter_ids[p.id] || empty,
             noters:                   noter_ids[p.id] || empty,
-            notes:                    notes[p.id] || empty,
-            deleter:                  deleter_ids[p.id] || empty,
-            disapprovers:             disapprovers[p.id] || empty,
-            del_reason:               del_reasons[p.id] || empty,
-            has_pending_replacements: pending_replacements[p.id],
-            disapproval_count:        disapprovers[p.id]&.count || 0,
-            artverified:              p.tag_array.any? { |tag| verified_artists.key?(tag) && verified_artists[tag] == p.uploader_id },
+            notes:                    note_bodies[p.id] || empty,
+            deleter:                  deleter_ids[p.id],
+            disapprovers:             disapprover_ids[p.id] || empty,
+            del_reason:               deletion_reasons[p.id],
+            has_pending_replacements: has_pending_replacements[p.id] || false,
+            disapproval_count:        disapproval_counts[p.id] || 0,
+            artverified:              has_verified_artist[p.id] || false,
             views:                    views[p.id] || 0,
+            appealed:                 has_pending_appeals[p.id] || false,
           }
 
           {
@@ -236,6 +181,42 @@ module PostIndex
           body:  batch,
         })
       end
+    end
+
+    def get_data(relation = Post.all)
+      sql = Post
+            .with(linked_artists: Artist.select("artists.linked_user_id", "ARRAY_AGG(artists.name) AS artist_names").where.not(linked_user_id: nil).group(:linked_user_id))
+            .select("posts.id",
+                    "pools_agg.pool_ids",
+                    "post_sets_agg.post_set_ids",
+                    "comments_agg.commenter_ids",
+                    "comments_agg.comment_count",
+                    "notes_agg.noter_ids", "notes_agg.note_bodies",
+                    "favorites_agg.fav_user_ids",
+                    "post_votes_agg.upvote_user_ids", "post_votes_agg.downvote_user_ids",
+                    "child_posts_agg.child_post_ids",
+                    "post_disapprovals_agg.disapprover_ids", "post_disapprovals_agg.disapproval_count",
+                    "last_flag.deleter_id, last_flag.deletion_reason",
+                    "post_replacements_agg.has_pending_replacements",
+                    "post_appeals_agg.has_pending_appeals",
+                    "verified_artist_agg.has_verified_artist")
+            .joins("LEFT JOIN LATERAL (SELECT ARRAY_AGG(pools.id) AS pool_ids FROM pools WHERE posts.id = ANY(pools.post_ids)) pools_agg ON TRUE")
+            .joins("LEFT JOIN LATERAL (SELECT ARRAY_AGG(post_sets.id) AS post_set_ids FROM post_sets WHERE posts.id = ANY(post_sets.post_ids)) post_sets_agg ON TRUE")
+            .joins("LEFT JOIN LATERAL (SELECT ARRAY_AGG(comments.creator_id) AS commenter_ids, COUNT(comments.id) AS comment_count FROM comments WHERE comments.post_id = posts.id AND comments.is_hidden = FALSE) comments_agg ON TRUE")
+            .joins("LEFT JOIN LATERAL (SELECT ARRAY_AGG(notes.creator_id) noter_ids, ARRAY_AGG(notes.body) AS note_bodies FROM notes WHERE notes.post_id = posts.id AND notes.is_active = TRUE) notes_agg ON TRUE")
+            .joins("LEFT JOIN LATERAL (SELECT ARRAY_AGG(favorites.user_id) AS fav_user_ids FROM favorites WHERE favorites.post_id = posts.id) favorites_agg ON TRUE")
+            .joins("LEFT JOIN LATERAL (SELECT ARRAY_AGG(post_votes.user_id) FILTER (WHERE post_votes.score > 0) as upvote_user_ids, ARRAY_AGG(post_votes.user_id) FILTER (WHERE post_votes.score < 0) AS downvote_user_ids FROM post_votes WHERE post_votes.post_id = posts.id) post_votes_agg ON TRUE")
+            .joins("LEFT JOIN LATERAL (SELECT ARRAY_AGG(child_posts.id) AS child_post_ids FROM posts AS child_posts WHERE child_posts.parent_id = posts.id) child_posts_agg ON TRUE")
+            .joins("LEFT JOIN LATERAL (SELECT ARRAY_AGG(post_disapprovals.user_id) AS disapprover_ids, COUNT(post_disapprovals.user_id) AS disapproval_count FROM post_disapprovals WHERE post_disapprovals.post_id = posts.id) post_disapprovals_agg ON TRUE")
+            .joins("LEFT JOIN LATERAL (SELECT creator_id as deleter_id, reason as deletion_reason FROM post_flags WHERE post_flags.post_id = posts.id AND post_flags.is_resolved = FALSE and post_flags.is_deletion = TRUE ORDER BY id DESC LIMIT 1) last_flag ON TRUE")
+            .joins("LEFT JOIN LATERAL (SELECT EXISTS(SELECT 1 FROM post_replacements WHERE post_replacements.post_id = posts.id AND post_replacements.status = 'pending') as has_pending_replacements) post_replacements_agg ON TRUE")
+            .joins("LEFT JOIN LATERAL (SELECT EXISTS(SELECT 1 FROM post_appeals WHERE post_appeals.post_id = posts.id AND post_appeals.status = #{PostAppeal.statuses['pending']}) as has_pending_appeals) post_appeals_agg ON TRUE")
+            .joins("LEFT JOIN linked_artists ON linked_artists.linked_user_id = posts.uploader_id")
+            .joins("LEFT JOIN LATERAL (SELECT EXISTS(SELECT 1 FROM unnest(string_to_array(posts.tag_string, ' ')) AS tag WHERE tag = ANY(linked_artists.artist_names)) AS has_verified_artist) verified_artist_agg ON TRUE")
+            .order(id: :asc)
+            .merge(relation)
+            .to_sql
+      Post.connection.execute(sql).map { |d| PostData.new(**d.transform_keys(&:to_sym)) }
     end
 
     def import_views(options = {})
@@ -269,6 +250,7 @@ module PostIndex
   end
 
   def as_indexed_json(options = {})
+    options_or_get = ->(key, get) { options.key?(key) ? options[key] : get.call }
     {
       created_at:               created_at,
       updated_at:               updated_at,
@@ -293,32 +275,32 @@ module PostIndex
       tag_count_invalid:        tag_count_invalid,
       tag_count_contributor:    tag_count_contributor,
       tag_count_gender:         tag_count_gender,
-      comment_count:            options[:comment_count] || comment_count,
-      disapproval_count:        options[:disapproval_count] || ::PostDisapproval.where(post_id: id).pluck(:user_id).size,
+      comment_count:            options_or_get.call(:comment_count, -> { comment_count }),
+      disapproval_count:        options_or_get.call(:disapproval_count, -> { ::PostDisapproval.where(post_id: id).pluck(:user_id).size }),
 
       file_size:                file_size,
       parent:                   parent_id,
-      pools:                    options[:pools] || ::Pool.where("? = ANY(post_ids)", id).pluck(:id),
-      sets:                     options[:sets] || ::PostSet.where("? = ANY(post_ids)", id).pluck(:id),
-      commenters:               options[:commenters] || ::Comment.undeleted.where(post_id: id).pluck(:creator_id),
-      noters:                   options[:noters] || ::Note.active.where(post_id: id).pluck(:creator_id),
-      faves:                    options[:faves] || ::Favorite.where(post_id: id).pluck(:user_id),
-      upvotes:                  options[:upvotes] || ::PostVote.where(post_id: id).where("score > 0").pluck(:user_id),
-      downvotes:                options[:downvotes] || ::PostVote.where(post_id: id).where("score < 0").pluck(:user_id),
-      children:                 options[:children] || ::Post.where(parent_id: id).pluck(:id),
-      notes:                    options[:notes] || ::Note.active.where(post_id: id).pluck(:body),
+      pools:                    options_or_get.call(:pools, -> { ::Pool.where("? = ANY(post_ids)", id).pluck(:id) }),
+      sets:                     options_or_get.call(:sets, -> { ::PostSet.where("? = ANY(post_ids)", id).pluck(:id) }),
+      commenters:               options_or_get.call(:commenters, -> { ::Comment.undeleted.where(post_id: id).pluck(:creator_id) }),
+      noters:                   options_or_get.call(:noters, -> { ::Note.active.where(post_id: id).pluck(:creator_id) }),
+      faves:                    options_or_get.call(:faves, -> { ::Favorite.where(post_id: id).pluck(:user_id) }),
+      upvotes:                  options_or_get.call(:upvotes, -> { ::PostVote.where(post_id: id).where("score > 0").pluck(:user_id) }),
+      downvotes:                options_or_get.call(:downvotes, -> { ::PostVote.where(post_id: id).where("score < 0").pluck(:user_id) }),
+      children:                 options_or_get.call(:children, -> { ::Post.where(parent_id: id).pluck(:id) }),
+      notes:                    options_or_get.call(:notes, -> { ::Note.active.where(post_id: id).pluck(:body) }),
       uploader:                 uploader_id,
       approver:                 approver_id,
-      disapprovers:             options[:disapprovers] || ::PostDisapproval.where(post_id: id).pluck(:user_id),
-      deleter:                  options[:deleter] || ::PostFlag.where(post_id: id, is_resolved: false, is_deletion: true).order(id: :desc).first&.creator_id,
-      del_reason:               options[:del_reason] || ::PostFlag.where(post_id: id, is_resolved: false, is_deletion: true).order(id: :desc).first&.reason&.downcase,
+      disapprovers:             options_or_get.call(:disapprovers, -> { ::PostDisapproval.where(post_id: id).pluck(:user_id) }),
+      deleter:                  options_or_get.call(:deleter, -> { ::PostFlag.where(post_id: id, is_resolved: false, is_deletion: true).order(id: :desc).first&.creator_id }),
+      del_reason:               options_or_get.call(:del_reason, -> { ::PostFlag.where(post_id: id, is_resolved: false, is_deletion: true).order(id: :desc).first&.reason&.downcase }),
       width:                    image_width,
       height:                   image_height,
       mpixels:                  image_width && image_height ? (image_width.to_f * image_height / 1_000_000).round(2) : 0.0,
       aspect_ratio:             image_width && image_height ? (image_width.to_f / [image_height, 1].max).round(10) : 1.0,
       duration:                 duration,
       framecount:               framecount,
-      views:                    options[:views] || Reports.get_post_views(id),
+      views:                    options_or_get.call(:views, -> { Reports.get_post_views(id) }),
 
       tags:                     tag_string.split,
       md5:                      md5,
@@ -333,10 +315,10 @@ module PostIndex
       flagged:                  is_flagged,
       pending:                  is_pending,
       deleted:                  is_deleted,
-      appealed:                 is_appealed?,
+      appealed:                 options_or_get.call(:appealed, -> { is_appealed? }),
       has_children:             has_children,
-      has_pending_replacements: options.key?(:has_pending_replacements) ? options[:has_pending_replacements] : replacements.pending.any?,
-      artverified:              options.key?(:artverified) ? options[:artverified] : uploader_linked_artists.any?,
+      has_pending_replacements: options_or_get.call(:has_pending_replacements, -> { replacements.pending.any? }),
+      artverified:              options_or_get.call(:artverified, -> { uploader_linked_artists.any? }),
     }
   end
 end

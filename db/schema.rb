@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_03_16_020401) do
+ActiveRecord::Schema[7.1].define(version: 2025_03_28_122554) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -71,6 +71,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_16_020401) do
     t.text "other_names", default: [], null: false, array: true
     t.integer "linked_user_id"
     t.boolean "is_locked", default: false
+    t.index ["linked_user_id"], name: "index_artists_on_linked_user_id"
     t.index ["name"], name: "index_artists_on_name", unique: true
     t.index ["name"], name: "index_artists_on_name_trgm", opclass: :gin_trgm_ops, using: :gin
     t.index ["other_names"], name: "index_artists_on_other_names", using: :gin
@@ -166,6 +167,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_16_020401) do
     t.index ["creator_id", "post_id"], name: "index_comments_on_creator_id_and_post_id"
     t.index ["creator_id"], name: "index_comments_on_creator_id"
     t.index ["creator_ip_addr"], name: "index_comments_on_creator_ip_addr"
+    t.index ["post_id", "is_hidden"], name: "index_comments_on_post_id_and_is_hidden"
     t.index ["post_id"], name: "index_comments_on_post_id"
   end
 
@@ -464,6 +466,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_16_020401) do
     t.index "lower(body) gin_trgm_ops", name: "index_notes_on_lower_body_trgm", using: :gin
     t.index "to_tsvector('english'::regconfig, body)", name: "index_notes_on_to_tsvector_english_body", using: :gin
     t.index ["creator_id", "post_id"], name: "index_notes_on_creator_id_and_post_id"
+    t.index ["post_id", "is_active"], name: "index_notes_on_post_id_and_is_active"
     t.index ["post_id"], name: "index_notes_on_post_id"
   end
 
@@ -510,6 +513,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_16_020401) do
     t.index "lower((name)::text)", name: "index_pools_on_lower_name"
     t.index ["creator_id"], name: "index_pools_on_creator_id"
     t.index ["name"], name: "index_pools_on_name"
+    t.index ["post_ids"], name: "index_pools_on_post_ids", using: :gin
     t.index ["updated_at"], name: "index_pools_on_updated_at"
   end
 
@@ -522,6 +526,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_16_020401) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["creator_id"], name: "index_post_appeals_on_creator_id"
+    t.index ["post_id", "status"], name: "index_post_appeals_on_post_id_and_status"
     t.index ["post_id"], name: "index_post_appeals_on_post_id"
   end
 
@@ -583,6 +588,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_16_020401) do
     t.index "to_tsvector('english'::regconfig, reason)", name: "index_post_flags_on_reason_tsvector", using: :gin
     t.index ["creator_id"], name: "index_post_flags_on_creator_id"
     t.index ["creator_ip_addr"], name: "index_post_flags_on_creator_ip_addr"
+    t.index ["post_id", "is_resolved", "is_deletion"], name: "index_post_flags_on_post_id_and_is_resolved_and_is_deletion"
     t.index ["post_id"], name: "index_post_flags_on_post_id"
   end
 
@@ -621,6 +627,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_16_020401) do
     t.string "rejection_reason", default: "", null: false
     t.jsonb "previous_details"
     t.index ["creator_id"], name: "index_post_replacements_on_creator_id"
+    t.index ["post_id", "status"], name: "index_post_replacements_on_post_id_and_status"
     t.index ["post_id"], name: "index_post_replacements_on_post_id"
     t.index ["rejector_id"], name: "index_post_replacements_on_rejector_id"
   end
@@ -685,6 +692,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_16_020401) do
     t.inet "user_ip_addr", null: false
     t.boolean "is_locked", default: false, null: false
     t.index ["post_id"], name: "index_post_votes_on_post_id"
+    t.index ["score"], name: "index_post_votes_on_score"
     t.index ["user_id", "post_id"], name: "index_post_votes_on_user_id_and_post_id", unique: true
     t.index ["user_id"], name: "index_post_votes_on_user_id"
   end
@@ -754,6 +762,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_16_020401) do
     t.index "string_to_array(tag_string, ' '::text)", name: "index_posts_on_string_to_array_tag_string", using: :gin
     t.index ["change_seq"], name: "index_posts_on_change_seq", unique: true
     t.index ["created_at"], name: "index_posts_on_created_at"
+    t.index ["id"], name: "index_posts_on_id"
     t.index ["is_flagged"], name: "index_posts_on_is_flagged", where: "(is_flagged = true)"
     t.index ["is_pending"], name: "index_posts_on_is_pending", where: "(is_pending = true)"
     t.index ["md5"], name: "index_posts_on_md5", unique: true

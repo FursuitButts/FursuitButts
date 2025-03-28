@@ -394,6 +394,7 @@ class Post < ApplicationRecord
       is_deleted? && !is_appealed?
     end
 
+    # TODO: add database column
     def is_appealed?
       is_deleted? && appeals.pending.any?
     end
