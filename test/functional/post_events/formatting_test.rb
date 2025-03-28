@@ -1,0 +1,336 @@
+# frozen_string_literal: true
+
+require "test_helper"
+require_relative "helper"
+
+module PostEvents
+  class FormattingTest < ActiveSupport::TestCase
+    include Helper
+    include Rails.application.routes.url_helpers
+
+    context "post events for" do
+      setup do
+        @post = create(:post)
+      end
+
+      context "deletions" do
+        should "format deleted correctly" do
+          @post.delete!("Test")
+
+          assert_matches(
+            post_id: @post.id,
+            actions: %w[deleted],
+            text:    "Test",
+            reason:  "Test",
+          )
+        end
+
+        should "format undeleted correctly" do
+          @post.update_column(:is_deleted, true)
+          @post.undelete!
+
+          assert_matches(
+            post_id: @post.id,
+            actions: %w[undeleted],
+            text:    "",
+          )
+        end
+      end
+
+      context "approvals" do
+        should "format approved correctly" do
+          @post.approve!
+
+          assert_matches(
+            post_id: @post.id,
+            actions: %w[approved],
+            text:    "",
+          )
+        end
+
+        should "format unapproved correctly" do
+          @post.update_column(:is_pending, false)
+          @post.unapprove!
+
+          assert_matches(
+            post_id: @post.id,
+            actions: %w[unapproved],
+            text:    "",
+          )
+        end
+      end
+
+      context "flags" do
+        should "format flag_created correctly" do
+          @flag = @post.flags.create!(reason_name: "uploading_guidelines")
+
+          reason = FemboyFans.config.flag_reasons.find { |r| r[:name] == "uploading_guidelines" }[:reason]
+          assert_matches(
+            post_id:      @post.id,
+            actions:      %w[flag_created],
+            text:         reason,
+            post_flag_id: @flag.id,
+            reason:       reason,
+          )
+        end
+
+        should "format flag_removed correctly" do
+          @post2 = create(:post, parent_id: @post.id)
+          @post2.give_favorites_to_parent!
+
+          # FIXME: make a way to test two actions at once, as these are both only ever created at the same time in a determined order
+          assert_matches(
+            post_id:   @post2.id,
+            actions:   %w[favorites_moved favorites_received],
+            text:      "Target: post ##{@post.id}",
+            parent_id: @post.id,
+          )
+        end
+      end
+
+      context "locks" do
+        should "format rating_locked correctly" do
+          @post.update!(is_rating_locked: true)
+
+          assert_matches(
+            post_id: @post.id,
+            actions: %w[rating_locked],
+            text:    "",
+          )
+        end
+
+        should "format rating_unlocked correctly" do
+          @post.update_column(:is_rating_locked, true)
+          @post.update!(is_rating_locked: false)
+
+          assert_matches(
+            post_id: @post.id,
+            actions: %w[rating_unlocked],
+            text:    "",
+          )
+        end
+
+        should "format status_locked correctly" do
+          @post.update!(is_status_locked: true)
+
+          assert_matches(
+            post_id: @post.id,
+            actions: %w[status_locked],
+            text:    "",
+          )
+        end
+
+        should "format status_unlocked correctly" do
+          @post.update_column(:is_status_locked, true)
+          @post.update!(is_status_locked: false)
+
+          assert_matches(
+            post_id: @post.id,
+            actions: %w[status_unlocked],
+            text:    "",
+          )
+        end
+
+        should "format note_locked correctly" do
+          @post.update!(is_note_locked: true)
+
+          assert_matches(
+            post_id: @post.id,
+            actions: %w[note_locked],
+            text:    "",
+          )
+        end
+
+        should "format note_unlocked correctly" do
+          @post.update_column(:is_note_locked, true)
+          @post.update!(is_note_locked: false)
+
+          assert_matches(
+            post_id: @post.id,
+            actions: %w[note_unlocked],
+            text:    "",
+          )
+        end
+      end
+
+      context "replacements" do
+        setup do
+          @upload = UploadService.new(attributes_for(:png_upload).merge(uploader: @admin)).start!
+          @post = @upload.post
+          @replacement = create(:jpg_replacement, post: @post)
+          set_count!
+        end
+
+        should "format replacement_accepted correctly" do
+          @replacement.approve!(penalize_current_uploader: true)
+
+          assert_matches(
+            post_id:             @post.id,
+            actions:             %w[replacement_accepted],
+            text:                "\"replacement ##{@replacement.id}\":#{post_replacements_path(search: { id: @replacement.id })}",
+            post_replacement_id: @replacement.id,
+            old_md5:             @post.md5,
+            new_md5:             @replacement.md5,
+          )
+        end
+
+        should "format replacement_rejected correctly" do
+          @replacement.reject!
+
+          assert_matches(
+            post_id:             @post.id,
+            actions:             %w[replacement_rejected],
+            text:                "\"replacement ##{@replacement.id}\":#{post_replacements_path(search: { id: @replacement.id })}",
+            post_replacement_id: @replacement.id,
+          )
+        end
+
+        should "format replacement_promoted correctly" do
+          @post2 = @replacement.promote!.post
+
+          assert_matches(
+            post_id:             @post2.id,
+            actions:             %w[replacement_promoted],
+            text:                "Source: post ##{@post.id}",
+            post_replacement_id: @replacement.id,
+            source_post_id:      @post.id,
+          )
+        end
+
+        context "replacement_deleted" do
+          should "format correctly for admins" do
+            @replacement.destroy
+
+            assert_matches(
+              post_id:             @post.id,
+              actions:             %w[replacement_deleted],
+              text:                "",
+              post_replacement_id: @replacement.id,
+              md5:                 @replacement.md5,
+              storage_id:          @replacement.storage_id,
+            )
+          end
+
+          should "format correctly for users" do
+            @replacement.destroy
+
+            as(@user) do
+              assert_matches(
+                post_id:             @post.id,
+                actions:             %w[replacement_deleted],
+                creator:             @admin,
+                text:                "",
+                post_replacement_id: @replacement.id,
+              )
+            end
+          end
+        end
+      end
+
+      context "misc" do
+        should "format expunged correctly" do
+          @post.expunge!
+
+          assert_matches(
+            post_id: @post.id,
+            actions: %w[expunged],
+            text:    "",
+          )
+        end
+
+        should "format changed_bg_color correctly" do
+          @post.update!(bg_color: "000000")
+
+          assert_matches(
+            post_id:  @post.id,
+            actions:  %w[changed_bg_color],
+            text:     "To: #000000",
+            bg_color: "000000",
+          )
+        end
+
+        should "format changed_thumbnail_frame correctly" do
+          @upload = UploadService.new(attributes_for(:webm_upload).merge(uploader: @admin)).start!
+          @post = @upload.post
+          set_count!
+          @post.update!(thumbnail_frame: 1)
+
+          assert_matches(
+            post_id:             @post.id,
+            actions:             %w[changed_thumbnail_frame],
+            text:                "Default -> 1",
+            old_thumbnail_frame: nil,
+            new_thumbnail_frame: 1,
+          )
+        end
+
+        should "format copied_notes correctly" do
+          @post2 = create(:post)
+          @note = create(:note, post: @post)
+          @post.copy_notes_to(@post2)
+
+          assert_matches(
+            post_id:        @post2.id,
+            actions:        %w[copied_notes],
+            text:           "Copied 1 note from post ##{@post.id}",
+            source_post_id: @post.id,
+            note_count:     1,
+          )
+        end
+
+        should "format set_min_edit_level correctly" do
+          @post.update(min_edit_level: User::Levels::TRUSTED)
+
+          assert_matches(
+            post_id:        @post.id,
+            actions:        %w[set_min_edit_level],
+            text:           "To: [b]#{User::Levels.id_to_name(User::Levels::TRUSTED)}[/b]",
+            min_edit_level: User::Levels::TRUSTED,
+          )
+        end
+      end
+
+      context "appeals" do
+        setup do
+          @post.update_column(:is_deleted, true)
+          @appeal = @post.appeals.create!(reason: "Test")
+          set_count!
+        end
+
+        should "format appeal_created correctly" do
+          @appeal.delete
+          @appeal = @post.appeals.create!(reason: "Test")
+
+          assert_matches(
+            post_id:        @post.id,
+            actions:        %w[appeal_created],
+            text:           "\"appeal ##{@appeal.id}\":#{post_appeals_path(search: { id: @appeal.id })}",
+            post_appeal_id: @appeal.id,
+          )
+        end
+
+        should "format appeal_accepted correctly" do
+          @appeal.accept!
+
+          assert_matches(
+            post_id:        @post.id,
+            actions:        %w[appeal_accepted],
+            text:           "\"appeal ##{@appeal.id}\":#{post_appeals_path(search: { id: @appeal.id })}",
+            post_appeal_id: @appeal.id,
+          )
+        end
+
+        should "format appeal_rejected correctly" do
+          @appeal.reject!
+
+          assert_matches(
+            post_id:        @post.id,
+            actions:        %w[appeal_rejected],
+            text:           "\"appeal ##{@appeal.id}\":#{post_appeals_path(search: { id: @appeal.id })}",
+            post_appeal_id: @appeal.id,
+          )
+        end
+      end
+    end
+  end
+end

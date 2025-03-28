@@ -1725,7 +1725,7 @@ class Post < ApplicationRecord
           note.copy_to(other_post)
         end
 
-        PostEvent.add!(other_post.id, CurrentUser.user, :copied_notes, source_post_id: other_post.id, note_count: notes.active.count)
+        PostEvent.add!(other_post.id, CurrentUser.user, :copied_notes, source_post_id: id, note_count: notes.active.count)
         copy_tags.each do |tag|
           other_post.remove_tag(tag)
           other_post.add_tag(tag) if has_tag?(tag)

@@ -18,14 +18,14 @@
   <% t.column("User") do |event| %>
     <% if event.is_creator_visible?(CurrentUser.user) %>
       <%= link_to_user(event.creator) %>
-      <%= link_to("»", post_events_path(search: params[:search].permit!.merge(creator_name: event.creator.name))) %>
+      <%= link_to("»", post_events_path(search: params[:search].permit!.merge(creator_name: event.creator_name))) %>
     <% else %>
       <i>hidden</i>
     <% end %>
     <p><%= time_ago_in_words_tagged(event.created_at, compact: true) %></p>
   <% end %>
   <% t.column("Info", th: { class: "col-expand" }) do |event| %>
-    <%= format_text(event.format_description) %>
+    <%= format_text(event.format_text) %>
   <% end %>
 <% end %>
 

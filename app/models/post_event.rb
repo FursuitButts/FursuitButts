@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class PostEvent < ApplicationRecord
-  belongs_to :creator, class_name: "User"
+  belongs_to_creator
   belongs_to :post
   enum :action, {
     deleted:                 0,
@@ -42,6 +42,22 @@ class PostEvent < ApplicationRecord
     actions[:comment_disabled],
     actions[:comment_enabled],
   ].freeze
+
+  EXTRA_DATA = %i[
+    reason
+    parent_id
+    child_id
+    source_post_id
+    bg_color
+    old_thumbnail_frame new_thumbnail_frame
+    note_count
+    post_appeal_id
+    post_flag_id
+    post_replacement_id old_md5 new_md5 md5 storage_id
+    min_edit_level
+  ].freeze
+
+  store_accessor :extra_data, *EXTRA_DATA
 
   def self.search_options_for(user)
     options = actions.keys
@@ -94,13 +110,8 @@ class PostEvent < ApplicationRecord
   end
 
   module ApiMethods
-    # whitelisted data attributes
-    def allowed_data
-      %w[reason parent_id child_id bg_color post_replacement_id old_md5 new_md5 source_post_id md5 note_count post_appeal_id post_flag_id min_edit_level]
-    end
-
     def serializable_hash(*)
-      hash = super.merge(**extra_data.slice(*allowed_data))
+      hash = super
       hash[:creator_id] = nil unless is_creator_visible?(CurrentUser.user)
       hash
     end
@@ -108,6 +119,117 @@ class PostEvent < ApplicationRecord
 
   include ApiMethods
   extend SearchMethods
+
+  BLANK = { text: ->(_log) { "" }, json: [] }.freeze
+  FORMATTERS = {
+    deleted:                 {
+      text: ->(log) { log.reason.to_s },
+      json: %i[reason],
+    },
+    undeleted:               BLANK,
+    approved:                BLANK,
+    unapproved:              BLANK,
+    flag_created:            {
+      text: ->(log) { log.reason.to_s },
+      json: %i[post_flag_id reason],
+    },
+    flag_removed:            {
+      text: ->(_log) { "" },
+      json: %i[post_flag_id],
+    },
+    favorites_moved:         {
+      text: ->(log) { "Target: post ##{log.parent_id}" },
+      json: %i[parent_id],
+    },
+    favorites_received:      {
+      text: ->(log) { "From: post ##{log.child_id}" },
+      json: %i[child_id],
+    },
+    rating_locked:           BLANK,
+    rating_unlocked:         BLANK,
+    status_locked:           BLANK,
+    status_unlocked:         BLANK,
+    note_locked:             BLANK,
+    note_unlocked:           BLANK,
+    replacement_accepted:    {
+      text: ->(log) { "\"replacement ##{log.post_replacement_id}\":#{url.post_replacements_path(search: { id: log.post_replacement_id })}" },
+      json: %i[post_replacement_id old_md5 new_md5],
+    },
+    replacement_rejected:    {
+      text: ->(log) { "\"replacement ##{log.post_replacement_id}\":#{url.post_replacements_path(search: { id: log.post_replacement_id })}" },
+      json: %i[post_replacement_id],
+    },
+    replacement_promoted:    {
+      text: ->(log) { "Source: post ##{log.source_post_id}" },
+      json: %i[post_replacement_id source_post_id],
+    },
+    replacement_deleted:     {
+      text: ->(_log) { "" },
+      json: ->(_log) do
+        return %i[post_replacement_id] unless CurrentUser.user.is_admin?
+        %i[post_replacement_id md5 storage_id]
+      end,
+    },
+    expunged:                BLANK,
+    comment_disabled:        BLANK,
+    comment_enabled:         BLANK,
+    comment_unlocked:        BLANK,
+    changed_bg_color:        {
+      text: ->(log) { "To: #{log.bg_color.present? ? "##{log.bg_color}" : 'None'}" },
+      json: %i[bg_color],
+    },
+    changed_thumbnail_frame: {
+      text: ->(log) { "#{log.old_thumbnail_frame || 'Default'} -> #{log.new_thumbnail_frame || 'Default'}" },
+      json: %i[old_thumbnail_frame new_thumbnail_frame],
+    },
+    appeal_created:          {
+      text: ->(log) { "\"appeal ##{log.post_appeal_id}\":#{url.post_appeals_path(search: { id: log.post_appeal_id })}" },
+      json: %i[post_appeal_id],
+    },
+    appeal_accepted:         {
+      text: ->(log) { "\"appeal ##{log.post_appeal_id}\":#{url.post_appeals_path(search: { id: log.post_appeal_id })}" },
+      json: %i[post_appeal_id],
+    },
+    appeal_rejected:         {
+      text: ->(log) { "\"appeal ##{log.post_appeal_id}\":#{url.post_appeals_path(search: { id: log.post_appeal_id })}" },
+      json: %i[post_appeal_id],
+    },
+    copied_notes:            {
+      text: ->(log) { "Copied #{log.note_count} #{'note'.pluralize(log.note_count)} from post ##{log.source_post_id}" },
+      json: %i[source_post_id note_count],
+    },
+    set_min_edit_level:      {
+      text: ->(log) { "To: [b]#{User::Levels.id_to_name(log.min_edit_level)}[/b]" },
+      json: %i[min_edit_level],
+    },
+  }.freeze
+
+  def self.url
+    Rails.application.routes.url_helpers
+  end
+
+  def format_unknown(log)
+    CurrentUser.user.is_admin? ? "Unknown action #{log.action}: #{log.extra_data.inspect}" : "Unknown action #{log.action}"
+  end
+
+  def format_text
+    FORMATTERS[action.to_sym]&.[](:text)&.call(self) || format_unknown(self)
+  end
+
+  def json_keys
+    formatter = FORMATTERS[action.to_sym]&.[](:json)
+    return CurrentUser.user.is_admin? ? values.keys : [] unless formatter
+    formatter.is_a?(Proc) ? formatter.call(self) : formatter
+  end
+
+  def format_json
+    keys = FORMATTERS[action.to_sym]&.[](:json)
+    return CurrentUser.user.is_admin? ? values : {} if keys.nil?
+    keys = keys.call(self) if keys.is_a?(Proc)
+    keys.index_with(&method(:send))
+  end
+
+  KNOWN_ACTIONS = FORMATTERS.keys.freeze
 
   def self.available_includes
     %i[post]

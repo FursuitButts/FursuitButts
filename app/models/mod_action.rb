@@ -644,15 +644,15 @@ class ModAction < ApplicationRecord
 
   def json_keys
     formatter = FORMATTERS[action.to_sym]&.[](:json)
-    return CurrentUser.is_admin? ? values.keys : [] unless formatter
+    return CurrentUser.user.is_admin? ? values.keys : [] unless formatter
     formatter.is_a?(Proc) ? formatter.call(self, user) : formatter
   end
 
   def format_json
     keys = FORMATTERS[action.to_sym]&.[](:json)
-    return CurrentUser.is_admin? ? values : {} if keys.nil?
+    return CurrentUser.user.is_admin? ? values : {} if keys.nil?
     keys = keys.call(self, user) if keys.is_a?(Proc)
-    keys.index_with { |k| send(k) }
+    keys.index_with(&method(:send))
   end
 
   KNOWN_ACTIONS = FORMATTERS.keys.freeze

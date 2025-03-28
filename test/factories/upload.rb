@@ -26,5 +26,13 @@ FactoryBot.define do
     factory(:png_upload) do
       file { fixture_file_upload("test.png") }
     end
+
+    factory(:webm_upload) do
+      file { fixture_file_upload("test-512x512.webm") }
+    end
+
+    factory(:mp4_upload) do
+      file { fixture_file_upload("test-300x300.mp4") }
+    end
   end
 end

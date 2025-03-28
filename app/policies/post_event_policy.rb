@@ -6,6 +6,6 @@ class PostEventPolicy < ApplicationPolicy
   end
 
   def api_attributes
-    super - %i[extra_data]
+    super - %i[extra_data] + record.json_keys
   end
 end

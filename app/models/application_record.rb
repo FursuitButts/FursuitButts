@@ -447,6 +447,7 @@ class ApplicationRecord < ActiveRecord::Base
           end
 
           define_method(:creator_name) do
+            return creator.name if association(:creator).loaded?
             User.id_to_name(creator_id)
           end
         end
@@ -461,6 +462,7 @@ class ApplicationRecord < ActiveRecord::Base
           end
 
           define_method(:updater_name) do
+            return updater.name if association(:updater).loaded?
             User.id_to_name(updater_id)
           end
         end
