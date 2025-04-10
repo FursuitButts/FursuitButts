@@ -553,11 +553,11 @@ class User < ApplicationRecord
     end
 
     def mark_unverified!
-      update(email_verified: false)
+      update!(email_verified: false)
     end
 
     def mark_verified!
-      update(email_verified: true)
+      update!(email_verified: true)
     end
 
     def enable_email_verification?

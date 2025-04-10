@@ -32,7 +32,7 @@ class EmailsController < ApplicationController
     raise(User::PrivilegeError, "Account already activated.") if user.is_verified?
 
     user.mark_verified!
-    UserEvent.create_from_request!(CurrentUser.user, :email_verify, request)
+    UserEvent.create_from_request!(user, :email_verify, request)
 
     redirect_to(home_users_path, notice: "Account activated")
   end
