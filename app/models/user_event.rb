@@ -35,7 +35,8 @@ class UserEvent < ApplicationRecord
 
   module ConstructorMethods
     def create_from_request!(user, category, request)
-      raise(StandardError, "Anonymous user supplied to UserEvent#create_from_request!") if user.is_anonymous?
+      # we need to compare directly due to tests using properly created anonymous users
+      raise(StandardError, "Anonymous user supplied to UserEvent#create_from_request!") if user == User.anonymous
       ip_addr = request.remote_ip
       user_session = UserSession.new(session_id: request.session[:session_id], ip_addr: ip_addr, user_agent: request.user_agent)
       user.user_events.create!(category: category, user_session: user_session, ip_addr: ip_addr, session_id: request.session[:session_id], user_agent: request.user_agent)
