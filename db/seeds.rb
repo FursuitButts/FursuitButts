@@ -11,6 +11,7 @@ require_relative "seeds/posts"
 # Uncomment to see detailed logs
 # ActiveRecord::Base.logger = ActiveSupport::Logger.new($stdout)
 
+ENV["SEEDING"] = "1"
 module Seeds
   def self.run!
     CurrentUser.user = User.system
@@ -95,7 +96,7 @@ module Seeds
   end
 end
 
-if ENV["POSTS_ONLY"] == "1"
+if ENV.fetch("POSTS_ONLY", false).to_s.truthy?
   CurrentUser.as_system { Seeds::Posts.run! }
 else
   CurrentUser.as_system do

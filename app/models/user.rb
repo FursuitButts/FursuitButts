@@ -506,6 +506,10 @@ class User < ApplicationRecord
       level == Levels::RESTRICTED
     end
 
+    def is_system?
+      level == Levels::SYSTEM
+    end
+
     def is_pending?
       is_rejected? || is_restricted?
     end

@@ -56,7 +56,7 @@ module Seeds
         uploader:         CurrentUser.user,
         uploader_ip_addr: CurrentUser.ip_addr,
         direct_url:       url,
-        tag_string:       data["tags"].values.flatten.join(" "),
+        tag_string:       data["tags"].map { |category, tags| tags.map { |tag| "#{category}:#{tag}" }}.flatten.join(" "),
         source:           data["sources"].join("\n"),
         description:      data["description"],
         rating:           data["rating"],

@@ -27,6 +27,10 @@ module TagCategory
     def admin_only?
       is_a?(AdminCategory)
     end
+
+    def can_use?(user)
+      !admin_only? || (user.is_system? || user.is_admin?)
+    end
   end
   class AdminCategory < Category; end
 

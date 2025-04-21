@@ -132,7 +132,7 @@ class Tag < ApplicationRecord
     def user_can_change_category?
       cat = TagCategory.get(category)
       return false unless cat
-      if !CurrentUser.user.is_admin? && cat.admin_only?
+      if cat.can_use?(CurrentUser.user)
         errors.add(:category, "can only used by admins")
         return false
       end
