@@ -1093,13 +1093,6 @@ class Post < ApplicationRecord
       delete_typed_tag(tag)
     end
 
-    def inject_tag_categories(tag_cats)
-      @tag_categories = tag_cats
-      @typed_tags = tag_array.group_by do |tag_name|
-        @tag_categories[tag_name]
-      end
-    end
-
     def tag_categories
       @tag_categories ||= Tag.categories_for(tag_array)
     end

@@ -3,7 +3,7 @@
 module Seeds
   class Posts
     MAX_PER_PAGE = 500
-    Pool = Struct.new(:id, :name, :created_at, :updated_at, :creator_id, :description, :is_active, :category, :post_ids, :creator_name, :post_count)
+    Pool = Struct.new(:id, :name, :created_at, :updated_at, :creator_id, :description, :is_active, :category, :post_ids, :creator_name, :post_count, :artist_names)
 
     def self.run!(limit = ENV.fetch("SEED_POST_COUNT", 100).to_i)
       new.run!(limit)

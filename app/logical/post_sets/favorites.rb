@@ -32,15 +32,10 @@ module PostSets
     def api_posts
       favorites = self.favorites
       fill_children(favorites)
-      fill_tag_types(favorites)
       favorites
     end
 
     def fill_children(favorites)
-      super(favorites.map(&:post))
-    end
-
-    def fill_tag_types(favorites)
       super(favorites.map(&:post))
     end
 

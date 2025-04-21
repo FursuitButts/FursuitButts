@@ -73,7 +73,6 @@ module PostSets
     def api_posts
       posts = self.posts
       fill_children(posts)
-      fill_tag_types(posts)
       posts
     end
 
