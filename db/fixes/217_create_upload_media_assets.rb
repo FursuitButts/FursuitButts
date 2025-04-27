@@ -12,9 +12,10 @@ end
 def handle(post)
   puts(post.id)
   # move the file to the new location
+  FileUtils.mkdir_p(File.dirname(file_path(post.md5_in_database, post.file_ext_in_database, post.protect_file?, false)))
   FileUtils.mv(file_path(post.md5_in_database, post.file_ext_in_database, post.protect_file?, true), file_path(post.md5_in_database, post.file_ext_in_database, post.protect_file?, false))
   # we have to use _in_database due to the bare names being delegated
-  asset = UploadMediaAsset.new(file: File.open(file_path(post.md5_in_database, post.file_ext_in_database, post.protect_file?, false)), creator_id: post.uploader_id, creator_ip_addr: post.uploader_ip_addr)
+  asset = UploadMediaAsset.new(file: File.open(file_path(post.md5_in_database, post.file_ext_in_database, post.protect_file?, false)), creator_id: post.uploader_id, creator_ip_addr: post.uploader_ip_addr, checksum: post.md5_in_database)
   asset.save!
   asset.set_file_attributes
   asset.status = "active"

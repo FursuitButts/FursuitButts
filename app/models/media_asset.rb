@@ -33,8 +33,8 @@ class MediaAsset < ApplicationRecord
   scope :duplicates_of, ->(md5) { duplicate_relevant.where(md5: md5) }
   scope :expunged_duplicates_of, ->(md5) { expunged.where(md5: md5) }
   scope :with_metadata, -> { includes(:media_metadata) }
-  scope :images_only, -> { where(file_ext: FileMethods::IMAGE_EXTENSIONS) }
-  scope :videos_only, -> { where(file_ext: FileMethods::VIDEO_EXTENSIONS) }
+  scope :images_only, -> { where(file_ext: ::FileMethods::IMAGE_EXTENSIONS) }
+  scope :videos_only, -> { where(file_ext: ::FileMethods::VIDEO_EXTENSIONS) }
 
   enum :status, %i[pending uploading active deleted cancelled expunged replaced failed duplicate].index_with(&:to_s)
 

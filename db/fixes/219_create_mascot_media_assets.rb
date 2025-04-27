@@ -12,7 +12,7 @@ def handle(mascot)
   puts(mascot.id)
   # neither the mascot nor the mod action store the ip address of the creator
   # we have to use _in_database due to the bare names being delegated
-  asset = MascotMediaAsset.new(file: File.open(file_path(mascot.md5_in_database, mascot.file_ext_in_database)), creator_id: mascot.creator_id, creator_ip_addr: "127.0.0.1")
+  asset = MascotMediaAsset.new(file: File.open(file_path(mascot.md5_in_database, mascot.file_ext_in_database)), creator_id: mascot.creator_id, creator_ip_addr: "127.0.0.1", checksum: mascot.md5_in_database)
   asset.save!
   asset.set_file_attributes
   asset.status = "active"
