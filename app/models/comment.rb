@@ -37,7 +37,7 @@ class Comment < ApplicationRecord
   has_one :spam_ticket, -> { spam }, class_name: "Ticket", as: :model
 
   scope :deleted, -> { where(is_hidden: true) }
-  scope :undeleted, -> { where(is_hidden: false) }
+  scope :not_deleted, -> { where(is_hidden: false) }
   scope :stickied, -> { where(is_sticky: true) }
 
   module SearchMethods

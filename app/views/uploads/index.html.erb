@@ -55,7 +55,7 @@
     <br><%= time_ago_in_words_tagged(upload.created_at) %>
   <% end %>
   <% t.column("Status") do |upload| %>
-    <%= render_status(upload) %>
+    <%= upload.pretty_status %>
   <% end %>
 <% end %>
 

@@ -136,30 +136,38 @@ module FemboyFans
       "/usr/bin/ffmpeg"
     end
 
+    # TODO: remove these
+
     # Thumbnail size
+    # @deprecated
     def small_image_width
       300
     end
 
     # Large resize image width. Set to nil to disable.
+    # @deprecated
     def large_image_width
       850
     end
 
-    def large_image_prefix
-      ""
-    end
-
     def protected_path_prefix
-      "deleted"
+      "deleted/"
     end
 
     def protected_file_secret
       "abc123"
     end
 
+    def post_path_prefix
+      "posts/"
+    end
+
     def replacement_path_prefix
-      "replacements"
+      "replacements/"
+    end
+
+    def mascot_path_prefix
+      "mascots/"
     end
 
     def replacement_file_secret
@@ -199,6 +207,10 @@ module FemboyFans
 
     def disable_cache_store?
       false
+    end
+
+    def pending_uploads_limit
+      3
     end
 
     # Members cannot post more than X comments in an hour.
@@ -443,7 +455,11 @@ module FemboyFans
     # Maximum size of an upload. If you change this, you must also change
     # `client_max_body_size` in your nginx.conf.
     def max_file_size
-      100.megabytes
+      200.megabytes
+    end
+
+    def max_upload_per_request
+      75.megabytes
     end
 
     def max_file_sizes
@@ -452,8 +468,8 @@ module FemboyFans
         "png"  => 100.megabytes,
         "webp" => 100.megabytes,
         "gif"  => 30.megabytes,
-        "webm" => 100.megabytes,
-        "mp4"  => 100.megabytes,
+        "webm" => 200.megabytes,
+        "mp4"  => 200.megabytes,
       }
     end
 
@@ -516,6 +532,7 @@ module FemboyFans
       }
     end
 
+    # hierarchical is in app/models/media_asset.rb as a constant now
     # The method to use for storing image files.
     def storage_manager
       # Store files on the local filesystem.
@@ -783,14 +800,114 @@ module FemboyFans
 
     # Additional video samples will be generated in these dimensions if it makes sense to do so
     # They will be available as additional scale options on applicable posts in the order they appear here
-    def video_rescales
-      { "720p" => [1280, 720], "480p" => [640, 480] }
+    def video_variants
+      {
+        "720p" => MediaAsset::Rescale.new(width: 1280, height: 720, method: :scaled),
+        "480p" => MediaAsset::Rescale.new(width: 640, height: 480, method: :scaled),
+      }
     end
 
-    # TODO: merge image samples into rescales
-    # FIXME: image rescales have NOT been tested well and are likely NOT fully implemented, sample generation really need to be redone from scratch
-    def image_rescales
-      {}
+    def video_image_variants
+      {
+        "crop"    => MediaAsset::Rescale.new(width: 300, height: 300, method: :exact),
+        "preview" => MediaAsset::Rescale.new(width: 300, height: nil, method: :scaled), # thumbnail, small
+        "large"   => MediaAsset::Rescale.new(width: nil, height: nil, method: :scaled), # sample
+      }
+    end
+
+    def image_variants
+      {
+        "crop"    => MediaAsset::Rescale.new(width: 300, height: 300, method: :exact),
+        "preview" => MediaAsset::Rescale.new(width: 300, height: nil, method: :scaled), # thumbnail, small
+        "large"   => MediaAsset::Rescale.new(width: 850, height: nil, method: :scaled), # sample
+      }
+    end
+
+    def variant_location(variant, _file_ext)
+      variant = variant.to_s
+      return :none if variant == "original"
+      return :path if %w[720p 480p crop preview large].include?(variant)
+      return :file if %w[thumb].include?(variant)
+      # return :file if %w[720p 480p].include?(variant)
+      # return :path if %w[crop preview large].include?(variant)
+      Rails.logger.warn("[variant_location]: Unknown variant #{variant}")
+      :none
+    end
+
+    def video_scale_options_webm(width, height, file_path)
+      [
+        "-c:v",
+        "libvpx-vp9",
+        "-pix_fmt",
+        "yuv420p",
+        "-deadline",
+        "good",
+        "-cpu-used",
+        "5", # 4+ disable a bunch of rate estimation features, but seems to save reasonable CPU time without large quality drop
+        "-auto-alt-ref",
+        "0",
+        "-qmin",
+        "20",
+        "-qmax",
+        "42",
+        "-crf",
+        "35",
+        "-b:v",
+        "3M",
+        "-vf",
+        "scale=w=#{width}:h=#{height}",
+        "-threads",
+        (Etc.nprocessors * 0.7).to_i.to_s,
+        "-row-mt",
+        "1",
+        "-max_muxing_queue_size",
+        "4096",
+        "-slices",
+        "8",
+        "-c:a",
+        "libopus",
+        "-b:a",
+        "96k",
+        "-map_metadata",
+        "-1",
+        "-metadata",
+        'title="femboy.fan_preview_quality_conversion,_visit_site_for_full_quality_download"',
+        file_path,
+      ]
+    end
+
+    def video_scale_options_mp4(width, height, file_path)
+      [
+        "-c:v",
+        "libx264",
+        "-pix_fmt",
+        "yuv420p",
+        "-profile:v",
+        "main",
+        "-preset",
+        "fast",
+        "-crf",
+        "27",
+        "-b:v",
+        "3M",
+        "-vf",
+        "scale=w=#{width}:h=#{height}",
+        "-threads",
+        (Etc.nprocessors * 0.7).to_i.to_s,
+        "-max_muxing_queue_size",
+        "4096",
+        "-c:a",
+        "aac",
+        "-b:a",
+        "128k",
+        "-map_metadata",
+        "-1",
+        "-metadata",
+        'title="femboy.fan_preview_quality_conversion,_visit_site_for_full_quality_download"',
+        "-movflags",
+        "+faststart",
+        file_path,
+      ]
     end
 
     def replacement_thumbnail_width
@@ -905,7 +1022,6 @@ module FemboyFans
 
   class EnvironmentConfiguration
     def custom_configuration
-      return CustomConfiguration.new if Rails.env.development? # no caching in dev
       @custom_configuration ||= CustomConfiguration.new
     end
 

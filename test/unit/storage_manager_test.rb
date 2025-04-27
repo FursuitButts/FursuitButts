@@ -7,7 +7,8 @@ class StorageManagerTest < ActiveSupport::TestCase
 
   context "StorageManager::Local" do
     setup do
-      @storage_manager = StorageManager::Local.new(base_dir: BASE_DIR, base_url: "/")
+      @base_url = "http://localhost"
+      @storage_manager = StorageManager::Local.new(base_dir: BASE_DIR, base_url: @base_url)
     end
 
     teardown do
@@ -42,43 +43,63 @@ class StorageManagerTest < ActiveSupport::TestCase
       end
     end
 
-    context "#store_file and #delete_file methods" do
-      setup do
-        @post = create(:post, file_ext: "png")
-
-        @storage_manager.store_file(StringIO.new("data"), @post, :preview)
-        @storage_manager.store_file(StringIO.new("data"), @post, :large)
-        @storage_manager.store_file(StringIO.new("data"), @post, :original)
-
-        @file_path = "#{BASE_DIR}/preview/#{@post.md5}.webp"
-        @large_file_path = "#{BASE_DIR}/sample/#{@post.md5}.webp"
-        @preview_file_path = "#{BASE_DIR}/#{@post.md5}.#{@post.file_ext}"
-      end
-
-      should "store the files at the correct path" do
-        assert(File.exist?(@file_path))
-        assert(File.exist?(@large_file_path))
-        assert(File.exist?(@preview_file_path))
-      end
-
-      should "delete the files" do
-        @storage_manager.delete_file(@post.id, @post.md5, @post.file_ext, :preview)
-        @storage_manager.delete_file(@post.id, @post.md5, @post.file_ext, :large)
-        @storage_manager.delete_file(@post.id, @post.md5, @post.file_ext, :original)
-
-        assert_not(File.exist?(@file_path))
-        assert_not(File.exist?(@large_file_path))
-        assert_not(File.exist?(@preview_file_path))
+    context "#file_name method" do
+      should "return the correct name" do
+        md5 = SecureRandom.hex(16)
+        format = ->(ext, type) { @storage_manager.file_name(md5, ext, type) }
+        assert_equal("#{md5}.webm", format.call("webm", :original))
+        assert_equal("#{md5}.webp", format.call("webp", :crop))
+        assert_equal("#{md5}.webp", format.call("webp", :large))
+        assert_equal("#{md5}.webp", format.call("webp", :preview))
+        assert_equal("#{md5}.webm", format.call("webm", :"720p"))
+        assert_equal("#{md5}.mp4", format.call("mp4", :"720p"))
+        assert_equal("#{md5}.webm", format.call("webm", :"480p"))
+        assert_equal("#{md5}.mp4", format.call("mp4", :"480p"))
       end
     end
 
-    context "#file_url method" do
+    context "#url method" do
       should "return the correct urls" do
-        @post = create(:post, file_ext: "png")
+        md5 = SecureRandom.hex(16)
+        format = ->(ext, type) { @storage_manager.url(md5, ext, type, protected: false, prefix: FemboyFans.config.post_path_prefix, protected_prefix: FemboyFans.config.protected_path_prefix) }
+        assert_equal("#{@base_url}/data/posts/#{md5}.webm", format.call("webm", :original))
+        assert_equal("#{@base_url}/data/posts/crop/#{md5}.webp", format.call("webp", :crop))
+        assert_equal("#{@base_url}/data/posts/large/#{md5}.webp", format.call("webp", :large))
+        assert_equal("#{@base_url}/data/posts/preview/#{md5}.webp", format.call("webp", :preview))
+        assert_equal("#{@base_url}/data/posts/720p/#{md5}.webm", format.call("webm", :"720p"))
+        assert_equal("#{@base_url}/data/posts/720p/#{md5}.mp4", format.call("mp4", :"720p"))
+        assert_equal("#{@base_url}/data/posts/480p/#{md5}.webm", format.call("webm", :"480p"))
+        assert_equal("#{@base_url}/data/posts/480p/#{md5}.mp4", format.call("mp4", :"480p"))
+      end
+    end
 
-        assert_equal("/data/#{@post.md5}.png", @storage_manager.file_url(@post, :original))
-        assert_equal("/data/sample/#{@post.md5}.webp", @storage_manager.file_url(@post, :large))
-        assert_equal("/data/preview/#{@post.md5}.webp", @storage_manager.file_url(@post, :preview))
+    context "#url_path method" do
+      should "return the correct paths" do
+        md5 = SecureRandom.hex(16)
+        format = ->(ext, type) { @storage_manager.url_path(md5, ext, type, protected: false, prefix: FemboyFans.config.post_path_prefix, protected_prefix: FemboyFans.config.protected_path_prefix) }
+        assert_equal("/data/posts/#{md5}.webm", format.call("webm", :original))
+        assert_equal("/data/posts/crop/#{md5}.webp", format.call("webp", :crop))
+        assert_equal("/data/posts/large/#{md5}.webp", format.call("webp", :large))
+        assert_equal("/data/posts/preview/#{md5}.webp", format.call("webp", :preview))
+        assert_equal("/data/posts/720p/#{md5}.webm", format.call("webm", :"720p"))
+        assert_equal("/data/posts/720p/#{md5}.mp4", format.call("mp4", :"720p"))
+        assert_equal("/data/posts/480p/#{md5}.webm", format.call("webm", :"480p"))
+        assert_equal("/data/posts/480p/#{md5}.mp4", format.call("mp4", :"480p"))
+      end
+    end
+
+    context "#file_path method" do
+      should "return the correct paths" do
+        md5 = SecureRandom.hex(16)
+        format = ->(ext, type) { @storage_manager.file_path(md5, ext, type, protected: false, prefix: FemboyFans.config.post_path_prefix, protected_prefix: FemboyFans.config.protected_path_prefix) }
+        assert_equal("#{BASE_DIR}/posts/#{md5}.webm", format.call("webm", :original))
+        assert_equal("#{BASE_DIR}/posts/crop/#{md5}.webp", format.call("webp", :crop))
+        assert_equal("#{BASE_DIR}/posts/large/#{md5}.webp", format.call("webp", :large))
+        assert_equal("#{BASE_DIR}/posts/preview/#{md5}.webp", format.call("webp", :preview))
+        assert_equal("#{BASE_DIR}/posts/720p/#{md5}.webm", format.call("webm", :"720p"))
+        assert_equal("#{BASE_DIR}/posts/720p/#{md5}.mp4", format.call("mp4", :"720p"))
+        assert_equal("#{BASE_DIR}/posts/480p/#{md5}.webm", format.call("webm", :"480p"))
+        assert_equal("#{BASE_DIR}/posts/480p/#{md5}.mp4", format.call("mp4", :"480p"))
       end
     end
   end

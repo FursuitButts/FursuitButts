@@ -123,7 +123,7 @@ class PostEventTest < ActiveSupport::TestCase
 
     context "replacements" do
       setup do
-        upload = UploadService.new(attributes_for(:upload).merge(file: fixture_file_upload("test.gif"), uploader: @user, tag_string: "tst")).start!
+        upload = create(:gif_upload, uploader: @user, tag_string: "tst")
         @post = upload.post
         @replacement = create(:png_replacement, creator: @user, post: @post)
       end

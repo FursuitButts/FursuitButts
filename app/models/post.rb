@@ -9,12 +9,12 @@ class Post < ApplicationRecord
   # Tags to copy when copying notes.
   NOTE_COPY_TAGS = %w[translated partially_translated translation_check translation_request].freeze
   ASPECT_RATIO_REGEX = /^\d+:\d+$/
-  VIDEO_EXTENSIONS = %w[webm mp4].freeze
-  IMAGE_EXTENSIONS = %w[png jpg gif webp].freeze
-  EXTENSIONS = (IMAGE_EXTENSIONS + VIDEO_EXTENSIONS).freeze
+  VIDEO_EXTENSIONS = ::FileMethods::VIDEO_EXTENSIONS
+  IMAGE_EXTENSIONS = ::FileMethods::IMAGE_EXTENSIONS
+  EXTENSIONS = ::FileMethods::EXTENSIONS
 
   module Flags
-    HAS_CROPPED              = 1 << 0
+    # HAS_CROPPED              = 1 << 0
     HIDE_FROM_ANONYMOUS      = 1 << 1
     HIDE_FROM_SEARCH_ENGINES = 1 << 2
 
@@ -41,7 +41,6 @@ class Post < ApplicationRecord
   before_validation :blank_out_nonexistent_parents
   before_validation :remove_parent_loops
   normalizes :description, with: ->(desc) { desc.gsub("\r\n", "\n") }
-  validates :md5, uniqueness: { on: :create, message: ->(obj, _data) { "duplicate: #{Post.find_by(md5: obj.md5).id}" } }
   validates :rating, inclusion: { in: %w[s q e], message: "rating must be s, q, or e" }
   validates :bg_color, format: { with: /\A[A-Fa-f0-9]{6}\z/ }, allow_nil: true
   validates :description, length: { maximum: FemboyFans.config.post_descr_max_size }, if: :description_changed?
@@ -54,7 +53,7 @@ class Post < ApplicationRecord
   validate :validate_thumbnail_frame
   before_save :update_tag_post_counts, if: :should_process_tags?
   before_save :update_qtags, if: :will_save_change_to_description?
-  after_update :regenerate_image_samples, if: :saved_change_to_thumbnail_frame?
+  after_update :regenerate_image_variants, if: :saved_change_to_thumbnail_frame?
   after_save :create_post_events
   after_save :create_version
   after_save :update_parent_on_save
@@ -64,12 +63,12 @@ class Post < ApplicationRecord
   after_commit :delete_files, on: :destroy
   after_commit :remove_iqdb_async, on: :destroy
   after_commit :update_iqdb_async, on: :create
-  after_commit :generate_video_samples, on: :create, if: :is_video?
 
   belongs_to :updater, class_name: "User", optional: true # this is handled in versions
   belongs_to :approver, class_name: "User", optional: true
   belongs_to :uploader, class_name: "User", counter_cache: "post_count"
   belongs_to :parent, class_name: "Post", optional: true
+  belongs_to :media_asset, class_name: "UploadMediaAsset", foreign_key: :upload_media_asset_id
   has_one :upload, dependent: :destroy
   has_many :flags, class_name: "PostFlag", dependent: :destroy
   has_many :votes, class_name: "PostVote", dependent: :destroy
@@ -81,13 +80,26 @@ class Post < ApplicationRecord
   has_many :disapprovals, class_name: "PostDisapproval", dependent: :destroy
   has_many :favorites
   has_many :replacements, -> { default_order }, class_name: "PostReplacement", dependent: :destroy
+  has_many :pool_covers, class_name: "Pool", foreign_key: :cover_post_id, dependent: :nullify
 
   attr_accessor :old_tag_string, :old_parent_id, :old_source, :old_rating,
                 :do_not_version_changes, :tag_string_diff, :source_diff, :edit_reason, :tag_string_before_parse,
                 :automated_edit
 
   has_many :versions, -> { order("post_versions.id ASC") }, class_name: "PostVersion", dependent: :destroy
+
+  scope :pending, -> { where(is_pending: true) }
+  scope :not_pending, -> { where(is_pending: false) }
+  scope :deleted, -> { where(is_deleted: true) }
+  scope :not_deleted, -> { where(is_deleted: false) }
+  scope :flagged, -> { where(is_flagged: true) }
+  scope :not_flagged, -> { where(is_flagged: false) }
+  scope :pending_or_flagged, -> { pending.or(flagged) }
+  scope :has_notes, -> { where.not(last_noted_at: nil) }
+  scope :for_user, ->(user_id) { where(uploader_id: user_id) }
   scope :expired, -> { pending.where("posts.created_at < ?", PostPruner::MODERATION_WINDOW.days.ago) }
+  scope :with_assets, -> { includes(:media_asset) }
+  scope :with_assets_and_metadata, -> { with_assets.includes(media_asset: :media_metadata) }
 
   IMAGE_TYPES = %i[original large preview crop].freeze
 
@@ -96,15 +108,15 @@ class Post < ApplicationRecord
       SELECT
         AVG(file_size) as average_size,
         SUM(file_size) AS posts_size,
-        SUM((row->>'size')::bigint) AS samples_size
-      FROM posts, LATERAL jsonb_array_elements(samples_data) row;
+        SUM((row->>'size')::bigint) AS variants_size
+      FROM upload_media_assets, LATERAL jsonb_array_elements(variants_data) row;
     SQL
 
     {
-      total:   results["posts_size"] + results["samples_size"],
-      average: results["average_size"],
-      posts:   results["posts_size"],
-      samples: results["samples_size"],
+      total:    results["posts_size"] + results["variants_size"],
+      average:  results["average_size"],
+      posts:    results["posts_size"],
+      variants: results["variants_size"],
     }
   end
 
@@ -121,99 +133,123 @@ class Post < ApplicationRecord
   module PostFileMethods
     extend ActiveSupport::Concern
 
-    module ClassMethods
-      def delete_files(_post_id, md5, file_ext, force: false)
-        if Post.exists?(md5: md5) && !force
-          raise(DeletionError, "Files still in use; skipping deletion.")
-        end
-
-        FemboyFans.config.storage_manager.delete_post_files(md5, file_ext)
-      end
-    end
-
     def delete_files
-      Post.delete_files(id, md5, file_ext, force: true)
+      media_asset&.expunge!
     end
 
     def move_files_on_delete
-      FemboyFans.config.storage_manager.move_file_delete(self)
+      media_asset.delete!
     end
 
     def move_files_on_undelete
-      FemboyFans.config.storage_manager.move_file_undelete(self)
+      media_asset.undelete!
     end
 
-    def storage_manager
-      FemboyFans.config.storage_manager
+    def file_path
+      media_asset.original.file_path
     end
 
-    def file(type = :original, scale_factor: nil, &)
-      storage_manager.open_file(self, type, protected: is_deleted?, scale_factor: scale_factor, &)
+    def file_url
+      media_asset.original.file_url
     end
 
-    def preview_file(&)
-      file(:preview, &)
+    def file(&)
+      media_asset.original.open_file(&)
     end
 
-    def crop_file(&)
-      file(:crop, &)
+    FemboyFans.config.image_variants.keys.map(&:to_s).each do |name|
+      define_method("#{name}_file_path") do
+        variant_path(name)
+      end
+
+      define_method("#{name}_file_url") do
+        variant_url(name)
+      end
+
+      define_method("#{name}_file") do |&block|
+        variant_file(name, &block)
+      end
+
+      alias_method("file_path_#{name}", "#{name}_file_path")
+      alias_method("file_url_#{name}", "#{name}_file_url")
+      alias_method("file_#{name}", "#{name}_file")
     end
 
-    def large_file(&)
-      file(:large, &)
-    end
+    FemboyFans.config.video_variants.keys.map(&:to_s).each do |name|
+      define_method("#{name}_webm_file_path") do
+        variant_path(name, "webm")
+      end
 
-    def file_url(type = :original, scale_factor: nil)
-      storage_manager.file_url(self, type, scale_factor: scale_factor)
-    end
+      define_method("#{name}_mp4_file_path") do
+        variant_path(name, "mp4")
+      end
 
-    def file_url_ext(ext)
-      storage_manager.file_url_ext(self, :original, ext)
-    end
+      define_method("#{name}_webm_file_url") do
+        variant_url(name, "webm")
+      end
 
-    def scaled_url_ext(scale, ext)
-      storage_manager.file_url_ext(self, :scaled, ext, scale_factor: scale)
-    end
+      define_method("#{name}_mp4_file_url") do
+        variant_url(name, "mp4")
+      end
 
-    def large_file_url
-      return file_url unless has_large?
-      file_url(:large)
-    end
+      define_method("#{name}_webm_file") do |&block|
+        variant_file(name, "webm", &block)
+      end
 
-    def preview_file_url
-      file_url(:preview)
+      define_method("#{name}_mp4_file") do |&block|
+        variant_file(name, "mp4", &block)
+      end
+
+      alias_method("file_path_#{name}_webm", "#{name}_webm_file_path")
+      alias_method("file_path_#{name}_mp4", "#{name}_mp4_file_path")
+      alias_method("file_url_#{name}_webm", "#{name}_webm_file_url")
+      alias_method("file_url_#{name}_mp4", "#{name}_mp4_file_url")
+      alias_method("file_#{name}_webm", "#{name}_webm_file")
+      alias_method("file_#{name}_mp4", "#{name}_mp4_file")
     end
 
     def reverse_image_url
       return large_file_url if has_large?
-      preview_file_url
+      return preview_file_url if has_preview?
+      file_url
     end
 
-    def file_path
-      storage_manager.file_path(self, file_ext, :original, protected: is_deleted?)
+    def avatar_image_url
+      return large_file_url if has_large?
+      return preview_file_url if has_preview?
+      file_url
     end
 
-    def crop_file_path
-      storage_manager.file_path(self, file_ext, :crop, protected: is_deleted?)
+    def video_poster_url
+      return large_file_url if has_large?
+      file_url
     end
 
-    def large_file_path
-      storage_manager.file_path(self, file_ext, :large, protected: is_deleted?)
+    def find_variant(...)
+      media_asset.find_variant(...)
     end
 
-    def preview_file_path
-      storage_manager.file_path(self, file_ext, :preview, protected: is_deleted?)
+    def find_variant!(...)
+      media_asset.find_variant!(...)
     end
 
-    def crop_file_url
-      storage_manager.file_url(self, :crop)
+    def variant_url(type, ext = nil)
+      find_variant!(type, ext).file_url
+    end
+
+    def variant_path(type, ext = nil)
+      find_variant!(type, ext).file_path
+    end
+
+    def variant_file(type, ext = nil, &)
+      find_variant!(type, ext).open_file(&)
     end
 
     def open_graph_video_url
-      if image_height > 720 && has_sample_size?("720p")
-        return scaled_url_ext("720p", "mp4")
+      if image_height > 720 && has_720p?
+        return file_url_720p_mp4
       end
-      file_url_ext("mp4")
+      variant_url("original", "mp4")
     end
 
     def open_graph_image_url
@@ -223,13 +259,15 @@ class Post < ApplicationRecord
         else
           file_url
         end
-      else
+      elsif has_preview?
         preview_file_url
+      else
+        file_url
       end
     end
 
     def file_url_for(user)
-      if user.default_image_size == "large" && image_width > FemboyFans.config.large_image_width
+      if user.default_image_size == "large" && has_large?
         large_file_url
       else
         file_url
@@ -237,10 +275,10 @@ class Post < ApplicationRecord
     end
 
     def file_url_ext_for(user, ext)
-      if user.default_image_size == "large" && is_video? && has_sample_size?("720p")
-        scaled_url_ext("720p", ext)
+      if user.default_image_size == "large" && is_video? && has_720p?
+        variant_url("720p", ext)
       else
-        file_url_ext(ext)
+        variant_url("original", ext)
       end
     end
 
@@ -252,91 +290,27 @@ class Post < ApplicationRecord
       end
     end
 
-    def has_preview?
-      has_sample_size?("preview")
+    [*FemboyFans.config.image_variants.keys, *FemboyFans.config.video_variants.keys].map(&:to_s).uniq.each do |name|
+      define_method("has_#{name}?") do
+        has_variant_size?(name)
+      end
     end
 
     def has_dimensions?
       image_width.present? && image_height.present?
     end
 
-    def preview_dimensions(max_px = FemboyFans.config.small_image_width)
-      return [max_px, max_px] unless has_dimensions?
-      height = width = max_px
-      dimension_ratio = image_width.to_f / image_height
-      if dimension_ratio > 1
-        height = (width / dimension_ratio).to_i
-      else
-        width = (height * dimension_ratio).to_i
-      end
-      [height, width]
+    def has_variant_size?(scale)
+      media_asset.generated_variants.include?(scale)
     end
 
-    def has_sample_size?(scale)
-      generated_samples.include?(scale)
-    end
+    delegate :regenerate_video_variants, to: :media_asset
 
-    def scaled_sample_dimensions(box)
-      UploadService::Utils.scaled_sample_dimensions(box, image_width, image_height)
-    end
+    delegate :regenerate_video_variants!, to: :media_asset
 
-    def generate_video_samples(later: false)
-      if later
-        PostVideoConversionJob.set(wait: 1.minute).perform_later(id)
-      else
-        PostVideoConversionJob.perform_later(id)
-      end
-    end
+    delegate :regenerate_image_variants, to: :media_asset
 
-    def regenerate_video_samples!
-      clear_video_samples!
-      generate_video_samples(later: true)
-    end
-
-    def regenerate_image_samples(later: false)
-      if later
-        PostImageSampleJob.set(wait: 1.minute).perform_later(id)
-      else
-        PostImageSampleJob.perform_later(id)
-      end
-    end
-
-    def regenerate_image_samples!
-      clear_image_samples!
-      file = self.file
-      preview_file, crop_file, sample_file, scaled, data = ::PostThumbnailer.generate_resizes(file, image_height, image_width, is_video? ? :video : :image, frame: thumbnail_frame)
-      storage_manager.store_file(sample_file, self, :large) if sample_file.present?
-      storage_manager.store_file(preview_file, self, :preview) if preview_file.present?
-      storage_manager.store_file(crop_file, self, :crop) if crop_file.present?
-      scaled.each do |scale, sfile|
-        storage_manager.store(sfile, storage_manager.file_path(md5, "webp", :scaled, protected: is_deleted?, scale_factor: scale))
-      end
-      update(has_cropped: crop_file.present?)
-      update_samples_data(data)
-    ensure
-      file.close
-    end
-
-    def clear_image_samples!
-      data = samples_data.reject { |s| s["image"] }
-      samples = data.pluck("type").uniq
-      update_columns(generated_samples: samples, samples_data: data)
-    end
-
-    def clear_video_samples!
-      data = samples_data.reject { |s| s["video"] }
-      samples = data.pluck("type").uniq
-      update_columns(generated_samples: samples, samples_data: data)
-    end
-
-    def clear_samples!
-      update_columns(generated_samples: [], samples_data: [])
-    end
-
-    def update_samples_data(data)
-      samples = (data + samples_data).map { |s| s.transform_keys(&:to_s) }.uniq { |s| [s["type"], s["ext"]] }
-      update_columns(generated_samples: samples.pluck("type").uniq, samples_data: samples)
-    end
+    delegate :regenerate_image_variants!, to: :media_asset
   end
 
   module ImageMethods
@@ -344,23 +318,9 @@ class Post < ApplicationRecord
       image_width.to_i >= 280 && image_height.to_i >= 150
     end
 
-    def has_large?
-      # return true if is_video?
-      # return false if is_gif?
-      # return false if has_tag?("animated_gif", "animated_png")
-      # is_image? && image_width.present? && image_width > FemboyFans.config.large_image_width
-      has_sample_size?("large")
-    end
-
+    # @deprecated
     def has_large
-      !!has_large?
-    end
-
-    def supports_large?
-      return true if is_video?
-      return false if is_gif?
-      return false if has_tag?("animated_gif", "animated_png")
-      is_image? && image_width.present? && image_width > FemboyFans.config.large_image_width
+      !!has_large? # TODO: remove
     end
 
     def large_image_width
@@ -699,10 +659,10 @@ class Post < ApplicationRecord
       @tag_array_was = nil
     end
 
-    def set_tag_string(string)
+    def set_tag_string(string, typed: true)
       self.tag_string = string
       reset_tag_array_cache
-      update_typed_tags(string)
+      update_typed_tags(string) if typed
     end
 
     def tag_count_not_insane
@@ -1084,12 +1044,12 @@ class Post < ApplicationRecord
     end
 
     def add_tag(tag)
-      set_tag_string("#{tag_string} #{tag}")
+      set_tag_string("#{tag_string} #{tag}", typed: false)
       update_typed_tag(tag, Tag.category_for(tag))
     end
 
     def remove_tag(tag)
-      set_tag_string((tag_array - Array(tag)).join(" "))
+      set_tag_string((tag_array - Array(tag)).join(" "), typed: false)
       delete_typed_tag(tag)
     end
 
@@ -1401,7 +1361,7 @@ class Post < ApplicationRecord
     # - Reparent all children to the first child.
 
     def update_has_children_flag
-      update(has_children: children.exists?, has_active_children: children.undeleted.exists?)
+      update(has_children: children.exists?, has_active_children: children.not_deleted.exists?)
     end
 
     def blank_out_nonexistent_parents
@@ -1757,33 +1717,23 @@ class Post < ApplicationRecord
 
       if visible?
         attributes[:md5] = md5
-        attributes[:preview_url] = preview_file_url
-        attributes[:large_url] = large_file_url
+        attributes[:preview_url] = preview_file_url if has_preview?
+        attributes[:large_url] = large_file_url if has_large?
         attributes[:file_url] = file_url
-        attributes[:cropped_url] = crop_file_url
-        attributes[:preview_width] = preview_dimensions[1]
-        attributes[:preview_height] = preview_dimensions[0]
+        attributes[:cropped_url] = crop_file_url if has_crop?
+        attributes[:preview_width] = find_variant("preview")&.width
+        attributes[:preview_height] = find_variant("preview")&.height
       end
 
       attributes
     end
 
-    def samples
-      scaled = (FemboyFans.config.video_rescales.keys + FemboyFans.config.image_rescales.keys)
-      samples_data.inject([]) do |result, element|
-        if visible?
-          if element["type"] == "original"
-            element["url"] = file_url_ext(element["ext"])
-          elsif scaled.include?(element["type"])
-            element["url"] = scaled_url_ext(element["type"], element["ext"])
-          else
-            element["url"] = file_url(element["type"].to_sym)
-          end
-        else
-          element["url"] = nil
-        end
-        result << element
+    def variants
+      results = []
+      media_asset.variants_images_first.without(media_asset.original).each do |variant|
+        results << variant.cached_hash.merge(url: visible? ? variant.file_url : nil)
       end
+      results
     end
 
     def status
@@ -1811,7 +1761,7 @@ class Post < ApplicationRecord
           md5:    md5,
           url:    visible? ? file_url : nil,
         },
-        samples:         samples,
+        variants:        variants,
         score:           {
           up:    up_score,
           down:  down_score,
@@ -1881,34 +1831,6 @@ class Post < ApplicationRecord
     # unflattens the tag_string into one tag per row.
     def with_unflattened_tags
       joins("CROSS JOIN unnest(string_to_array(tag_string, ' ')) AS tag")
-    end
-
-    def pending
-      where(is_pending: true)
-    end
-
-    def flagged
-      where(is_flagged: true)
-    end
-
-    def pending_or_flagged
-      pending.or(flagged)
-    end
-
-    def undeleted
-      where("is_deleted = ?", false)
-    end
-
-    def deleted
-      where("is_deleted = ?", true)
-    end
-
-    def has_notes
-      where.not(last_noted_at: nil)
-    end
-
-    def for_user(user_id)
-      where("uploader_id = ?", user_id)
     end
 
     def sql_raw_tag_match(tag)
@@ -2095,6 +2017,7 @@ class Post < ApplicationRecord
     end
   end
 
+  include MediaAsset::DelegateProperties
   include PostFileMethods
   include FileMethods
   include ImageMethods

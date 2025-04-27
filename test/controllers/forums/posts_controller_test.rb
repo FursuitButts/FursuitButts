@@ -28,16 +28,19 @@ module Forums
 
         should "not render the vote links for the requesting user" do
           get_auth forum_topic_path(@forum_topic), @user
+          assert_response :success
           assert_select "a[title='Vote up']", false
         end
 
         should "render the vote links" do
           get_auth forum_topic_path(@forum_topic), @mod
+          assert_response :success
           assert_select "a[title='Vote up']"
         end
 
         should "render existing votes" do
           get_auth forum_topic_path(@forum_topic), @mod
+          assert_response :success
           assert_select "li.vote-score-up"
         end
 

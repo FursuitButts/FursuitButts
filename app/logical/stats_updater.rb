@@ -41,7 +41,7 @@ module StatsUpdater
     sizes = Post.file_sizes
     stats[:total_file_size] = sizes[:total]
     stats[:posts_file_size] = sizes[:posts]
-    stats[:samples_file_size] = sizes[:samples]
+    stats[:variants_file_size] = sizes[:variants]
     stats[:average_file_size] = sizes[:average]
     stats[:average_posts_per_day] = daily_average.call(stats[:total_posts])
 

@@ -27,8 +27,10 @@ module StorageManager
     end
 
     def delete(path)
-      super
-      purge_cache("#{base_url}#{path}")
+      log(%{delete("#{path}")}) do
+        super
+        purge_cache("#{base_url}#{path}")
+      end
     end
   end
 end

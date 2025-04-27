@@ -102,7 +102,7 @@ class TagSetPresenter < Presenter
   private
 
   def tags
-    @tags ||= Tag.where(name: tag_names).select(:name, :post_count, :category)
+    @tags ||= Tag.where(name: tag_names).includes(antecedent_alias: :consequent_tag).select(:name, :post_count, :category)
   end
 
   def tags_by_category

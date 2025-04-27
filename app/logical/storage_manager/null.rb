@@ -13,5 +13,9 @@ module StorageManager
     def open(path)
       # no-op
     end
+
+    def move_file(old_path, new_path)
+      # no-op
+    end
   end
 end

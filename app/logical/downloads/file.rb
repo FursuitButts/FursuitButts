@@ -9,7 +9,7 @@ module Downloads
 
     validate :validate_url
 
-    def initialize(url)
+    def initialize(url, exception: true)
       begin
         unencoded = Addressable::URI.unencode(url)
         escaped = Addressable::URI.escape(unencoded)
@@ -17,7 +17,11 @@ module Downloads
       rescue Addressable::URI::InvalidURIError
         @url = nil
       end
-      validate!
+      if exception
+        validate!
+      else
+        validate
+      end
     end
 
     def download!(max_size: FemboyFans.config.max_file_size)

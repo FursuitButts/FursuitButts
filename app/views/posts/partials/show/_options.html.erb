@@ -53,9 +53,9 @@
     <% end %>
   <% end %>
   <% if policy(post).regenerate_thumbnails? %>
-    <li><%= tag.a("Regenerate Thumbnails", "href": "#", "id": "regenerate-image-samples-link", "data-pid": post.id) %></li>
+    <li><%= tag.a("Regenerate Thumbnails", "href": "#", "id": "regenerate-image-variants-link", "data-pid": post.id) %></li>
   <% end %>
   <% if post.is_video? && policy(post).regenerate_videos? %>
-    <li><%= tag.a("Regenerate Video Samples", "href": "#", "id": "regenerate-video-samples-link", "data-pid": post.id) %></li>
+    <li><%= tag.a("Regenerate Video variants", "href": "#", "id": "regenerate-video-variants-link", "data-pid": post.id) %></li>
 <% end %>
 </ul>

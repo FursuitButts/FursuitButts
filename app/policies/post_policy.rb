@@ -121,8 +121,13 @@ class PostPolicy < ApplicationPolicy
 
   def api_attributes
     attr = super + %i[has_large has_visible_children children_ids pool_ids is_favorited? is_voted_up? is_voted_down?] - %i[pool_string fav_string vote_string]
-    attr += %i[file_url large_file_url preview_file_url] if record.visible?
-    attr -= %i[md5 file_ext] unless record.visible?
+    if record.visible?
+      attr += %i[file_url]
+      attr += %i[large_file_url] if record.has_large?
+      attr += %i[preview_file_url] if record.has_preview?
+    else
+      attr -= %i[md5 file_ext]
+    end
     attr
   end
 end

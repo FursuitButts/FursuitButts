@@ -8,7 +8,7 @@ module Admin
       setup do
         @admin = create(:admin_user)
         @owner = create(:owner_user)
-        @upload = UploadService.new(attributes_for(:jpg_upload).merge({ uploader: @admin })).start!
+        @upload = create(:jpg_upload, uploader: @admin)
         @post = @upload.post
         as(@admin) { @post.expunge! }
         @destroyed_post = DestroyedPost.find_by!(post_id: @post.id)

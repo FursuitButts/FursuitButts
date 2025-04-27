@@ -790,15 +790,15 @@ class User < ApplicationRecord
                          :general_bypass_throttle?, 3.days, Levels::MEMBER..)
 
     def can_remove_from_pools?
-      is_member? && older_than(3.days)
+      is_staff? || (is_member? && older_than(3.days))
     end
 
     def can_discord?
-      is_member? && older_than(3.days)
+      is_staff? || (is_member? && older_than(3.days))
     end
 
     def can_view_flagger?(flagger_id)
-      is_janitor? || flagger_id == id
+      is_staff? || flagger_id == id
     end
 
     def can_view_flagger_on_post?(flag)

@@ -14,10 +14,10 @@ class MascotPolicy < ApplicationPolicy
   end
 
   def permitted_attributes
-    %i[mascot_file display_name background_color artist_url artist_name available_on_string active hide_anonymous]
+    %i[file display_name background_color artist_url artist_name available_on_string active hide_anonymous]
   end
 
   def api_attributes
-    super + %i[url_path]
+    super + %i[file_url md5 file_ext file_size image_width image_height] - %i[mascot_media_asset_id]
   end
 end

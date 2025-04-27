@@ -457,13 +457,13 @@ Post.initialize_links = function () {
     if (reason === null) return;
     Post.destroy($(e.target).data("pid"), reason);
   });
-  $("#regenerate-image-samples-link").on("click", e => {
+  $("#regenerate-image-variants-link").on("click", e => {
     e.preventDefault();
-    Post.regenerate_image_samples($(e.target).data("pid"));
+    Post.regenerate_image_variants($(e.target).data("pid"));
   });
-  $("#regenerate-video-samples-link").on("click", e => {
+  $("#regenerate-video-variants-link").on("click", e => {
     e.preventDefault();
-    Post.regenerate_video_samples($(e.target).data("pid"));
+    Post.regenerate_video_variants($(e.target).data("pid"));
   });
   $(".disapprove-post-link").on("click", e => {
     e.preventDefault();
@@ -578,7 +578,7 @@ Post.resize_video = function (post, target_size) {
   function original_sources () {
     const webm = post.file.ext === "webm";
     target_sources.push({ type: webm ? "video/webm; codecs=\"vp9\"" : "video/mp4", url: post?.file?.url });
-    const original = post.samples.find(s => s.type === "original" && s.ext === (webm ? "mp4" : "webm"));
+    const original = post.variants.find(s => s.type === "original" && s.ext === (webm ? "mp4" : "webm"));
     if (typeof original !== "undefined") {
       target_sources.push({ type: webm ? "video/mp4" : "video/webm; codecs=\"vp9\"", url: original.url });
     }
@@ -598,9 +598,9 @@ Post.resize_video = function (post, target_size) {
       break;
     default: {
       $notice.show();
-      const samples = post.samples.filter(s => s.type === target_size);
-      const webm = samples.find(s => s.ext === "webm");
-      const mp4 = samples.find(s => s.ext === "mp4");
+      const variants = post.variants.filter(s => s.type === target_size);
+      const webm = variants.find(s => s.ext === "webm");
+      const mp4 = variants.find(s => s.ext === "mp4");
       target_sources.push({ type: "video/webm; codecs=\"vp9\"", url: webm.url });
       target_sources.push({ type: "video/mp4", url: mp4.url });
       desired_classes.push("fit-window");
@@ -641,7 +641,7 @@ Post.resize_image = function (post, target_size) {
   $notice.hide();
   let desired_url = "";
   let desired_classes = [];
-  let sample;
+  let variant;
   switch (target_size) {
     case "original":
       desired_url = post?.file?.url;
@@ -657,16 +657,16 @@ Post.resize_image = function (post, target_size) {
     case "large":
       $notice.show();
       desired_classes.push("fit-window");
-      sample = post?.samples?.find(s => s.type === "large");
-      desired_url = sample?.url;
-      update_resize_percentage(sample?.width, post?.file?.width);
+      variant = post?.variants?.find(s => s.type === "large");
+      desired_url = variant?.url;
+      update_resize_percentage(variant?.width, post?.file?.width);
       break;
     default:
       $notice.show();
       desired_classes.push("fit-window");
-      sample = post?.samples?.find(s => s.type === target_size);
-      desired_url = sample?.url;
-      update_resize_percentage(sample?.width, post?.file?.width);
+      variant = post?.variants?.find(s => s.type === target_size);
+      desired_url = variant?.url;
+      update_resize_percentage(variant?.width, post?.file?.width);
       break;
   }
   $image.removeClass();
@@ -721,16 +721,16 @@ function update_size_selector (choice) {
   return "fit";
 }
 
-function most_relevant_sample_size (post) {
-  let samples = Post.currentPost().samples;
-  samples = samples.filter((x) => !["original", "preview", "large", "crop"].includes(x.type));
-  if (samples.length === 0) {
+function most_relevant_variant_size (post) {
+  let variants = Post.currentPost().variants;
+  variants = variants.filter((x) => !["original", "preview", "large", "crop"].includes(x.type));
+  if (variants.length === 0) {
     return "fit";
   }
   if (post?.file?.width <= 1280 && post?.file?.height <= 720) {
-    return "fit"; // Don't force people onto 480p samples for <720 videos.
+    return "fit"; // Don't force people onto 480p variants for <720 videos.
   }
-  const differences = samples.map((x) => [x.type, Math.abs(window.outerHeight - x.height) * Math.abs(window.outerWidth - x.width)]).sort((a, b) => (a[1] < b[1] ? -1 : 1));
+  const differences = variants.map((x) => [x.type, Math.abs(window.outerHeight - x.height) * Math.abs(window.outerWidth - x.width)]).sort((a, b) => (a[1] < b[1] ? -1 : 1));
   return differences[0].type;
 }
 
@@ -754,7 +754,7 @@ Post.initialize_resize = function () {
   }
   let image_size = Utility.meta("image-override-size") || Utility.meta("default-image-size");
   if (is_post_video && image_size === "large") {
-    image_size = most_relevant_sample_size(post);
+    image_size = most_relevant_variant_size(post);
   }
   Post.resize_to(image_size);
   const $selector = $("#image-resize-selector");
@@ -993,7 +993,7 @@ Post.destroy = function (post_id, reason) {
     });
 };
 
-Post.regenerate_image_samples = function (post_id) {
+Post.regenerate_image_variants = function (post_id) {
   $.ajax({
     method: "PUT",
     url: `/posts/${post_id}/regenerate_thumbnails.json`,
@@ -1001,11 +1001,11 @@ Post.regenerate_image_samples = function (post_id) {
     .fail(data => {
       Utility.error("Error: " + data.responseJSON.reason);
     }).done(() => {
-      Utility.notice("Image samples regenerated.");
+      Utility.notice("Image variants regenerated.");
     });
 };
 
-Post.regenerate_video_samples = function (post_id) {
+Post.regenerate_video_variants = function (post_id) {
   $.ajax({
     method: "PUT",
     url: `/posts/${post_id}/regenerate_videos.json`,
@@ -1013,7 +1013,7 @@ Post.regenerate_video_samples = function (post_id) {
     .fail(data => {
       Utility.error("Error: " + data.responseJSON.reason);
     }).done(() => {
-      Utility.notice("Video samples will be regenerated in a few minutes.");
+      Utility.notice("Video variants will be regenerated in a few minutes.");
     });
 };
 

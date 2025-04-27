@@ -54,7 +54,7 @@ class StaffAuditLog < ApplicationRecord
       json: %i[],
     },
     min_upload_level_change:    {
-      text: ->(log) { "Changed the minimum upload level from [b]#{User::Levels.id_to_name(log.old_level)}[/b] to [b]#{User::Levels.level_name(log.new_level)}[/b]" },
+      text: ->(log) { "Changed the minimum upload level from [b]#{User::Levels.id_to_name(log.old_level)}[/b] to [b]#{User::Levels.id_to_name(log.new_level)}[/b]" },
       json: %i[new_level old_level],
     },
     post_owner_reassign:        {

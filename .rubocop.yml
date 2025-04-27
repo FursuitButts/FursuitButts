@@ -38,6 +38,8 @@ Metrics/AbcSize:
 Metrics/BlockLength:
   AllowedMethods:
     - class_methods
+    - class_eval
+    - included
     - concerning
     - context
     - create_table
@@ -47,6 +49,7 @@ Metrics/BlockLength:
     - should_eventually
   Exclude:
     - config/routes.rb
+    - config/environments/*.rb
     - db/seeds.rb
     - db/seeds/*.rb
 
@@ -85,7 +88,6 @@ Rails/InverseOf:
 
 Rails/Output:
   Exclude:
-    - db/populate.rb
     - db/seeds.rb
     - db/seeds/*.rb
     - db/fixes/*.rb
@@ -215,3 +217,8 @@ Naming/AccessorMethodName:
 
 Metrics/ParameterLists:
   Enabled: false
+
+Security/Open:
+  Enabled: true
+  Exclude:
+    - app/logical/storage_manager/ftp.rb

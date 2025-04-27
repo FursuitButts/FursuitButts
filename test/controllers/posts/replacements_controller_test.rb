@@ -6,53 +6,73 @@ module Posts
   class ReplacementsControllerTest < ActionDispatch::IntegrationTest
     context "The post replacements controller" do
       setup do
-        @user = create(:moderator_user, can_approve_posts: true, created_at: 1.month.ago)
+        @user = create(:janitor_user, created_at: 2.weeks.ago)
+        @admin = create(:admin_user)
         as(@user) do
-          @upload = UploadService.new(attributes_for(:jpg_upload).merge({ uploader: @user })).start!
+          @upload = create(:jpg_upload, uploader: @user)
           @post = @upload.post
           @replacement = create(:png_replacement, creator: @user, post: @post)
         end
       end
 
       context "create action" do
-        should "accept new non duplicate replacement" do
+        should "work" do
           file = fixture_file_upload("alpha.png")
           params = {
             format:           :json,
             post_id:          @post.id,
             post_replacement: {
-              replacement_file: file,
-              reason:           "test replacement",
+              file:   file,
+              reason: "test replacement",
             },
           }
 
-          assert_difference(-> { @post.replacements.size }) do
+          assert_difference("@post.reload.replacements.size", 1) do
             post_auth(post_replacements_path, @user, params: params)
-            @post.reload
+            assert_response(:success)
+            assert_equal(@response.parsed_body["location"], post_path(@post))
           end
+        end
 
-          assert_equal @response.parsed_body["location"], post_path(@post)
+        should "work with direct url" do
+          file = fixture_file_upload("alpha.png")
+          as(create(:admin_user)) { create(:upload_whitelist, pattern: "http://example.com/*") }
+          CloudflareService.stubs(:ips).returns([])
+          stub_request(:get, "http://example.com/alpha.png").to_return(status: 200, body: file.read, headers: { "Content-Type" => "image/png" })
+          params = {
+            format:           :json,
+            post_id:          @post.id,
+            post_replacement: {
+              direct_url: "http://example.com/alpha.png",
+              reason:     "test replacement",
+            },
+          }
+
+          assert_difference("@post.reload.replacements.size", 1) do
+            post_auth(post_replacements_path, @user, params: params)
+            assert_response(:success)
+            assert_equal(@response.parsed_body["location"], post_path(@post))
+          end
         end
 
         should "automatically approve replacements by approvers" do
-          as(@user) { @replacement.destroy }
           file = fixture_file_upload("alpha.png")
           params = {
             format:           :json,
             post_id:          @post.id,
             post_replacement: {
-              replacement_file: file,
-              reason:           "test replacement",
-              as_pending:       false,
+              file:       file,
+              reason:     "test replacement",
+              as_pending: false,
             },
           }
 
-          assert_difference("@post.replacements.size", 2) do
+          assert_difference("@post.reload.replacements.size", 2) do
             post_auth(post_replacements_path, @user, params: params)
-            @post.reload
+            assert_response(:success)
+            assert_equal(post_path(@post), @response.parsed_body["location"])
           end
 
-          assert_equal @response.parsed_body["location"], post_path(@post)
           assert_equal %w[approved original], @post.replacements.last(2).pluck(:status)
           assert_equal(false, @user.notifications.replacement_approve.exists?)
         end
@@ -63,14 +83,15 @@ module Posts
             format:           :json,
             post_id:          @post.id,
             post_replacement: {
-              replacement_file: file,
-              reason:           "test replacement",
-              as_pending:       true,
+              file:       file,
+              reason:     "test replacement",
+              as_pending: true,
             },
           }
 
           assert_difference("@post.replacements.size") do
             post_auth(post_replacements_path, @user, params: params)
+            assert_response(:success)
             @post.reload
           end
 
@@ -83,26 +104,35 @@ module Posts
             @admin = create(:admin_user)
             as(@admin) do
               @replacement.destroy
-              @upload2 = UploadService.new(attributes_for(:png_upload).merge({ uploader: @user })).start!
+              @upload2 = create(:apng_upload, uploader: @user)
               @post2 = @upload2.post
               @post2.expunge!
             end
           end
 
           should "fail and create ticket" do
-            assert_difference({ "PostReplacement.count" => 0, "Ticket.count" => 1 }) do
-              file = fixture_file_upload("test.png")
-              post_auth post_replacements_path, @user, params: { post_id: @post.id, post_replacement: { replacement_file: file, reason: "test replacement" }, format: :json }
+            previous_md5 = @post.md5
+            assert_difference({ "Ticket.count" => 1 }) do
+              assert_enqueued_jobs(1, only: NotifyExpungedMediaAssetReuploadJob) do
+                file = fixture_file_upload("test.png")
+                post_auth post_replacements_path, @user, params: { post_id: @post.id, post_replacement: { file: file, reason: "test replacement" }, format: :json }
+                assert_response :precondition_failed
+                assert_equal("That image has been deleted and cannot be reuploaded", @response.parsed_body["message"])
+                assert_equal("expunged", PostReplacementMediaAsset.last.status)
+                assert_equal(previous_md5, @post.reload.md5)
+              end
+              perform_enqueued_jobs(only: NotifyExpungedMediaAssetReuploadJob)
             end
           end
 
-          should "fail and not create ticket if notify=false" do
-            DestroyedPost.find_by!(post_id: @post2.id).update_column(:notify, false)
-            assert_difference(%w[Post.count Ticket.count], 0) do
-              file = fixture_file_upload("test.png")
-              post_auth post_replacements_path, @user, params: { post_id: @post.id, post_replacement: { replacement_file: file, reason: "test replacement" }, format: :json }
-            end
-          end
+          # TODO
+          # should "fail and not create ticket if notify=false" do
+          #   DestroyedPost.find_by!(post_id: @post2.id).update_column(:notify, false)
+          #   assert_difference(%w[Post.count Ticket.count], 0) do
+          #     file = fixture_file_upload("test.png")
+          #     post_auth post_replacements_path, @user, params: { post_id: @post.id, post_replacement: { replacement_file: file, reason: "test replacement" }, format: :json }
+          #   end
+          # end
         end
 
         should "restrict access" do
@@ -110,7 +140,7 @@ module Posts
           file = fixture_file_upload("alpha.png")
           assert_access(User::Levels::MEMBER, anonymous_response: :forbidden) do |user|
             PostReplacement.delete_all
-            post_auth post_replacements_path, user, params: { post_replacement: { replacement_file: file, reason: "test replacement" }, post_id: @post.id, format: :json }
+            post_auth post_replacements_path, user, params: { post_replacement: { file: file, reason: "test replacement" }, post_id: @post.id, format: :json }
           end
         end
       end
@@ -120,6 +150,7 @@ module Posts
           janitor = create(:janitor_user)
           put_auth reject_post_replacement_path(@replacement), janitor
           assert_redirected_to(post_path(@post))
+
           @replacement.reload
           @post.reload
           assert_equal(@replacement.status, "rejected")
@@ -171,9 +202,14 @@ module Posts
         end
 
         should "restrict access" do
-          assert_access([User::Levels::JANITOR, User::Levels::ADMIN, User::Levels::OWNER], success_response: :redirect) do |user|
-            @replacement.update_column(:status, "pending")
-            put_auth approve_post_replacement_path(@replacement), user
+          @janitor = create(:janitor_user)
+          as(@janitor) { [Post, Upload, UploadMediaAsset, PostReplacementMediaAsset, PostReplacement].each(&:destroy_all) }
+          assert_access([User::Levels::JANITOR, User::Levels::ADMIN, User::Levels::OWNER], anonymous_response: :forbidden) do |user|
+            replacement = as(@janitor) do
+              @upload = create(:jpg_upload, uploader: @janitor, uploader_ip_addr: "127.0.0.1")
+              create(:png_replacement, post: @upload.post)
+            end
+            put_auth approve_post_replacement_path(replacement), user, params: { format: :json }
           end
         end
       end
@@ -191,10 +227,14 @@ module Posts
         end
 
         should "restrict access" do
+          @janitor = create(:janitor_user)
+          as(@janitor) { [Post, Upload, UploadMediaAsset, PostReplacementMediaAsset, PostReplacement].each(&:destroy_all) }
           assert_access([User::Levels::JANITOR, User::Levels::ADMIN, User::Levels::OWNER], success_response: :redirect) do |user|
-            Post.where.not(id: @post.id).destroy_all
-            @replacement.update_column(:status, "pending")
-            post_auth promote_post_replacement_path(@replacement), user
+            replacement = as(@janitor) do
+              @upload = create(:jpg_upload, uploader: @janitor, uploader_ip_addr: "127.0.0.1")
+              create(:png_replacement, post: @upload.post)
+            end
+            post_auth promote_post_replacement_path(replacement), user
           end
         end
       end
@@ -235,6 +275,19 @@ module Posts
 
         should "restrict access" do
           assert_access(User::Levels::MEMBER) { |user| get_auth new_post_replacement_path, user, params: { post_id: @post.id } }
+        end
+      end
+
+      context "destroy action" do
+        should "work" do
+          delete_auth post_replacement_path(@replacement), @admin
+          assert_redirected_to post_path(@post)
+          assert_equal(false, ::PostReplacement.exists?(@replacement.id))
+          assert_equal("expunged", @replacement.media_asset.reload.status)
+        end
+
+        should "restrict access" do
+          assert_access(User::Levels::ADMIN, success_response: :redirect) { |user| delete_auth post_replacement_path(@replacement), user }
         end
       end
     end

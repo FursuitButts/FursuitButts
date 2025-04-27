@@ -132,7 +132,7 @@ class Tag < ApplicationRecord
     def user_can_change_category?
       cat = TagCategory.get(category)
       return false unless cat
-      if cat.can_use?(CurrentUser.user)
+      unless cat.can_use?(CurrentUser.user)
         errors.add(:category, "can only used by admins")
         return false
       end
@@ -395,7 +395,7 @@ class Tag < ApplicationRecord
   def category_editable_by?(user)
     return true if user.is_admin?
     return false if is_locked?
-    return false if TagCategory.get(category).admin_only?
+    return false unless TagCategory.get(category).can_use?(user)
     return true if post_count < FemboyFans.config.tag_type_change_cutoff(user)
     false
   end

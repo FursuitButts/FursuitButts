@@ -61,10 +61,11 @@ development:
   # Reference: https://webpack.js.org/configuration/dev-server/
   dev_server:
     https: false
-    host: localhost
-    port: 3035
+    host: "0.0.0.0"
+    port: 4003
+    public: "http://localhost:4003"
     # Hot Module Replacement updates modules while the application is running without a full reload
-    hmr: false
+    hmr: true
     client:
       # Should we show a full-screen overlay in the browser when there are compiler errors or warnings?
       overlay: true
@@ -76,7 +77,7 @@ development:
     # Should we use gzip compression?
     compress: true
     # Note that apps that do not check the host are vulnerable to DNS rebinding attacks
-    allowed_hosts: "all"
+    allowedHosts: "all"
     pretty: true
     headers:
       'Access-Control-Allow-Origin': '*'

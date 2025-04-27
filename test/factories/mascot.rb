@@ -6,6 +6,7 @@ FactoryBot.define do
     background_color { "FFFFFF" }
     artist_url { "http://localhost" }
     artist_name { "artist" }
-    mascot_file { fixture_file_upload("test.jpg") }
+    mascot_media_asset { build(:jpg_mascot_media_asset, :pending, creator: creator) }
+    file { |rec| rec.mascot_media_asset&.file }
   end
 end

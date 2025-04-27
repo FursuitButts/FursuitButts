@@ -155,13 +155,14 @@ module PostEvents
 
       context "replacements" do
         setup do
-          @upload = UploadService.new(attributes_for(:png_upload).merge(uploader: @admin)).start!
+          @upload = create(:png_upload, uploader: @admin)
           @post = @upload.post
           @replacement = create(:jpg_replacement, post: @post)
           set_count!
         end
 
         should "format replacement_accepted correctly" do
+          previous_md5 = @post.md5
           @replacement.approve!(penalize_current_uploader: true)
 
           assert_matches(
@@ -169,7 +170,7 @@ module PostEvents
             actions:             %w[replacement_accepted],
             text:                "\"replacement ##{@replacement.id}\":#{post_replacements_path(search: { id: @replacement.id })}",
             post_replacement_id: @replacement.id,
-            old_md5:             @post.md5,
+            old_md5:             previous_md5,
             new_md5:             @replacement.md5,
           )
         end
@@ -250,7 +251,7 @@ module PostEvents
         end
 
         should "format changed_thumbnail_frame correctly" do
-          @upload = UploadService.new(attributes_for(:webm_upload).merge(uploader: @admin)).start!
+          @upload = create(:webm_upload, uploader: @admin)
           @post = @upload.post
           set_count!
           @post.update!(thumbnail_frame: 1)

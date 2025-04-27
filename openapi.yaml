@@ -235,6 +235,17 @@ x-constants:
     - replacement_approve
     - replacement_reject
     - replacement_promote
+  - &media-asset-statuses
+    - pending
+    - uploading
+    - active
+    - deleted
+    - cancelled
+    - expunged
+    - replaced
+    - failed
+    - duplicate
+
 
 components:
   securitySchemes:
@@ -1262,8 +1273,6 @@ components:
         - id
         - creator_id
         - display_name
-        - md5
-        - file_ext
         - background_color
         - artist_url
         - artist_name
@@ -1272,16 +1281,17 @@ components:
         - updated_at
         - available_on
         - url_path
+        - md5
+        - file_ext
+        - file_size
+        - image_width
+        - image_height
       properties:
         id:
           type: number
         creator_id:
           type: number
         display_name:
-          type: string
-        md5:
-          type: string
-        file_ext:
           type: string
         background_color:
           type: string
@@ -1305,6 +1315,76 @@ components:
         url_path:
           type: string
           format: uri
+        md5:
+          type: string
+        file_ext:
+          type: string
+        file_size:
+          type: number
+        image_width:
+          type: number
+        image_height:
+          type: number
+    MascotMediaAsset:
+      allOf:
+        - $ref: "#/components/schemas/MediaAsset"
+    MediaAsset:
+      type: object
+      required:
+        - id
+        - creator_id
+        - md5
+        - file_ext
+        - file_size
+        - image_width
+        - image_height
+        - duration
+        - framecount
+        - pixel_hash
+        - status
+        - status_message
+        - created_at
+        - updated_at
+        - is_animated_png
+        - is_animated_gif
+      properties:
+        id:
+          type: number
+        creator_id:
+          type: number
+        md5:
+          type: ["string", "null"]
+        file_ext:
+          type: ["string", "null"]
+        file_size:
+          type: ["number", "null"]
+        image_width:
+          type: ["number", "null"]
+        image_height:
+          type: ["number", "null"]
+        duration:
+          type: ["string", "null"]
+        framecount:
+          type: ["number", "null"]
+        pixel_hash:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: *media-asset-statuses
+        status_message:
+          type: ["string", "null"]
+        storage_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        is_animated_png:
+          type: ["boolean", "null"]
+        is_animated_gif:
+          type: ["boolean", "null"]
     ModAction:
       type: object
       required:
@@ -1853,7 +1933,7 @@ components:
         - created_at
         - updated_at
         - file
-        - samples
+        - variants
         - score
         - views
         - tags
@@ -1921,10 +2001,10 @@ components:
               type: number
             total:
               type: number
-        samples:
+        variants:
           type: array
           items:
-            $ref: "#/components/schemas/PostSample"
+            $ref: "#/components/schemas/PostVariant"
         views:
           type: object
           required:
@@ -2350,11 +2430,6 @@ components:
         - post_id
         - creator_id
         - approver_id
-        - file_ext
-        - file_size
-        - image_height
-        - image_width
-        - md5
         - source
         - file_name
         - status
@@ -2362,6 +2437,13 @@ components:
         - rejector_id
         - rejection_reason
         - file_url
+        - md5
+        - file_ext
+        - file_size
+        - image_height
+        - image_width
+        - creator_name
+        - media_asset_id
       properties:
         id:
           type: number
@@ -2377,16 +2459,6 @@ components:
           type: number
         approver_id:
           type: ["number", "null"]
-        file_ext:
-          type: string
-        file_size:
-          type: number
-        image_height:
-          type: number
-        image_width:
-          type: number
-        md5:
-          type: string
         source:
           type: string
         file_name:
@@ -2406,7 +2478,30 @@ components:
           type: string
         file_url:
           type: ["string", "null"]
-    PostSample:
+        md5:
+          type: string
+        file_ext:
+          type: string
+        file_size:
+          type: number
+        image_height:
+          type: number
+        image_width:
+          type: number
+        creator_name:
+          type: string
+        media_asset_id:
+          type: number
+    PostReplacementMediaAsset:
+      allOf:
+        - $ref: "#/components/schemas/MediaAsset"
+        - type: object
+          required:
+            - storage_id
+          properties:
+            storage_id:
+              type: string
+    PostVariant:
       type: object
       required:
         - ext
@@ -2963,7 +3058,7 @@ components:
         - average_file_size
         - total_file_size
         - posts_file_size
-        - samples_file_size
+        - variants_file_size
         - average_posts_per_day
         - total_users
         - anonymous_users
@@ -3054,7 +3149,7 @@ components:
           type: number
         posts_file_size:
           type: number
-        samples_file_size:
+        variants_file_size:
           type: number
         average_posts_per_day:
           type: number
@@ -3416,25 +3511,27 @@ components:
     Upload:
       type: object
       required:
-        - io
+        - id
         - source
         - rating
         - uploader_id
         - tag_string
-        - status
         - backtrace
         - post_id
         - created_at
         - updated_at
         - parent_id
+        - description
+        - direct_url
         - md5
         - file_ext
         - file_size
         - image_width
         - image_height
-        - description
+        - status
+        - status_message
         - uploader_name
-        - direct_url
+        - media_asset_id
       properties:
         id:
           type: number
@@ -3447,16 +3544,6 @@ components:
           type: number
         tag_string:
           type: string
-        status:
-          type: string
-          description: |
-            Note: The "error" status will be proceeded by an error, ex: "error: RuntimeError - No file or source URL provided"
-          enum:
-            - completed
-            - duplicate
-            - error
-            - processing
-            - pending
         backtrace:
           type: ["string", "null"]
         post_id:
@@ -3470,6 +3557,10 @@ components:
           format: date-time
         parent_id:
           type: ["null", "number"]
+        description:
+          type: string
+        direct_url:
+          type: string
         md5:
           type: ["string", "null"]
         file_ext:
@@ -3480,12 +3571,18 @@ components:
           type: ["null", "number"]
         image_height:
           type: ["null", "number"]
-        description:
+        status:
           type: string
+          enum: *media-asset-statuses
+        status_message:
+          type: ["string", "null"]
         uploader_name:
           type: string
-        direct_url:
-          type: string
+        media_asset_id:
+          type: number
+    UploadMediaAsset:
+      allOf:
+        - $ref: "#/components/schemas/MediaAsset"
     User:
       type: object
       required:
@@ -7253,13 +7350,13 @@ paths:
             schema:
               type: object
               required:
-                - mascot[mascot_file]
+                - mascot[file]
                 - mascot[display_name]
                 - mascot[background_color]
                 - mascot[artist_url]
                 - mascot[artist_name]
               properties:
-                mascot[mascot_file]:
+                mascot[file]:
                   type: binary
                 mascot[display_name]:
                   type: string
@@ -7308,7 +7405,7 @@ paths:
             schema:
               type: object
               properties:
-                mascot[mascot_file]:
+                mascot[file]:
                   type: binary
                 mascot[display_name]:
                   type: string
@@ -7355,6 +7452,417 @@ paths:
           $ref: "#/components/responses/AccessDenied"
         404:
           $ref: "#/components/responses/NotFound"
+  # Mascot Media Assets
+  /media_assets/mascots.json:
+    get:
+      summary: Search Mascot Media Assets
+      tags:
+        - Mascot Media Assets
+        - Mascots
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/id"
+        - name: search[order]
+          in: query
+          schema:
+            type: string
+            enum:
+              - id_asc
+              - id_desc
+        - name: search[checksum]
+          in: query
+          schema:
+            type: string
+        - name: search[md5]
+          in: query
+          schema:
+            type: string
+        - name: search[file_ext]
+          in: query
+          schema:
+            type: string
+        - name: search[pixel_hash]
+          in: query
+          schema:
+            type: string
+        - name: search[status]
+          in: query
+          schema:
+            type: string
+            enum: *media-asset-statuses
+        - name: search[status_message_matches]
+          in: query
+          schema:
+            type: string
+        - name: search[creator_id]
+          in: query
+          schema:
+            type: number
+        - name: search[creator_name]
+          in: query
+          schema:
+            type: string
+        - name: search[mascot_id]
+          in: query
+          schema:
+            type: number
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MascotMediaAsset"
+  # Post Replacement Media Assets
+  /media_assets/post_replacements.json:
+    get:
+      summary: Search Mascot Media Assets
+      tags:
+        - Post Replacement Assets
+        - Post Replacements
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/id"
+        - name: search[order]
+          in: query
+          schema:
+            type: string
+            enum:
+              - id_asc
+              - id_desc
+        - name: search[checksum]
+          in: query
+          schema:
+            type: string
+        - name: search[md5]
+          in: query
+          schema:
+            type: string
+        - name: search[file_ext]
+          in: query
+          schema:
+            type: string
+        - name: search[pixel_hash]
+          in: query
+          schema:
+            type: string
+        - name: search[status]
+          in: query
+          schema:
+            type: string
+            enum: *media-asset-statuses
+        - name: search[status_message_matches]
+          in: query
+          schema:
+            type: string
+        - name: search[creator_id]
+          in: query
+          schema:
+            type: number
+        - name: search[creator_name]
+          in: query
+          schema:
+            type: string
+        - name: search[post_replacement_id]
+          in: query
+          schema:
+            type: number
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PostReplacementMediaAsset"
+  /media_assets/post_replacements/{id}/append.json:
+    put:
+      summary: Append to Post Replacement Media Asset
+      tags:
+        - Post Replacement Assets
+        - Post Replacements
+      security:
+        - basicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the post replacement media asset.
+          schema:
+            type: number
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - post_replacement[chunk_id]
+                - post_replacement[data]
+              properties:
+                post_replacement[chunk_id]:
+                  type: number
+                post_replacement[data]:
+                  type: binary
+      responses:
+        204:
+          description: Success
+        403:
+          $ref: "#/components/responses/AccessDenied"
+        404:
+          $ref: "#/components/responses/NotFound"
+        422:
+          oneOf:
+            - $ref: "#/components/responses/ExpectedError"
+            - $ref: "#/components/responses/MessageError"
+  /media_assets/post_replacements/{id}/cancel.json:
+    put:
+      summary: Cancel Post Replacement Media Asset
+      tags:
+        - Post Replacement Assets
+        - Post Replacements
+      security:
+        - basicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the post replacement media asset.
+          schema:
+            type: number
+      responses:
+        204:
+          description: Success
+        403:
+          $ref: "#/components/responses/AccessDenied"
+        404:
+          $ref: "#/components/responses/NotFound"
+        422:
+          $ref: "#/components/responses/ExpectedError"
+  /media_assets/post_replacements/{id}/finalize.json:
+    put:
+      summary: Finalize Post Replacement Media Asset
+      tags:
+        - Post Replacement Assets
+        - Post Replacements
+      security:
+        - basicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the post replacement media asset.
+          schema:
+            type: number
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - location
+                  - post_id
+                  - post_replacement_id
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  location:
+                    type: string
+                  post_id:
+                    type: number
+                  post_replacement_id:
+                    type: number
+        403:
+          $ref: "#/components/responses/AccessDenied"
+        404:
+          $ref: "#/components/responses/NotFound"
+        422:
+          oneOf:
+            - $ref: "#/components/responses/ExpectedError"
+            - $ref: "#/components/responses/MessageError"
+  # Upload Media Assets
+  /media_assets/uploads.json:
+    get:
+      summary: Search Mascot Media Assets
+      tags:
+        - Upload Assets
+        - Uploads
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/id"
+        - name: search[order]
+          in: query
+          schema:
+            type: string
+            enum:
+              - id_asc
+              - id_desc
+        - name: search[checksum]
+          in: query
+          schema:
+            type: string
+        - name: search[md5]
+          in: query
+          schema:
+            type: string
+        - name: search[file_ext]
+          in: query
+          schema:
+            type: string
+        - name: search[pixel_hash]
+          in: query
+          schema:
+            type: string
+        - name: search[status]
+          in: query
+          schema:
+            type: string
+            enum: *media-asset-statuses
+        - name: search[status_message_matches]
+          in: query
+          schema:
+            type: string
+        - name: search[creator_id]
+          in: query
+          schema:
+            type: number
+        - name: search[creator_name]
+          in: query
+          schema:
+            type: string
+        - name: search[upload_id]
+          in: query
+          schema:
+            type: number
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UploadMediaAsset"
+  /media_assets/uploads/{id}/append.json:
+    put:
+      summary: Append to Upload Media Asset
+      tags:
+        - Upload Assets
+        - Uploads
+      security:
+        - basicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the upload media asset.
+          schema:
+            type: number
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - upload[chunk_id]
+                - upload[data]
+              properties:
+                upload[chunk_id]:
+                  type: number
+                upload[data]:
+                  type: binary
+      responses:
+        204:
+          description: Success
+        403:
+          $ref: "#/components/responses/AccessDenied"
+        404:
+          $ref: "#/components/responses/NotFound"
+        422:
+          oneOf:
+            - $ref: "#/components/responses/ExpectedError"
+            - $ref: "#/components/responses/MessageError"
+  /media_assets/uploads/{id}/cancel.json:
+    put:
+      summary: Cancel Upload Media Asset
+      tags:
+        - Upload Assets
+        - Uploads
+      security:
+        - basicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the upload media asset.
+          schema:
+            type: number
+      responses:
+        204:
+          description: Success
+        403:
+          $ref: "#/components/responses/AccessDenied"
+        404:
+          $ref: "#/components/responses/NotFound"
+        422:
+          $ref: "#/components/responses/ExpectedError"
+  /media_assets/uploads/{id}/finalize.json:
+    put:
+      summary: Finalize Upload Media Asset
+      tags:
+        - Upload Assets
+        - Uploads
+      security:
+        - basicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the upload media asset.
+          schema:
+            type: number
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - location
+                  - post_id
+                  - upload_id
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  location:
+                    type: string
+                  post_id:
+                    type: number
+                  upload_id:
+                    type: number
+        403:
+          $ref: "#/components/responses/AccessDenied"
+        404:
+          $ref: "#/components/responses/NotFound"
+        422:
+          oneOf:
+            - $ref: "#/components/responses/ExpectedError"
+            - $ref: "#/components/responses/MessageError"
+
   # Mod Actions
   /mod_actions.json:
     get:
@@ -9987,16 +10495,16 @@ paths:
         - Post Replacements
       security:
         - basicAuth: []
+      description: If neither file or direct_url are provided, a pending media asset will be created which should be filled via the /media_assets/post_replacements/{id}/append and /media_assets/post_replacements/{id}/finalize endpoints. The media asset expires if not finalized within 4 hours.
       requestBody:
         content:
           application/json:
             schema:
               type: object
               required:
-                - replacement_url
                 - reason
               properties:
-                replacement_url:
+                direct_url:
                   type: string
                 reason:
                   type: string
@@ -10009,27 +10517,73 @@ paths:
             schema:
               type: object
               required:
-                - reason
+                - replacement[reason]
               properties:
-                replacement[replacement_file]:
+                replacement[file]:
                   type: string
-                replacement[replacement_url]:
+                replacement[direct_url]:
                   type: string
                 replacement[reason]:
                   type: string
                 replacement[source]:
                   type: string
       responses:
-        201:
+        200:
           description: Success
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PostReplacement"
+                type: object
+                required:
+                  - success
+                  - location
+                  - id
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  location:
+                    type: string
+                  id:
+                    type: string
+        202:
+          description: Pending
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - id
+                  - media_asset_id
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  id:
+                    type: number
+                  media_asset_id:
+                    type: number
         403:
           $ref: "#/components/responses/AccessDenied"
-        422:
-          $ref: "#/components/responses/ExpectedError"
+        412:
+          description: Precondition Failed
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - message
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                    message:
+                      type: string
   /posts/replacements/{id}.json:
     delete:
       summary: Delete Post Replacement
@@ -12213,11 +12767,7 @@ paths:
           name: search[status]
           schema:
             type: string
-            enum:
-              - completed
-              - processing
-              - pending
-              - error
+            enum: *media-asset-statuses
         - in: query
           name: search[backtrace]
           schema:
@@ -12242,8 +12792,39 @@ paths:
         - Posts
       security:
         - basicAuth: []
+      description: If neither file or direct_url are provided, a pending media asset will be created which should be filled via the /media_assets/uploads/{id}/append and /media_assets/uploads/{id}/finalize endpoints. The media asset expires if not finalized within 4 hours.
       requestBody:
         content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - source
+                - tag_string
+                - rating
+              properties:
+                direct_url:
+                  type: string
+                source:
+                  type: string
+                tag_string:
+                  type: string
+                rating:
+                  type: string
+                  enum: *ratings
+                parent_id:
+                  type: number
+                description:
+                  type: string
+                as_pending:
+                  type: boolean
+                  description: Must have the "Unrestricted Uploads" permission.
+                locked_rating:
+                  type: boolean
+                  description: Must be Trusted+ to use.
+                locked_tags:
+                  type: string
+                  description: Must be Admin+ to use.
           multipart/form-data:
             schema:
               type: object
@@ -12288,6 +12869,7 @@ paths:
                 required:
                   - success
                   - location
+                  - id
                   - post_id
                 properties:
                   success:
@@ -12298,22 +12880,46 @@ paths:
                     type: string
                   post_id:
                     type: number
+        202:
+          description: Pending
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - id
+                  - media_asset_id
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  id:
+                    type: number
+                  media_asset_id:
+                    type: number
         403:
           $ref: "#/components/responses/AccessDenied"
         412:
           description: Precondition Failed
           content:
             application/json:
-              type: object
-              properties:
-                success:
-                  type: boolean
-                  enum:
-                    - false
-                  reason:
-                    type: string
-                  message:
-                    type: string
+              schema:
+                type: object
+                required:
+                  - success
+                  - reason
+                  - message
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                    reason:
+                      type: string
+                    message:
+                      type: string
   # Upload Whitelists
   /upload_whitelists.json:
     get:

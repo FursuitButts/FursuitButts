@@ -11,7 +11,7 @@ server {
     break;
   }
 
-  location /data/deleted/ {
+  location /data/posts/deleted/ {
     add_header Cache-Control "private";
     secure_link $arg_auth,$arg_expires;
     secure_link_md5 "$secure_link_expires $uri $arg_uid ${FEMBOYFANS_PROTECTED_FILE_SECRET}";

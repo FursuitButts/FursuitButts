@@ -63,7 +63,7 @@ module PostSets
 
     def posts
       @posts ||= begin
-        temp = ::Post.tag_match(tag_string).paginate_posts(page, limit: limit, includes: [:uploader])
+        temp = ::Post.tag_match(tag_string).paginate_posts(page, limit: limit, includes: %i[uploader media_asset])
 
         @post_count = temp.total_count
         temp

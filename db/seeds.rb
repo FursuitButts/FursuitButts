@@ -11,7 +11,6 @@ require_relative "seeds/posts"
 # Uncomment to see detailed logs
 # ActiveRecord::Base.logger = ActiveSupport::Logger.new($stdout)
 
-ENV["SEEDING"] = "1"
 module Seeds
   def self.run!
     CurrentUser.user = User.system
@@ -33,6 +32,10 @@ module Seeds
 
   def self.base_url
     read_resources["base_url"]
+  end
+
+  def self.e621?
+    base_url.include?("e621.net")
   end
 
   def self.read_resources
@@ -63,10 +66,11 @@ module Seeds
 
     def self.create_from_web
       Seeds.api_request("/mascots.json").each do |mascot|
-        next if ::Mascot.exists?(display_name: mascot["display_name"])
-        puts(mascot["url_path"])
+        next if Mascot.exists?(display_name: mascot["display_name"])
+        url = Seeds.e621? ? mascot["url_path"] : mascot["file_url"]
+        puts(url)
         Mascot.find_or_create_by!(display_name: mascot["display_name"]) do |masc|
-          masc.mascot_file = Downloads::File.new(mascot["url_path"]).download!
+          masc.file = Downloads::File.new(url).download!
           masc.background_color = mascot["background_color"]
           masc.artist_url = mascot["artist_url"]
           masc.artist_name = mascot["artist_name"]
@@ -83,7 +87,7 @@ module Seeds
         next if ::Mascot.exists?(display_name: mascot["name"])
         puts(mascot["file"])
         Mascot.find_or_create_by!(display_name: mascot["name"]) do |masc|
-          masc.mascot_file = Downloads::File.new(mascot["file"]).download!
+          masc.file = Downloads::File.new(mascot["file"]).download!
           masc.background_color = mascot["color"]
           masc.artist_url = mascot["artist_url"]
           masc.artist_name = mascot["artist_name"]

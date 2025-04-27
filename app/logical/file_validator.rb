@@ -13,7 +13,7 @@ class FileValidator
     validate_file_size(max_file_sizes)
     validate_file_integrity
     if record.is_video?
-      video = record.video(file_path)
+      video = MediaAsset.video(file_path)
       validate_container_format(video)
       validate_duration(video)
       validate_colorspace(video)
@@ -23,7 +23,7 @@ class FileValidator
   end
 
   def validate_file_integrity
-    if record.is_image? && record.is_corrupt?(file_path)
+    if record.is_image? && MediaAsset.is_corrupt?(file_path)
       record.errors.add(:file, "is corrupt")
     end
   end
@@ -43,7 +43,7 @@ class FileValidator
     if record.file_size > max_size
       record.errors.add(:file_size, "is too large. Maximum allowed for this file type is #{ApplicationController.helpers.number_to_human_size(max_size)}")
     end
-    if record.is_animated_png?(file_path) && record.file_size > FemboyFans.config.max_apng_file_size
+    if MediaAsset.is_animated_png?(file_path) && record.file_size > FemboyFans.config.max_apng_file_size
       record.errors.add(:file_size, "is too large. Maximum allowed for this file type is #{ApplicationController.helpers.number_to_human_size(FemboyFans.config.max_apng_file_size)}")
     end
   end

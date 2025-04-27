@@ -67,4 +67,25 @@ Rails.application.configure do
 
   # Allow any hosts
   config.hosts.clear
+
+  set_user = -> do
+    CurrentUser.user = User.system
+    CurrentUser.ip_addr = "127.0.0.1"
+  end
+
+  console do
+    set_user.call
+    ActiveSupport::Reloader.to_complete(&set_user)
+  end
+
+  config.after_initialize do
+    Bullet.enable = true
+    Bullet.alert = true
+    Bullet.bullet_logger = true
+    Bullet.console = true
+    Bullet.rails_logger = true
+    Bullet.add_footer = true
+    Bullet.stacktrace_excludes = %w[silence_healthcheck_logging]
+    Bullet.add_safelist(type: :unused_eager_loading, class_name: "Post", association: :uploader)
+  end
 end

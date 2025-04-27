@@ -6,7 +6,7 @@ class PostsController < ApplicationController
 
   def index
     if params[:md5].present?
-      @post = authorize(Post.find_by!(md5: params[:md5]))
+      @post = authorize(Post.joins(:media_asset).find_by!("upload_media_assets.md5": params[:md5]))
       respond_with(@post) do |format|
         format.html { redirect_to(@post) }
         format.json { render(json: [@post].to_json) }
@@ -153,15 +153,15 @@ class PostsController < ApplicationController
 
   def regenerate_thumbnails
     @post = authorize(Post.find(params[:id]))
-    raise(User::PrivilegeError, "Cannot regenerate thumbnails on deleted images") if @post.is_deleted?
-    @post.regenerate_image_samples!
+    raise(User::PrivilegeError, "Cannot regenerate variants on deleted images") if @post.is_deleted?
+    @post.regenerate_image_variants
     respond_with(@post)
   end
 
   def regenerate_videos
     @post = authorize(Post.find(params[:id]))
-    raise(User::PrivilegeError, "Cannot regenerate thumbnails on deleted images") if @post.is_deleted?
-    @post.regenerate_video_samples!
+    raise(User::PrivilegeError, "Cannot regenerate variants on deleted images") if @post.is_deleted?
+    @post.regenerate_video_variants
     respond_with(@post)
   end
 
@@ -248,7 +248,7 @@ class PostsController < ApplicationController
     if post.invalid?
       return render_expected_error(400, post.errors.full_messages.join("; "), format: :json)
     end
-    path = PostThumbnailer.extract_frame_from_video(post.file_path, frame)
+    path = VideoResizer.extract_frame(post.file_path, frame)
     File.open(path, "r") do |file|
       send_data(file.read, type: "image/webp", disposition: "inline")
     end

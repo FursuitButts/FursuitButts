@@ -307,7 +307,7 @@ class ApplicationRecord < ActiveRecord::Base
         self.versioning_is_hidden_column = options[:is_hidden_column] || "is_hidden"
         self.versioning_is_sticky_column = options[:is_sticky_column] || "is_sticky"
 
-        class_eval do # rubocop:disable Metrics/BlockLength
+        class_eval do
           has_many(:versions, class_name: "EditHistory", as: :versionable)
           after_update(:save_version, if: :should_create_edited_history)
           after_save(if: :should_create_hidden_history) do |rec|
@@ -392,7 +392,7 @@ class ApplicationRecord < ActiveRecord::Base
         self.mentionable_notified_mentions_column = options[:notified_mentions_column] || "notified_mentions"
         self.mentionable_creator_column = options[:user_column] || "creator_id"
 
-        class_eval do # rubocop:disable Metrics/BlockLength
+        class_eval do
           after_save(:update_mentions, if: :should_update_mentions?)
 
           define_method(:should_update_mentions?) do
@@ -441,14 +441,16 @@ class ApplicationRecord < ActiveRecord::Base
       def belongs_to_creator(options = {})
         class_eval do
           belongs_to(:creator, **options.merge(class_name: "User"))
-          before_validation(on: :create) do |rec|
-            rec.creator_id = CurrentUser.id if rec.creator_id.nil?
-            rec.creator_ip_addr = CurrentUser.ip_addr if rec.respond_to?(:creator_ip_addr=) && rec.creator_ip_addr.nil?
-          end
+          before_validation(:__set_creator__, on: :create)
 
           define_method(:creator_name) do
             return creator.name if association(:creator).loaded?
             User.id_to_name(creator_id)
+          end
+
+          define_method(:__set_creator__) do
+            self.creator_id = CurrentUser.id if creator_id.nil?
+            self.creator_ip_addr = CurrentUser.ip_addr if respond_to?(:creator_ip_addr=) && creator_ip_addr.nil?
           end
         end
       end
@@ -456,14 +458,16 @@ class ApplicationRecord < ActiveRecord::Base
       def belongs_to_updater(options = {})
         class_eval do
           belongs_to(:updater, **options.merge(class_name: "User"))
-          before_validation(unless: :destroyed?) do |rec|
-            rec.updater_id = CurrentUser.id
-            rec.updater_ip_addr = CurrentUser.ip_addr if rec.respond_to?(:updater_ip_addr=)
-          end
+          before_validation(:__set_updater__, unless: :destroyed?)
 
           define_method(:updater_name) do
             return updater.name if association(:updater).loaded?
             User.id_to_name(updater_id)
+          end
+
+          define_method(:__set_updater__) do
+            self.updater_id = CurrentUser.id
+            self.updater_ip_addr = CurrentUser.ip_addr if respond_to?(:updater_ip_addr=)
           end
         end
       end
@@ -528,6 +532,7 @@ class ApplicationRecord < ActiveRecord::Base
   include HasDtextLinks
   include ApiMethods
   include ConditionalIncludes
+  include HasMediaAsset
 
   def self.override_route_key(value)
     define_singleton_method(:model_name) do

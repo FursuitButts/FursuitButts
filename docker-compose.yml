@@ -21,6 +21,7 @@ x-environment: &common-env
   SESSION_SECRET_KEY: 44b4f44e9f253c406cbe727d403d500c1cecff943e4d2aea8f5447f28846fffe
   # Hide annoying output from libvips on corrupt files
   VIPS_WARNING: "0"
+  EXPOSED_WEBPACKER_PORT: ${EXPOSED_WEBPACKER_PORT:-4003}
 
 x-depends-on: &common-depends-on
   opensearch:
@@ -58,6 +59,8 @@ services:
       RAILS_ENV: development
       DB_USER: femboyfans
       DB_NAME: femboyfans_development
+    ports:
+      - "${EXPOSED_WEBPACKER_PORT:-4003}:${EXPOSED_WEBPACKER_PORT:-4003}"
     depends_on:
       <<: *common-depends-on
       autocompleted:

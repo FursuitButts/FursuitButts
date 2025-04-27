@@ -4,8 +4,9 @@ require "tmpdir"
 
 class Upload < ApplicationRecord
   class Error < StandardError; end
+  has_media_asset(:upload_media_asset)
 
-  attr_accessor :as_pending, :replaced_post, :file, :original_post_id, :locked_rating, :replacement_id, :locked_tags
+  attr_accessor :as_pending, :original_post_id, :locked_rating, :locked_tags, :is_replacement, :replacement_id
 
   belongs_to :uploader, class_name: "User"
   belongs_to :post, optional: true
@@ -13,50 +14,22 @@ class Upload < ApplicationRecord
   after_initialize :set_locked_tags
   before_validation :assign_rating_from_tags
   before_validation :normalize_direct_url, on: :create
+
   validate :uploader_is_not_limited, on: :create
   validate :direct_url_is_whitelisted, on: :create
+  validate :no_excessive_pending_uploads, on: :create
   validates :rating, inclusion: { in: %w[q e s] }, allow_nil: false
-  validate :md5_is_unique, on: :file
-  validate on: :file do |upload|
-    FileValidator.new(upload, file.path).validate
-  end
+
+  scope :pending, -> { joins(:upload_media_asset).where("upload_media_asset.status": "pending") }
+  scope :uploading, -> { joins(:upload_media_asset).where("upload_media_asset.status": "uploading") }
+  scope :completed, -> { joins(:upload_media_asset).where("upload_media_asset.status": "active") }
+  scope :in_progress, -> { joins(:upload_media_asset).where("upload_media_asset.status": %w[pending uploading]) }
+
+  delegate :duplicate_post_id, :status, :status_message, :pretty_status,
+           :pending?, :uploading?, :active?, :deleted?, :cancelled?, :expunged?, :failed?, :duplicate?, to: :media_asset, allow_nil: true
 
   def set_locked_tags
     self.locked_tags ||= ""
-  end
-
-  module StatusMethods
-    def is_pending?
-      status == "pending"
-    end
-
-    def is_processing?
-      status == "processing"
-    end
-
-    def is_completed?
-      status == "completed"
-    end
-
-    def is_duplicate?
-      status.match?(/duplicate: \d+/)
-    end
-
-    def is_errored?
-      status.match?(/error:/)
-    end
-
-    def sanitized_status
-      if is_errored?
-        status.sub(/DETAIL:.+/m, "...")
-      else
-        status
-      end
-    end
-
-    def duplicate_post_id
-      @duplicate_post_id ||= status[/duplicate: (\d+)/, 1]
-    end
   end
 
   module DirectURLMethods
@@ -94,10 +67,6 @@ class Upload < ApplicationRecord
   end
 
   module SearchMethods
-    def pending
-      where(status: "pending")
-    end
-
     def post_tags_match(query)
       where(post_id: Post.tag_match_sql(query))
     end
@@ -138,7 +107,7 @@ class Upload < ApplicationRecord
       end
 
       if params[:status].present?
-        q = q.where("uploads.status LIKE ? ESCAPE E'\\\\'", params[:status].to_escaped_for_sql_like)
+        q = q.joins(:upload_media_asset).where("upload_media_asset.status": params[:status])
       end
 
       if params[:backtrace].present?
@@ -153,19 +122,23 @@ class Upload < ApplicationRecord
     end
   end
 
-  include FileMethods
-  include StatusMethods
   include UploaderMethods
-  extend SearchMethods
   include DirectURLMethods
+  extend SearchMethods
 
   def uploader_is_not_limited
-    # Uploads created when approving a replacemnet should always go through
     return if replacement_id.present?
-
     uploadable = uploader.can_upload_with_reason
     if uploadable != true
       errors.add(:uploader, User.upload_reason_string(uploadable))
+      return false
+    end
+    true
+  end
+
+  def no_excessive_pending_uploads
+    if Upload.in_progress.where(uploader_id: uploader_id).count >= FemboyFans.config.pending_uploads_limit
+      errors.add(:base, "You have too many pending uploads. Finish or cancel your existing uploads and try again")
       return false
     end
     true
@@ -179,40 +152,6 @@ class Upload < ApplicationRecord
       return false
     end
     true
-  end
-
-  def md5_is_unique
-    if md5.nil?
-      return
-    end
-
-    if (destroyed_post = DestroyedPost.find_by(md5: md5))
-      errors.add(:base, "That image had been deleted from our site, and cannot be re-uploaded")
-      destroyed_post.notify_reupload(uploader)
-      return
-    end
-
-    replacements = PostReplacement.pending.where(md5: md5)
-    replacements = replacements.where.not(id: replacement_id) if replacement_id
-
-    if !replaced_post && replacements.any?
-      replacements.each do |rep|
-        errors.add(:md5, "duplicate of pending replacement on post ##{rep.post_id}")
-      end
-      return
-    end
-
-    md5_post = Post.find_by(md5: md5)
-
-    if md5_post.nil?
-      return
-    end
-
-    if replaced_post && replaced_post == md5_post
-      return
-    end
-
-    errors.add(:md5, "duplicate: #{md5_post.id}")
   end
 
   def assign_rating_from_tags
@@ -229,11 +168,42 @@ class Upload < ApplicationRecord
     as_pending.to_s.truthy?
   end
 
-  def self.available_includes
-    %i[post uploader]
-  end
-
   def visible?(user = CurrentUser.user)
     user.is_janitor?
+  end
+
+  def convert_to_post
+    Post.new.tap do |p|
+      p.tag_string = tag_string
+      p.original_tag_string = tag_string
+      p.locked_tags = locked_tags
+      p.is_rating_locked = locked_rating if locked_rating.present?
+      p.description = description.strip
+      p.rating = rating
+      p.source = source
+      p.uploader_id = uploader_id
+      p.uploader_ip_addr = uploader_ip_addr
+      p.parent_id = parent_id
+      p.upload_url = direct_url
+      p.media_asset = media_asset
+
+      if !uploader.unrestricted_uploads? || (!uploader.can_approve_posts? && p.avoid_posting_artists.any?) || upload_as_pending?
+        p.is_pending = true
+      end
+    end
+  end
+
+  # this overrides a rails method, but we should never need it
+  def create_post
+    return post if reload_post.present?
+    @post = convert_to_post
+    @post.save!
+    update(post_id: @post.id)
+    reload_post
+    @post.reload
+  end
+
+  def self.available_includes
+    %i[post uploader]
   end
 end

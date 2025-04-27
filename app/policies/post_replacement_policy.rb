@@ -30,16 +30,16 @@ class PostReplacementPolicy < ApplicationPolicy
   end
 
   def permitted_attributes
-    attr = %i[replacement_url replacement_file reason source]
+    attr = %i[direct_url file reason source checksum]
     attr += %i[as_pending] if approver?
     attr
   end
 
   def permitted_search_params
-    super + %i[file_ext md5 status creator_id creator_name approver_id approver_name rejector_id rejector_name uploader_name_on_approve uploader_id_on_approve]
+    super + %i[file_ext md5 status creator_id creator_name approver_id approver_name rejector_id rejector_name uploader_name_on_approve uploader_id_on_approve post_id]
   end
 
   def api_attributes
-    super - %i[storage_id protected uploader_id_on_approve penalize_uploader_on_approve previous_details] + %i[file_url]
+    super + %i[file_url md5 file_ext file_size image_width image_height creator_name media_asset_id] - %i[storage_id protected uploader_id_on_approve penalize_uploader_on_approve previous_details post_replacement_media_asset_id]
   end
 end

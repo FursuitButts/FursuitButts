@@ -20,6 +20,7 @@ module Maintenance
 
   def hourly
     ignoring_exceptions { Post.document_store.import_views }
+    ignoring_exceptions { MediaAsset.prune_expired! }
   end
 
   def ignoring_exceptions

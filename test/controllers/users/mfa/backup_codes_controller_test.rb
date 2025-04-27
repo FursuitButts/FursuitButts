@@ -28,7 +28,6 @@ module Users
 
               travel_to(1.day.ago) { login_as(@user) }
               get user_mfa_backup_codes_path
-              # puts @response.body
               assert_redirected_to(confirm_password_session_path(url: user_mfa_backup_codes_path))
             end
           end

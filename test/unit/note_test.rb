@@ -3,7 +3,7 @@
 require "test_helper"
 
 class NoteTest < ActiveSupport::TestCase
-  context "In all cases" do
+  context "A note" do
     setup do
       @user = create(:user)
       CurrentUser.user = @user
@@ -29,7 +29,7 @@ class NoteTest < ActiveSupport::TestCase
 
     context "creating a note" do
       setup do
-        @post = create(:post, image_width: 1000, image_height: 1000)
+        @post = create(:post, media_asset: build(:random_upload_media_asset, image_width: 1000, image_height: 1000))
       end
 
       should "not validate if the note is outside the image" do
@@ -94,7 +94,7 @@ class NoteTest < ActiveSupport::TestCase
 
     context "updating a note" do
       setup do
-        @post = create(:post, image_width: 1000, image_height: 1000)
+        @post = create(:post, media_asset: build(:random_upload_media_asset, image_width: 1000, image_height: 1000))
         @note = create(:note, post: @post)
       end
 

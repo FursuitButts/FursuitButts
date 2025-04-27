@@ -58,7 +58,7 @@
                 include_blank: false, collection: [%w[No false], %w[Yes true]]) %>
 
     <%= f.input(:enable_keyboard_navigation, as: :select, include_blank: false, label: "Enable keyboard shortcuts", collection: [%w[No false], %w[Yes true]],
-    hint: raw("Enables the use of keyboard shortcuts for a majority of site actions related to posts. A list of keyboard shortcuts is available #{link_to('here', keyboard_shortcuts_path)}."))%>
+    hint: raw("Enables the use of keyboard shortcuts for a majority of site actions related to posts. A list of keyboard shortcuts is available #{link_to('here', keyboard_shortcuts_path)}.")) %>
 
     <%= f.input(:enable_autocomplete, as: :select, collection: [%w[No false], %w[Yes true]], include_blank: false,
                 hint: "Enables auto-completion on most tag and user entry fields.") %>

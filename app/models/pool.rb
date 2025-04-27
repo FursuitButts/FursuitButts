@@ -23,11 +23,13 @@ class Pool < ApplicationRecord
   validate :validate_number_of_posts
   before_validation :normalize_post_ids
   before_validation :normalize_name
+  before_save :update_cover_post, if: :will_save_change_to_post_ids?
   after_create :synchronize!
   before_destroy :remove_all_posts
   after_destroy :log_delete
   after_save :create_version
   after_save :synchronize, if: :saved_change_to_post_ids?
+  has_one :cover_post, class_name: "Post", foreign_key: :id
 
   has_many :versions, -> { order("id asc") }, class_name: "PoolVersion", dependent: :destroy
 
@@ -255,6 +257,10 @@ class Pool < ApplicationRecord
       .uniq
   end
 
+  def update_cover_post
+    self.cover_post_id = (post_ids.first if Post.exists?(id: post_ids.first)) # parenthesis are intentional to set nil value
+  end
+
   def synchronize
     return if skip_sync == true
     post_ids_before = post_ids_before_last_save || post_ids_was
@@ -316,10 +322,6 @@ class Pool < ApplicationRecord
     post_ids[n]
   end
 
-  def cover_post
-    Post.find_by(id: post_ids.first)
-  end
-
   def create_version(updater: CurrentUser.user, updater_ip_addr: CurrentUser.ip_addr)
     PoolVersion.queue(self, updater, updater_ip_addr)
   end
@@ -348,7 +350,7 @@ class Pool < ApplicationRecord
   def updater_can_remove_posts
     removed = post_ids_was - post_ids
     if removed.any? && !CurrentUser.user.can_remove_from_pools?
-      errors.add(:base, "You cannot removes posts from pools within the first week of sign up")
+      errors.add(:base, "You cannot removes posts from pools within the 3 days of sign up")
     end
   end
 

@@ -60,7 +60,7 @@ class ApplicationController < ActionController::Base
     CurrentUser.user ||= User.anonymous
 
     case exception
-    when ProcessingError
+    when PostReplacement::ProcessingError
       render_expected_error(400, exception)
     when APIThrottled
       render_expected_error(429, "Throttled: Too many requests")
@@ -287,10 +287,6 @@ class ApplicationController < ActionController::Base
       return p.permit(po.send("permitted_search_params_for_#{action_name}"))
     end
     p.permit(po.permitted_search_params)
-  end
-
-  def permit_search_params(permitted_params)
-    params.fetch(:search, {}).permit(%i[id created_at updated_at] + permitted_params)
   end
 
   def format_json(data, **)

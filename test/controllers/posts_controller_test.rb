@@ -95,35 +95,35 @@ class PostsControllerTest < ActionDispatch::IntegrationTest
       end
 
       should "generate the correct thumbnail" do
-        post = UploadService.new(attributes_for(:upload).merge(file: fixture_file_upload("test-512x512.webm"), uploader: @admin, tag_string: "tst")).start!.post
+        post = create(:webm_upload, uploader: @admin).post
         assert_equal("77ecd5e8577a03090d3864d348d7020b", Digest::MD5.file(post.reload.preview_file_path).hexdigest)
         assert_difference("PostEvent.count", 1) do
-          assert_enqueued_jobs(1, only: PostImageSampleJob) do
+          assert_enqueued_jobs(1, only: UploadMediaAssetImageVariantsJob) do
             put_auth post_path(post), @admin, params: { post: { thumbnail_frame: 5 }, format: :json }
           end
         end
         assert_response :success
-        perform_enqueued_jobs(only: PostImageSampleJob)
+        perform_enqueued_jobs(only: UploadMediaAssetImageVariantsJob)
         assert_equal("79bb226d5656a47979fdcb94a5feb16a", Digest::MD5.file(post.reload.preview_file_path).hexdigest)
       end
 
       should "not allow setting thumbnail_frame on posts where framecount=0" do
-        @post.update_column(:framecount, 0)
+        @post.media_asset.update_column(:framecount, 0)
         put_auth post_path(@post), @admin, params: { post: { thumbnail_frame: 1 }, format: :json }
         assert_response :unprocessable_entity
         assert_same_elements(["Thumbnail frame cannot be used on posts without a framecount"], @response.parsed_body[:message]&.split("; "))
       end
 
       should "not allow setting thumbnail_frame greater than framecount" do
-        @post.update_column(:framecount, 10)
+        @post.media_asset.update_column(:framecount, 10)
         put_auth post_path(@post), @admin, params: { post: { thumbnail_frame: 11 }, format: :json }
         assert_response :unprocessable_entity
         assert_same_elements(["Thumbnail frame must be between 1 and 10"], @response.parsed_body[:message]&.split("; "))
       end
 
       should "not allow setting thumbnail_frame further than 10% from the start if framecount is greater than 1000" do
-        @post.update_column(:framecount, 1500)
-        put_auth post_path(@post), @admin, params: { post: { thumbnail_frame: 2000 }, format: :json }
+        @post.media_asset.update_column(:framecount, 1500)
+        put_auth post_path(@post), @admin, params: { post: { thumbnail_frame: 200 }, format: :json }
         assert_response :unprocessable_entity
         assert_same_elements(["Thumbnail frame must be between 1 and 150", "Thumbnail frame must be in first 10% of video"], @response.parsed_body[:message]&.split("; "))
       end
@@ -253,6 +253,7 @@ class PostsControllerTest < ActionDispatch::IntegrationTest
 
         assert_response :success
         assert_equal(false, ::Post.exists?(@post.id))
+        assert_equal("expunged", @post.media_asset.reload.status)
       end
 
       should "work with reason" do

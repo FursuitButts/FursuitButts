@@ -2,19 +2,13 @@
 
 module StorageManager
   class Base
-    attr_reader :base_url, :base_dir, :hierarchical, :large_image_prefix, :protected_prefix, :base_path, :replacement_prefix
+    attr_reader :base_url, :base_dir, :base_path, :hierarchical
 
-    def initialize(base_url: default_base_url, base_path: default_base_path, base_dir: DEFAULT_BASE_DIR, hierarchical: false,
-                   large_image_prefix: FemboyFans.config.large_image_prefix,
-                   protected_prefix: FemboyFans.config.protected_path_prefix,
-                   replacement_prefix: FemboyFans.config.replacement_path_prefix)
+    def initialize(base_url: default_base_url, base_path: default_base_path, base_dir: DEFAULT_BASE_DIR, hierarchical: false)
       @base_url = base_url.chomp("/")
       @base_dir = base_dir
       @base_path = base_path
-      @protected_prefix = protected_prefix
-      @replacement_prefix = replacement_prefix
       @hierarchical = hierarchical
-      @large_image_prefix = large_image_prefix
     end
 
     def default_base_path
@@ -30,71 +24,23 @@ module StorageManager
     # written, or an error is raised and the original file is left unchanged. The
     # file should never be in a partially written state.
     def store(io, path)
-      raise(NotImplementedError, "store not implemented")
+      raise(NotImplementedError, "#{self.class.name}#store not implemented")
     end
 
     # Delete the file at the given path. If the file doesn't exist, no error
     # should be raised.
     def delete(path)
-      raise(NotImplementedError, "delete not implemented")
+      raise(NotImplementedError, "#{self.class.name}#delete not implemented")
     end
 
     # Return a readonly copy of the file located at the given path.
     def open(path, &)
-      raise(NotImplementedError, "open not implemented")
+      raise(NotImplementedError, "#{self.class.name}#open not implemented")
     end
 
-    def store_file(io, post, type)
-      store(io, file_path(post.md5, post.file_ext, type))
-    end
-
-    def store_replacement(io, replacement, image_size)
-      store(io, replacement_path(replacement.storage_id, replacement.file_ext, image_size))
-    end
-
-    def delete_file(_post_id, md5, file_ext, type, scale_factor: nil)
-      delete(file_path(md5, file_ext, type, scale_factor: scale_factor))
-      delete(file_path(md5, file_ext, type, protected: true, scale_factor: scale_factor))
-    end
-
-    def delete_post_files(post_or_md5, file_ext)
-      md5 = post_or_md5.is_a?(String) ? post_or_md5 : post_or_md5.md5
-      StorageManager::IMAGE_TYPES.each do |type|
-        delete(file_path(md5, file_ext, type, protected: false))
-        delete(file_path(md5, file_ext, type, protected: true))
-      end
-
-      FemboyFans.config.image_rescales.each_key do |k|
-        delete(file_path(md5, "webp", :scaled, protected: false, scale_factor: k.to_s))
-        delete(file_path(md5, "webp", :scaled, protected: true, scale_factor: k.to_s))
-      end
-
-      FemboyFans.config.video_rescales.each_key do |k|
-        Post::VIDEO_EXTENSIONS.each do |ext|
-          delete(file_path(md5, ext, :scaled, protected: false, scale_factor: k.to_s))
-          delete(file_path(md5, ext, :scaled, protected: true, scale_factor: k.to_s))
-        end
-      end
-
-      delete(file_path(md5, file_ext == "webm" ? "mp4" : "webm", :original, protected: false))
-      delete(file_path(md5, file_ext == "webm" ? "mp4" : "webm", :original, protected: true))
-    end
-
-    def delete_replacement(replacement)
-      delete(replacement_path(replacement.storage_id, replacement.file_ext, :original))
-      delete(replacement_path(replacement.storage_id, replacement.file_ext, :preview))
-    end
-
-    def open_file(post, type, protected: false, scale_factor: nil, &)
-      open(file_path(post.md5, post.file_ext, type, protected: protected, scale_factor: scale_factor), &) # rubocop:disable Security/Open
-    end
-
-    def move_file_delete(post)
-      raise(NotImplementedError, "move_file_delete not implemented")
-    end
-
-    def move_file_undelete(post)
-      raise(NotImplementedError, "move_file_undelete not implemented")
+    # Move a file from the old location to the new location
+    def move_file(old_path, new_path)
+      raise(NotImplementedError, "#{self.class.name}#move_file not implemented")
     end
 
     def protected_params(url, secret: FemboyFans.config.protected_file_secret)
@@ -104,104 +50,80 @@ module StorageManager
       "?auth=#{hmac}&expires=#{time}&uid=#{user_id}"
     end
 
-    def file_url_ext(post, type, ext, scale_factor: nil)
-      subdir = subdir_for(post.md5)
-      file = file_name(post.md5, ext, type, scale_factor: scale_factor)
-      base = post.protect_file? ? "#{base_path}/#{protected_prefix}" : base_path
+    def file_name(md5, ext, type)
+      return "#{md5}_#{type}.#{ext}" if variant_location(type, ext) == :file
+      "#{md5}.#{ext}"
+    end
 
-      return "#{root_url}/images/download-preview.png" if type == :preview && !post.has_preview?
-      path = if type == :preview
-               "#{base}/preview/#{subdir}#{file}"
-             elsif type == :crop
-               "#{base}/crop/#{subdir}#{file}"
-             elsif type == :scaled || (type == :large && post.has_large?)
-               "#{base}/sample/#{subdir}#{file}"
-             else
-               "#{base}/#{subdir}#{file}"
-             end
-      if post.protect_file?
-        "#{base_url}#{path}#{protected_params(path, secret: FemboyFans.config.protected_file_secret)}"
-      else
-        "#{base_url}#{path}"
+    def url_path(md5, file_ext, type, protected: false, prefix: "", protected_prefix: "", hierarchical: :default)
+      subdir = ""
+      subdir += "#{type}/" if variant_location(type, file_ext) == :path
+      subdir += subdir_for(md5, hierarchical: hierarchical)
+      file = file_name(md5, file_ext, type)
+      clean_path("#{base_path}/#{prefix}#{protected_prefix if protected}#{subdir}#{file}")
+    end
+
+    def url(md5, file_ext, type, protected: false, prefix: "", protected_prefix: "", hierarchical: :default, secret: FemboyFans.config.protected_file_secret)
+      path = url_path(md5, file_ext, type, protected: protected, prefix: prefix, protected_prefix: protected_prefix, hierarchical: hierarchical)
+      url = "#{base_url}#{path}"
+      url += protected_params(path, secret: secret) if protected
+      url
+    end
+
+    def file_path(md5, file_ext, type, protected: false, prefix: "", protected_prefix: "", hierarchical: :default)
+      subdir = ""
+      subdir += "#{type}/" if variant_location(type, file_ext) == :path
+      subdir += subdir_for(md5, hierarchical: hierarchical)
+      file = file_name(md5, file_ext, type)
+      clean_path("#{base_dir}/#{prefix}#{protected_prefix if protected}#{subdir}#{file}")
+    end
+
+    def move_file_delete(md5, file_ext, type, prefix: "", protected_prefix: "", hierarchical: :default)
+      old = file_path(md5, file_ext, type, protected: false, prefix: prefix, protected_prefix: protected_prefix, hierarchical: hierarchical)
+      new = file_path(md5, file_ext, type, protected: true, prefix: prefix, protected_prefix: protected_prefix, hierarchical: hierarchical)
+      move_file(old, new)
+    end
+
+    def move_file_undelete(md5, file_ext, type, prefix: "", protected_prefix: "", hierarchical: :default)
+      old = file_path(md5, file_ext, type, protected: true, prefix: prefix, protected_prefix: protected_prefix, hierarchical: hierarchical)
+      new = file_path(md5, file_ext, type, protected: false, prefix: prefix, protected_prefix: protected_prefix, hierarchical: hierarchical)
+      move_file(old, new)
+    end
+
+    def subdir_for(md5, hierarchical: :default)
+      h = hierarchical == :default ? self.hierarchical : hierarchical
+      h ? "#{md5[0..1]}/#{md5[2..3]}/" : ""
+    end
+
+    def clean_path(path)
+      path.gsub(%r(/{2,}), "/")
+    end
+
+    protected
+
+    def log(message, if: true, &)
+      cond = binding.local_variable_get(:if)
+      format = "\e[34m[\e[36m%s\e[0m\e[34m]\e[0m %s \e[34m- \e[35m%s\e[0m"
+      start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC, :nanosecond)
+      result = yield
+      end_time = Process.clock_gettime(Process::CLOCK_MONOTONIC, :nanosecond)
+      duration = ((end_time - start_time) / 1000 / 1000).round(2)
+      if cond
+        callers = caller_locations.reject do |loc|
+          path = loc.absolute_path || loc.path
+          path.include?("/storage_manager/") || !Rails.backtrace_cleaner.clean_frame("#{path}:#{loc.lineno}")
+        end.first(3)
+        Rails.logger.debug(format(format, self.class, message, "#{duration.round(2)}ms"))
+        callers.each { |c| Rails.logger.debug("↳ #{c.path.gsub(%r{^/app/}, '')}:#{c.lineno} in `#{c.label}`") }
       end
+      # caller_locations.select { |loc| !Rails.backtrace_cleaner.clean_frame("#{path}:#{loc.lineno}")}
+      #                 .each { |c| Rails.logger.debug("↳ #{c.path.gsub(%r{^/app/}, "")}:#{c.lineno} in `#{c.label}`") }
+
+      result
     end
 
-    def file_url(post, type, scale_factor: nil)
-      file_url_ext(post, type, post.file_ext, scale_factor: scale_factor)
-    end
-
-    def replacement_url(replacement, image_size = :original)
-      subdir = subdir_for(replacement.storage_id)
-      file = "#{replacement.storage_id}#{'_thumb' if image_size == :preview}.#{replacement.file_ext}"
-      base = "#{base_path}/#{replacement_prefix}"
-      path = "#{base}/#{subdir}#{file}"
-      "#{base_url}#{path}#{protected_params(path, secret: FemboyFans.config.replacement_file_secret)}"
-    end
-
-    def root_url
-      origin = Addressable::URI.parse(base_url).origin
-      origin = "" if origin == "null" # base_url was relative
-      origin
-    end
-
-    def file_path(post_or_md5, file_ext, type, protected: false, scale_factor: nil)
-      md5 = post_or_md5.is_a?(String) ? post_or_md5 : post_or_md5.md5
-      subdir = subdir_for(md5)
-      file = file_name(md5, file_ext, type, scale_factor: scale_factor)
-      base = protected ? "#{base_dir}/#{protected_prefix}" : base_dir
-
-      case type
-      when :preview
-        "#{base}/preview/#{subdir}#{file}"
-      when :crop
-        "#{base}/crop/#{subdir}#{file}"
-      when :large, :scaled
-        "#{base}/sample/#{subdir}#{file}"
-      when :original
-        "#{base}/#{subdir}#{file}"
-      end
-    end
-
-    def file_name(md5, file_ext, type, scale_factor: nil)
-      case type
-      when :preview, :crop
-        "#{md5}.webp"
-      when :large
-        "#{large_image_prefix}#{md5}.webp"
-      when :original
-        "#{md5}.#{file_ext}"
-      when :scaled
-        "#{md5}_#{scale_factor}.#{file_ext}"
-      end
-    end
-
-    def replacement_path(replacement_or_storage_id, file_ext, image_size)
-      storage_id = replacement_or_storage_id.is_a?(String) ? replacement_or_storage_id : replacement_or_storage_id.storage_id
-      subdir = subdir_for(storage_id)
-      file = "#{storage_id}#{'_thumb' if image_size == :preview}.#{file_ext}"
-      "#{base_dir}/#{replacement_prefix}/#{subdir}#{file}"
-    end
-
-    def store_mascot(io, mascot)
-      store(io, mascot_path(mascot.md5, mascot.file_ext))
-    end
-
-    def mascot_path(md5, file_ext)
-      file = "#{md5}.#{file_ext}"
-      "#{base_dir}/#{MASCOT_PREFIX}/#{file}"
-    end
-
-    def mascot_url(mascot)
-      file = "#{mascot.md5}.#{mascot.file_ext}"
-      "#{base_url}#{base_path}/#{MASCOT_PREFIX}/#{file}"
-    end
-
-    def delete_mascot(md5, file_ext)
-      delete(mascot_path(md5, file_ext))
-    end
-
-    def subdir_for(md5)
-      hierarchical ? "#{md5[0..1]}/#{md5[2..3]}/" : ""
+    def variant_location(...)
+      FemboyFans.config.variant_location(...)
     end
   end
 end

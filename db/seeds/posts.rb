@@ -11,6 +11,7 @@ module Seeds
 
     def run!(limit)
       return if limit == 0
+      ENV["SEEDING"] = "1"
       @limit = limit
       Seeds.read_resources do |r|
         @tags = r["post_ids"].blank? ? r["tags"] : %W[id:#{r['post_ids'].join(',')}]
@@ -27,6 +28,7 @@ module Seeds
       end
       @after = ::Post.count
       Seeds.log("Created #{@after - @before} posts from #{@total} (#{@limit}) requested posts.")
+      ENV["SEEDING"] = "0"
     end
 
     def process_post(data, text: nil, relationships: fetch_related_posts?)
@@ -52,20 +54,19 @@ module Seeds
 
       url = get_url(data)
       Seeds.log("#{text} #{url}") if text.present?
-      service = UploadService.new({
+
+      upload = Upload.create(
         uploader:         CurrentUser.user,
         uploader_ip_addr: CurrentUser.ip_addr,
         direct_url:       url,
-        tag_string:       data["tags"].map { |category, tags| tags.map { |tag| "#{category}:#{tag}" }}.flatten.join(" "),
+        tag_string:       data["tags"].map { |category, tags| tags.map { |tag| "#{category}:#{tag}" } }.flatten.join(" "),
         source:           data["sources"].join("\n"),
         description:      data["description"],
         rating:           data["rating"],
-      })
+      )
 
-      upload = service.start!
-
-      if upload.is_errored?
-        raise(StandardError, "Failed to create upload: #{upload.status}")
+      if upload.failed?
+        raise(StandardError, "Failed to create upload: #{upload.status_message.presence || upload.status}")
       end
 
       if upload.errors.any?
@@ -77,7 +78,7 @@ module Seeds
       end
 
       if upload.post.nil?
-        Rails.logger.warn("Post is nil for upload #{upload.id}\n\n#{upload.status}\n\n#{upload.errors.full_messages.join("\n")}")
+        Rails.logger.warn("Post is nil for upload #{upload.id}\n\n#{upload.status_message.presence || upload.status}\n\n#{upload.errors.full_messages.join("\n")}")
       end
 
       upload.post
@@ -163,7 +164,7 @@ module Seeds
     end
 
     def e621?
-      Seeds.base_url.include?("e621.net")
+      Seeds.e621?
     end
 
     def fetch_posts(tags, limit = per_page_limit, page = 1)

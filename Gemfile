@@ -25,6 +25,7 @@ gem "marcel"
 # bookmarks for later, if they are needed
 # gem 'sidekiq-worker-killer'
 gem "sidekiq-unique-jobs"
+gem "sidekiq-failures"
 gem "redis"
 gem "request_store"
 
@@ -53,6 +54,7 @@ group :development do
   gem "ruby-lsp"
   gem "ruby-lsp-rails", "~> 0.3.13"
   gem "faker", require: false
+  gem "bullet", "~> 8.0"
 end
 
 group :test do
@@ -66,17 +68,13 @@ group :test do
 end
 
 gem "pundit", "~> 2.3"
-
 gem "net-ftp", "~> 0.3.4"
-
 gem "rakismet", "~> 1.5"
-
 gem "jwt", "~> 2.8"
-
 gem "rotp", "~> 6.3"
-
 gem "rqrcode", "~> 2.2"
-
 gem "click_house", "~> 2.1"
-
 gem "after_commit_everywhere", "~> 1.6"
+gem "active_record_extended", "~> 3.3"
+# https://github.com/rails/rails/issues/49259, https://github.com/ruby/irb/pull/916#discussion_r1553958795
+gem "irb", "~> 1.15.2"

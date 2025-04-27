@@ -17,25 +17,25 @@ class PostTest < ActiveSupport::TestCase
     context "Expunging a post" do
       # That belonged in a museum!
       setup do
-        @upload = UploadService.new(attributes_for(:jpg_upload).merge({ uploader: @user })).start!
+        @upload = create(:jpg_upload, uploader: @user)
         @post = @upload.post
         FavoriteManager.add!(user: @post.uploader, post: @post)
       end
 
       should "delete the files" do
-        assert_nothing_raised { @post.file(:preview) }
-        assert_nothing_raised { @post.file(:original) }
+        assert_nothing_raised { @post.preview_file }
+        assert_nothing_raised { @post.file }
 
         @post.expunge!
 
-        assert_raise(StandardError) { @post.file(:preview) }
-        assert_raise(StandardError) { @post.file(:original) }
+        assert_raise(Errno::ENOENT) { @post.preview_file }
+        assert_raise(Errno::ENOENT) { @post.file }
       end
 
       should "remove all favorites" do
         @post.expunge!
 
-        assert_equal(0, Favorite.for_user(@post.uploader_id).where("post_id = ?", @post.id).count)
+        assert_equal(0, Favorite.for_user(@post.uploader_id).where(post_id: @post.id).count)
       end
 
       should "decrement the uploader's upload count" do
@@ -1054,8 +1054,8 @@ class PostTest < ActiveSupport::TestCase
 
       context "with large dimensions" do
         setup do
-          @post.image_width = 10_000
-          @post.image_height = 10
+          @post.media_asset.image_width = 10_000
+          @post.media_asset.image_height = 10
           @post.tag_string = ""
           @post.save
         end
@@ -1068,7 +1068,7 @@ class PostTest < ActiveSupport::TestCase
 
       context "with a large file size" do
         setup do
-          @post.file_size = 31.megabytes
+          @post.media_asset.file_size = 31.megabytes
           @post.tag_string = ""
           @post.save
         end
@@ -1081,7 +1081,7 @@ class PostTest < ActiveSupport::TestCase
       context "with a .webm file extension" do
         setup do
           create(:tag_implication, antecedent_name: "webm", consequent_name: "animated")
-          @post.file_ext = "webm"
+          @post.media_asset.file_ext = "webm"
           @post.tag_string = ""
           @post.save
         end
@@ -1966,7 +1966,7 @@ class PostTest < ActiveSupport::TestCase
     end
 
     should "return posts for the ratio:<x:y> metatag" do
-      post = create(:post, image_width: 1000, image_height: 500)
+      post = create(:post, media_asset: build(:random_upload_media_asset, image_width: 1000, image_height: 500))
 
       assert_tag_match([post], "ratio:2:1")
       assert_tag_match([post], "ratio:2.0")
@@ -1996,8 +1996,8 @@ class PostTest < ActiveSupport::TestCase
     end
 
     should "return posts for the filetype:<ext> metatag" do
-      png = create(:post, file_ext: "png")
-      jpg = create(:post, file_ext: "jpg")
+      png = create(:post, media_asset: build(:random_upload_media_asset, file_ext: "png"))
+      jpg = create(:post, media_asset: build(:random_upload_media_asset, file_ext: "jpg"))
 
       assert_tag_match([png], "filetype:png")
       assert_tag_match([jpg], "-filetype:png")
@@ -2022,7 +2022,7 @@ class PostTest < ActiveSupport::TestCase
     end
 
     should "return posts for the md5:<md5> metatag" do
-      post1 = create(:post, md5: "abcd")
+      post1 = create(:post, media_asset: build(:random_upload_media_asset, md5: "abcd"))
       create(:post)
 
       assert_tag_match([post1], "md5:abcd")
@@ -2187,7 +2187,7 @@ class PostTest < ActiveSupport::TestCase
     end
 
     should "return posts for a filesize search" do
-      post = create(:post, file_size: 1.megabyte)
+      post = create(:post, media_asset: create(:random_upload_media_asset, file_size: 1.megabyte))
 
       assert_tag_match([post], "filesize:1mb")
       assert_tag_match([post], "filesize:1000kb")
@@ -2248,7 +2248,7 @@ class PostTest < ActiveSupport::TestCase
 
     should "return no posts when the replacement is not pending anymore" do
       post1 = create(:post)
-      upload = UploadService.new(attributes_for(:upload).merge(file: fixture_file_upload("test.gif"), uploader: @user, tag_string: "tst")).start!
+      upload = create(:gif_upload, uploader: @user, tag_string: "tst")
       post2 = upload.post
       post3 = create(:post)
       post4 = create(:post)
@@ -2574,20 +2574,19 @@ class PostTest < ActiveSupport::TestCase
 
   context "URLs:" do
     should "generate the correct urls for animated gifs" do
-      @post = build(:post, md5: "deadbeef", file_ext: "gif", tag_string: "animated_gif")
+      @post = build(:post, tag_string: "animated_gif", media_asset: build(:random_upload_media_asset, md5: "deadbeef", file_ext: "gif"))
 
-      assert_equal("#{FemboyFans.config.hostname}/data/preview/deadbeef.webp", @post.preview_file_url)
-
-      assert_equal("#{FemboyFans.config.hostname}/data/deadbeef.gif", @post.large_file_url)
-      assert_equal("#{FemboyFans.config.hostname}/data/deadbeef.gif", @post.file_url)
+      assert_equal("#{FemboyFans.config.hostname}/data/posts/preview/deadbeef.webp", @post.preview_file_url)
+      assert_raises(MediaAssetWithVariants::VariantNotFoundError) { @post.large_file_url }
+      assert_equal("#{FemboyFans.config.hostname}/data/posts/deadbeef.gif", @post.file_url)
     end
   end
 
   context "Notes:" do
     context "#copy_notes_to" do
       setup do
-        @src = create(:post, image_width: 100, image_height: 100, tag_string: "translated partially_translated")
-        @dst = create(:post, image_width: 200, image_height: 200, tag_string: "translation_request")
+        @src = create(:post, tag_string: "translated partially_translated", media_asset: build(:random_upload_media_asset, image_width: 100, image_height: 100))
+        @dst = create(:post, tag_string: "translation_request", media_asset: build(:random_upload_media_asset, image_width: 200, image_height: 200))
 
         @src.notes.create(x: 10, y: 10, width: 10, height: 10, body: "test")
         @src.notes.create(x: 10, y: 10, width: 10, height: 10, body: "deleted", is_active: false)

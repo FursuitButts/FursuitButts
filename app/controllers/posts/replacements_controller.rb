@@ -30,18 +30,20 @@ module Posts
       @post = Post.find(params[:post_id])
       @post_replacement = authorize(@post.replacements.new(permitted_attributes(PostReplacement).merge(creator_id: CurrentUser.id, creator_ip_addr: CurrentUser.ip_addr)))
       @post_replacement.save
-      @post_replacement.notify_reupload
+      if @post_replacement.media_asset.expunged?
+        return render(json: { success: false, reason: "invalid", message: "That image #{@post_replacement.media_asset.status_message}" }, status: 412)
+      end
       if @post_replacement.errors.none?
         flash.now[:notice] = "Post replacement submitted"
       end
-      if CurrentUser.user.can_approve_posts? && @post_replacement.as_pending.to_s.falsy?
+      if @post_replacement.pending? && CurrentUser.user.can_approve_posts? && @post_replacement.as_pending.to_s.falsy?
         @post_replacement.approve!(penalize_current_uploader: @post_replacement.post.uploader != @post_replacement.creator)
       end
       respond_to do |format|
         format.json do
           return render(json: { success: false, message: @post_replacement.errors.full_messages.join("; ") }, status: 412) if @post_replacement.errors.any?
-
-          render(json: { success: true, location: post_path(@post) })
+          return render(json: { success: true, id: @post_replacement.id, media_asset_id: @post_replacement.media_asset_id }, status: 202) unless @post_replacement.is_direct?
+          render(json: { success: true, location: post_path(@post), id: @post_replacement.id })
         end
       end
     end

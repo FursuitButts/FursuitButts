@@ -6,11 +6,11 @@ class UploadPolicy < ApplicationPolicy
   end
 
   def permitted_attributes
-    attr = %i[file direct_url source tag_string rating parent_id description]
+    attr = %i[file direct_url source tag_string rating parent_id description checksum]
     attr += %i[as_pending] if user.unrestricted_uploads?
     attr += %i[locked_rating] if user.is_trusted?
     attr += %i[locked_tags] if user.is_admin?
-    attr
+    attr + [upload_media_asset_attributes: %i[checksum]]
   end
 
   def permitted_search_params
@@ -18,6 +18,6 @@ class UploadPolicy < ApplicationPolicy
   end
 
   def api_attributes
-    super + %i[uploader_name]
+    super + %i[md5 file_ext file_size image_width image_height status status_message uploader_name media_asset_id] - %i[upload_media_asset_id]
   end
 end

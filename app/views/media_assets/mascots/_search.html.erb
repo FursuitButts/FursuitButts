@@ -1,0 +1,10 @@
+<%= form_search(path: post_replacement_media_assets_path, policy: policy(MascotMediaAsset)) do |f| %>
+  <%= f.user(:creator) %>
+  <%= f.input(:checksum) %>
+  <%= f.input(:md5, label: "MD5") %>
+  <%= f.input(:file_ext, label: "Type") %>
+  <%= f.input(:pixel_hash, label: "Pixel Hash") %>
+  <%= f.input(:status, collection: MascotMediaAsset.statuses) %>
+  <%= f.input(:status_message_matches, label: "Status Message") %>
+  <%= f.input(:mascot_id, label: "Mascot") %>
+<% end %>

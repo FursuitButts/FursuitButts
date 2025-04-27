@@ -4,7 +4,7 @@
 
 <%= table_for(@usages) do |t| %>
   <% t.column(:date) do |usage| %>
-    <%= compact_time(DateTime.parse(usage.date))%>
+    <%= compact_time(DateTime.parse(usage.date)) %>
   <% end %>
   <% t.column(:ip_address) %>
   <% t.column("Action") do |usage| %>

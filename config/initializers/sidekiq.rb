@@ -3,6 +3,7 @@
 require "sidekiq-unique-jobs"
 
 Sidekiq.configure_server do |config|
+  # config.failures_default_mode = :exhausted
   config.redis = { url: FemboyFans.config.redis_url }
 
   config.client_middleware do |chain|
@@ -25,3 +26,6 @@ Sidekiq.configure_client do |config|
 end
 
 Sidekiq.transactional_push!
+
+# https://github.com/mhfs/sidekiq-failures/issues/146
+Sidekiq.failures_max_count = false

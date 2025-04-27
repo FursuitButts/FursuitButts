@@ -289,7 +289,6 @@ class ApplicationControllerTest < ActionDispatch::IntegrationTest
       should "allow underscore" do
         get_auth user_path(@user), @user, params: { only: "_", format: :json }
         assert_response :success
-        Rails.logger.debug(@response.parsed_body.to_json)
         assert_equal(as(@user) { @user.reload.as_json }, @response.parsed_body)
       end
 

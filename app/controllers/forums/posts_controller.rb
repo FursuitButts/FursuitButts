@@ -20,8 +20,9 @@ module Forums
 
     def show
       authorize(@forum_post)
+      @forum_topic = @forum_post.topic
       if request.format.html? && @forum_post.id == @forum_post.topic.original_post.id
-        redirect_to(forum_topic_path(@forum_post.topic, page: params[:page]))
+        redirect_to(forum_topic_path(@forum_topic, page: params[:page]))
       else
         respond_with(@forum_post)
       end

@@ -172,7 +172,7 @@ class Ticket < ApplicationRecord
     end
 
     def validate_model_exists
-      errors.add(model.name.underscore.to_sym, "does not exist") if model.nil?
+      errors.add(:model, "does not exist") if model.nil?
     end
 
     def initialize_fields

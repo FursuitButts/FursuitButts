@@ -149,11 +149,11 @@ HoverZoom.init_functionality = function () {
       zoomVideo
         .css({
           "display": "",
-          "background-image": `url(${post.file.sample})`,
+          "background-image": `url(${post.file.large})`,
         })
         .attr({
           src: post.file.original,
-          poster: post.file.sample,
+          poster: post.file.large,
         });
 
       videoTimeout = setTimeout(() => {
@@ -269,7 +269,7 @@ HoverZoom.post_from_element = function (element) {
   const ext = element.attr("data-file-ext");
   const urls = {
     preview: element.attr("data-preview-url") ?? "/images/deleted-preview.png",
-    sample: element.attr("data-large-url") ?? "/images/deleted-preview.png",
+    large: element.attr("data-large-url") ?? "/images/deleted-preview.png",
     original: element.attr("data-file-url") ?? "/images/deleted-preview.png",
   };
   let md5;
@@ -314,7 +314,7 @@ HoverZoom.post_from_element = function (element) {
       md5,
       original: urls.original,
       preview: urls.preview,
-      sample: urls.sample,
+      large: urls.large,
       size: Number(element.attr("data-file-size") || "0"),
     },
     image: {

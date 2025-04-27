@@ -282,7 +282,7 @@ module PostIndex
       parent:                   parent_id,
       pools:                    options_or_get.call(:pools, -> { ::Pool.where("? = ANY(post_ids)", id).pluck(:id) }),
       sets:                     options_or_get.call(:sets, -> { ::PostSet.where("? = ANY(post_ids)", id).pluck(:id) }),
-      commenters:               options_or_get.call(:commenters, -> { ::Comment.undeleted.where(post_id: id).pluck(:creator_id) }),
+      commenters:               options_or_get.call(:commenters, -> { ::Comment.not_deleted.where(post_id: id).pluck(:creator_id) }),
       noters:                   options_or_get.call(:noters, -> { ::Note.active.where(post_id: id).pluck(:creator_id) }),
       faves:                    options_or_get.call(:faves, -> { ::Favorite.where(post_id: id).pluck(:user_id) }),
       upvotes:                  options_or_get.call(:upvotes, -> { ::PostVote.where(post_id: id).where("score > 0").pluck(:user_id) }),

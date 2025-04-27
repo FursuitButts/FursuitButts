@@ -39,6 +39,7 @@
     allowUploadAsPending: <%= policy(Upload).can_use_attribute?(:as_pending).to_json %>,
     maxFileSize: <%= FemboyFans.config.max_file_size %>,
     maxFileSizeMap: <%= sanitize(FemboyFans.config.max_file_sizes.to_json) %>,
+    maxFileSizePerRequest: <%= FemboyFans.config.max_upload_per_request %>,
   };
   Danbooru.Uploader.init();
 <% end -%>

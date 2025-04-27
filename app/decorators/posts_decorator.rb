@@ -28,7 +28,7 @@ class PostsDecorator < ApplicationDecorator
   end
 
   def cropped_url(options)
-    cropped_url = if FemboyFans.config.enable_image_cropping? && options[:show_cropped] && object.has_cropped? && !CurrentUser.user.disable_cropped_thumbnails?
+    cropped_url = if FemboyFans.config.enable_image_cropping? && options[:show_cropped] && object.has_crop? && !CurrentUser.user.disable_cropped_thumbnails?
                     object.crop_file_url
                   else
                     object.preview_file_url
@@ -81,22 +81,26 @@ class PostsDecorator < ApplicationDecorator
     end
     tooltip += "\n\n#{post.tag_string}"
 
-    cropped_url = if FemboyFans.config.enable_image_cropping? && options[:show_cropped] && post.has_cropped? && !CurrentUser.user.disable_cropped_thumbnails?
+    cropped_url = if FemboyFans.config.enable_image_cropping? && options[:show_cropped] && post.has_crop? && !CurrentUser.user.disable_cropped_thumbnails?
                     post.crop_file_url
-                  else
+                  elsif post.has_preview?
                     post.preview_file_url
+                  else
+                    post.file_url
                   end
 
     cropped_url = FemboyFans.config.deleted_preview_url if post.deleteblocked?
     preview_url = if post.deleteblocked?
                     FemboyFans.config.deleted_preview_url
-                  else
+                  elsif post.has_preview?
                     post.preview_file_url
+                  else
+                    post.file_url
                   end
 
     alt_text = post.tag_string
 
-    has_cropped = post.has_cropped?
+    has_cropped = post.has_crop?
 
     pool = options[:pool]
 

@@ -2,6 +2,7 @@
 
 module PostReplacementHelper
   def replacement_thumbnail(replacement)
+    return tag.p("None") if replacement.uploading?
     if replacement.post.deleteblocked?
       image_tag(FemboyFans.config.deleted_preview_url)
     elsif replacement.post.visible?

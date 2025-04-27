@@ -45,22 +45,26 @@ class PostPresenter < Presenter
 
     locals[:tooltip] = "Rating: #{post.rating}\nID: #{post.id}\nDate: #{post.created_at}\nStatus: #{post.status}\nScore: #{post.score}\n\n#{post.tag_string}"
 
-    locals[:cropped_url] = if FemboyFans.config.enable_image_cropping? && options[:show_cropped] && post.has_cropped? && !CurrentUser.user.disable_cropped_thumbnails?
+    locals[:cropped_url] = if FemboyFans.config.enable_image_cropping? && options[:show_cropped] && post.has_crop? && !CurrentUser.user.disable_cropped_thumbnails?
                              post.crop_file_url
-                           else
+                           elsif post.has_preview?
                              post.preview_file_url
+                           else
+                             post.file_url
                            end
 
     locals[:cropped_url] = FemboyFans.config.deleted_preview_url if post.deleteblocked?
     locals[:preview_url] = if post.deleteblocked?
                              FemboyFans.config.deleted_preview_url
-                           else
+                           elsif post.has_preview?
                              post.preview_file_url
+                           else
+                             post.file_url
                            end
 
     locals[:alt_text] = post.tag_string
 
-    locals[:has_cropped] = post.has_cropped?
+    locals[:has_cropped] = post.has_crop?
 
     if options[:pool]
       locals[:pool] = options[:pool]
@@ -152,7 +156,7 @@ class PostPresenter < Presenter
         md5:    post.md5,
         url:    post.visible? ? post.file_url : nil,
       },
-      samples:       post.samples,
+      variants:      post.variants,
       sources:       post.source&.split('\n'),
       tags:          post.tag_string.split,
       locked_tags:   post.locked_tags&.split || [],

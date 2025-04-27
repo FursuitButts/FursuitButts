@@ -5,11 +5,11 @@
   <li>Source: <%= @upload.source %></li>
   <li>Tags: <%= @upload.tag_string %></li>
   <% if @upload.md5.present? %>
-    <li>MD5: <%= @upload.md5 %>
+    <li>MD5: <%= @upload.md5 %></li>
   <% end %>
   <% if @upload.file_size.present? %>
     <li>
-      Size: <%= number_to_human_size(@upload.file_size) %></li>
+      Size: <%= number_to_human_size(@upload.file_size) %>
       <% if @upload.image_width.present? %>
         (<span itemprop="width"><%= @upload.image_width %></span>x<span itemprop="height"><%= @upload.image_height %></span>)
       <% end %>
@@ -17,19 +17,37 @@
   <% end %>
 </ul>
 
-<% if @upload.is_completed? %>
-  <p>This upload has finished processing. <%= link_to "View the post", post_path(@upload.post_id) %>.</p>
-<% elsif @upload.is_pending? %>
-  <p>This upload is waiting to be processed. Please wait a few seconds.</p>
-<% elsif @upload.is_processing? %>
+<% case @upload.status %>
+<% when "active" %>
+  <p>
+    This upload has finished processing.
+    <% if @upload.post_id.present? %>
+      <%= link_to("View the post", post_path(@upload.post_id)) %>.
+    <% else %>
+      No post was found.
+    <% end %>
+  </p>
+<% when "duplicate" %>
+  <p>
+    This upload is a duplicate:
+    <% if @upload.duplicate_post_id.present? %>
+      <%= link_to("post ##{@upload.duplicate_post_id}", post_path(@upload.duplicate_post_id)) %>
+    <% else %>
+      unknown
+    <% end %>
+  </p>
+<% when "pending", "uploading" %>
+  <p>This upload is still being uploaded.</p>
+<% when "processing" %>
   <p>This upload is being processed. Please wait a few seconds.</p>
-<% elsif @upload.is_duplicate? %>
-  <p>This upload is a duplicate: <%= link_to "post ##{@upload.duplicate_post_id}", post_path(@upload.duplicate_post_id) %></p>
-<% else %>
-  <p>An error occurred: <%= render_status(@upload) %></p>
-  <% if FemboyFans.config.show_backtrace?(CurrentUser.user, @upload.backtrace) %>
-    <%= render "static/backtrace", backtrace: @upload.backtrace.to_s.split("\n") %>
-  <% end %>
+<% when "cancelled" %>
+  <p>This upload was cancelled.</p>
+<% when "deleted" %>
+  <p>This upload was deleted. <%= link_to("View the post", post_path(@upload.post_id)) %>.</p>
+<% when "expunged" %>
+  <p>This upload has been permanently deleted.</p>
+<% when "failed" %>
+  <p>An error occurred: <%= @upload.status_message %></p>
 <% end %>
 
 <%= render "uploads/secondary_links" %>

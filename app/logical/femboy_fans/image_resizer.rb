@@ -10,6 +10,7 @@ module FemboyFans
     WEBP_OPTIONS = { strip: true }.freeze
     CROP_OPTIONS = { linear: false, no_rotate: true, export_profile: "srgb", import_profile: "srgb", crop: :attention }.freeze
 
+    # @deprecated ImageResizer#resize
     def resize(file, width, height, resize_quality = 90)
       options = WEBP_OPTIONS.merge(Q: resize_quality)
       output_file = Tempfile.new
@@ -19,6 +20,7 @@ module FemboyFans
       output_file
     end
 
+    # @deprecated ImageResizer#crop
     def crop(file, width, height, resize_quality = 90)
       return nil unless FemboyFans.config.enable_image_cropping?
       options = WEBP_OPTIONS.merge(Q: resize_quality)
@@ -31,6 +33,7 @@ module FemboyFans
 
     # https://github.com/libvips/libvips/wiki/HOWTO----Image-shrinking
     # https://www.libvips.org/API/current/Using-vipsthumbnail.md.html
+    # @deprecated ImageResizer#thumbnail
     def thumbnail(file, width, height, options)
       Vips::Image.thumbnail(file.path, width, height: height, **options)
     rescue Vips::Error => e

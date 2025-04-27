@@ -9,9 +9,14 @@
 Rails.application.configure do
   config.content_security_policy do |policy|
     policy.default_src(:self)
-    policy.script_src(:self, "https://www.google.com/recaptcha/", "https://www.gstatic.com/recaptcha/", "https://www.recaptcha.net/", "https://cdnjs.cloudflare.com", "https://plausible.furry.computer")
+    if Rails.env.development?
+      policy.script_src(:self, :unsafe_inline, :unsafe_eval, "https:")
+      policy.connect_src(:self, "https://plausible.furry.computer", "ws://localhost:#{ENV.fetch('EXPOSED_WEBPACKER_PORT', 4003)}")
+    else
+      policy.script_src(:self, "https://www.google.com/recaptcha/", "https://www.gstatic.com/recaptcha/", "https://www.recaptcha.net/", "https://cdnjs.cloudflare.com", "https://plausible.furry.computer")
+      policy.connect_src(:self, "https://plausible.furry.computer")
+    end
     policy.style_src(:self, :unsafe_inline, "https://cdnjs.cloudflare.com")
-    policy.connect_src(:self, "https://plausible.furry.computer")
     policy.object_src(:self, FemboyFans.config.cdn_domain)
     policy.media_src(:self, FemboyFans.config.cdn_domain)
     policy.frame_ancestors(:self)

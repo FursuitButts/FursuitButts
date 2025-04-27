@@ -2,12 +2,12 @@
 
 <%= table_for(@mascots) do |t| %>
   <% t.column("Name") do |mascot| %>
-    <%= link_to mascot.display_name, mascot.url_path %>
+    <%= link_to(mascot.display_name, mascot.file_url) %>
   <% end %>
   <% t.column(:background_color) %>
   <% t.column(:artist_name) %>
   <% t.column(:artist_url, name: "Artist URL") %>
-  <% t.column(:active)%>
+  <% t.column(:active) %>
   <% t.column(:hide_anonymous, name: "Hide From Anonymous") %>
   <% t.column(:available_on_string, name: "Available On") %>
   <% t.column("Created") do |mascot| %>

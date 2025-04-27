@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_03_28_122554) do
+ActiveRecord::Schema[7.1].define(version: 2025_04_26_152444) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -393,11 +393,36 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_28_122554) do
     t.index ["ip_addr"], name: "index_ip_bans_on_ip_addr", unique: true
   end
 
+  create_table "mascot_media_assets", force: :cascade do |t|
+    t.bigint "creator_id", null: false
+    t.bigint "media_metadata_id", null: false
+    t.inet "creator_ip_addr", null: false
+    t.string "checksum", limit: 32
+    t.string "md5", limit: 32
+    t.string "file_ext", limit: 4
+    t.integer "file_size"
+    t.integer "image_width"
+    t.integer "image_height"
+    t.decimal "duration"
+    t.integer "framecount"
+    t.string "pixel_hash", limit: 32
+    t.string "status", default: "pending", null: false
+    t.string "status_message"
+    t.integer "last_chunk_id", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.boolean "is_animated_png"
+    t.boolean "is_animated_gif"
+    t.index ["checksum"], name: "index_mascot_media_assets_on_checksum"
+    t.index ["creator_id"], name: "index_mascot_media_assets_on_creator_id"
+    t.index ["md5"], name: "index_mascot_media_assets_on_md5", unique: true, where: "((status)::text = 'active'::text)"
+    t.index ["media_metadata_id"], name: "index_mascot_media_assets_on_media_metadata_id"
+    t.index ["pixel_hash"], name: "index_mascot_media_assets_on_pixel_hash"
+  end
+
   create_table "mascots", force: :cascade do |t|
     t.bigint "creator_id", null: false
     t.string "display_name", null: false
-    t.string "md5", null: false
-    t.string "file_ext", null: false
     t.string "background_color", null: false
     t.string "artist_url", null: false
     t.string "artist_name", null: false
@@ -406,8 +431,16 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_28_122554) do
     t.datetime "updated_at", null: false
     t.string "available_on", default: [], null: false, array: true
     t.boolean "hide_anonymous", default: false, null: false
+    t.bigint "mascot_media_asset_id"
+    t.index "lower((display_name)::text)", name: "index_mascots_on_lower_display_name", unique: true
     t.index ["creator_id"], name: "index_mascots_on_creator_id"
-    t.index ["md5"], name: "index_mascots_on_md5", unique: true
+    t.index ["mascot_media_asset_id"], name: "index_mascots_on_mascot_media_asset_id"
+  end
+
+  create_table "media_metadata", force: :cascade do |t|
+    t.jsonb "meatadata", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "mod_actions", id: :serial, force: :cascade do |t|
@@ -509,8 +542,10 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_28_122554) do
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.string "artist_names", default: [], null: false, array: true
+    t.bigint "cover_post_id"
     t.index "lower((name)::text) gin_trgm_ops", name: "index_pools_on_name_trgm", using: :gin
     t.index "lower((name)::text)", name: "index_pools_on_lower_name"
+    t.index ["cover_post_id"], name: "index_pools_on_cover_post_id"
     t.index ["creator_id"], name: "index_pools_on_creator_id"
     t.index ["name"], name: "index_pools_on_name"
     t.index ["post_ids"], name: "index_pools_on_post_ids", using: :gin
@@ -592,6 +627,37 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_28_122554) do
     t.index ["post_id"], name: "index_post_flags_on_post_id"
   end
 
+  create_table "post_replacement_media_assets", force: :cascade do |t|
+    t.bigint "creator_id", null: false
+    t.bigint "media_metadata_id", null: false
+    t.inet "creator_ip_addr", null: false
+    t.string "checksum", limit: 32
+    t.string "md5", limit: 32
+    t.string "file_ext", limit: 4
+    t.integer "file_size"
+    t.integer "image_width"
+    t.integer "image_height"
+    t.decimal "duration"
+    t.integer "framecount"
+    t.string "pixel_hash", limit: 32
+    t.string "status", default: "pending", null: false
+    t.string "status_message"
+    t.string "storage_id", null: false
+    t.integer "last_chunk_id", default: 0, null: false
+    t.jsonb "generated_variants", default: [], null: false
+    t.jsonb "variants_data", default: [], null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.boolean "is_animated_png"
+    t.boolean "is_animated_gif"
+    t.index ["checksum"], name: "index_post_replacement_media_assets_on_checksum"
+    t.index ["creator_id"], name: "index_post_replacement_media_assets_on_creator_id"
+    t.index ["md5"], name: "index_post_replacement_media_assets_on_md5"
+    t.index ["media_metadata_id"], name: "index_post_replacement_media_assets_on_media_metadata_id"
+    t.index ["pixel_hash"], name: "index_post_replacement_media_assets_on_pixel_hash"
+    t.index ["storage_id"], name: "index_post_replacement_media_assets_on_storage_id", unique: true
+  end
+
   create_table "post_replacement_rejection_reasons", force: :cascade do |t|
     t.bigint "creator_id", null: false
     t.string "reason", null: false
@@ -610,25 +676,20 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_28_122554) do
     t.integer "creator_id", null: false
     t.inet "creator_ip_addr", null: false
     t.integer "approver_id"
-    t.string "file_ext", null: false
-    t.integer "file_size", null: false
-    t.integer "image_height", null: false
-    t.integer "image_width", null: false
-    t.string "md5", null: false
     t.string "source", default: "", null: false
     t.string "file_name"
-    t.string "storage_id", null: false
-    t.string "status", default: "pending", null: false
+    t.string "status", default: "uploading", null: false
     t.string "reason", null: false
-    t.boolean "protected", default: false, null: false
     t.integer "uploader_id_on_approve"
     t.boolean "penalize_uploader_on_approve"
     t.bigint "rejector_id"
     t.string "rejection_reason", default: "", null: false
     t.jsonb "previous_details"
+    t.bigint "post_replacement_media_asset_id"
     t.index ["creator_id"], name: "index_post_replacements_on_creator_id"
     t.index ["post_id", "status"], name: "index_post_replacements_on_post_id_and_status"
     t.index ["post_id"], name: "index_post_replacements_on_post_id"
+    t.index ["post_replacement_media_asset_id"], name: "index_post_replacements_on_post_replacement_media_asset_id"
     t.index ["rejector_id"], name: "index_post_replacements_on_rejector_id"
   end
 
@@ -704,7 +765,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_28_122554) do
     t.integer "down_score", default: 0, null: false
     t.integer "score", default: 0, null: false
     t.string "source", null: false
-    t.string "md5", null: false
     t.string "rating", limit: 1, default: "q", null: false
     t.boolean "is_note_locked", default: false, null: false
     t.boolean "is_rating_locked", default: false, null: false
@@ -726,10 +786,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_28_122554) do
     t.integer "tag_count_artist", default: 0, null: false
     t.integer "tag_count_character", default: 0, null: false
     t.integer "tag_count_copyright", default: 0, null: false
-    t.string "file_ext", null: false
-    t.integer "file_size", null: false
-    t.integer "image_width", null: false
-    t.integer "image_height", null: false
     t.integer "parent_id"
     t.boolean "has_children", default: false, null: false
     t.datetime "last_commented_at", precision: nil
@@ -744,8 +800,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_28_122554) do
     t.bigserial "change_seq", null: false
     t.integer "tag_count_lore", default: 0, null: false
     t.string "bg_color"
-    t.string "generated_samples", default: [], null: false, array: true
-    t.decimal "duration"
     t.boolean "is_comment_disabled", default: false, null: false
     t.text "original_tag_string", default: "", null: false
     t.boolean "is_comment_locked", default: false, null: false
@@ -753,20 +807,19 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_28_122554) do
     t.string "upload_url"
     t.string "vote_string", default: "", null: false
     t.integer "tag_count_gender", default: 0, null: false
-    t.integer "framecount"
     t.integer "thumbnail_frame"
     t.integer "tag_count_contributor", default: 0, null: false
-    t.jsonb "samples_data", default: [], null: false
     t.integer "min_edit_level", default: 10, null: false
     t.string "typed_tag_string", default: "", null: false
+    t.bigint "upload_media_asset_id"
     t.index "string_to_array(tag_string, ' '::text)", name: "index_posts_on_string_to_array_tag_string", using: :gin
     t.index ["change_seq"], name: "index_posts_on_change_seq", unique: true
     t.index ["created_at"], name: "index_posts_on_created_at"
     t.index ["id"], name: "index_posts_on_id"
     t.index ["is_flagged"], name: "index_posts_on_is_flagged", where: "(is_flagged = true)"
     t.index ["is_pending"], name: "index_posts_on_is_pending", where: "(is_pending = true)"
-    t.index ["md5"], name: "index_posts_on_md5", unique: true
     t.index ["parent_id"], name: "index_posts_on_parent_id"
+    t.index ["upload_media_asset_id"], name: "index_posts_on_upload_media_asset_id"
     t.index ["uploader_id"], name: "index_posts_on_uploader_id"
     t.index ["uploader_ip_addr"], name: "index_posts_on_uploader_ip_addr"
   end
@@ -955,6 +1008,35 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_28_122554) do
     t.string "report_type", default: "report", null: false
   end
 
+  create_table "upload_media_assets", force: :cascade do |t|
+    t.bigint "creator_id", null: false
+    t.bigint "media_metadata_id", null: false
+    t.inet "creator_ip_addr", null: false
+    t.string "checksum", limit: 32
+    t.string "md5", limit: 32
+    t.string "file_ext", limit: 4
+    t.integer "file_size"
+    t.integer "image_width"
+    t.integer "image_height"
+    t.decimal "duration"
+    t.integer "framecount"
+    t.string "pixel_hash", limit: 32
+    t.integer "last_chunk_id", default: 0, null: false
+    t.string "status", default: "pending", null: false
+    t.string "status_message"
+    t.jsonb "generated_variants", default: [], null: false
+    t.jsonb "variants_data", default: [], null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.boolean "is_animated_png"
+    t.boolean "is_animated_gif"
+    t.index ["checksum"], name: "index_upload_media_assets_on_checksum"
+    t.index ["creator_id"], name: "index_upload_media_assets_on_creator_id"
+    t.index ["md5"], name: "index_upload_media_assets_on_md5", unique: true, where: "((status)::text = 'active'::text)"
+    t.index ["media_metadata_id"], name: "index_upload_media_assets_on_media_metadata_id"
+    t.index ["pixel_hash"], name: "index_upload_media_assets_on_pixel_hash"
+  end
+
   create_table "upload_whitelists", force: :cascade do |t|
     t.string "pattern", null: false
     t.string "note"
@@ -972,20 +1054,16 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_28_122554) do
     t.integer "uploader_id", null: false
     t.inet "uploader_ip_addr", null: false
     t.text "tag_string", null: false
-    t.text "status", default: "pending", null: false
     t.text "backtrace"
     t.integer "post_id"
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.integer "parent_id"
-    t.string "md5"
-    t.string "file_ext"
-    t.integer "file_size"
-    t.integer "image_width"
-    t.integer "image_height"
     t.text "description", default: "", null: false
     t.string "direct_url"
+    t.bigint "upload_media_asset_id"
     t.index ["source"], name: "index_uploads_on_source"
+    t.index ["upload_media_asset_id"], name: "index_uploads_on_upload_media_asset_id"
     t.index ["uploader_id"], name: "index_uploads_on_uploader_id"
     t.index ["uploader_ip_addr"], name: "index_uploads_on_uploader_ip_addr"
   end
@@ -1245,6 +1323,9 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_28_122554) do
   add_foreign_key "forum_topics", "users", column: "updater_id"
   add_foreign_key "help_pages", "wiki_pages"
   add_foreign_key "ip_bans", "users", column: "creator_id"
+  add_foreign_key "mascot_media_assets", "media_metadata", column: "media_metadata_id"
+  add_foreign_key "mascot_media_assets", "users", column: "creator_id"
+  add_foreign_key "mascots", "mascot_media_assets"
   add_foreign_key "mascots", "users", column: "creator_id"
   add_foreign_key "mod_actions", "users", column: "creator_id"
   add_foreign_key "news_updates", "users", column: "creator_id"
@@ -1257,6 +1338,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_28_122554) do
   add_foreign_key "notifications", "users"
   add_foreign_key "pool_versions", "pools"
   add_foreign_key "pool_versions", "users", column: "updater_id"
+  add_foreign_key "pools", "posts", column: "cover_post_id"
   add_foreign_key "pools", "users", column: "creator_id"
   add_foreign_key "post_appeals", "posts"
   add_foreign_key "post_appeals", "users", column: "creator_id"
@@ -1268,7 +1350,10 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_28_122554) do
   add_foreign_key "post_events", "users", column: "creator_id"
   add_foreign_key "post_flags", "posts"
   add_foreign_key "post_flags", "users", column: "creator_id"
+  add_foreign_key "post_replacement_media_assets", "media_metadata", column: "media_metadata_id"
+  add_foreign_key "post_replacement_media_assets", "users", column: "creator_id"
   add_foreign_key "post_replacement_rejection_reasons", "users", column: "creator_id"
+  add_foreign_key "post_replacements", "post_replacement_media_assets"
   add_foreign_key "post_replacements", "posts"
   add_foreign_key "post_replacements", "users", column: "approver_id"
   add_foreign_key "post_replacements", "users", column: "creator_id"
@@ -1281,6 +1366,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_28_122554) do
   add_foreign_key "post_versions", "users", column: "updater_id"
   add_foreign_key "post_votes", "posts"
   add_foreign_key "post_votes", "users"
+  add_foreign_key "posts", "upload_media_assets"
   add_foreign_key "posts", "users", column: "approver_id"
   add_foreign_key "posts", "users", column: "uploader_id"
   add_foreign_key "quick_rules", "rules"
@@ -1311,7 +1397,10 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_28_122554) do
   add_foreign_key "tickets", "users", column: "accused_id"
   add_foreign_key "tickets", "users", column: "creator_id"
   add_foreign_key "tickets", "users", column: "handler_id"
+  add_foreign_key "upload_media_assets", "media_metadata", column: "media_metadata_id"
+  add_foreign_key "upload_media_assets", "users", column: "creator_id"
   add_foreign_key "uploads", "posts"
+  add_foreign_key "uploads", "upload_media_assets"
   add_foreign_key "uploads", "users", column: "uploader_id"
   add_foreign_key "user_approvals", "users"
   add_foreign_key "user_approvals", "users", column: "updater_id"

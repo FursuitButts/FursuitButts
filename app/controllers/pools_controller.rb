@@ -6,6 +6,7 @@ class PoolsController < ApplicationController
 
   def index
     @pools = authorize(Pool).search(search_params(Pool))
+                            .includes(cover_post: :media_asset)
                             .paginate(params[:page], limit: params[:limit])
     respond_with(@pools) do |format|
       format.json do
@@ -19,7 +20,7 @@ class PoolsController < ApplicationController
     @pool = authorize(Pool.find(params[:id]))
     respond_with(@pool) do |format|
       format.html do
-        @posts = @pool.posts.paginate_posts(params[:page], limit: params[:limit], total_count: @pool.post_ids.count)
+        @posts = @pool.posts.includes(:media_asset).paginate_posts(params[:page], limit: params[:limit], total_count: @pool.post_ids.count)
       end
     end
   end
@@ -35,7 +36,7 @@ class PoolsController < ApplicationController
   end
 
   def gallery
-    @pools = authorize(Pool).search(search_params(Pool)).paginate_posts(params[:page], limit: params[:limit])
+    @pools = authorize(Pool).search(search_params(Pool)).includes(cover_post: :media_asset).paginate_posts(params[:page], limit: params[:limit])
   end
 
   def create

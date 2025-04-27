@@ -3,26 +3,73 @@
 require "test_helper"
 
 class UploadTest < ActiveSupport::TestCase
-  context "In all cases" do
+  context "An upload" do
     setup do
-      user = create(:trusted_user)
-      CurrentUser.user = user
+      CurrentUser.user = create(:user, created_at: 2.weeks.ago)
     end
 
-    context "An upload" do
-      context "from a user that is limited" do
-        setup do
-          CurrentUser.user = create(:user, created_at: 1.year.ago)
-          User.any_instance.stubs(:upload_limit).returns(0)
-          FemboyFans.config.stubs(:disable_throttles?).returns(false)
-        end
-
-        should "fail creation" do
-          @upload = build(:jpg_upload, tag_string: "")
-          @upload.save
-          assert_equal(["You have reached your upload limit"], @upload.errors.full_messages)
-        end
+    context "from a user that is limited" do
+      setup do
+        User.any_instance.stubs(:upload_limit).returns(0)
+        FemboyFans.config.stubs(:disable_throttles?).returns(false)
       end
+
+      should "fail creation" do
+        @upload = build(:jpg_upload, tag_string: "")
+        @upload.save
+        assert_equal(["You have reached your upload limit"], @upload.errors.full_messages)
+      end
+    end
+
+    context "From a user that has too many pending uploads" do
+      setup do
+        FemboyFans.config.stubs(:pending_uploads_limit).returns(0)
+      end
+
+      should "fail creation" do
+        @upload = build(:jpg_upload, tag_string: "")
+        @upload.save
+        assert_equal(["You have too many pending uploads. Finish or cancel your existing uploads and try again"], @upload.errors.full_messages)
+      end
+    end
+
+    should "require a checksum if no file or direct_url is provided" do
+      @upload = build(:upload, upload_media_asset: build(:upload_media_asset, checksum: nil))
+      @upload.save
+      assert_equal(["Checksum is required unless a file or direct_url is supplied"], @upload.errors.full_messages)
+    end
+
+    context "with a source containing unicode characters" do
+      should "normalize unicode characters in the source field" do
+        source1 = "poke\u0301mon" # pokémon (nfd form)
+        source2 = "pok\u00e9mon"  # pokémon (nfc form)
+        @upload = create(:jpg_upload, source: source1)
+        assert_equal(source2, @upload.post.source)
+      end
+    end
+
+    context "without a file or a direct url" do
+      should "be pending" do
+        @upload = create(:upload, file: nil, direct_url: nil, upload_media_asset: build(:upload_media_asset))
+        assert_equal("pending", @upload.status)
+      end
+    end
+
+    context "with both a file and direct url" do
+      should "prefer the file" do
+        file = fixture_file_upload("alpha.png")
+        as(create(:admin_user)) { create(:upload_whitelist, pattern: "http://example.com/*") }
+        CloudflareService.stubs(:ips).returns([])
+        stub_request(:get, "http://example.com/alpha.png").to_return(status: 200, body: file.read, headers: { "Content-Type" => "image/png" })
+        @upload = create(:upload, file: fixture_file_upload("test.jpg"), direct_url: "http://example.com/alpha.png", upload_media_asset: build(:upload_media_asset, checksum: nil))
+        assert_equal("active", @upload.status)
+        assert_equal("jpg", @upload.file_ext)
+      end
+    end
+
+    should "create a post" do
+      @upload = create(:jpg_upload)
+      assert_not_nil(@upload.post)
     end
   end
 end
