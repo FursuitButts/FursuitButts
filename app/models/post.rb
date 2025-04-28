@@ -796,7 +796,7 @@ class Post < ApplicationRecord
     def add_automatic_tags(tags)
       return tags unless FemboyFans.config.enable_autotagging?
 
-      tags -= %w[thumbnail low_res hi_res absurd_res superabsurd_res huge_filesize webm mp4 wide_image long_image invalid_source]
+      tags -= %w[thumbnail low_res hi_res absurd_res superabsurd_res large_filesize huge_filesize absurd_filesize insane_filesize webm mp4 animated_gif animated_png long_playtime short_playtime wide_image long_image invalid_source]
 
       if has_dimensions?
         tags << "superabsurd_res" if image_width >= 10_000 && image_height >= 10_000
@@ -819,21 +819,12 @@ class Post < ApplicationRecord
       tags << "absurd_filesize" if file_size >= 125.megabytes
       tags << "insane_filesize" if file_size >= 175.megabytes
 
-      if is_webm?
-        tags << "webm"
-      end
-
-      if is_mp4?
-        tags << "mp4"
-      end
-
-      unless is_gif?
-        tags -= ["animated_gif"]
-      end
-
-      unless is_png?
-        tags -= ["animated_png"]
-      end
+      tags << "webm" if is_webm?
+      tags << "mp4" if is_mp4?
+      tags << "animated_gif" if is_animated_gif?
+      tags << "animated_png" if is_animated_png?
+      tags << "long_playtime" if is_video? && duration >= 30
+      tags << "short_playtime" if is_video? && duration < 30
 
       if invalid_source?
         tags << "invalid_source"
