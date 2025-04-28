@@ -18,7 +18,7 @@ def handle(post)
   asset = UploadMediaAsset.new(file: File.open(file_path(post.md5_in_database, post.file_ext_in_database, post.protect_file?, false)), creator_id: post.uploader_id, creator_ip_addr: post.uploader_ip_addr, checksum: post.md5_in_database)
   asset.save!
   asset.set_file_attributes
-  asset.status = "active"
+  asset.status = post.protect_file? ? "deleted" : "active"
   asset.save!
   asset.regenerate_variants
   post.update_columns(upload_media_asset_id: asset.id)

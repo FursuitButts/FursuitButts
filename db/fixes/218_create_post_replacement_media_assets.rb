@@ -10,7 +10,7 @@ end
 
 def handle(post_replacement)
   puts(post_replacement.id)
-  asset = PostReplacementMediaAsset.new(file: File.open(file_path(post_replacement.storage_id_in_database, post_replacement.file_ext_in_database)), creator_id: post_replacement.creator_id, creator_ip_addr: post_replacement.creator_ip_addr, checksum: post_replacement.md5_in_database, storage_id: post_replacement.storage_id_in_database)
+  asset = PostReplacementMediaAsset.new(file: File.open(file_path(r.storage_id_in_database, r.file_ext_in_database)), creator_id: r.creator_id, creator_ip_addr: r.creator_ip_addr, checksum: r.md5_in_database, storage_id: r.storage_id_in_database)
   asset.save!
   asset.set_file_attributes
   asset.status = "active"

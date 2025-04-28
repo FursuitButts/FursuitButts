@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 
 class FinalizeMediaAssetChanges < ActiveRecord::Migration[7.1]
-  # applied in dev, will be applied to prod later
-  def _
+  def change
     remove_column(:posts, :md5, :string, null: false, index: { unique: true })
     remove_column(:posts, :file_ext, :string, null: false)
     remove_column(:posts, :file_size, :integer, null: false)
@@ -27,8 +26,5 @@ class FinalizeMediaAssetChanges < ActiveRecord::Migration[7.1]
     remove_column(:post_replacements, :protected, :boolean, null: false, default: false)
     remove_column(:mascots, :md5, :string, null: false)
     remove_column(:mascots, :file_ext, :string, null: false)
-  end
-
-  def change
   end
 end
