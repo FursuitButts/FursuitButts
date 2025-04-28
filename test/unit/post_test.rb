@@ -1068,13 +1068,49 @@ class PostTest < ActiveSupport::TestCase
 
       context "with a large file size" do
         setup do
-          @post.media_asset.file_size = 31.megabytes
+          @post.media_asset.file_size = 26.megabytes
+          @post.tag_string = ""
+          @post.save
+        end
+
+        should "have the appropriate file size tags added automatically" do
+          assert_match(/large_filesize/, @post.tag_string)
+        end
+      end
+
+      context "with a huge file size" do
+        setup do
+          @post.media_asset.file_size = 76.megabytes
           @post.tag_string = ""
           @post.save
         end
 
         should "have the appropriate file size tags added automatically" do
           assert_match(/huge_filesize/, @post.tag_string)
+        end
+      end
+
+      context "with an absurd file size" do
+        setup do
+          @post.media_asset.file_size = 126.megabytes
+          @post.tag_string = ""
+          @post.save
+        end
+
+        should "have the appropriate file size tags added automatically" do
+          assert_match(/absurd_filesize/, @post.tag_string)
+        end
+      end
+
+      context "with an insane file size" do
+        setup do
+          @post.media_asset.file_size = 176.megabytes
+          @post.tag_string = ""
+          @post.save
+        end
+
+        should "have the appropriate file size tags added automatically" do
+          assert_match(/insane_filesize/, @post.tag_string)
         end
       end
 

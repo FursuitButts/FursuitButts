@@ -814,9 +814,10 @@ class Post < ApplicationRecord
         end
       end
 
-      if file_size >= 30.megabytes
-        tags << "huge_filesize"
-      end
+      tags << "large_filesize" if file_size >= 25.megabytes
+      tags << "huge_filesize" if file_size >= 75.megabytes
+      tags << "absurd_filesize" if file_size >= 125.megabytes
+      tags << "insane_filesize" if file_size >= 175.megabytes
 
       if is_webm?
         tags << "webm"
