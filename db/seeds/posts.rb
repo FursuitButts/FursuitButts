@@ -46,7 +46,7 @@ module Seeds
     end
 
     def create_post(data, text: nil)
-      existing = ::Post.find_by(md5: data["file"]["md5"])
+      existing = Post.joins(:media_asset).find_by("upload_media_assets.md5": data["file"]["md5"])
       if existing.present?
         Seeds.log("#{text} DUPLICATE: #{existing.id}")
         return existing
@@ -140,7 +140,7 @@ module Seeds
       return post["file"]["url"] unless post["file"]["url"].nil?
       Seeds.log("post #{post['id']} returned a nil url, attempting to reconstruct url.")
       return "https://static1.e621.net/data/#{post['file']['md5'][0..1]}/#{post['file']['md5'][2..3]}/#{post['file']['md5']}.#{post['file']['ext']}" if e621?
-      "https://static.femboy.fan/#{post['file']['md5'][0..1]}/#{post['file']['md5'][2..3]}/#{post['file']['md5']}.#{post['file']['ext']}"
+      "https://static.femboy.fan/posts/#{post['file']['md5'][0..1]}/#{post['file']['md5'][2..3]}/#{post['file']['md5']}.#{post['file']['ext']}"
     end
 
     def randseed
@@ -215,7 +215,7 @@ module Seeds
         remote_posts += fetch_posts(%W[id:#{post_ids.join(',')}], 100)
       end
 
-      existing = Post.where(md5: remote_posts.map { |p| p["file"]["md5"] })
+      existing = Post.joins(:media_asset).where("upload_media_assets.md5": remote_posts.map { |p| p["file"]["md5"] })
       ep = existing.index_by(&:md5)
 
       remote_pools.each_with_index do |ogpool, rpi|

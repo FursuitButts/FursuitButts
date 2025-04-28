@@ -112,7 +112,7 @@ class DiscordNotification
     when PostFlag
       embeds << { color: RED, title: "Post Flag Created", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_flags_url(search: { post_id: record.post_id }, anchor: "post-flag-#{record.id}"), author: a(record.creator) }
     when PostReplacement
-      embeds << { color: GREEN, title: "Post Replacement Created", description: "Post: [#{record.id}](#{r.post_url(record)})", url: r.post_replacements_url(search: { post_id: record.post_id }, anchor: "post-replacement-#{record.id}"), author: a(record.creator) }
+      embeds << { color: GREEN, title: "Post Replacement Created", description: "Post: [#{record.id}](#{r.post_url(record.post_id)})", url: r.post_replacements_url(search: { post_id: record.post_id }, anchor: "post-replacement-#{record.id}"), author: a(record.creator) }
     when PostSet
       embeds << { color: GREEN, title: "Post Set Created", url: r.post_set_url(record), author: a(record.creator) }
     when PostVote

@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# Remember to update the posts_trigger_change_seq sql function if new fields which should be considered a change are added
 class Post < ApplicationRecord
   class RevertError < StandardError; end
   class DeletionError < StandardError; end
