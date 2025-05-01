@@ -1061,8 +1061,8 @@ class PostTest < ActiveSupport::TestCase
         end
 
         should "have the appropriate dimension tags added automatically" do
-          assert_match(/absurd_res/, @post.tag_string)
-          assert_match(/hi_res/, @post.tag_string)
+          assert(@post.has_tag?("absurd_res"))
+          assert(@post.has_tag?("hi_res"))
         end
       end
 
@@ -1074,7 +1074,7 @@ class PostTest < ActiveSupport::TestCase
         end
 
         should "have the appropriate file size tags added automatically" do
-          assert_match(/large_filesize/, @post.tag_string)
+          assert(@post.has_tag?("large_filesize"))
         end
       end
 
@@ -1086,7 +1086,7 @@ class PostTest < ActiveSupport::TestCase
         end
 
         should "have the appropriate file size tags added automatically" do
-          assert_match(/huge_filesize/, @post.tag_string)
+          assert(@post.has_tag?("huge_filesize"))
         end
       end
 
@@ -1098,7 +1098,7 @@ class PostTest < ActiveSupport::TestCase
         end
 
         should "have the appropriate file size tags added automatically" do
-          assert_match(/absurd_filesize/, @post.tag_string)
+          assert(@post.has_tag?("absurd_filesize"))
         end
       end
 
@@ -1110,7 +1110,7 @@ class PostTest < ActiveSupport::TestCase
         end
 
         should "have the appropriate file size tags added automatically" do
-          assert_match(/insane_filesize/, @post.tag_string)
+          assert(@post.has_tag?("insane_filesize"))
         end
       end
 
@@ -1118,12 +1118,14 @@ class PostTest < ActiveSupport::TestCase
         setup do
           create(:tag_implication, antecedent_name: "webm", consequent_name: "animated")
           @post.media_asset.file_ext = "webm"
+          @post.media_asset.duration = 1.67
           @post.tag_string = ""
           @post.save
         end
 
-        should "have the appropriate file type tag added automatically" do
-          assert_match(/webm/, @post.tag_string)
+        should "have the appropriate file type and duration tags added automatically" do
+          assert(@post.has_tag?("webm"))
+          assert(@post.has_tag?("short_playtime"))
         end
 
         should "apply implications after adding the file type tag" do
