@@ -3,7 +3,7 @@
 module FemboyFans
   class Configuration
     def version
-      GitHelper.short_hash
+      GitHelper.instance.local.short_hash
     end
 
     def app_name
@@ -58,6 +58,10 @@ module FemboyFans
     end
 
     def source_code_url
+      "https://github.com/FemboyFans/FemboyFans"
+    end
+
+    def local_source_code_url
       "https://github.com/FemboyFans/FemboyFans"
     end
 

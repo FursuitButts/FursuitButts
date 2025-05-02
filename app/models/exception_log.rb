@@ -33,7 +33,7 @@ class ExceptionLog < ApplicationRecord
       message:      unwrapped_exception.message,
       trace:        unwrapped_exception.backtrace.try(:join, "\n") || "",
       code:         SecureRandom.uuid,
-      version:      GitHelper.short_hash,
+      version:      GitHelper.instance.local.short_hash,
       extra_params: extra_params,
     )
   end
