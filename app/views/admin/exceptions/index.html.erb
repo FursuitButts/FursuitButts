@@ -5,12 +5,15 @@
 <% end %>
 
 <%= table_for(@exception_logs) do |t| %>
+  <% t.column do |exception_log| %>
+    <%= link_to("View", admin_exception_path(exception_log)) %>
+  <% end %>
   <% t.column("Created At", th: { style: "width: 200px;" }) do |exception_log| %>
     <%= compact_time(exception_log.created_at) %>
   <% end %>
   <% t.column(:code) %>
   <% t.column("Commit", th: { style: "width: 100px;" }) do |exception_log| %>
-    <%= link_to(exception_log.version, GitHelper.commit_url(exception_log.version)) %>
+    <%= link_to(exception_log.version, GitHelper.local.commit_url(exception_log.version)) %>
   <% end %>
   <% t.column("Source") do |exception_log| %>
     <%= exception_log.extra_params["source"] %>
@@ -18,9 +21,6 @@
   <% t.column(:class_name) %>
   <% t.column("Message") do |exception_log| %>
     <%= truncate(exception_log.message, length: 500) %>
-  <% end %>
-  <% t.column("Stacktrace") do |exception_log| %>
-    <%= link_to("View", admin_exception_path(exception_log)) %>
   <% end %>
 <% end %>
 

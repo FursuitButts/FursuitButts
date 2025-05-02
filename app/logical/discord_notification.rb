@@ -113,6 +113,8 @@ class DiscordNotification
       embeds << { color: RED, title: "Post Flag Created", description: "Post: [#{record.post_id}](#{r.post_url(record.post_id)})", url: r.post_flags_url(search: { post_id: record.post_id }, anchor: "post-flag-#{record.id}"), author: a(record.creator) }
     when PostReplacement
       embeds << { color: GREEN, title: "Post Replacement Created", description: "Post: [#{record.post_id}](#{r.post_url(record.post_id)})", url: r.post_replacements_url(search: { post_id: record.post_id }, anchor: "post-replacement-#{record.id}"), author: a(record.creator) }
+    when PostReplacementMediaAsset
+      embeds << { color: GREEN, title: "Post Replacement Media Asset Created", url: r.post_replacement_media_assets_url(search: { id: record.id }), author: a(record.creator) }
     when PostSet
       embeds << { color: GREEN, title: "Post Set Created", url: r.post_set_url(record), author: a(record.creator) }
     when PostVote
@@ -128,7 +130,7 @@ class DiscordNotification
     when User
       embeds << { color: GREEN, title: "User Created", description: "Name: #{record.name}", url: r.user_url(record), author: a(record) }
     when UploadMediaAsset
-      embeds << { color: GREEN, title: "Upload Media Asset Created", url: r.upload_media_asset_url(record), author: a(record.creator) }
+      embeds << { color: GREEN, title: "Upload Media Asset Created", url: r.upload_media_assets_url(search: { id: record.id }), author: a(record.creator) }
     when UserFeedback
       embeds << { color: GREEN, title: "User Feedback Created", url: r.user_feedback_url(record), author: a(record.creator) }
     when WikiPage
