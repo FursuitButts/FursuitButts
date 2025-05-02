@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module PostIndex
-  PostData = Struct.new(:id, :pool_ids, :post_set_ids, :commenter_ids, :comment_count, :noter_ids, :note_bodies, :fav_user_ids, :upvote_user_ids, :downvote_user_ids, :child_post_ids, :disapprover_ids, :disapproval_count, :deleter_id, :deletion_reason, :has_pending_appeals, :has_pending_replacements, :has_verified_artist, keyword_init: true) do
+  PostData = Struct.new(:id, :pool_ids, :post_set_ids, :commenter_ids, :comment_count, :noter_ids, :note_bodies, :fav_user_ids, :upvote_user_ids, :downvote_user_ids, :child_post_ids, :disapprover_ids, :disapproval_count, :deleter_id, :deletion_reason, :has_pending_appeals, :has_pending_replacements, :has_verified_artist, :file_size, :image_width, :image_height, :duration, :framecount, :md5, :file_ext, keyword_init: true) do
     def initialize(**options)
       %i[pool_ids post_set_ids commenter_ids noter_ids note_bodies fav_user_ids upvote_user_ids downvote_user_ids child_post_ids disapprover_ids].each do |key|
         next unless options.key?(key)
@@ -143,6 +143,13 @@ module PostIndex
         has_pending_replacements = data.to_h { |d| [d.id, d.has_pending_replacements] }
         has_pending_appeals      = data.to_h { |d| [d.id, d.has_pending_appeals] }
         has_verified_artist      = data.to_h { |d| [d.id, d.has_verified_artist] }
+        file_sizes               = data.to_h { |d| [d.id, d.file_size] }
+        image_widths             = data.to_h { |d| [d.id, d.image_width] }
+        image_heights            = data.to_h { |d| [d.id, d.image_height] }
+        durations                = data.to_h { |d| [d.id, d.duration] }
+        framecounts              = data.to_h { |d| [d.id, d.framecount] }
+        md5s                     = data.to_h { |d| [d.id, d.md5] }
+        file_exts                = data.to_h { |d| [d.id, d.file_ext] }
         views                    = Reports.get_views_for_posts(post_ids.split(","))
 
         empty = []
@@ -166,6 +173,13 @@ module PostIndex
             artverified:              has_verified_artist[p.id] || false,
             views:                    views[p.id] || 0,
             appealed:                 has_pending_appeals[p.id] || false,
+            file_size:                file_sizes[p.id] || 0,
+            width:                    image_widths[p.id] || 0,
+            height:                   image_heights[p.id] || 0,
+            duration:                 durations[p.id] || 0,
+            framecount:               framecounts[p.id] || 0,
+            md5:                      md5s[p.id],
+            file_ext:                 file_exts[p.id],
           }
 
           {
@@ -199,7 +213,14 @@ module PostIndex
                     "last_flag.deleter_id, last_flag.deletion_reason",
                     "post_replacements_agg.has_pending_replacements",
                     "post_appeals_agg.has_pending_appeals",
-                    "verified_artist_agg.has_verified_artist")
+                    "verified_artist_agg.has_verified_artist",
+                    "upload_media_assets.file_size",
+                    "upload_media_assets.image_width",
+                    "upload_media_assets.image_height",
+                    "upload_media_assets.duration",
+                    "upload_media_assets.framecount",
+                    "upload_media_assets.md5",
+                    "upload_media_assets.file_ext")
             .joins("LEFT JOIN LATERAL (SELECT ARRAY_AGG(pools.id) AS pool_ids FROM pools WHERE posts.id = ANY(pools.post_ids)) pools_agg ON TRUE")
             .joins("LEFT JOIN LATERAL (SELECT ARRAY_AGG(post_sets.id) AS post_set_ids FROM post_sets WHERE posts.id = ANY(post_sets.post_ids)) post_sets_agg ON TRUE")
             .joins("LEFT JOIN LATERAL (SELECT ARRAY_AGG(comments.creator_id) AS commenter_ids, COUNT(comments.id) AS comment_count FROM comments WHERE comments.post_id = posts.id AND comments.is_hidden = FALSE) comments_agg ON TRUE")
@@ -213,6 +234,7 @@ module PostIndex
             .joins("LEFT JOIN LATERAL (SELECT EXISTS(SELECT 1 FROM post_appeals WHERE post_appeals.post_id = posts.id AND post_appeals.status = #{PostAppeal.statuses['pending']}) as has_pending_appeals) post_appeals_agg ON TRUE")
             .joins("LEFT JOIN linked_artists ON linked_artists.linked_user_id = posts.uploader_id")
             .joins("LEFT JOIN LATERAL (SELECT EXISTS(SELECT 1 FROM unnest(string_to_array(posts.tag_string, ' ')) AS tag WHERE tag = ANY(linked_artists.artist_names)) AS has_verified_artist) verified_artist_agg ON TRUE")
+            .joins("LEFT JOIN upload_media_assets ON upload_media_assets.id = posts.upload_media_asset_id")
             .order(id: :asc)
             .merge(relation)
             .to_sql
@@ -251,6 +273,8 @@ module PostIndex
 
   def as_indexed_json(options = {})
     options_or_get = ->(key, get) { options.key?(key) ? options[key] : get.call }
+    width = options_or_get.call(:width, -> { image_width })
+    height = options_or_get.call(:height, -> { image_height })
     {
       created_at:               created_at,
       updated_at:               updated_at,
@@ -278,7 +302,7 @@ module PostIndex
       comment_count:            options_or_get.call(:comment_count, -> { comment_count }),
       disapproval_count:        options_or_get.call(:disapproval_count, -> { ::PostDisapproval.where(post_id: id).pluck(:user_id).size }),
 
-      file_size:                file_size,
+      file_size:                options_or_get.call(:file_size, -> { file_size }),
       parent:                   parent_id,
       pools:                    options_or_get.call(:pools, -> { ::Pool.where("? = ANY(post_ids)", id).pluck(:id) }),
       sets:                     options_or_get.call(:sets, -> { ::PostSet.where("? = ANY(post_ids)", id).pluck(:id) }),
@@ -294,18 +318,18 @@ module PostIndex
       disapprovers:             options_or_get.call(:disapprovers, -> { ::PostDisapproval.where(post_id: id).pluck(:user_id) }),
       deleter:                  options_or_get.call(:deleter, -> { ::PostFlag.where(post_id: id, is_resolved: false, is_deletion: true).order(id: :desc).first&.creator_id }),
       del_reason:               options_or_get.call(:del_reason, -> { ::PostFlag.where(post_id: id, is_resolved: false, is_deletion: true).order(id: :desc).first&.reason&.downcase }),
-      width:                    image_width,
-      height:                   image_height,
-      mpixels:                  image_width && image_height ? (image_width.to_f * image_height / 1_000_000).round(2) : 0.0,
-      aspect_ratio:             image_width && image_height ? (image_width.to_f / [image_height, 1].max).round(10) : 1.0,
-      duration:                 duration,
-      framecount:               framecount,
+      width:                    width,
+      height:                   height,
+      mpixels:                  width && height ? (width.to_f * height / 1_000_000).round(2) : 0.0,
+      aspect_ratio:             width && height ? (width.to_f / [height, 1].max).round(10) : 1.0,
+      duration:                 options_or_get.call(:duration, -> { duration }),
+      framecount:               options_or_get.call(:framecount, -> { framecount }),
       views:                    options_or_get.call(:views, -> { Reports.get_post_views(id) }),
 
       tags:                     tag_string.split,
-      md5:                      md5,
+      md5:                      options_or_get.call(:md5, -> { md5 }),
       rating:                   rating,
-      file_ext:                 file_ext,
+      file_ext:                 options_or_get.call(:file_ext, -> { file_ext }),
       source:                   source_array.map(&:downcase),
       description:              description.presence,
 
