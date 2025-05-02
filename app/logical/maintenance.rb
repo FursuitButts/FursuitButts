@@ -5,7 +5,6 @@ module Maintenance
 
   def daily
     ignoring_exceptions { PostPruner.new.prune! }
-    ignoring_exceptions { Upload.where("created_at < ?", 1.week.ago).delete_all }
     ignoring_exceptions { ForumTopicStatus.process_all_subscriptions! }
     ignoring_exceptions { Tag.clean_up_negative_post_counts! }
     ignoring_exceptions { TagAlias.fix_nonzero_post_counts! }

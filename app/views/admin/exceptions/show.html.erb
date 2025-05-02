@@ -6,7 +6,7 @@
     <div>
       Error Code: <%= @exception_log.code %><br/>
       Created At: <%= compact_time @exception_log.created_at %><br/>
-      Commit:  <%= link_to(@exception_log.version, GitHelper.local.commit_url(@exception_log.version)) %><br/>
+      Commit:  <%= link_to(@exception_log.version, GitHelper.instance.local.commit_url(@exception_log.version)) %><br/>
       IP Address: <%= link_to_ip @exception_log.ip_addr %><br/>
       User: <%= link_to_user @exception_log.user %>
     </div>

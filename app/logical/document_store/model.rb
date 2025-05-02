@@ -22,7 +22,7 @@ module DocumentStore
       end
     end
 
-    def update_index(queue: :high_prio)
+    def update_index(queue: :high)
       # TODO: race condition hack, makes tests SLOW!!!
       return document_store.update_index(refresh: "true") if Rails.env.test?
 

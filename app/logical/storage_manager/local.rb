@@ -61,7 +61,7 @@ module StorageManager
       raise(InvalidPathError, "path is blank") if path.blank?
       raise(InvalidPathError, "path resolves to root") if %W[#{File::SEPARATOR} .].include?(path)
       path = "#{File::SEPARATOR}#{path}" unless path.start_with?(File::SEPARATOR)
-      parts = (base_dir + path).split(File::SEPARATOR).compact_blank
+      parts = path.split(File::SEPARATOR).compact_blank
       raise(InvalidPathError, "path resolves to root") if parts.count == 1
       raise(InvalidPathError, "path contains '..'") if parts.include?("..")
       path = File::SEPARATOR + parts.join(File::SEPARATOR)

@@ -207,6 +207,7 @@ class PostReplacementTest < ActiveSupport::TestCase
       assert_equal("original", new_replacement.status)
       assert_equal(old_md5, new_replacement.md5)
       assert_equal(old_source, new_replacement.source)
+      sleep(60)
       assert_equal(old_md5, MediaAsset.md5(new_replacement.replacement_file_path))
     end
 
