@@ -420,7 +420,7 @@ DEPENDENCIES
   dotenv
   draper
   dtext_rb
-  elasticsearch (~> 8.0)
+  elasticsearch (~> 8.18.0)
   factory_bot_rails
   faker
   faraday

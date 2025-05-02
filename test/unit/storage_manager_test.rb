@@ -32,14 +32,14 @@ class StorageManagerTest < ActiveSupport::TestCase
 
     context "#delete method" do
       should "delete the file" do
-        @storage_manager.store(StringIO.new("data"), "test.txt")
-        @storage_manager.delete("test.txt")
+        @storage_manager.store(StringIO.new("data"), "#{BASE_DIR}/test.txt")
+        @storage_manager.delete("#{BASE_DIR}/test.txt")
 
         assert_not(File.exist?("#{BASE_DIR}/test.txt"))
       end
 
       should "not fail if the file doesn't exist" do
-        assert_nothing_raised { @storage_manager.delete("dne.txt") }
+        assert_nothing_raised { @storage_manager.delete("#{BASE_DIR}/dne.txt") }
       end
     end
 

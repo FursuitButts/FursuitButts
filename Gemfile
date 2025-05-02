@@ -79,4 +79,3 @@ gem "after_commit_everywhere", "~> 1.6"
 gem "active_record_extended", "~> 3.3"
 # https://github.com/rails/rails/issues/49259, https://github.com/ruby/irb/pull/916#discussion_r1553958795
 gem "irb", "~> 1.15.2"
-
