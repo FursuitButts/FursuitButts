@@ -14,7 +14,7 @@ module DocumentStore
     end
 
     def stub_elasticsearch(method, path)
-      stub_request(method, "#{FemboyFans.config.elasticsearch_host}#{path}")
+      stub_request(method, "http://#{FemboyFans.config.elasticsearch_host}:9200#{path}")
     end
 
     test "it deletes the index" do
