@@ -110,4 +110,11 @@ div#c-forums-topics {
     margin-right: 0.5em;
     font-weight: normal;
   }
+
+  span.muted {
+    font-size: 80%;
+    color: $forum-topic-muted-color;
+    margin-right: 0.5em;
+    font-weight: bold;
+  }
 }

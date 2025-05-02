@@ -11,7 +11,7 @@ module Forums
       params[:search] ||= {}
       params[:search][:order] ||= "sticky" if request.format.html?
 
-      @query = authorize(ForumTopic).html_includes(request, :creator, :updater, :category, posts: :creator)
+      @query = authorize(ForumTopic).html_includes(request, :creator, :updater, :category, :statuses, posts: :creator, last_post: :creator)
                                     .visible(CurrentUser.user)
                                     .search(search_params(ForumTopic))
       @forum_topics = @query.paginate(params[:page], limit: params[:limit] || 50)
@@ -19,7 +19,7 @@ module Forums
       respond_with(@forum_topics) do |format|
         format.html do
           # TODO: revisit muting, it may need to be further optimized or removed due to performance issues
-          @mutes = ForumTopicStatus.where(forum_topic: @forum_topics, user: CurrentUser.user, mute: true).load
+
           @category = ForumCategory.find_by(id: params.dig(:search, :category_id)) if params.dig(:search, :category_id).present?
         end
       end

@@ -155,15 +155,20 @@ class ForumTopic < ApplicationRecord
   end
 
   module VisitMethods
-    def read_by?(user = CurrentUser.user, mutes = nil)
+    def read_by?(user = CurrentUser.user)
       return true if user.is_anonymous?
-
-      return true if mutes.present? && mutes.find { |m| m.forum_topic_id == id && m.mute }.present?
 
       return true if user_mute(user)
       last_read_at = category.last_read_at_for(user)
 
       (last_read_at && last_post_created_at <= last_read_at) || false
+    end
+
+    def muted_by?(user = CurrentUser.user)
+      return false if user.is_anonymous?
+
+      m = user_mute(user)
+      m.is_a?(ActiveRecord::Relation) ? m.exists? : m.present?
     end
 
     def mark_as_read!(user = CurrentUser.user)
@@ -182,7 +187,11 @@ class ForumTopic < ApplicationRecord
   module MuteMethods
     # TODO: revisit muting, it may need to be further optimized or removed due to performance issues
     def user_mute(user)
-      statuses.find_by(user_id: user.id, mute: true)
+      if association(:statuses).loaded?
+        statuses.find { |s| s.mute? && s.user_id == user.id }
+      else
+        statuses.find_by(user_id: user.id, mute: true)
+      end
     end
   end
 

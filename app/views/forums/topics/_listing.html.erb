@@ -5,11 +5,15 @@
       <span class="sticky">Sticky:</span>
     <% end %>
 
-    <% unless topic.read_by?(CurrentUser.user, @mutes) %>
+    <% unless topic.read_by?(CurrentUser.user) %>
       <span class="new">NEW</span>
     <% end %>
 
-    <% if CurrentUser.user.go_to_recent_forum_post? && topic.response_count > 1 && (post = topic.posts.select(:id).last) %>
+    <% if topic.muted_by?(CurrentUser.user) %>
+      <span class="muted">Muted</span>
+    <% end %>
+
+    <% if CurrentUser.user.go_to_recent_forum_post? && topic.response_count > 1 && (post = topic.last_post) %>
       <%= link_to(topic.title, forum_topic_path(topic, page: topic.last_page, anchor: "forum_post_#{post.id}"), class: "forum-post-link") %>
     <% else %>
       <%= link_to(topic.title, forum_topic_path(topic), class: "forum-post-link") %>
@@ -27,13 +31,12 @@
     <% end %>
   <% end %>
   <% t.column("Last Post") do |topic| %>
-    <% post = topic.posts.order(created_at: :desc).last %>
-    <% if post %>
-      <%= link_to_user(post.creator) %>
-      <% if policy(topic).can_see_ip_addr? %>
-        (<%= link_to_ip(post.creator_ip_addr) %>)
+    <% if topic.last_post %>
+      <%= link_to_user(topic.last_post.creator) %>
+      <% if policy(topic.last_post).can_see_ip_addr? %>
+        (<%= link_to_ip(topic.last_post.creator_ip_addr) %>)
       <% end %>
-      <p><%= time_ago_in_words_tagged(post.created_at, compact: true) %></p>
+      <p><%= time_ago_in_words_tagged(topic.last_post.created_at, compact: true) %></p>
     <% end %>
   <% end %>
   <% t.column("Creator", th: { class: "creator" }, td: { class: "creator" }) do |topic| %>
