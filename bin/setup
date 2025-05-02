@@ -22,7 +22,7 @@ FileUtils.chdir(APP_ROOT) do
   puts("== Creating credentials ==")
   system!("EDITOR=/dev/null rails credentials:edit")
 
-  puts("== Creating opensearch indices ==\n")
+  puts("== Creating elasticsearch indices ==\n")
   system!("RAILS_ENV=#{env} bin/rails runner '[Post, PostVersion].each { |model| model.document_store.create_index! }'")
 
   puts("\n== Preparing database ==")

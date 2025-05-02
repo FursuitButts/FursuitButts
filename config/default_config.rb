@@ -772,7 +772,7 @@ module FemboyFans
     def iqdb_server
     end
 
-    def opensearch_host
+    def elasticsearch_host
     end
 
     # Use a recaptcha on the signup page to protect against spambots creating new accounts.

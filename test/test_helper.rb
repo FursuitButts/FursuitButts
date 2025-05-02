@@ -31,7 +31,7 @@ Shoulda::Matchers.configure do |config|
 end
 
 WebMock.disable_net_connect!(allow: [
-  FemboyFans.config.opensearch_host,
+  FemboyFans.config.elasticsearch_host,
 ])
 
 FactoryBot::SyntaxRunner.class_eval do
@@ -44,7 +44,7 @@ end
 BCrypt::Engine.send(:remove_const, :DEFAULT_COST)
 BCrypt::Engine::DEFAULT_COST = BCrypt::Engine::MIN_COST
 
-# Clear the opensearch indicies completly
+# Clear the elasticsearch indicies completly
 Post.document_store.create_index!(delete_existing: true)
 PostVersion.document_store.create_index!(delete_existing: true)
 

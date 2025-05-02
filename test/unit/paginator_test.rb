@@ -16,7 +16,7 @@ class PaginatorTest < ActiveSupport::TestCase
     end
   end
 
-  { active_record: WikiPage, opensearch: Post }.each do |type, model| # rubocop:disable Metrics/BlockLength
+  { active_record: WikiPage, elasticsearch: Post }.each do |type, model| # rubocop:disable Metrics/BlockLength
     context type do
       setup do
         @user = create(:user)
@@ -47,7 +47,7 @@ class PaginatorTest < ActiveSupport::TestCase
 
       context "numbered pagination" do
         setup do
-          skip "flaky af" if ENV["CI"] && type == :opensearch
+          skip "flaky af" if ENV["CI"] && type == :elasticsearch
         end
 
         should "return the correct set of records" do
