@@ -15,7 +15,7 @@ class TagQuery
     id filetype type rating description parent user user_id approver disapprover flagger deletedby delreason
     source status pool set fav favoritedby note locked upvote votedup downvote voteddown voted
     width height mpixels ratio filesize duration score favcount framecount views date age change tagcount
-    commenter comm noter noteupdater disapprovals
+    commenter comm noter noteupdater disapprovals qtags
   ] + TagCategory.short_name_list.map { |tag_name| "#{tag_name}tags" }
 
   METATAGS = %w[
@@ -278,6 +278,9 @@ class TagQuery
         add_to_query(type, :parent_ids, any_none_key: :parent, value: g2) do
           g2.to_i
         end
+
+      when "qtags", "-qtags", "~qtags"
+        add_to_query(type, :qtag, any_none_key: :qtags, value: g2) { g2 }
 
       when "child"
         q[:child] = g2.downcase

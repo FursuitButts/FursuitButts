@@ -91,6 +91,7 @@ module PostIndex
           description:              { type: "text" },
           notes:                    { type: "text" },
           del_reason:               { type: "keyword" },
+          qtags:                    { type: "keyword" },
 
           rating_locked:            { type: "boolean" },
           note_locked:              { type: "boolean" },
@@ -332,6 +333,7 @@ module PostIndex
       file_ext:                 options_or_get.call(:file_ext, -> { file_ext }),
       source:                   source_array.map(&:downcase),
       description:              description.presence,
+      qtags:                    qtags,
 
       rating_locked:            is_rating_locked,
       note_locked:              is_note_locked,

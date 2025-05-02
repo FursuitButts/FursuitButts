@@ -147,6 +147,18 @@ class PostQueryBuilder
       relation = relation.where.not("posts.parent_id = ?", parent_id)
     end
 
+    if q[:qtags] == "none"
+      relation = relation.where("posts.qtags = '{}'")
+    elsif q[:qtags] == "any"
+      relation = relation.where("posts.qtags != '{}'")
+    end
+
+    if q[:qtag]
+      relation = relation.where("posts.qtags @> ARRAY[?]::character varying[]", q[:qtag])
+    elsif q[:qtag_must_not]
+      relation = relation.where.not("posts.qtags @> ARRAY[?]::character varying[]", q[:qtag_must_not])
+    end
+
     if q[:child] == "none"
       relation = relation.where("posts.has_children = FALSE")
     elsif q[:child] == "any"

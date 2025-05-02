@@ -7,7 +7,7 @@ class ElasticPostQueryBuilder < ElasticQueryBuilder
     status: :status_locked,
   }.freeze
 
-  def initialize(query_string, resolve_aliases:, free_tags_count:, enable_safe_mode:, always_show_deleted:)
+  def initialize(query_string, resolve_aliases: true, free_tags_count: 0, enable_safe_mode: CurrentUser.safe_mode?, always_show_deleted: false)
     super(TagQuery.new(query_string, resolve_aliases: resolve_aliases, free_tags_count: free_tags_count))
     @enable_safe_mode = enable_safe_mode
     @always_show_deleted = always_show_deleted
@@ -119,6 +119,7 @@ class ElasticPostQueryBuilder < ElasticQueryBuilder
     add_array_relation(:description, :description, action: :match_phrase_prefix)
     add_array_relation(:note, :notes, action: :match_phrase_prefix)
     add_array_relation(:sources, :source, any_none_key: :source, action: :wildcard, cast: :downcase)
+    add_array_relation(:qtag, :qtags, any_none_key: :qtags)
     add_array_relation(:deleter, :deleter)
     add_array_relation(:upvote, :upvotes)
     add_array_relation(:downvote, :downvotes)
