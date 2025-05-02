@@ -15,6 +15,8 @@ class ForumPost < ApplicationRecord
   has_many :tickets, as: :model
   has_many :versions, class_name: "EditHistory", as: :versionable, dependent: :destroy
   has_one :spam_ticket, -> { spam }, class_name: "Ticket", as: :model
+  has_one :last_edit_version, -> { where(edit_type: "edit").order(created_at: :desc) }, class_name: "EditHistory", as: :versionable
+
   belongs_to :tag_change_request, polymorphic: true, optional: true
   before_validation :initialize_is_hidden, on: :create
   before_create :auto_report_spam
@@ -278,7 +280,9 @@ class ForumPost < ApplicationRecord
   end
 
   def forum_topic_page
-    (ForumPost.where("topic_id = ? and created_at <= ?", topic_id, created_at).count / FemboyFans.config.records_per_page.to_f).ceil
+    Cache.fetch("fp_topic_page:#{id}", expires_in: 12.hours) do
+      (ForumPost.where("topic_id = ? and created_at <= ?", topic_id, created_at).count / FemboyFans.config.records_per_page.to_f).ceil
+    end
   end
 
   def is_original_post?(original_post_id = nil)
@@ -308,7 +312,7 @@ class ForumPost < ApplicationRecord
   end
 
   def edited_at
-    versions.edited.last&.created_at
+    last_edit_version&.created_at
   end
 
   def auto_report_spam

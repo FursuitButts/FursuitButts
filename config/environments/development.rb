@@ -51,7 +51,7 @@ Rails.application.configure do
   config.active_record.migration_error = :page_load
 
   # Highlight code that triggered database queries in logs.
-  config.active_record.verbose_query_logs = true
+  config.active_record.verbose_query_logs = !ActiveRecordQueryTrace.enabled
 
   # Highlight code that enqueued background job in logs.
   config.active_job.verbose_enqueue_logs = true
@@ -76,16 +76,5 @@ Rails.application.configure do
   console do
     set_user.call
     ActiveSupport::Reloader.to_complete(&set_user)
-  end
-
-  config.after_initialize do
-    Bullet.enable = true
-    Bullet.alert = true
-    Bullet.bullet_logger = true
-    Bullet.console = true
-    Bullet.rails_logger = true
-    Bullet.add_footer = true
-    Bullet.stacktrace_excludes = %w[silence_healthcheck_logging]
-    Bullet.add_safelist(type: :unused_eager_loading, class_name: "Post", association: :uploader)
   end
 end

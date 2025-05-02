@@ -8,9 +8,7 @@
     <%= render "forums/posts/votes/vote", vote: own_vote, forum_post: forum_post, votable: votable %>
   <% end %>
 
-  <% other_votes.each do |vote| %>
-    <%= render "forums/posts/votes/vote", vote: vote, forum_post: forum_post, votable: false %>
-  <% end %>
+  <%= render(partial: "forums/posts/votes/vote", collection: other_votes, as: :vote, locals: { forum_post: forum_post, votable: false }) %>
 
   <% if forum_post.voting_active? && votable && forum_post.creator != CurrentUser.user %>
     <%= render "forums/posts/votes/add_vote", forum_post: forum_post, show: !own_vote %>

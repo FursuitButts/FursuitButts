@@ -30,7 +30,7 @@ module Forums
       if request.format.html?
         @forum_topic.mark_as_read!(CurrentUser.user)
       end
-      @forum_posts = ForumPost.html_includes(request, :creator, :spam_ticket, topic: %i[category original_post])
+      @forum_posts = ForumPost.html_includes(request, :creator, :spam_ticket, :last_edit_version, topic: %i[category original_post], votes: %i[user])
                               .permitted(CurrentUser.user)
                               .search(topic_id: @forum_topic.id)
                               .reorder("forum_posts.id")

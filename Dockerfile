@@ -10,10 +10,10 @@ RUN <<EOS
 EOS
 
 COPY Gemfile Gemfile.lock ./
-RUN gem i foreman && BUNDLE_IGNORE_CONFIG=true bundle install -j$(nproc) \
- && rm -rf /usr/local/bundle/cache/*.gem \
- && find /usr/local/bundle/gems/ -name "*.c" -delete \
- && find /usr/local/bundle/gems/ -name "*.o" -delete
+RUN gem i foreman && BUNDLE_IGNORE_CONFIG=true bundle install -j$(nproc)
+RUN rm -rf /usr/local/bundle/cache/*.gem
+RUN find /usr/local/bundle/gems/ -name "*.c" -delete
+RUN find /usr/local/bundle/gems/ -name "*.o" -delete
 
 FROM node:20-alpine3.20 AS node-builder
 RUN apk --no-cache add git

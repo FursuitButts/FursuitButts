@@ -53,6 +53,8 @@ GEM
     active_record_extended (3.3.0)
       activerecord (>= 5.2, < 8.0.0)
       pg (< 3.0)
+    active_record_query_trace (1.8.3)
+      activerecord (>= 6.0.0)
     activejob (7.1.3.2)
       activesupport (= 7.1.3.2)
       globalid (>= 0.3.6)
@@ -400,11 +402,12 @@ PLATFORMS
 
 DEPENDENCIES
   active_record_extended (~> 3.3)
+  active_record_query_trace
   addressable
   after_commit_everywhere (~> 1.6)
   bcrypt
   bootsnap
-  bullet (~> 8.0)
+  bullet
   click_house (~> 2.1)
   dalli
   debug

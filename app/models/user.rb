@@ -1344,6 +1344,18 @@ class User < ApplicationRecord
     self.upload_notifications = upload_notifications.compact_blank.uniq
   end
 
+  def use(&)
+    if block_given?
+      CurrentUser.scoped(self, last_ip_addr || "127.0.0.1", &)
+    else
+      CurrentUser.user = self
+      CurrentUser.ip_addr = last_ip_addr || "127.0.0.1"
+    end
+  end
+  alias set_user use
+  alias scoped use
+  alias as use
+
   def self.available_includes
     %i[artists bans feedback]
   end

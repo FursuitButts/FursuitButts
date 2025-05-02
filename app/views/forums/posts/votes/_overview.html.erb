@@ -9,7 +9,7 @@
       <%= tag.i(class: "fa-regular #{icon}") %>
     <% end %>
     <span class="forum-post-vote-rating">
-    (<span class="<%= forum_post.percentage_score >= 50 ? "text-green" : "text-red" %>" title="Total: <%= votes.count %>, Sum: <%= format("%+d", forum_post.total_score) %>"><%= number_to_percentage(forum_post.percentage_score, precision: 2, strip_insignificant_zeros: true) %></span>)
+    (<span class="<%= forum_post.percentage_score >= 50 ? "text-green" : "text-red" %>" title="Total: <%= votes.size %>, Sum: <%= format("%+d", forum_post.total_score) %>"><%= number_to_percentage(forum_post.percentage_score, precision: 2, strip_insignificant_zeros: true) %></span>)
   </span>
   <% end %>
 </ul>

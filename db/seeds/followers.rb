@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "config", "environment"))
+require_relative "base"
 
 users = User.left_joins(:followed_tags).where("tag_followers.user_id": nil, "level": User::Levels::MEMBER).limit(1000).order("users.id asc")
 

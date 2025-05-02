@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "config", "environment"))
+require_relative "base"
 
 users = User.where(level: User::Levels::MEMBER, favorite_count: ...1000).order("id asc")
 

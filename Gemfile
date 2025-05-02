@@ -54,7 +54,8 @@ group :development do
   gem "ruby-lsp"
   gem "ruby-lsp-rails", "~> 0.3.13"
   gem "faker", require: false
-  gem "bullet", "~> 8.0"
+  gem "bullet"
+  gem "active_record_query_trace"
 end
 
 group :test do

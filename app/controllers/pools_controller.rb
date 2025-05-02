@@ -6,7 +6,6 @@ class PoolsController < ApplicationController
 
   def index
     @pools = authorize(Pool).search(search_params(Pool))
-                            .includes(cover_post: :media_asset)
                             .paginate(params[:page], limit: params[:limit])
     respond_with(@pools) do |format|
       format.json do
