@@ -110,7 +110,7 @@ class MediaAssetWithVariants < MediaAsset
   end
 
   module StorageMethods
-    delegate :file_path, :file_url, to: :original
+    delegate :file_path, :backup_file_path, :file_url, to: :original
 
     def store_file_finalize
       raise(StandardError, "file not present") if file.nil?
@@ -197,6 +197,10 @@ class MediaAssetWithVariants < MediaAsset
       storage_manager.file_path(md5, ext, type, protected: protected, prefix: path_prefix, protected_prefix: protected_path_prefix, hierarchical: hierarchical?)
     end
 
+    def backup_file_path(protected: is_protected?)
+      backup_storage_manager.file_path(md5, ext, type, protected: protected, prefix: path_prefix, protected_prefix: protected_path_prefix, hierarchical: hierarchical?)
+    end
+
     def file_url(protected: is_protected?)
       storage_manager.url(md5, ext, type, protected: protected, prefix: path_prefix, protected_prefix: protected_path_prefix, hierarchical: hierarchical?, secret: protected_secret)
     end
@@ -204,7 +208,7 @@ class MediaAssetWithVariants < MediaAsset
     def store!(original_file)
       convert_file(original_file) do |file|
         storage_manager.store(file, file_path)
-        backup_storage_manager.store(file, file_path)
+        backup_storage_manager.store(file, backup_file_path)
       end
     end
 
@@ -221,12 +225,10 @@ class MediaAssetWithVariants < MediaAsset
     end
 
     def expunge!
-      unprotected = storage_manager.file_path(md5, ext, type, protected: false, prefix: path_prefix, protected_prefix: protected_path_prefix, hierarchical: hierarchical?)
-      protected = storage_manager.file_path(md5, ext, type, protected: true, prefix: path_prefix, protected_prefix: protected_path_prefix, hierarchical: hierarchical?)
-      storage_manager.delete(unprotected)
-      storage_manager.delete(protected)
-      backup_storage_manager.delete(unprotected)
-      backup_storage_manager.delete(protected)
+      storage_manager.delete(file_path(protected: false))
+      storage_manager.delete(file_path(protected: true))
+      backup_storage_manager.delete(backup_file_path(protected: false))
+      backup_storage_manager.delete(backup_file_path(protected: true))
     end
 
     def serializable_hash(*)

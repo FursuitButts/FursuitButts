@@ -238,6 +238,10 @@ class MediaAsset < ApplicationRecord
       storage_manager.file_path(md5, file_ext, :original, protected: protected, prefix: path_prefix, hierarchical: hierarchical?)
     end
 
+    def backup_file_path(protected: is_protected?)
+      backup_storage_manager.file_path(md5, file_ext, :original, protected: protected, prefix: path_prefix, hierarchical: hierarchical?)
+    end
+
     def file_url(protected: is_protected?)
       storage_manager.url(md5, file_ext, :original, protected: protected, prefix: path_prefix, hierarchical: hierarchical?, secret: protected_secret)
     end
@@ -252,7 +256,7 @@ class MediaAsset < ApplicationRecord
       end
       set_file_attributes
       storage_manager.store(file, file_path)
-      backup_storage_manager.store(file, file_path)
+      backup_storage_manager.store(file, backup_file_path)
     end
 
     def store!(...)
@@ -289,14 +293,10 @@ class MediaAsset < ApplicationRecord
         self.status = "expunged"
         self.status_message = "has been deleted and cannot be reuploaded"
       end
-      unprotected = file_path(protected: false)
-      protected = file_path(protected: true)
-      storage_manager.delete(unprotected)
-      backup_storage_manager.delete(unprotected)
-      if unprotected != protected
-        storage_manager.delete(protected)
-        backup_storage_manager.delete(protected)
-      end
+      storage_manager.delete(file_path(protected: false))
+      storage_manager.delete(file_path(protected: true))
+      backup_storage_manager.delete(backup_file_path(protected: false))
+      backup_storage_manager.delete(backup_file_path(protected: true))
     end
 
     def expunge!(...)
