@@ -1,9 +1,9 @@
-SELECT id,
-       created_at,
-       updated_at,
-       category,
-       is_locked,
-       tag_id,
-       updater_id,
-       reason
-FROM public.tag_versions ORDER BY id
+SELECT tag_versions.id,
+       tag_versions.created_at,
+       tag_versions.updated_at,
+       tag_versions.category,
+       tag_versions.is_locked,
+       tag_versions.tag_id,
+       tag_versions.updater_id,
+       tag_versions.reason
+FROM public.tag_versions ORDER BY tag_versions.id ASC

@@ -1,10 +1,10 @@
-SELECT id,
-       creator_id,
-       title,
-       body,
-       protection_level,
-       created_at,
-       updated_at,
-       updater_id,
-       parent
-FROM public.wiki_pages ORDER BY id
+SELECT wiki_pages.id,
+       wiki_pages.creator_id,
+       wiki_pages.title,
+       wiki_pages.body,
+       wiki_pages.protection_level,
+       wiki_pages.created_at,
+       wiki_pages.updated_at,
+       wiki_pages.updater_id,
+       wiki_pages.parent
+FROM public.wiki_pages ORDER BY wiki_pages.id ASC
