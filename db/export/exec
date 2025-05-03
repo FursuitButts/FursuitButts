@@ -47,7 +47,7 @@ else
     date = Time.zone.parse(d)
     if date.day == 1
       puts("Archiving #{d}")
-      system("tar cJf #{target}/#{d}.tar.xz -C #{target}/#{d} .", exception: true)
+      system("tar cJf #{target}/#{d[0..-4]}.tar.xz -C #{target}/#{d} .", exception: true)
     end
     if date < 4.days.ago
       puts("Removing #{d}")
