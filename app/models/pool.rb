@@ -29,7 +29,7 @@ class Pool < ApplicationRecord
   after_destroy :log_delete
   after_save :create_version
   after_save :synchronize, if: :saved_change_to_post_ids?
-  has_one :cover_post, class_name: "Post", foreign_key: :id
+  has_one :cover_post, class_name: "Post", foreign_key: :id, primary_key: :cover_post_id
 
   has_many :versions, -> { order("id asc") }, class_name: "PoolVersion", dependent: :destroy
 
