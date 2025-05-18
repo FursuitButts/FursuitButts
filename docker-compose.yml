@@ -154,7 +154,7 @@ services:
       - "${EXPOSED_CLICKHOUSE_PORT:-34520}:8123"
 
   redis:
-    image: redis:7.0.10-alpine3.17
+    image: redis:8.0.1-alpine3.21
     command: redis-server --save 10 1 --loglevel warning
     healthcheck:
       test: redis-cli ping
