@@ -222,7 +222,7 @@ services:
   # To change this, set the FEMBOYFANS_REPORTS_SERVER env variable
   # For internal access, change the FEMBOYFANS_REPORTS_SERVER_INTERNAL env varable (defaults to http://reports:3000)
   reports:
-    image: ghcr.io/femboyfans/reports:388effaf0e1140f269a7c66c8c5c5975681aa1b2
+    image: ghcr.io/femboyfans/reports:49b1c03947327bc22eb6cd8e077064139abca801
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/up || exit 1
       interval: 30s
