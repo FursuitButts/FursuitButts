@@ -37,6 +37,17 @@ class PopularControllerTest < ActionDispatch::IntegrationTest
       end
     end
 
+    context "top_views action" do
+      should "render" do
+        get top_views_popular_index_path
+        assert_response :success
+      end
+
+      should "restrict access" do
+        assert_access(User::Levels::ANONYMOUS) { |user| get_auth top_views_popular_index_path, user }
+      end
+    end
+
     context "followed_tags action" do
       should "render" do
         get followed_tags_popular_index_path
@@ -59,6 +70,17 @@ class PopularControllerTest < ActionDispatch::IntegrationTest
       end
     end
 
+    context "top_searches action" do
+      should "render" do
+        get top_searches_popular_index_path
+        assert_response :success
+      end
+
+      should "restrict access" do
+        assert_access(User::Levels::ANONYMOUS) { |user| get_auth top_searches_popular_index_path, user }
+      end
+    end
+
     context "missed_searches action" do
       should "render" do
         get missed_searches_popular_index_path
@@ -67,6 +89,17 @@ class PopularControllerTest < ActionDispatch::IntegrationTest
 
       should "restrict access" do
         assert_access(User::Levels::ANONYMOUS) { |user| get_auth missed_searches_popular_index_path, user }
+      end
+    end
+
+    context "top_missed_searches action" do
+      should "render" do
+        get missed_searches_popular_index_path
+        assert_response :success
+      end
+
+      should "restrict access" do
+        assert_access(User::Levels::ANONYMOUS) { |user| get_auth top_missed_searches_popular_index_path, user }
       end
     end
   end

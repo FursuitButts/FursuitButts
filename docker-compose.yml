@@ -118,7 +118,7 @@ services:
       - "${EXPOSED_SERVER_PORT:-4000}:${EXPOSED_SERVER_PORT:-4000}"
 
   postgres:
-    image: postgres:15.7-alpine3.20
+    image: postgres:17.5-alpine3.20
     environment:
       - POSTGRES_USER=femboyfans
       - POSTGRES_DB=femboyfans_development
