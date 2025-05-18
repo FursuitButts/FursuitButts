@@ -70,7 +70,7 @@ module PostSetPresenters
         html << template.link_to(
           "«prev",
           template.uploads_popular_index_path(
-            date:  prev_date_for_scale(scale),
+            date:  prev_date_for_scale(scale).strftime("%Y-%m-%d"),
             scale: scale.downcase,
           ),
           "id":            (link_rel_for_scale?(template, scale.downcase) ? "paginator-prev" : nil),
@@ -80,7 +80,7 @@ module PostSetPresenters
         html << template.link_to(
           scale,
           template.uploads_popular_index_path(
-            date:  date,
+            date:  date.strftime("%Y-%m-%d"),
             scale: scale.downcase,
           ),
           class: "desc",
@@ -88,7 +88,7 @@ module PostSetPresenters
         html << template.link_to(
           "next»",
           template.uploads_popular_index_path(
-            date:  next_date_for_scale(scale),
+            date:  next_date_for_scale(scale).strftime("%Y-%m-%d"),
             scale: scale.downcase,
           ),
           "id":            (link_rel_for_scale?(template, scale.downcase) ? "paginator-next" : nil),

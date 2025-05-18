@@ -2,16 +2,15 @@
 
 module PostSets
   module Popular
-    class Views < PostSets::Base
-      attr_reader :date, :limit
+    class TopViews < PostSets::Base
+      attr_reader :limit
 
-      def initialize(date, limit: Reports::LIMIT)
-        @date = date
+      def initialize(limit: Reports::LIMIT)
         @limit = limit
       end
 
       def ranking
-        @ranking ||= Reports.get_post_views_rank(date).first(limit)
+        @ranking ||= Reports.get_top_post_views.first(limit)
       end
 
       def posts
@@ -22,7 +21,7 @@ module PostSets
       end
 
       def presenter
-        ::PostSetPresenters::Popular::Views.new(self)
+        ::PostSetPresenters::Post.new(self)
       end
     end
   end

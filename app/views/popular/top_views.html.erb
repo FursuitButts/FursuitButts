@@ -1,12 +1,16 @@
-<h1>Most Viewed: <%= date_range_description(@date, @scale, @min_date, @max_date) %></h1>
-
-<%= @post_set.presenter.nav_links(self) %>
+<h1>Most Viewed Posts Of All Time</h1>
 
 <%= render "posts/partials/common/inline_blacklist" %>
 
+<p id="popular-nav-links">
+  <span class="period">
+    <%= link_to("Per Day", views_popular_index_path) %>
+  </span>
+</p>
+
 <div id="posts" class="user-disable-cropped-<%= FemboyFans.config.enable_image_cropping? && CurrentUser.user.disable_cropped_thumbnails? %>">
   <div id="posts-container">
-    <%= @post_set.presenter.post_previews_html(self, show_cropped: true, views: :daily, views_list: @ranking, unique_views: false) %>
+    <%= @post_set.presenter.post_previews_html(self, show_cropped: true, views: :total, views_list: @ranking, unique_views: false) %>
   </div>
 </div>
 
@@ -16,9 +20,9 @@
 <%= render "posts/partials/common/secondary_links" %>
 
 <% content_for(:page_title) do %>
-  Popular Posts for <%= date_range_description(@date, @scale, @min_date, @max_date) %>
+  Most Viewed Posts Of All Time
 <% end %>
 
 <% content_for(:html_header) do %>
-  <meta name="description" content="The most viewed posts per day">
+  <meta name="description" content="The most viewed posts of all time">
 <% end %>

@@ -1,6 +1,10 @@
-<h1>Missed Searches: <%= date_range_description(@date, @scale, @min_date, @max_date) %></h1>
+<h1>Top Missed Searches Of All Time</h1>
 
-<%= @nav.build(self) %>
+<p id="popular-nav-links">
+  <span class="period">
+    <%= link_to("Per Day", missed_searches_popular_index_path) %>
+  </span>
+</p>
 
 <%= table_for(@ranking, class: "striped autofit") do |t| %>
   <% t.column("Count") do |rank| %>
@@ -14,7 +18,7 @@
 <%= render partial: "popular/secondary_links" %>
 
 <% content_for(:page_title) do %>
-  Missed Searches for <%= date_range_description(@date, @scale, @min_date, @max_date) %>
+  Top Missed Searches Of All Time
 <% end %>
 
 <% content_for(:html_header) do %>

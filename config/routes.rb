@@ -67,10 +67,13 @@ Rails.application.routes.draw do
   resources :popular, only: %i[index] do
     collection do
       get :uploads
-      get :views
       get :followed_tags
+      get :views
+      get "/views/top", to: "popular#top_views", as: "top_views"
       get :searches
+      get "/searches/top", to: "popular#top_searches", as: "top_searches"
       get "/searches/missed", to: "popular#missed_searches", as: "missed_searches"
+      get "/searches/missed/top", to: "popular#top_missed_searches", as: "top_missed_searches"
     end
   end
   namespace :users do

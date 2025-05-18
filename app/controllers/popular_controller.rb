@@ -17,19 +17,40 @@ class PopularController < ApplicationController
     @date, @scale, @min_date, @max_date = parse_date(params, scales: %w[day])
     @post_set = PostSets::Popular::Views.new(@date, limit: limit)
     @posts = @post_set.posts
+    @ranking = @post_set.ranking.to_h { |r| [r["post"], r["count"]] }
+    respond_with(@posts)
+  end
+
+  def top_views
+    @post_set = PostSets::Popular::TopViews.new(limit: limit)
+    @ranking = @post_set.ranking.to_h { |r| [r["post"], r["count"]] }
+    @posts = @post_set.posts
     respond_with(@posts)
   end
 
   def searches
     @date, @scale, @min_date, @max_date = parse_date(params, scales: %w[day])
-    @ranking = Reports.get_post_searches_rank(@date, limit: limit).first(limit)
+    @ranking = Reports.get_post_searches_rank(@date).first(limit)
+    @tags = Tag.find_by_name_list(@ranking.pluck("tag"))
+    @nav = NavLinks.new(@date, "searches_popular_index_path", "top_searches_popular_index_path")
+    respond_with(@ranking, &format_json(@ranking))
+  end
+
+  def top_searches
+    @ranking = Reports.get_top_post_searches.first(limit)
     @tags = Tag.find_by_name_list(@ranking.pluck("tag"))
     respond_with(@ranking, &format_json(@ranking))
   end
 
   def missed_searches
-    @date, @scale, @min_date, @max_date = parse_date({}, scales: %w[day])
-    @ranking = Reports.get_missed_searches_rank(limit: limit)
+    @date, @scale, @min_date, @max_date = parse_date(params, scales: %w[day])
+    @ranking = Reports.get_missed_searches_rank(@date).first(limit)
+    @nav = NavLinks.new(@date, "missed_searches_popular_index_path", "top_missed_searches_popular_index_path")
+    respond_with(@ranking, &format_json(@ranking))
+  end
+
+  def top_missed_searches
+    @ranking = Reports.get_top_missed_searches.first(limit)
     respond_with(@ranking, &format_json(@ranking))
   end
 
@@ -55,5 +76,58 @@ class PopularController < ApplicationController
 
   def limit(default: 100, min: 1, max: default)
     params.fetch(:limit, default).to_i.clamp(min..max)
+  end
+
+  # used for routes that don't have a post set
+  class NavLinks
+    attr_reader :date, :path, :top_path
+
+    def initialize(date, path, top_path)
+      @date = date
+      @path = path
+      @top_path = top_path
+    end
+
+    def next_date
+      date + 1.day
+    end
+
+    def prev_date
+      date - 1.day
+    end
+
+    def build(template)
+      html =  []
+      html << "<p id=\"popular-nav-links\">"
+      html << "<span class=\"period\">"
+      html << template.link_to(
+        "«prev",
+        template.public_send(path,
+                             date: prev_date.strftime("%Y-%m-%d")),
+        "id":            "paginator-prev",
+        "rel":           "prev",
+        "data-shortcut": "a left",
+      )
+      html << template.link_to(
+        "Day",
+        template.public_send(path,
+                             date: date.strftime("%Y-%m-%d")),
+        class: "desc",
+      )
+      html << template.link_to(
+        "next»",
+        template.public_send(path,
+                             date: next_date.strftime("%Y-%m-%d")),
+        "id":            "paginator-next",
+        "rel":           "next",
+        "data-shortcut": "d right",
+      )
+      html << "</span>"
+      html << "<span class=\"period\">"
+      html << template.link_to("All Time", template.public_send(top_path))
+      html << "</span>"
+      html << "</p>"
+      html.join("\n").html_safe
+    end
   end
 end

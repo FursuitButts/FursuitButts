@@ -1,6 +1,10 @@
-<h1>Most Searched: <%= date_range_description(@date, @scale, @min_date, @max_date) %></h1>
+<h1>Most Searched Of All Time</h1>
 
-<%= @nav.build(self) %>
+<p id="popular-nav-links">
+  <span class="period">
+    <%= link_to("Per Day", searches_popular_index_path) %>
+  </span>
+</p>
 
 <%= table_for(@ranking, class: "striped autofit") do |t| %>
   <% t.column("Count") do |rank| %>
@@ -14,7 +18,7 @@
 <%= render(partial: "popular/secondary_links") %>
 
 <% content_for(:page_title) do %>
-  Popular Searches for <%= date_range_description(@date, @scale, @min_date, @max_date) %>
+  Most Searched of All Time
 <% end %>
 
 <% content_for(:html_header) do %>

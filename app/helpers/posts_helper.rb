@@ -102,7 +102,13 @@ module PostsHelper
     rating = tag.span(post.rating.upcase, class: "post-score-rating")
     views = tag.span(class: "post-score-views post-score-views-classes-#{post.id}") do
       icon = tag.i("", class: "fa-regular fa-eye")
-      amount = tag.span(" #{views == :daily ? 'D' : 'T'}#{'U' if CurrentUser.user.unique_views?}#{(views == :daily ? post.daily_views : post.total_views) || 0}", class: "post-score-views-views-#{post.id}")
+      if views.is_a?(Array)
+        type, unique, count = views
+        amount = tag.span(" #{type == :daily ? 'D' : 'T'}#{'U' if unique}#{count || 0}", class: "post-score-views-views-#{post.id}")
+      else
+
+        amount = tag.span(" #{views == :daily ? 'D' : 'T'}#{'U' if CurrentUser.user.unique_views?}#{(views == :daily ? post.daily_views : post.total_views) || 0}", class: "post-score-views-views-#{post.id}")
+      end
       icon + amount
     end
     tag.div(score + favs + comments + views + rating, class: "post-score", id: "post-score-#{post.id}")

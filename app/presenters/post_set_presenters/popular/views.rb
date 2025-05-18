@@ -26,7 +26,7 @@ module PostSetPresenters
         html << template.link_to(
           "«prev",
           template.views_popular_index_path(
-            date: prev_date,
+            date: prev_date.strftime("%Y-%m-%d"),
           ),
           "id":            "paginator-prev",
           "rel":           "prev",
@@ -35,19 +35,22 @@ module PostSetPresenters
         html << template.link_to(
           "Day",
           template.views_popular_index_path(
-            date: date,
+            date: date.strftime("%Y-%m-%d"),
           ),
           class: "desc",
         )
         html << template.link_to(
           "next»",
           template.views_popular_index_path(
-            date: next_date,
+            date: next_date.strftime("%Y-%m-%d"),
           ),
           "id":            "paginator-next",
           "rel":           "next",
           "data-shortcut": "d right",
         )
+        html << "</span>"
+        html << "<span class=\"period\">"
+        html << template.link_to("All Time", template.top_views_popular_index_path)
         html << "</span>"
         html << "</p>"
         html.join("\n").html_safe

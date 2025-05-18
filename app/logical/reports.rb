@@ -30,7 +30,7 @@ module Reports
     return 0 unless enabled?
     d = date&.strftime("%Y-%m-%d")
     q = { date: d, unique: unique }.compact_blank.to_query
-    Cache.fetch("pv-#{post_id}-#{d}-#{unique}", expires_in: 1.minute) do
+    Cache.fetch("pv-#{post_id}-#{d || 'all'}-#{unique}", expires_in: 1.minute) do
       get("/views/#{post_id}?#{q}")["data"].to_i
     end
   rescue Faraday::ConnectionFailed, Faraday::TimeoutError, Faraday::ServerError => e
@@ -51,11 +51,25 @@ module Reports
     []
   end
 
+  # Hash { "post" => 0, "count" => 0 }[]
+  def get_top_post_views(limit: LIMIT, unique: false)
+    return [] unless enabled?
+    q = { limit: limit, unique: unique }.compact_blank.to_query
+    Cache.fetch("pv-top", expires_in: 1.minute) do
+      get("/views/top?#{q}")["data"]
+    end
+  rescue Faraday::ConnectionFailed, Faraday::TimeoutError, Faraday::ServerError => e
+    ExceptionLog.add!(e, source: "Reports#get_top_post_views", args: get_arguments(binding))
+    []
+  end
+
   # Hash { "tag" => "name", "count" => 0 }[]
   def get_post_searches_rank(date, limit: LIMIT)
     return [] unless enabled?
-    Cache.fetch("ps-rank-#{date}", expires_in: 1.minute) do
-      get("/searches/rank?date=#{date.strftime('%Y-%m-%d')}&limit=#{limit}")["data"]
+    d = date.strftime("%Y-%m-%d")
+    q = { date: d, limit: limit }.compact_blank.to_query
+    Cache.fetch("ps-rank-#{d}", expires_in: 1.minute) do
+      get("/searches/rank?#{q}")["data"]
     end
   rescue Faraday::ConnectionFailed, Faraday::TimeoutError, Faraday::ServerError => e
     ExceptionLog.add!(e, source: "Reports#get_post_searches_rank", args: get_arguments(binding))
@@ -63,13 +77,39 @@ module Reports
   end
 
   # Hash { "tag" => "name", "count" => 0 }[]
-  def get_missed_searches_rank(limit: LIMIT)
+  def get_top_post_searches(limit: LIMIT)
     return [] unless enabled?
-    Cache.fetch("ms-rank", expires_in: 1.minute) do
-      get("/searches/missed/rank?limit=#{limit}")["data"]
+    q = { limit: limit }.compact_blank.to_query
+    Cache.fetch("ps-top", expires_in: 1.minute) do
+      get("/searches/top?#{q}")["data"]
+    end
+  rescue Faraday::ConnectionFailed, Faraday::TimeoutError, Faraday::ServerError => e
+    ExceptionLog.add!(e, source: "Reports#get_top_post_searches", args: get_arguments(binding))
+    []
+  end
+
+  # Hash { "tag" => "name", "count" => 0 }[]
+  def get_missed_searches_rank(date, limit: LIMIT)
+    return [] unless enabled?
+    d = date.strftime("%Y-%m-%d")
+    q = { date: d, limit: limit }.compact_blank.to_query
+    Cache.fetch("ms-rank-#{d}", expires_in: 1.minute) do
+      get("/searches/missed/rank?#{q}")["data"]
     end
   rescue Faraday::ConnectionFailed, Faraday::TimeoutError, Faraday::ServerError => e
     ExceptionLog.add!(e, source: "Reports#get_missed_searches_rank", args: get_arguments(binding))
+    []
+  end
+
+  # Hash { "tag" => "name", "count" => 0 }[]
+  def get_top_missed_searches(limit: LIMIT)
+    return [] unless enabled?
+    q = { limit: limit }.compact_blank.to_query
+    Cache.fetch("ms-top", expires_in: 1.minute) do
+      get("/searches/missed/top?#{q}")["data"]
+    end
+  rescue Faraday::ConnectionFailed, Faraday::TimeoutError, Faraday::ServerError => e
+    ExceptionLog.add!(e, source: "Reports#get_top_missed_searches", args: get_arguments(binding))
     []
   end
 
