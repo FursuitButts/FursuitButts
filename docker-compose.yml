@@ -94,7 +94,7 @@ services:
       PG__POOL__MAX_SIZE: 1
 
   nginx:
-    image: nginx:stable-alpine
+    image: nginx:1.28.0-alpine3.21
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://127.0.0.1:$$NGINX_PORT/online || exit 1
       interval: 15s
@@ -118,7 +118,7 @@ services:
       - "${EXPOSED_SERVER_PORT:-4000}:${EXPOSED_SERVER_PORT:-4000}"
 
   postgres:
-    image: postgres:15-alpine
+    image: postgres:15.7-alpine3.20
     environment:
       - POSTGRES_USER=femboyfans
       - POSTGRES_DB=femboyfans_development
@@ -134,7 +134,7 @@ services:
       - "${EXPOSED_POSTGRES_PORT:-34518}:5432"
 
   clickhouse:
-    image: clickhouse/clickhouse-server:latest-alpine
+    image: clickhouse/clickhouse-server:24.8.2.3-alpine
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://127.0.0.1:8123/ping || exit 1
       interval: 15s
@@ -154,7 +154,7 @@ services:
       - "${EXPOSED_CLICKHOUSE_PORT:-34520}:8123"
 
   redis:
-    image: redis:7.0.10-alpine
+    image: redis:7.0.10-alpine3.17
     command: redis-server --save 10 1 --loglevel warning
     healthcheck:
       test: redis-cli ping
@@ -222,7 +222,7 @@ services:
   # To change this, set the FEMBOYFANS_REPORTS_SERVER env variable
   # For internal access, change the FEMBOYFANS_REPORTS_SERVER_INTERNAL env varable (defaults to http://reports:3000)
   reports:
-    image: ghcr.io/femboyfans/reports:38ee2fc252ac1296bc49ab7e58d08cea4ba07e0f
+    image: ghcr.io/femboyfans/reports:bb9877670468a5d929e4873ea93e134367277663
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/up || exit 1
       interval: 30s
