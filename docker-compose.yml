@@ -167,7 +167,7 @@ services:
       - "${EXPOSED_REDIS_PORT:-34519}:6379"
 
   memcached:
-    image: memcached:1.5.22-alpine
+    image: memcached:1.6.38-alpine
     healthcheck:
       test: echo "version" | nc -vn -w 1 127.0.0.1 11211
       interval: 30s
@@ -175,7 +175,7 @@ services:
       retries: 5
 
   elasticsearch:
-    image: elasticsearch:8.18.0
+    image: elasticsearch:9.0.1
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
