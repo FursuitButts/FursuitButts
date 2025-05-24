@@ -234,7 +234,7 @@
               <% if compare.ahead? %>
                 <li><%= compare.ahead %> <%= "commit".pluralize(compare.ahead) %> ahead</li>
               <% end %>
-              <li>Common Commit: <%= link_to(compare.common, @info.git.origin.commit_url(compare.common), target: "_blank") %></li>
+              <li>Common Commit: <%= link_to(compare.common, @info.git.origin.commit_url(compare.common), target: "_blank", rel: "noopener") %></li>
             </ul>
           </td>
         </tr>
@@ -255,13 +255,13 @@
       </tr>
       <tr>
         <td>Commit</td>
-        <td><%= link_to(@info.git.origin.short_commit, @info.git.origin.current_commit_url, target: "_blank") %> (<%= @info.git.origin.commit %>)</td>
+        <td><%= link_to(@info.git.origin.short_commit, @info.git.origin.current_commit_url, target: "_blank", rel: "noopener") %> (<%= @info.git.origin.commit %>)</td>
       </tr>
       <tr>
         <td>Tag</td>
         <td>
           <% if @info.git.origin.tag.present? %>
-            <%= link_to(@info.git.origin.tag, @info.git.origin.current_tag_url, target: "_blank") %>
+            <%= link_to(@info.git.origin.tag, @info.git.origin.current_tag_url, target: "_blank", rel: "noopener") %>
           <% else %>
             (none)
           <% end %>
@@ -279,7 +279,7 @@
               <% if compare.ahead? %>
                 <li><%= compare.ahead %> <%= "commit".pluralize(compare.ahead) %> ahead</li>
               <% end %>
-              <li>Common Commit: <%= link_to(compare.common, @info.git.origin.commit_url(compare.common), target: "_blank") %></li>
+              <li>Common Commit: <%= link_to(compare.common, @info.git.origin.commit_url(compare.common), target: "_blank", rel: "noopener") %></li>
             </ul>
           </td>
         </tr>
@@ -302,13 +302,13 @@
       </tr>
       <tr>
         <td>Commit</td>
-        <td><%= link_to(@info.git.upstream.short_commit, @info.git.upstream.current_commit_url, target: "_blank") %> (<%= @info.git.upstream.commit %>)</td>
+        <td><%= link_to(@info.git.upstream.short_commit, @info.git.upstream.current_commit_url, target: "_blank", rel: "noopener") %> (<%= @info.git.upstream.commit %>)</td>
       </tr>
       <tr>
         <td>Tag</td>
         <td>
           <% if @info.git.upstream.tag.present? %>
-            <%= link_to(@info.git.upstream.tag, @info.git.upstream.current_tag_url, target: "_blank") %>
+            <%= link_to(@info.git.upstream.tag, @info.git.upstream.current_tag_url, target: "_blank", rel: "noopener") %>
           <% else %>
             (none)
           <% end %>
