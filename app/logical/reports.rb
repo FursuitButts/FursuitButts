@@ -25,7 +25,25 @@ module Reports
     request(:post, path, body)
   end
 
-  # Integer
+
+  # Hash { "viewCount" => 0, "searchCount" => 0, "missedSearchCount" => 0, "schemaVersion" => 0, "dbVersion" => "", "healthy" => true, "error" => nil }[]
+  def get_stats
+    Cache.fetch("reports-stats", expires_in: 1.minute) do
+      get("/stats")
+    end
+  rescue Faraday::ConnectionFailed, Faraday::TimeoutError, Faraday::ServerError => e
+    log = ExceptionLog.add!(e, source: "Reports#get_stats", args: get_arguments(binding))
+    {
+      "viewCount" => 0,
+      "searchCount" => 0,
+      "missedSearchCount" => 0,
+      "schemaVersion" => 0,
+      "dbVersion" => "NONE",
+      "healthy" => false,
+      "error" => "Request Failed: #{log.code}",
+    }
+  end
+
   def get_post_views(post_id, date: nil, unique: false)
     return 0 unless enabled?
     d = date&.strftime("%Y-%m-%d")

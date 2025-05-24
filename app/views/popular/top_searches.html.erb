@@ -1,4 +1,7 @@
 <h1>Most Searched Of All Time</h1>
+<p id="total">
+  Total Searches: <%= ActiveSupport::NumberHelper.number_to_delimited(@stats["searchCount"]) %>
+</p>
 
 <p id="popular-nav-links">
   <span class="period">

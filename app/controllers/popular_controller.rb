@@ -25,6 +25,7 @@ class PopularController < ApplicationController
     @post_set = PostSets::Popular::TopViews.new(limit: limit)
     @ranking = @post_set.ranking.to_h { |r| [r["post"], r["count"]] }
     @posts = @post_set.posts
+    @stats = Reports.get_stats
     respond_with(@posts)
   end
 
@@ -39,6 +40,7 @@ class PopularController < ApplicationController
   def top_searches
     @ranking = Reports.get_top_post_searches.first(limit)
     @tags = Tag.find_by_name_list(@ranking.pluck("tag"))
+    @stats = Reports.get_stats
     respond_with(@ranking, &format_json(@ranking))
   end
 
@@ -51,6 +53,7 @@ class PopularController < ApplicationController
 
   def top_missed_searches
     @ranking = Reports.get_top_missed_searches.first(limit)
+    @stats = Reports.get_stats
     respond_with(@ranking, &format_json(@ranking))
   end
 

@@ -1,4 +1,7 @@
 <h1>Most Viewed Posts Of All Time</h1>
+<p id="total">
+  Total Views: <%= ActiveSupport::NumberHelper.number_to_delimited(@stats["viewCount"]) %>
+</p>
 
 <%= render "posts/partials/common/inline_blacklist" %>
 

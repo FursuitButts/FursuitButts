@@ -1,4 +1,7 @@
 <h1>Top Missed Searches Of All Time</h1>
+<p id="total">
+  Total Missed Searches: <%= ActiveSupport::NumberHelper.number_to_delimited(@stats["missedSearchCount"]) %>
+</p>
 
 <p id="popular-nav-links">
   <span class="period">

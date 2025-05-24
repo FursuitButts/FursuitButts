@@ -1,4 +1,7 @@
 <h1>Most Viewed: <%= date_range_description(@date, @scale, @min_date, @max_date) %></h1>
+<p id="total">
+  Total Views: <%= ActiveSupport::NumberHelper.number_to_delimited(@ranking.sum { |r| r["count"] }) %>
+</p>
 
 <%= @post_set.presenter.nav_links(self) %>
 
