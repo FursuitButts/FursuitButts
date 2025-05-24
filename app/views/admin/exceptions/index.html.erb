@@ -13,7 +13,7 @@
   <% end %>
   <% t.column(:code) %>
   <% t.column("Commit", th: { style: "width: 100px;" }) do |exception_log| %>
-    <%= link_to(exception_log.version, GitHelper.instance.local.commit_url(exception_log.version)) %>
+    <%= link_to(exception_log.version, GitHelper.instance.origin.commit_url(exception_log.version)) %>
   <% end %>
   <% t.column("Source") do |exception_log| %>
     <%= exception_log.extra_params["source"] %>

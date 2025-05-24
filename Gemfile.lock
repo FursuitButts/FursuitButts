@@ -218,6 +218,7 @@ GEM
     nokogiri (1.16.2)
       mini_portile2 (~> 2.8.2)
       racc (~> 1.4)
+    ostruct (0.6.1)
     parallel (1.24.0)
     parser (3.3.1.0)
       ast (~> 2.4.1)
@@ -287,6 +288,8 @@ GEM
     rdoc (6.13.1)
       psych (>= 4.0.0)
     recaptcha (5.16.0)
+    recursive-open-struct (2.0.0)
+      ostruct
     redis (5.1.0)
       redis-client (>= 0.17.0)
     redis-client (0.20.0)
@@ -439,6 +442,7 @@ DEPENDENCIES
   rails (~> 7.1.0)
   rakismet (~> 1.5)
   recaptcha
+  recursive-open-struct (~> 2.0)
   redis
   request_store
   responders

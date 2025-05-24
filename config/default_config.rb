@@ -3,7 +3,7 @@
 module FemboyFans
   class Configuration
     def version
-      GitHelper.instance.local.short_hash
+      GitHelper.instance.origin.short_commit
     end
 
     def app_name

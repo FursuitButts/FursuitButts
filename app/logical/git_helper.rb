@@ -3,7 +3,7 @@
 class GitHelper
   include Singleton
 
-  attr_accessor :enabled, :upstream_enabled, :git_exists, :repo_exists, :local, :upstream
+  attr_accessor :enabled, :upstream_enabled, :git_exists, :repo_exists, :origin, :upstream, :local
   alias enabled? enabled
   alias upstream_enabled? upstream_enabled
 
@@ -21,19 +21,20 @@ class GitHelper
     end
 
     @enabled = true
+    @local = LocalRef.new
     if Rails.env.production?
-      @local = Ref.new("internal", "master", FemboyFans.config.local_source_code_url)
+      @origin = Ref.new("internal", "master", FemboyFans.config.local_source_code_url)
       @upstream = Ref.new("upstream", "master", FemboyFans.config.source_code_url)
     else
       branch = `git rev-parse --abbrev-ref HEAD`.strip
       remote = `git config branch.#{branch}.remote`.strip
-      @local = Ref.new(remote, branch, FemboyFans.config.source_code_url)
+      @origin = Ref.new(remote, branch, FemboyFans.config.source_code_url)
       @upstream = nil
     end
   end
 
   class Ref
-    attr_accessor :remote, :branch, :url, :exists, :hash
+    attr_accessor :remote, :branch, :url, :exists, :commit, :tag
 
     def initialize(remote, branch, url)
       @remote = remote
@@ -43,12 +44,13 @@ class GitHelper
       @exists = system("git show-ref --quiet #{remote}/#{branch}")
       raise(StandardError, "#{remote}/#{branch} does not exist") unless @exists
       return unless @exists
-      @hash = `git rev-parse #{remote}/#{branch}`.strip
-      raise("Could not get hash for #{remote}/#{branch}") if @hash.blank?
+      @commit = `git rev-parse #{remote}/#{branch}`.strip
+      raise("Could not get commit for #{remote}/#{branch}") if @commit.blank?
+      @tag = `git tag --points-at #{commit}`.strip.presence
     end
 
-    def short_hash
-      @hash&.[](0..7)
+    def short_commit
+      @commit&.[](0..7)
     end
 
     def latest
@@ -65,12 +67,20 @@ class GitHelper
       "#{url}/commit/#{commit}"
     end
 
+    def tag_url(tag)
+      "#{url}/releases/tag/#{tag}"
+    end
+
     def latest_commit_url
       commit_url(latest)
     end
 
     def current_commit_url
-      commit_url(hash)
+      commit_url(commit)
+    end
+
+    def current_tag_url
+      tag.present? ? tag_url(tag) : nil
     end
 
     def compare(ref)
@@ -83,6 +93,29 @@ class GitHelper
     end
   end
 
+  class LocalRef < Ref
+    def initialize
+      @remote = nil
+      @branch = nil
+      @url = nil
+      @exists = true
+      @commit = `git rev-parse HEAD`.strip
+      @tag = `git tag --points-at #{commit}`.strip.presence
+    end
+
+    alias latest commit
+
+    def noop(*)
+      nil
+    end
+
+    alias commit_url noop
+    alias tag_url noop
+    alias latest_commit_url noop
+    alias current_commit_url noop
+    alias current_tag_url noop
+  end
+
   class Comparison
     attr_accessor :a, :b
 
@@ -92,11 +125,11 @@ class GitHelper
     end
 
     def common
-      @common ||= `git merge-base #{a.hash} #{b.hash}`.strip
+      @common ||= `git merge-base #{a.commit} #{b.commit}`.strip
     end
 
     def behind
-      @behind ||= `git rev-list --count #{a.hash}..#{b.hash}`.strip.to_i
+      @behind ||= `git rev-list --count #{a.commit}..#{b.commit}`.strip.to_i
     end
 
     def behind?
@@ -104,7 +137,7 @@ class GitHelper
     end
 
     def ahead
-      @ahead ||= `git rev-list --count #{b.hash}..#{a.hash}`.strip.to_i
+      @ahead ||= `git rev-list --count #{b.commit}..#{a.commit}`.strip.to_i
     end
 
     def ahead?
@@ -117,18 +150,18 @@ class GitHelper
   end
 
   def public_ref
-    upstream || local
+    upstream || origin
   end
 
-  def common_hash
-    upstream.present? ? local.compare(upstream).common : local.hash
+  def common_commit
+    upstream.present? ? origin.compare(upstream).common : origin.commit
   end
 
   def commit_url(commit)
-    "#{local.url}/commit/#{commit}"
+    "#{origin.url}/commit/#{commit}"
   end
 
   def public_commit_url
-    public_ref.commit_url(common_hash)
+    public_ref.commit_url(common_commit)
   end
 end

@@ -1,0 +1,382 @@
+<h1>System Info</h1>
+
+<br>
+<br>
+
+<table class="striped">
+  <thead>
+    <tr>
+      <th colspan="2" style="text-align: center">Reports</th>
+    </tr>
+    <tr>
+      <th>Data</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td>Schema Version</td>
+    <td><%= @info.reports.version.schema %></td>
+  </tr>
+  <tr>
+    <td>DB Version</td>
+    <td><%= @info.reports.version.db %></td>
+  </tr>
+    <tr>
+      <td>Code Date</td>
+      <td><%= @info.reports.date.code %></td>
+    </tr>
+    <tr>
+      <td>DB Date</td>
+      <td><%= @info.reports.date.db %></td>
+    </tr>
+    <tr>
+      <td>Healthy</td>
+      <td>
+        <% if @info.reports.health.healthy %>
+          Yes
+        <% else %>
+          No (<%= @info.reports.health.error %>)
+        <% end %>
+      </td>
+    </tr>
+    <tr>
+      <td>Latency</td>
+      <td><%= @info.reports.latency %>ms</td>
+    </tr>
+  </tbody>
+  <thead>
+    <tr>
+      <% if @info.postgres.pending_migrations %>
+        <th colspan="2" style="text-align: center; background-color: #8d6e20">Postgres</th>
+      <% else %>
+        <th colspan="2" style="text-align: center">Postgres</th>
+      <% end %>
+    </tr>
+    <tr>
+      <th>Data</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Version</td>
+      <td><%= @info.postgres.version %></td>
+    </tr>
+    <tr>
+      <td>Latency</td>
+      <td><%= @info.postgres.latency %>ms</td>
+    </tr>
+    <tr>
+      <td>Database</td>
+      <td><%= @info.postgres.database %></td>
+    </tr>
+    <tr>
+      <td>Date</td>
+      <td><%= @info.postgres.date %></td>
+    </tr>
+    <tr>
+      <td>Connection Count</td>
+      <td><%= @info.postgres.connection_count %></td>
+    </tr>
+    <tr>
+      <td>Deadlocks</td>
+      <td><%= @info.postgres.deadlocks %></td>
+    </tr>
+    <tr>
+      <td>Migrations</td>
+      <td>
+        <%= @info.postgres.latest_migration %> (<%= @info.postgres.migration_count %> Total)
+        <% if @info.postgres.pending_migrations %>
+          <p><b>Pending Migrations</b></p>
+        <% end %>
+      </td>
+    </tr>
+  </tbody>
+  <thead>
+    <tr>
+      <th colspan="2" style="text-align: center">Redis</th>
+    </tr>
+    <tr>
+      <th>Data</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Version</td>
+      <td><%= @info.redis.version %></td>
+    </tr>
+    <tr>
+      <td>Latency</td>
+      <td><%= @info.redis.latency %>ms</td>
+    </tr>
+    <tr>
+      <td>Databases</td>
+      <td>
+        <ul>
+          <% @info.redis.databases.each do |db| %>
+            <% clients = @info.redis.clients_per_db[db] || 0 %>
+            <% keys = @info.redis.keys_per_db[db] || 0 %>
+            <% current = @info.redis.current_db == db %>
+            <dl>
+              <dt><%= db %></dt>
+              <dd><%= clients %> <%= "client".pluralize(clients) %>, <%= keys %> <%= "key".pluralize(keys) %><%= ", current" if current %></dd>
+            </dl>
+          <% end %>
+        </ul>
+      </td>
+    </tr>
+  </tbody>
+  <% FemboyFans.config.memcached_servers.split.each do |server|  %>
+    <thead>
+      <tr>
+        <% if FemboyFans.config.memcached_servers.split.size > 1 %>
+          <th colspan="2" style="text-align: center">Memcached (<%= server %>)</th>
+        <% else %>
+          <th colspan="2" style="text-align: center">Memcached</th>
+        <% end %>
+      </tr>
+      <tr>
+        <th>Data</th>
+        <th>Value</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Version</td>
+        <td><%= @info.memcached[server].version %></td>
+      </tr>
+      <tr>
+        <td>Latency</td>
+        <td><%= @info.memcached[server].latency %>ms</td>
+      </tr>
+      <tr>
+        <td>Connections</td>
+        <td><%= @info.memcached[server].connections %></td>
+      </tr>
+    </tbody>
+  <% end %>
+  <thead>
+    <tr>
+      <th colspan="2" style="text-align: center">Elasticsearch</th>
+    </tr>
+    <tr>
+      <th>Data</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Version</td>
+      <td><%= @info.elasticsearch.version %></td>
+    </tr>
+    <tr>
+      <td>Latency</td>
+      <td><%= @info.elasticsearch.latency %>ms</td>
+    </tr>
+    <tr>
+      <td>Date</td>
+      <td><%= @info.elasticsearch.date %></td>
+    </tr>
+    <tr>
+      <td>Status</td>
+      <td><%= @info.elasticsearch.status %></td>
+    </tr>
+    <tr>
+      <td>Indexes</td>
+        <td>
+          <% @info.elasticsearch.indexes.each do |index| %>
+            <dl>
+              <dt><%= index %></dt>
+              <dd><%= @info.elasticsearch.docs_per_index[index] %><%= " document".pluralize(@info.elasticsearch.docs_per_index[index]) %></dd>
+            </dl>
+          <% end %>
+        </td>
+    </tr>
+  </tbody>
+  <thead>
+    <tr>
+      <th colspan="2" style="text-align: center">Git (Local)</th>
+    </tr>
+    <tr>
+      <th>Data</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td>Ref</td>
+        <td>HEAD</td>
+      </tr>
+      <tr>
+        <td>Commit</td>
+        <td><%= @info.git.local.commit %>)</td>
+      </tr>
+      <tr>
+        <td>Tag</td>
+        <td>
+          <% if @info.git.local.tag.present? %>
+            <%= @info.git.local.tag %>
+          <% else %>
+            (none)
+          <% end %>
+        </td>
+      </tr>
+        <tr>
+          <td>Diff (Origin)</td>
+          <td>
+            <ul>
+              <% compare = @info.git.local.compare(@info.git.origin) %>
+              <% if compare.behind? %>
+                <li><%= compare.behind %> <%= "commit".pluralize(compare.behind) %> behind</li>
+              <% end %>
+              <% if compare.ahead? %>
+                <li><%= compare.ahead %> <%= "commit".pluralize(compare.ahead) %> ahead</li>
+              <% end %>
+              <li>Common Commit: <%= link_to(compare.common, @info.git.origin.commit_url(compare.common), target: "_blank") %></li>
+            </ul>
+          </td>
+        </tr>
+    </tbody>
+  <thead>
+    <tr>
+      <th colspan="2" style="text-align: center">Git (Origin)</th>
+    </tr>
+    <tr>
+      <th>Data</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td>Ref</td>
+        <td><%= @info.git.origin.remote %>/<%= @info.git.origin.branch %></td>
+      </tr>
+      <tr>
+        <td>Commit</td>
+        <td><%= link_to(@info.git.origin.short_commit, @info.git.origin.current_commit_url, target: "_blank") %> (<%= @info.git.origin.commit %>)</td>
+      </tr>
+      <tr>
+        <td>Tag</td>
+        <td>
+          <% if @info.git.origin.tag.present? %>
+            <%= link_to(@info.git.origin.tag, @info.git.origin.current_tag_url, target: "_blank") %>
+          <% else %>
+            (none)
+          <% end %>
+        </td>
+      </tr>
+      <% if @info.git.upstream.present? %>
+        <tr>
+          <td>Diff (Upstream)</td>
+          <td>
+            <ul>
+              <% compare = @info.git.origin.compare(@info.git.upstream) %>
+              <% if compare.behind? %>
+                <li><%= compare.behind %> <%= "commit".pluralize(compare.behind) %> behind</li>
+              <% end %>
+              <% if compare.ahead? %>
+                <li><%= compare.ahead %> <%= "commit".pluralize(compare.ahead) %> ahead</li>
+              <% end %>
+              <li>Common Commit: <%= link_to(compare.common, @info.git.origin.commit_url(compare.common), target: "_blank") %></li>
+            </ul>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  <% if @info.git.upstream.present? %>
+    <thead>
+      <tr>
+        <th colspan="2" style="text-align: center">Git (Upstream)</th>
+      </tr>
+      <tr>
+        <th>Data</th>
+        <th>Value</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Ref</td>
+        <td><%= @info.git.upstream.remote %>/<%= @info.git.upstream.branch %></td>
+      </tr>
+      <tr>
+        <td>Commit</td>
+        <td><%= link_to(@info.git.upstream.short_commit, @info.git.upstream.current_commit_url, target: "_blank") %> (<%= @info.git.upstream.commit %>)</td>
+      </tr>
+      <tr>
+        <td>Tag</td>
+        <td>
+          <% if @info.git.upstream.tag.present? %>
+            <%= link_to(@info.git.upstream.tag, @info.git.upstream.current_tag_url, target: "_blank") %>
+          <% else %>
+            (none)
+          <% end %>
+        </td>
+      </tr>
+    </tbody>
+  <% end %>
+  <thead>
+    <tr>
+      <th colspan="2" style="text-align: center">Miscellaneous</th>
+    </tr>
+    <tr>
+      <th>Data</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Version</td>
+      <td><%= @info.misc.version %></td>
+    </tr>
+    <tr>
+      <td>Date</td>
+      <td><%= @info.misc.date %></td>
+    </tr>
+    <tr>
+      <td>Environment</td>
+      <td><%= @info.misc.environment %></td>
+    </tr>
+    <tr>
+      <td>Name</td>
+      <td><%= @info.misc.name %></td>
+    </tr>
+    <tr>
+      <td>Description</td>
+      <td><%= @info.misc.description %></td>
+    </tr>
+    <tr>
+      <td>URL</td>
+      <td><%= @info.misc.url %></td>
+    </tr>
+    <tr>
+      <td>Safe Mode</td>
+      <td><%= @info.misc.safe_mode %></td>
+    </tr>
+    <tr>
+      <td>Hostname</td>
+      <td><%= @info.misc.hostname %>
+    </tr>
+    <tr>
+      <td>Timezone</td>
+      <td><%= @info.misc.timezone %></td>
+    </tr>
+    <tr>
+      <td>Ruby Version</td>
+      <td><%= @info.misc.ruby_version %></td>
+    </tr>
+    <tr>
+      <td>Rails Version</td>
+      <td><%= @info.misc.rails_version %></td>
+    </tr>
+    <tr>
+      <td>Node Version</td>
+      <td><%= @info.misc.node_version %></td>
+    </tr>
+    <tr>
+      <td>Alpine Version</td>
+      <td><%= @info.misc.alpine_version %></td>
+    </tr>
+  </tbody>
+</table>

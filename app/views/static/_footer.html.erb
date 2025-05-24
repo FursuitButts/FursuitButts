@@ -1,6 +1,6 @@
 <footer id="page-footer">
   <span class="left">
-    Running <%= FemboyFans.config.app_name %> (<%= link_to(GitHelper.instance.public_ref.short_hash, GitHelper.instance.public_commit_url) %>)
+    Running <%= FemboyFans.config.app_name %> (<%= link_to(GitHelper.instance.public_ref.short_commit, GitHelper.instance.public_commit_url) %>)
     – <%= link_to "Rules", rules_path %>
     – <%= link_to "Takedowns", takedown_static_path %>
     – <%= link_to "Privacy", privacy_policy_path %>

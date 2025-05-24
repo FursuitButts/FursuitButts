@@ -374,6 +374,7 @@ Rails.application.routes.draw do
     end
   end
   resources :stats, only: %i[index]
+  resource :system, only: %i[show]
   resources :tags, constraints: id_name_constraint, only: %i[index show edit update] do
     collection do
       get :preview
