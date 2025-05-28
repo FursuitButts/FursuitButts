@@ -90,7 +90,7 @@ class TagImplication < TagRelationship
     def absence_of_circular_relation
       # We don't want a -> b && b -> a chains
       if descendants.include?(antecedent_name)
-        errors.add(:base, "Tag implication can not create a circular relation with another tag implication")
+        errors.add(:base, "Tag implication cannot create a circular relation with another tag implication")
       end
     end
 
@@ -204,9 +204,9 @@ class TagImplication < TagRelationship
       end
 
       CurrentUser.scoped(approver) do
-        update(status: "pending")
+        update(status: "retired")
         CurrentUser.as_system { update_posts_undo }
-        forum_updater.update(retirement_message, "UNDONE") if update_topic
+        forum_updater.update(retirement_message, "RETIRED") if update_topic
       end
       tag_rel_undos.update_all(applied: true)
     end

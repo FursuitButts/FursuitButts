@@ -1,8 +1,8 @@
 
 
 @each $tag-category, $tag-category-name in $tag-categories {
+  .tag-type-#{$tag-category},
   .category-#{$tag-category} a,
-  a.tag-type-#{$tag-category},
   .ui-widget-content .category-#{$tag-category} a,
   .ui-widget-content a.tag-type-#{$tag-category} {
 

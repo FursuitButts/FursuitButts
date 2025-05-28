@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 class TagAlias < TagRelationship
-  has_many :tag_rel_undos, as: :tag_rel
-
   attr_accessor :skip_forum
 
   after_save :create_mod_action
@@ -155,7 +153,6 @@ class TagAlias < TagRelationship
       update_column(:undo_data, undo_data - mover.applied.as_json)
       forum_updater.update(retirement_message, "RETIRED") if update_topic
     end
-    tag_rel_undos.update_all(applied: true)
   end
 
   def process!(update_topic: true)

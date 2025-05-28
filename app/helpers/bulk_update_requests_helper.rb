@@ -76,7 +76,7 @@ module BulkUpdateRequestsHelper
   end
 
   def script_with_line_breaks(bur, with_decorations:)
-    cache_key = "#{CurrentUser.is_admin? ? 'mod' : ''}#{with_decorations ? 'color' : ''}#{bur.updated_at}"
+    cache_key = "#{CurrentUser.is_admin? ? 'mod:' : ''}#{with_decorations ? 'color:' : ''}#{bur.updated_at.utc.iso8601}"
     Cache.fetch(cache_key, expires_in: 1.hour) do
       script_tokenized = BulkUpdateRequestImporter.tokenize(bur.script)
       script_tags = collect_script_tags(script_tokenized)
@@ -94,5 +94,17 @@ module BulkUpdateRequestsHelper
     rescue BulkUpdateRequestImporter::Error
       "!!!!!!Invalid Script!!!!!!"
     end
+  end
+
+  def category_changes_for_bur(bur)
+    tokenized = BulkUpdateRequestImporter.tokenize(bur.script).select { |(cmd)| cmd == :create_alias }
+    changes = []
+    tokenized.each do |_cmd, antecedent, consequent, _comment|
+      mover = TagMover.new(antecedent, consequent, tcr: bur)
+      tag, category = mover.tag_category_update
+      next if category.blank?
+      changes << [tag, category]
+    end
+    changes
   end
 end
