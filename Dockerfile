@@ -1,6 +1,6 @@
-FROM ruby:3.3.1-alpine3.20 AS ruby-builder
+FROM ruby:3.3.8-alpine3.21 AS ruby-builder
 
-RUN apk --no-cache add build-base cmake git glib-dev postgresql15-dev gcompat ragel
+RUN apk --no-cache add build-base cmake git glib-dev postgresql17-dev gcompat ragel yaml-dev
 
 COPY lib/dtext_rb/ lib/dtext_rb/
 
@@ -15,16 +15,16 @@ RUN rm -rf /usr/local/bundle/cache/*.gem
 RUN find /usr/local/bundle/gems/ -name "*.c" -delete
 RUN find /usr/local/bundle/gems/ -name "*.o" -delete
 
-FROM node:20-alpine3.20 AS node-builder
+FROM node:20-alpine3.21 AS node-builder
 RUN apk --no-cache add git
 WORKDIR /app
 COPY package.json yarn.lock ./
 RUN corepack enable && corepack prepare --activate && yarn install
 
 
-FROM ruby:3.3.1-alpine3.20
+FROM ruby:3.3.8-alpine3.21
 RUN apk --no-cache add ffmpeg vips \
-  postgresql15-client \
+  postgresql17-client \
   git jemalloc tzdata \
   sudo xz gcompat
 

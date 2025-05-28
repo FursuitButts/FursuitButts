@@ -5,6 +5,6 @@ class TagAliasUndoJob < ApplicationJob
 
   def perform(*args)
     ta = TagAlias.find(args[0])
-    ta.process_undo!(update_topic: args[1])
+    ta.process_undo!(user: User.find(args[1]), update_topic: args[2])
   end
 end

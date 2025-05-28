@@ -10,21 +10,8 @@ module DurationParser
     size = Float($1)
     unit = abbrevs.fetch($2.downcase)
 
-    case unit
-    when "seconds"
-      size.seconds
-    when "minutes"
-      size.minutes
-    when "hours"
-      size.hours
-    when "days"
-      size.days
-    when "weeks"
-      size.weeks
-    when "months"
-      size * (365.25.days / 12)
-    when "years"
-      size * 365.25.days
+    if %w[seconds minutes hours days weeks months years].include?(unit)
+      size.public_send(unit)
     else
       raise(NotImplementedError)
     end

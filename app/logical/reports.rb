@@ -27,6 +27,17 @@ module Reports
 
   # Hash { "viewCount" => 0, "searchCount" => 0, "missedSearchCount" => 0, "schemaVersion" => 0, "dbVersion" => "", "healthy" => true, "error" => nil }[]
   def get_stats
+    unless enabled?
+      return {
+        "viewCount"         => 0,
+        "searchCount"       => 0,
+        "missedSearchCount" => 0,
+        "schemaVersion"     => 0,
+        "dbVersion"         => "NONE",
+        "healthy"           => true,
+        "error"             => nil,
+      }
+    end
     Cache.fetch("reports-stats", expires_in: 1.minute) do
       get("/stats")
     end

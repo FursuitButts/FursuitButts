@@ -15,6 +15,7 @@ class TagRelationship < ApplicationRecord
   scope :active, -> { approved }
   scope :approved, -> { where(status: %w[active processing queued]) }
   scope :deleted, -> { where(status: "deleted") }
+  scope :not_deleted, -> { where.not(status: "deleted") }
   scope :pending, -> { where(status: "pending") }
   scope :retired, -> { where(status: "retired") }
   scope :duplicate_relevant, -> { where(status: %w[active processing queued pending]) }
@@ -222,7 +223,13 @@ class TagRelationship < ApplicationRecord
 
   def antecedent_and_consequent_are_different
     if antecedent_name == consequent_name
-      errors.add(:base, "Cannot alias or implicate a tag to itself")
+      if is_a?(TagAlias)
+        errors.add(:base, "Cannot alias a tag to itself")
+      elsif is_a?(TagImplication)
+        errors.add(:base, "Cannot implicate a tag to itself")
+      else
+        errors.add(:base, "Antecedent and consequent tags must be different")
+      end
     end
   end
 

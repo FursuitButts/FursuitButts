@@ -235,6 +235,8 @@ class User < ApplicationRecord
   has_many :notifications
   has_many :user_events
 
+  scope :has_blacklisted_tag, ->(name) { where_regex(:blacklisted_tags, "(^| )[~-]?#{Regexp.escape(name)}( |$)", flags: "ni") }
+
   belongs_to :avatar, class_name: "Post", optional: true
   accepts_nested_attributes_for :dmail_filter
 
@@ -579,6 +581,23 @@ class User < ApplicationRecord
   end
 
   module BlacklistMethods
+    extend ActiveSupport::Concern
+
+    class_methods do
+      def rewrite_blacklists!(old_name, new_name)
+        has_blacklisted_tag(old_name).find_each do |user|
+          user.with_lock do
+            user.rewrite_blacklist(old_name, new_name)
+            user.save!
+          end
+        end
+      end
+    end
+
+    def rewrite_blacklist(old_name, new_name)
+      blacklisted_tags.gsub!(/(?:^| )([-~])?#{Regexp.escape(old_name)}(?: |$)/i) { " #{$1}#{new_name} " }
+    end
+
     def normalize_blacklisted_tags
       self.blacklisted_tags = TagAlias.to_aliased_query(blacklisted_tags, comments: true) if blacklisted_tags.present?
     end

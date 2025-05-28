@@ -1,6 +1,7 @@
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
+SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -28,8 +29,8 @@ COMMENT ON EXTENSION pg_trgm IS 'text similarity measurement and index searching
 --
 
 CREATE FUNCTION public.posts_trigger_change_seq() RETURNS trigger
-  LANGUAGE plpgsql
-AS $$
+    LANGUAGE plpgsql
+    AS $$
 DECLARE
   old_md5 text;
   new_md5 text;
@@ -2222,7 +2223,8 @@ CREATE TABLE public.tag_aliases (
     approver_id integer,
     forum_post_id integer,
     forum_topic_id integer,
-    reason text DEFAULT ''::text NOT NULL
+    reason text DEFAULT ''::text NOT NULL,
+    undo_data jsonb DEFAULT '[]'::jsonb NOT NULL
 );
 
 
@@ -2296,7 +2298,8 @@ CREATE TABLE public.tag_implications (
     forum_post_id integer,
     forum_topic_id integer,
     descendant_names text[] DEFAULT '{}'::text[],
-    reason text DEFAULT ''::text NOT NULL
+    reason text DEFAULT ''::text NOT NULL,
+    undo_data jsonb DEFAULT '[]'::jsonb NOT NULL
 );
 
 
@@ -7180,6 +7183,7 @@ ALTER TABLE ONLY public.mascot_media_assets
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20250526212423'),
 ('20250426152444'),
 ('20250421070836'),
 ('20250421055132'),

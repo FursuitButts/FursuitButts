@@ -373,6 +373,14 @@ class Pool < ApplicationRecord
 
   include LogMethods
 
+  def self.rewrite_wiki_links!(old_name, new_name)
+    Pool.linked_to(old_name).each do |pool|
+      pool.with_lock do
+        pool.update!(description: DTextHelper.rewrite_wiki_links(pool.description, old_name, new_name))
+      end
+    end
+  end
+
   def self.available_includes
     %i[creator]
   end

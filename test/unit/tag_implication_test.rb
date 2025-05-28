@@ -132,7 +132,7 @@ class TagImplicationTest < ActiveSupport::TestCase
       ti = build(:tag_implication, antecedent_name: "a", consequent_name: "a")
 
       assert(ti.invalid?)
-      assert_includes(ti.errors[:base], "Cannot alias or implicate a tag to itself")
+      assert_includes(ti.errors[:base], "Cannot implicate a tag to itself")
     end
 
     should "not validate when a circular relation is created" do

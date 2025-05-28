@@ -339,6 +339,14 @@ class WikiPage < ApplicationRecord
     titled(title) || new(body: "The wiki page \"#{title}\" was not found.")
   end
 
+  def self.rewrite_wiki_links!(old_name, new_name)
+    WikiPage.linked_to(old_name).each do |wiki|
+      wiki.with_lock do
+        wiki.update!(description: DTextHelper.rewrite_wiki_links(wiki.description, old_name, new_name))
+      end
+    end
+  end
+
   def self.available_includes
     %i[artist dtext_links help_page tag]
   end

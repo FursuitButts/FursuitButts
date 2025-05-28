@@ -81,3 +81,7 @@ gem "active_record_extended", "~> 3.3"
 gem "irb", "~> 1.15.2"
 
 gem "recursive-open-struct", "~> 2.0"
+
+gem "csv", "~> 3.3"
+
+gem "abbrev", "~> 0.1.2"

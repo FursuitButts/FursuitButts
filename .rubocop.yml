@@ -47,6 +47,7 @@ Metrics/BlockLength:
     - FactoryBot.define
     - should
     - should_eventually
+    - scoped
   Exclude:
     - config/routes.rb
     - config/environments/*.rb
