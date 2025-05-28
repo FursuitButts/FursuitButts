@@ -89,7 +89,7 @@
       <li class="spacer"></li>
 
       <%= li_link_to_if(mark = policy(comment).warning?, "Mark", "", class: "comment-mark-link") %>
-      <%= li_link_to_if(history = policy(EditHistory).index?, "History", edit_history_path(id: comment.id, type: "Comment"), class: "comment-edit-history-link") %>
+      <%= li_link_to_if(history = policy(EditHistory).index?, "History", comment_edits_path(comment), class: "comment-edit-history-link") %>
       <%= li_link_to_if(vote = CommentVotePolicy.new(CurrentUser.user, comment).index?, "Votes", { controller: "comments/votes", search: { comment_id: comment.id } }, class: "comment-vote-history-link") %>
       <% if mark || history || vote %>
         <li class="dot"></li>

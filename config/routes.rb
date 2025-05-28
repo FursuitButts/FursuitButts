@@ -136,6 +136,7 @@ Rails.application.routes.draw do
   end
   resources :comments do
     resource :votes, controller: "comments/votes", only: %i[create destroy]
+    resource :edits, controller: "edit_histories", only: %i[show]
     collection do
       get :search
       resources :votes, controller: "comments/votes", as: "comment_votes", only: %i[index delete lock] do
@@ -187,6 +188,7 @@ Rails.application.routes.draw do
       end
       resources :posts, controller: "forums/posts", as: "forum_posts" do
         resource :votes, controller: "forums/posts/votes", only: %i[create destroy]
+        resource :edits, controller: "edit_histories", only: %i[show]
         member do
           put :hide
           put :unhide

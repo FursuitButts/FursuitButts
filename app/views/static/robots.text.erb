@@ -12,6 +12,7 @@ Disallow: <%= bans_path %>
 Disallow: <%= bulk_update_requests_path %>
 Disallow: <%= comment_votes_path(comment_id: "*") %>
 Disallow: <%= url_for(controller: "comments/votes", action: "index") %>
+Disallow: <%= comment_edits_path(comment_id: "*") %>
 Disallow: <%= dmails_path %>
 Disallow: <%= dtext_links_path %>
 Disallow: <%= dtext_preview_path %>
@@ -21,6 +22,7 @@ Disallow: /email
 Disallow: <%= favorites_path %>
 Disallow: <%= forum_categories_path %>
 Disallow: <%= forum_post_votes_path(forum_post_id: "*") %>
+Disallow: <%= forum_post_edits_path(forum_post_id: "*") %>
 Disallow: <%= url_for(controller: "forums/posts/votes", action: "index") %>
 Disallow: <%= ip_bans_path %>
 Disallow: <%= mascots_path %>

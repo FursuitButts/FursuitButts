@@ -4,6 +4,10 @@ class EditHistory < ApplicationRecord
   belongs_to :versionable, polymorphic: true
   belongs_to :user
 
+  VERSIONABLE_TYPES = %w[ForumPost Comment].freeze
+
+  validates :versionable_type, inclusion: { in: VERSIONABLE_TYPES }
+
   VALUES = %i[old_topic_id old_topic_title new_topic_id new_topic_title].freeze
   store_accessor :extra_data, *VALUES
 

@@ -76,7 +76,7 @@
             <li>|</li>
           <% end %>
           <% if edits %>
-            <li><%= link_to("Show Edits", edit_history_path(id: forum_post.id, type: "ForumPost")) %></li>
+            <li><%= link_to("Show Edits", forum_post_edits_path(forum_post)) %></li>
           <% end %>
           <% if mark %>
             <%= render "user_warnable/buttons", model: forum_post %>
