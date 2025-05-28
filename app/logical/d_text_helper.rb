@@ -47,8 +47,13 @@ module DTextHelper
     fragment = parse_html(html)
 
     fragment.css("a.dtext-wiki-link").each do |node| # rubocop:disable Metrics/BlockLength
-      path = Addressable::URI.parse(node["href"]).path
-      name = path[%r{\A/wiki_pages/(.*)\z}i, 1]
+      parsed = Addressable::URI.parse(node["href"])
+      path = parsed.path
+      if path.include?("show_or_new")
+        name = parsed.query_values["title"]
+      else
+        name = path[%r{\A/wiki_pages/((?:(?!show_or_new).)*)\z}i, 1]
+      end
       name = CGI.unescape(name)
       name = WikiPage.normalize_title(name)
       wiki = wiki_pages.find { |w| w.title == name }
