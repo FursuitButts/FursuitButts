@@ -2,7 +2,7 @@
 
 module WikiPages
   class VersionsController < ApplicationController
-    respond_to :html, :json
+    respond_to(:html, :json)
 
     def index
       @wiki_page_versions = authorize(WikiPageVersion).html_includes(request, :updater)

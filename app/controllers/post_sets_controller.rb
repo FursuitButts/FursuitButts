@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class PostSetsController < ApplicationController
-  before_action :ensure_lockdown_disabled, except: %i[index show]
-  respond_to :html, :json
+  before_action(:ensure_lockdown_disabled, except: %i[index show])
+  respond_to(:html, :json)
 
   def index
     authorize(PostSet)

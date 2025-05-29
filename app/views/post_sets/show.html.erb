@@ -1,5 +1,5 @@
 <div class="set-header"><span class="set-name"><%= @post_set.name %></span> by
-  <span class="set-creator"><%= link_to_user @post_set.creator %></span>
+  <span class="set-creator"><%= link_to_user(@post_set.creator) %></span>
   <% if @post_set.is_public %>
     <div class="set-status set-status-public" title="This set is public">Public</div>
   <% else %>
@@ -13,7 +13,7 @@
   <% end %>
 </div>
 <div class="set-shortname">
-  Short Name: <%= link_to @post_set.shortname, posts_path(tags: "set:#{@post_set.shortname}") %>
+  Short Name: <%= link_to(@post_set.shortname, posts_path(tags: "set:#{@post_set.shortname}")) %>
 </div>
 Created: <%= time_ago_in_words_tagged(@post_set.created_at) %> |
 Updated: <%= time_ago_in_words_tagged(@post_set.updated_at) %>
@@ -21,11 +21,11 @@ Updated: <%= time_ago_in_words_tagged(@post_set.updated_at) %>
 <% if @post_set.description.blank? %>
   <div class="set-description">No description.</div>
 <% else %>
-  <div class="set-description dtext-container"><%= format_text @post_set.description %></div>
+  <div class="set-description dtext-container"><%= format_text(@post_set.description) %></div>
 <% end %>
 <div class="set-description-bottom"></div>
 
-<span class="set-viewposts"><%= link_to "» View Posts (#{@post_set.post_count})", posts_path(tags: "set:#{@post_set.shortname}") %></span><br/>
+<span class="set-viewposts"><%= link_to("» View Posts (#{@post_set.post_count})", posts_path(tags: "set:#{@post_set.shortname}")) %></span><br/>
 <br/>
 
 <% if @post_set.post_count == 0 %>
@@ -37,7 +37,7 @@ Updated: <%= time_ago_in_words_tagged(@post_set.updated_at) %>
       <ul>
         <li>On a post's page, click <strong>Add to Set</strong> under <strong>Options</strong> in the sidebar,
           select a set, and click <strong>Add</strong></li>
-        <li>When viewing the <%= link_to "post index", posts_path %>, select
+        <li>When viewing the <%= link_to("post index", posts_path) %>, select
           <strong>Add to set...</strong> from the mode dropdown under the search bar, select a set from the new
           dropdown, and click a post thumbnail to add it to the set.
         </li>
@@ -50,14 +50,14 @@ Updated: <%= time_ago_in_words_tagged(@post_set.updated_at) %>
     <ul>
       <li>On a post's page, click <strong>Add to Set</strong> under <strong>Options</strong> in the sidebar, select
         a set, and click <strong>Add</strong></li>
-      <li>When viewing the <%= link_to "post index", posts_path %>, select
+      <li>When viewing the <%= link_to("post index", posts_path) %>, select
         <strong>Add to set...</strong> from the mode dropdown under the search bar, select a set from the new
         dropdown, and click a post thumbnail to add it to the set.
       </li>
     </ul>
     To remove posts from this set:
     <ul>
-      <li>When viewing the <%= link_to "post index", posts_path %>, select
+      <li>When viewing the <%= link_to("post index", posts_path) %>, select
         <strong>Remove from set...</strong> from the mode dropdown under the search bar, select a set from the new
         dropdown, and click a post thumbnail to remove it to the set.
       </li>
@@ -65,7 +65,7 @@ Updated: <%= time_ago_in_words_tagged(@post_set.updated_at) %>
   </div>
 <% end %>
 
-<%= render partial: "secondary_links" %>
+<%= render(partial: "secondary_links") %>
 
 <% content_for(:page_title) do %>
   Set - <%= @post_set.name %>

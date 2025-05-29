@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 class UserRevertTest < ActiveSupport::TestCase
-  context "Reverting a user's changes" do
+  context("Reverting a user's changes") do
     setup do
       @creator = create(:user)
       @user = create(:user)
@@ -20,14 +20,14 @@ class UserRevertTest < ActiveSupport::TestCase
 
     subject { UserRevert.new(@user.id) }
 
-    should "have the correct data" do
+    should("have the correct data") do
       assert_equal("bbb ccc xxx", @post.tag_string)
       assert_equal("", @post.source)
       assert_equal("e", @post.rating)
     end
 
-    context "when processed" do
-      should "revert the user's changes" do
+    context("when processed") do
+      should("revert the user's changes") do
         as(@user) do
           subject.process
         end
@@ -38,12 +38,12 @@ class UserRevertTest < ActiveSupport::TestCase
         assert_equal("q", @post.rating)
       end
 
-      context "when the user has an upload" do
+      context("when the user has an upload") do
         setup do
           as(@user) { create(:post, uploader: @user) }
         end
 
-        should "not raise" do
+        should("not raise") do
           as(@user) do
             assert_nothing_raised { subject.process }
           end

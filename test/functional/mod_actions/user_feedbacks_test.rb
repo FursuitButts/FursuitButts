@@ -1,20 +1,20 @@
 # frozen_string_literal: true
 
-require "test_helper"
-require_relative "helper"
+require("test_helper")
+require_relative("helper")
 
 module ModActions
   class UserFeedbacksTest < ActiveSupport::TestCase
-    include Helper
-    include Rails.application.routes.url_helpers
+    include(Helper)
+    include(Rails.application.routes.url_helpers)
 
-    context "mod actions for user feedbacks" do
+    context("mod actions for user feedbacks") do
       setup do
         @feedback = create(:user_feedback, user: @user, body: "test")
         set_count!
       end
 
-      should "format user_feedback_create correctly" do
+      should("format user_feedback_create correctly") do
         @feedback = create(:user_feedback, user: @user, body: "test")
 
         assert_matches(
@@ -27,7 +27,7 @@ module ModActions
         )
       end
 
-      should "format user_feedback_delete correctly" do
+      should("format user_feedback_delete correctly") do
         @feedback.update(is_deleted: true)
 
         assert_matches(
@@ -40,7 +40,7 @@ module ModActions
         )
       end
 
-      should "format user_feedback_undelete correctly" do
+      should("format user_feedback_undelete correctly") do
         @feedback.update_column(:is_deleted, true)
         @feedback.update(is_deleted: false)
 
@@ -54,7 +54,7 @@ module ModActions
         )
       end
 
-      should "format user_feedback_destroy correctly" do
+      should("format user_feedback_destroy correctly") do
         @feedback.destroy
 
         assert_matches(
@@ -67,12 +67,12 @@ module ModActions
         )
       end
 
-      context "user_feedback_update" do
+      context("user_feedback_update") do
         setup do
           @original = @feedback.dup
         end
 
-        should "format no changes correctly" do
+        should("format no changes correctly") do
           @feedback.save
 
           assert_matches(
@@ -87,7 +87,7 @@ module ModActions
           )
         end
 
-        should "format type changes correctly" do
+        should("format type changes correctly") do
           @feedback.update!(category: "neutral")
 
           assert_matches(
@@ -105,7 +105,7 @@ module ModActions
           )
         end
 
-        should "format reason changes correctly" do
+        should("format reason changes correctly") do
           @feedback.update!(body: "new")
 
           assert_matches(
@@ -123,7 +123,7 @@ module ModActions
           )
         end
 
-        should "format all changes correctly" do
+        should("format all changes correctly") do
           @feedback.update!(category: "neutral", body: "new")
 
           assert_matches(

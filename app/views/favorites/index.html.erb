@@ -1,16 +1,16 @@
 <aside id="sidebar">
-  <%= render "posts/partials/common/search", path: posts_path, tags: "fav:#{@user.name} ", tags_dom_id: "tags" %>
+  <%= render("posts/partials/common/search", path: posts_path, tags: "fav:#{@user.name} ", tags_dom_id: "tags") %>
   <div style="color:darkorange;margin-bottom:0.5rem;">*Searching favorites does not preserve the order they were added in.<br/></div>
   <% if CurrentUser.user.is_member? %>
-    <%= render "posts/partials/index/mode_menu" %>
+    <%= render("posts/partials/index/mode_menu") %>
   <% end %>
 
-  <%= render "posts/partials/index/blacklist" %>
+  <%= render("posts/partials/index/blacklist") %>
 
   <section id="related-box">
     <h1>Related</h1>
     <ul id="related-list">
-      <li><%= link_to "Random post", random_posts_path(tags: @favorite_set.public_tag_string), "id": "random-post", "rel": "nofollow", "data-shortcut": "r" %></li>
+      <li><%= link_to("Random post", random_posts_path(tags: @favorite_set.public_tag_string), "id": "random-post", "rel": "nofollow", "data-shortcut": "r") %></li>
     </ul>
   </section>
 </aside>
@@ -18,7 +18,7 @@
 <section id="content">
   <h1>Favorites</h1>
 
-  <%= render "posts/partials/index/edit" %>
+  <%= render("posts/partials/index/edit") %>
 
   <div id="posts" class="user-disable-cropped-<%= FemboyFans.config.enable_image_cropping? && CurrentUser.user.disable_cropped_thumbnails? %>">
     <div id="posts-container">
@@ -28,7 +28,7 @@
   </div>
 </section>
 
-<%= render "posts/partials/common/secondary_links" %>
+<%= render("posts/partials/common/secondary_links") %>
 
 <% content_for(:page_title) do %>
   Favorites - <%= @user.pretty_name %>

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module EditHistoryHelper
   def link_to_edit_history(input, **)
     case input

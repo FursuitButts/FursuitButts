@@ -2,7 +2,7 @@
 
 module Pools
   class VersionsController < ApplicationController
-    respond_to :html, :json
+    respond_to(:html, :json)
 
     def index
       if (pool_id = params.dig(:search, :pool_id)).present?

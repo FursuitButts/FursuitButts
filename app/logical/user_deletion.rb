@@ -4,7 +4,7 @@ class UserDeletion
   class ValidationError < StandardError
   end
 
-  attr_reader :user, :password, :request
+  attr_reader(:user, :password, :request)
 
   def initialize(user, password, request)
     @user = user

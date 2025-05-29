@@ -5,13 +5,13 @@
 
 <ul class="forum-post-votes-list forum-post-votes" id="forum-post-votes-for-<%= forum_post.id %>">
   <% if own_vote %>
-    <%= render "forums/posts/votes/vote", vote: own_vote, forum_post: forum_post, votable: votable %>
+    <%= render("forums/posts/votes/vote", vote: own_vote, forum_post: forum_post, votable: votable) %>
   <% end %>
 
   <%= render(partial: "forums/posts/votes/vote", collection: other_votes, as: :vote, locals: { forum_post: forum_post, votable: false }) %>
 
   <% if forum_post.voting_active? && votable && forum_post.creator != CurrentUser.user %>
-    <%= render "forums/posts/votes/add_vote", forum_post: forum_post, show: !own_vote %>
+    <%= render("forums/posts/votes/add_vote", forum_post: forum_post, show: !own_vote) %>
   <% end %>
 
 </ul>

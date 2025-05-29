@@ -1,20 +1,20 @@
 # frozen_string_literal: true
 
-require "test_helper"
-require_relative "helper"
+require("test_helper")
+require_relative("helper")
 
 module PostEvents
   class FormattingTest < ActiveSupport::TestCase
-    include Helper
-    include Rails.application.routes.url_helpers
+    include(Helper)
+    include(Rails.application.routes.url_helpers)
 
-    context "post events for" do
+    context("post events for") do
       setup do
         @post = create(:post)
       end
 
-      context "deletions" do
-        should "format deleted correctly" do
+      context("deletions") do
+        should("format deleted correctly") do
           @post.delete!("Test")
 
           assert_matches(
@@ -25,7 +25,7 @@ module PostEvents
           )
         end
 
-        should "format undeleted correctly" do
+        should("format undeleted correctly") do
           @post.update_column(:is_deleted, true)
           @post.undelete!
 
@@ -37,8 +37,8 @@ module PostEvents
         end
       end
 
-      context "approvals" do
-        should "format approved correctly" do
+      context("approvals") do
+        should("format approved correctly") do
           @post.approve!
 
           assert_matches(
@@ -48,7 +48,7 @@ module PostEvents
           )
         end
 
-        should "format unapproved correctly" do
+        should("format unapproved correctly") do
           @post.update_column(:is_pending, false)
           @post.unapprove!
 
@@ -60,8 +60,8 @@ module PostEvents
         end
       end
 
-      context "flags" do
-        should "format flag_created correctly" do
+      context("flags") do
+        should("format flag_created correctly") do
           @flag = @post.flags.create!(reason_name: "uploading_guidelines")
 
           reason = FemboyFans.config.flag_reasons.find { |r| r[:name] == "uploading_guidelines" }[:reason]
@@ -74,7 +74,7 @@ module PostEvents
           )
         end
 
-        should "format flag_removed correctly" do
+        should("format flag_removed correctly") do
           @post2 = create(:post, parent_id: @post.id)
           @post2.give_favorites_to_parent!
 
@@ -88,8 +88,8 @@ module PostEvents
         end
       end
 
-      context "locks" do
-        should "format rating_locked correctly" do
+      context("locks") do
+        should("format rating_locked correctly") do
           @post.update!(is_rating_locked: true)
 
           assert_matches(
@@ -99,7 +99,7 @@ module PostEvents
           )
         end
 
-        should "format rating_unlocked correctly" do
+        should("format rating_unlocked correctly") do
           @post.update_column(:is_rating_locked, true)
           @post.update!(is_rating_locked: false)
 
@@ -110,7 +110,7 @@ module PostEvents
           )
         end
 
-        should "format status_locked correctly" do
+        should("format status_locked correctly") do
           @post.update!(is_status_locked: true)
 
           assert_matches(
@@ -120,7 +120,7 @@ module PostEvents
           )
         end
 
-        should "format status_unlocked correctly" do
+        should("format status_unlocked correctly") do
           @post.update_column(:is_status_locked, true)
           @post.update!(is_status_locked: false)
 
@@ -131,7 +131,7 @@ module PostEvents
           )
         end
 
-        should "format note_locked correctly" do
+        should("format note_locked correctly") do
           @post.update!(is_note_locked: true)
 
           assert_matches(
@@ -141,7 +141,7 @@ module PostEvents
           )
         end
 
-        should "format note_unlocked correctly" do
+        should("format note_unlocked correctly") do
           @post.update_column(:is_note_locked, true)
           @post.update!(is_note_locked: false)
 
@@ -153,7 +153,7 @@ module PostEvents
         end
       end
 
-      context "replacements" do
+      context("replacements") do
         setup do
           @upload = create(:png_upload, uploader: @admin)
           @post = @upload.post
@@ -161,7 +161,7 @@ module PostEvents
           set_count!
         end
 
-        should "format replacement_accepted correctly" do
+        should("format replacement_accepted correctly") do
           previous_md5 = @post.md5
           @replacement.approve!(penalize_current_uploader: true)
 
@@ -175,7 +175,7 @@ module PostEvents
           )
         end
 
-        should "format replacement_rejected correctly" do
+        should("format replacement_rejected correctly") do
           @replacement.reject!
 
           assert_matches(
@@ -186,7 +186,7 @@ module PostEvents
           )
         end
 
-        should "format replacement_promoted correctly" do
+        should("format replacement_promoted correctly") do
           @post2 = @replacement.promote!.post
 
           assert_matches(
@@ -198,8 +198,8 @@ module PostEvents
           )
         end
 
-        context "replacement_deleted" do
-          should "format correctly for admins" do
+        context("replacement_deleted") do
+          should("format correctly for admins") do
             @replacement.destroy
 
             assert_matches(
@@ -212,7 +212,7 @@ module PostEvents
             )
           end
 
-          should "format correctly for users" do
+          should("format correctly for users") do
             @replacement.destroy
 
             as(@user) do
@@ -228,8 +228,8 @@ module PostEvents
         end
       end
 
-      context "misc" do
-        should "format expunged correctly" do
+      context("misc") do
+        should("format expunged correctly") do
           @post.expunge!
 
           assert_matches(
@@ -239,7 +239,7 @@ module PostEvents
           )
         end
 
-        should "format changed_bg_color correctly" do
+        should("format changed_bg_color correctly") do
           @post.update!(bg_color: "000000")
 
           assert_matches(
@@ -250,7 +250,7 @@ module PostEvents
           )
         end
 
-        should "format changed_thumbnail_frame correctly" do
+        should("format changed_thumbnail_frame correctly") do
           @upload = create(:webm_upload, uploader: @admin)
           @post = @upload.post
           set_count!
@@ -265,7 +265,7 @@ module PostEvents
           )
         end
 
-        should "format copied_notes correctly" do
+        should("format copied_notes correctly") do
           @post2 = create(:post)
           @note = create(:note, post: @post)
           @post.copy_notes_to(@post2)
@@ -279,7 +279,7 @@ module PostEvents
           )
         end
 
-        should "format set_min_edit_level correctly" do
+        should("format set_min_edit_level correctly") do
           @post.update(min_edit_level: User::Levels::TRUSTED)
 
           assert_matches(
@@ -291,14 +291,14 @@ module PostEvents
         end
       end
 
-      context "appeals" do
+      context("appeals") do
         setup do
           @post.update_column(:is_deleted, true)
           @appeal = @post.appeals.create!(reason: "Test")
           set_count!
         end
 
-        should "format appeal_created correctly" do
+        should("format appeal_created correctly") do
           @appeal.delete
           @appeal = @post.appeals.create!(reason: "Test")
 
@@ -310,7 +310,7 @@ module PostEvents
           )
         end
 
-        should "format appeal_accepted correctly" do
+        should("format appeal_accepted correctly") do
           @appeal.accept!
 
           assert_matches(
@@ -321,7 +321,7 @@ module PostEvents
           )
         end
 
-        should "format appeal_rejected correctly" do
+        should("format appeal_rejected correctly") do
           @appeal.reject!
 
           assert_matches(

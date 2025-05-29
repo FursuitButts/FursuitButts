@@ -1,7 +1,7 @@
 <h1>Post Replacements</h1>
 
-<%= render "search" %>
-<%= render "posts/partials/common/inline_blacklist" %>
+<%= render("search") %>
+<%= render("posts/partials/common/inline_blacklist") %>
 
 <%= table_for(@post_replacements, class: "striped autofit", style: "max-width: 100%") do |t| %>
   <% t.column("post", width: "1%") do |post_replacement| %>
@@ -18,7 +18,7 @@
           <% if post_replacement.source.present? %>
             <ul>
               <% post_replacement.source_list.each do |source| %>
-                <li><%= external_link_to source, truncate: 64 %></li>
+                <li><%= external_link_to(source, truncate: 64) %></li>
               <% end %>
             </ul>
           <% else %>
@@ -143,7 +143,7 @@
 
 <%= numbered_paginator(@post_replacements) %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   Post Replacements

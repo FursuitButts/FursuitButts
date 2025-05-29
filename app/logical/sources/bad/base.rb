@@ -3,7 +3,7 @@
 module Sources
   module Bad
     class Base
-      attr_reader :sources
+      attr_reader(:sources)
 
       def initialize(sources)
         @sources = sources

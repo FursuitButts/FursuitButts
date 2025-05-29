@@ -2,7 +2,7 @@
 
 module Moderator
   class IpAddrsController < ApplicationController
-    respond_to :html, :json
+    respond_to(:html, :json)
 
     def index
       search = authorize(IpAddrSearch).new(search_params(IpAddrSearch))

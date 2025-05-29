@@ -2,7 +2,7 @@
 
 module Artists
   class UrlsController < ApplicationController
-    respond_to :json, :html
+    respond_to(:json, :html)
 
     def index
       @artist_urls = authorize(ArtistUrl).includes(:artist)

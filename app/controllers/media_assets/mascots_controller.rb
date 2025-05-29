@@ -2,8 +2,8 @@
 
 module MediaAssets
   class MascotsController < BaseController
-    undef_method :append
-    undef_method :cancel
+    undef_method(:append)
+    undef_method(:cancel)
 
     protected
 

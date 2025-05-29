@@ -2,11 +2,11 @@
 
 module Posts
   class IqdbController < ApplicationController
-    respond_to :html, :json
+    respond_to(:html, :json)
     # Show uses POST because it needs a file parameter. This would be GET otherwise.
-    skip_forgery_protection only: :show
-    before_action :validate_enabled
-    skip_before_action :api_check, if: -> { CurrentUser.is_owner? }
+    skip_forgery_protection(only: :show)
+    before_action(:validate_enabled)
+    skip_before_action(:api_check, if: -> { CurrentUser.is_owner? })
 
     def show
       authorize(:iqdb)

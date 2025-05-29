@@ -2,8 +2,8 @@
 
 module Security
   class LockdownController < ApplicationController
-    respond_to :html
-    wrap_parameters :lockdown
+    respond_to(:html)
+    wrap_parameters(:lockdown)
 
     def index
       authorize(%i[security lockdown])

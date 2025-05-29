@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module DeferredPosts
-  extend ActiveSupport::Concern
+  extend(ActiveSupport::Concern)
 
   def deferred_post_ids
     RequestStore[:deferred_post_ids] ||= Set.new

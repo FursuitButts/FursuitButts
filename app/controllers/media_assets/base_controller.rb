@@ -2,8 +2,8 @@
 
 module MediaAssets
   class BaseController < ApplicationController
-    respond_to :json
-    respond_to :html, only: %i[index]
+    respond_to(:json)
+    respond_to(:html, only: %i[index])
 
     def index
       @assets = authorize(asset_class).visible(CurrentUser.user)

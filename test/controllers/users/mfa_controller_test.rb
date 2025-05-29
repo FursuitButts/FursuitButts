@@ -1,25 +1,25 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 module Users
   class MFAControllerTest < ActionDispatch::IntegrationTest
-    context "The user mfa controller" do
+    context("The user mfa controller") do
       setup do
         @user = create(:user)
       end
 
-      context "edit action" do
-        should "render" do
-          get_auth edit_user_mfa_path, @user
+      context("edit action") do
+        should("render") do
+          get_auth(edit_user_mfa_path, @user)
         end
       end
 
-      context "update action" do
-        should "work" do
+      context("update action") do
+        should("work") do
           mfa = ::MFA.new(username: @user.name)
           assert_difference("UserEvent.count", 3) do
-            put_auth user_mfa_path, @user, params: { mfa: { signed_secret: mfa.signed_secret, verification_code: mfa.code } }
+            put_auth(user_mfa_path, @user, params: { mfa: { signed_secret: mfa.signed_secret, verification_code: mfa.code } })
             assert_redirected_to(user_mfa_backup_codes_path)
           end
           assert_equal(mfa.secret, @user.reload.mfa_secret)
@@ -27,11 +27,11 @@ module Users
         end
       end
 
-      context "update action" do
-        should "work" do
+      context("update action") do
+        should("work") do
           mfa = ::MFA.new(username: @user.name)
           assert_difference("UserEvent.count", 3) do
-            put_auth user_mfa_path, @user, params: { mfa: { signed_secret: mfa.signed_secret, verification_code: mfa.code } }
+            put_auth(user_mfa_path, @user, params: { mfa: { signed_secret: mfa.signed_secret, verification_code: mfa.code } })
             assert_redirected_to(user_mfa_backup_codes_path)
           end
           assert_equal(mfa.secret, @user.reload.mfa_secret)
@@ -39,12 +39,12 @@ module Users
         end
       end
 
-      context "destroy action" do
-        should "work" do
+      context("destroy action") do
+        should("work") do
           mfa = ::MFA.new(username: @user.name)
           @user.update_mfa_secret!(mfa.secret, mock_request)
           assert_difference("UserEvent.count", 3) do
-            delete_auth user_mfa_path, @user
+            delete_auth(user_mfa_path, @user)
             assert_redirected_to(edit_users_path)
           end
           assert_nil(@user.reload.mfa_secret)

@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 class UserMailer < ApplicationMailer
-  helper ApplicationHelper
-  helper UsersHelper
-  default from: FemboyFans.config.mail_from_addr, content_type: "text/html"
+  helper(ApplicationHelper)
+  helper(UsersHelper)
+  default(from: FemboyFans.config.mail_from_addr, content_type: "text/html")
 
   def dmail_notice(dmail)
     @dmail = dmail

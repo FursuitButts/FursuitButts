@@ -9,39 +9,39 @@ class WikiPage < ApplicationRecord
 
   belongs_to_creator
   belongs_to_updater
-  has_dtext_links :body
-  has_one :help_page
-  has_one :tag, foreign_key: "name", primary_key: "title"
-  has_one :artist, foreign_key: "name", primary_key: "title"
-  has_many :versions, -> { order("wiki_page_versions.id ASC") }, class_name: "WikiPageVersion", dependent: :destroy
+  has_dtext_links(:body)
+  has_one(:help_page)
+  has_one(:tag, foreign_key: "name", primary_key: "title")
+  has_one(:artist, foreign_key: "name", primary_key: "title")
+  has_many(:versions, -> { order("wiki_page_versions.id ASC") }, class_name: "WikiPageVersion", dependent: :destroy)
 
-  after_initialize :set_parent_props
-  before_validation :normalize_title, unless: :destroyed?
-  before_validation :normalize_parent, unless: :destroyed?
-  before_validation :normalize_protection_level, unless: :destroyed?
-  before_validation :ensure_internal_protected, unless: :destroyed?
-  after_update :log_update
-  before_destroy :validate_not_used_as_help_page
-  after_destroy :log_delete
-  after_save :create_version
-  normalizes :body, with: ->(body) { body.gsub("\r\n", "\n") }
-  validates :title, uniqueness: { case_sensitive: false }
-  validates :title, presence: true
-  validates :title, tag_name: true, if: :title_changed?
-  validates :body, presence: { unless: -> { parent.present? } }
-  validates :title, length: { minimum: 1, maximum: 100 }
-  validates :body, length: { maximum: FemboyFans.config.wiki_page_max_size }
-  validates :protection_level, inclusion: { in: User::Levels.hash.values }, if: -> { protection_level.present? }
-  validate :validate_name_not_restricted, on: :create
-  validate :user_not_limited
-  validate :validate_rename
-  validate :validate_redirect
-  validate :validate_not_restricted
+  after_initialize(:set_parent_props)
+  before_validation(:normalize_title, unless: :destroyed?)
+  before_validation(:normalize_parent, unless: :destroyed?)
+  before_validation(:normalize_protection_level, unless: :destroyed?)
+  before_validation(:ensure_internal_protected, unless: :destroyed?)
+  after_update(:log_update)
+  before_destroy(:validate_not_used_as_help_page)
+  after_destroy(:log_delete)
+  after_save(:create_version)
+  normalizes(:body, with: ->(body) { body.gsub("\r\n", "\n") })
+  validates(:title, uniqueness: { case_sensitive: false })
+  validates(:title, presence: true)
+  validates(:title, tag_name: true, if: :title_changed?)
+  validates(:body, presence: { unless: -> { parent.present? } })
+  validates(:title, length: { minimum: 1, maximum: 100 })
+  validates(:body, length: { maximum: FemboyFans.config.wiki_page_max_size })
+  validates(:protection_level, inclusion: { in: User::Levels.hash.values }, if: -> { protection_level.present? })
+  validate(:validate_name_not_restricted, on: :create)
+  validate(:user_not_limited)
+  validate(:validate_rename)
+  validate(:validate_redirect)
+  validate(:validate_not_restricted)
 
-  after_save :log_save
-  after_save :update_help_page, if: :saved_change_to_title?
+  after_save(:log_save)
+  after_save(:update_help_page, if: :saved_change_to_title?)
 
-  attr_accessor :edit_reason, :parent_name, :parent_anchor, :target_wiki_page_id, :target_wiki_page_title
+  attr_accessor(:edit_reason, :parent_name, :parent_anchor, :target_wiki_page_id, :target_wiki_page_title)
 
   module LogMethods
     def log_save
@@ -147,11 +147,11 @@ class WikiPage < ApplicationRecord
     end
   end
 
-  include HelpPageMethods
-  include LogMethods
-  include RestrictionMethods
-  include MergeMethods
-  extend SearchMethods
+  include(HelpPageMethods)
+  include(LogMethods)
+  include(RestrictionMethods)
+  include(MergeMethods)
+  extend(SearchMethods)
 
   def user_not_limited
     allowed = CurrentUser.user.can_wiki_edit_with_reason

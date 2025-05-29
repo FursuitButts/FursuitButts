@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-require "test_helper"
-require_relative "helper"
+require("test_helper")
+require_relative("helper")
 
 module ModActions
   class UsersTest < ActiveSupport::TestCase
-    include Helper
-    include Rails.application.routes.url_helpers
+    include(Helper)
+    include(Rails.application.routes.url_helpers)
 
-    context "mod actions for users" do
+    context("mod actions for users") do
       setup do
         @target = create(:user)
         @restricted = create(:restricted_user)
@@ -16,7 +16,7 @@ module ModActions
         set_count!
       end
 
-      should "format user_approve correctly" do
+      should("format user_approve correctly") do
         @approval = create(:user_approval, user: @restricted)
         @approval.approve!
 
@@ -28,7 +28,7 @@ module ModActions
         )
       end
 
-      should "format user_blacklist_change correctly" do
+      should("format user_blacklist_change correctly") do
         @target.update!(is_admin_edit: true, blacklisted_tags: "aaa bbb")
 
         assert_matches(
@@ -39,7 +39,7 @@ module ModActions
         )
       end
 
-      should "format user_ban correctly" do
+      should("format user_ban correctly") do
         @target.ban!
 
         assert_matches(
@@ -50,7 +50,7 @@ module ModActions
         )
       end
 
-      should "format user_delete correctly" do
+      should("format user_delete correctly") do
         UserDeletion.new(@target, nil, mock_request).send(:create_mod_action)
 
         assert_matches(
@@ -61,7 +61,7 @@ module ModActions
         )
       end
 
-      should "format user_flags_change correctly" do
+      should("format user_flags_change correctly") do
         @target.admin_edit!(@admin, unrestricted_uploads: true)
 
         assert_matches(
@@ -74,7 +74,7 @@ module ModActions
         )
       end
 
-      should "format user_level_change correctly" do
+      should("format user_level_change correctly") do
         @target.admin_edit!(@admin, level: User::Levels::TRUSTED)
 
         assert_matches(
@@ -87,7 +87,7 @@ module ModActions
         )
       end
 
-      should "format user_name_change correctly" do
+      should("format user_name_change correctly") do
         @target.log_name_change
 
         assert_matches(
@@ -98,7 +98,7 @@ module ModActions
         )
       end
 
-      should "format user_reject correctly" do
+      should("format user_reject correctly") do
         @approval = create(:user_approval, user: @restricted)
         @approval.reject!
 
@@ -110,7 +110,7 @@ module ModActions
         )
       end
 
-      should "format user_text_change correctly" do
+      should("format user_text_change correctly") do
         @target.update!(is_admin_edit: true, profile_about: "xxx")
 
         assert_matches(
@@ -121,7 +121,7 @@ module ModActions
         )
       end
 
-      should "format user_upload_limit_change correctly" do
+      should("format user_upload_limit_change correctly") do
         @target.update!(is_admin_edit: true, base_upload_limit: 20)
 
         assert_matches(
@@ -134,7 +134,7 @@ module ModActions
         )
       end
 
-      should "format user_unban correctly" do
+      should("format user_unban correctly") do
         @target.ban!
         set_count!
         @target.unban!

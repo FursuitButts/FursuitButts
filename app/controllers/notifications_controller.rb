@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class NotificationsController < ApplicationController
-  respond_to :html, :json
+  respond_to(:html, :json)
 
   def index
     @notifications = authorize(Notification).for_user(CurrentUser.user.id).search(search_params(Notification)).paginate(params[:page], limit: params[:limit])

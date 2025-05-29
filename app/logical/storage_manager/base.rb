@@ -2,7 +2,7 @@
 
 module StorageManager
   class Base
-    attr_reader :base_url, :base_dir, :base_path, :hierarchical
+    attr_reader(:base_url, :base_dir, :base_path, :hierarchical)
 
     def initialize(base_url: default_base_url, base_path: default_base_path, base_dir: DEFAULT_BASE_DIR, hierarchical: false)
       @base_url = base_url.chomp("/")

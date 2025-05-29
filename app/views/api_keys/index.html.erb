@@ -1,4 +1,4 @@
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <h1>API Keys</h1>
 
@@ -24,12 +24,12 @@
       </code>
     </p>
 
-    <p>See the <%= link_to "API documentation", help_page_path(id: "api") %> to learn more.</p>
+    <p>See the <%= link_to("API documentation", help_page_path(id: "api")) %> to learn more.</p>
   </div>
 <% end %>
 
 <% if params[:user_id].present? && @api_keys.blank? %>
-  <%= link_to "Create API key", new_user_api_key_path(CurrentUser.user.id) %>
+  <%= link_to("Create API key", new_user_api_key_path(CurrentUser.user.id)) %>
 <% else %>
   <%= table_for(@api_keys, width: "100%", class: "striped autofit") do |t| %>
     <% t.column(:name) %>
@@ -48,7 +48,7 @@
     <% end %>
 
     <% t.column("Last Used") do |api_key| %>
-      <%= time_ago_in_words_tagged api_key.last_used_at %>
+      <%= time_ago_in_words_tagged(api_key.last_used_at) %>
 
       <% if api_key.last_ip_address.present? %>
         <br>by <%= api_key.last_ip_address %>
@@ -56,10 +56,10 @@
     <% end %>
 
     <% t.column("Created") do |api_key| %>
-      <%= time_ago_in_words_tagged api_key.created_at %>
+      <%= time_ago_in_words_tagged(api_key.created_at) %>
 
       <% unless params[:user_id].present? %>
-        <br> by <%=  link_to_user api_key.user  %>
+        <br> by <%=  link_to_user(api_key.user)  %>
       <%  end %>
     <% end %>
 

@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 module Admin
   class DestroyedPostsControllerTest < ActionDispatch::IntegrationTest
-    context "The destroyed posts controller" do
+    context("The destroyed posts controller") do
       setup do
         @admin = create(:admin_user)
         @owner = create(:owner_user)
@@ -14,31 +14,31 @@ module Admin
         @destroyed_post = DestroyedPost.find_by!(post_id: @post.id)
       end
 
-      context "index action" do
-        should "render" do
-          get_auth admin_destroyed_posts_path, @admin
-          assert_response :success
+      context("index action") do
+        should("render") do
+          get_auth(admin_destroyed_posts_path, @admin)
+          assert_response(:success)
         end
       end
 
-      context "show action" do
-        should "redirect" do
-          get_auth admin_destroyed_post_path(@post), @admin
+      context("show action") do
+        should("redirect") do
+          get_auth(admin_destroyed_post_path(@post), @admin)
           assert_redirected_to(admin_destroyed_posts_path(search: { post_id: @post.id }))
         end
       end
 
-      context "update action" do
-        should "work" do
+      context("update action") do
+        should("work") do
           assert_difference("StaffAuditLog.count", 1) do
-            put_auth admin_destroyed_post_path(@post), @owner, params: { destroyed_post: { notify: "false" } }
+            put_auth(admin_destroyed_post_path(@post), @owner, params: { destroyed_post: { notify: "false" } })
             assert_redirected_to(admin_destroyed_posts_path)
             assert_equal(false, @destroyed_post.reload.notify)
             assert_equal("disable_post_notifications", StaffAuditLog.last.action)
           end
 
           assert_difference("StaffAuditLog.count", 1) do
-            put_auth admin_destroyed_post_path(@post), @owner, params: { destroyed_post: { notify: "true" } }
+            put_auth(admin_destroyed_post_path(@post), @owner, params: { destroyed_post: { notify: "true" } })
             assert_redirected_to(admin_destroyed_posts_path)
             assert_equal(true, @destroyed_post.reload.notify)
             assert_equal("enable_post_notifications", StaffAuditLog.last.action)

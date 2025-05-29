@@ -2,7 +2,7 @@
 
 module Admin
   class DestroyedPostsController < ApplicationController
-    respond_to :html
+    respond_to(:html)
 
     def index
       @destroyed_posts = authorize(DestroyedPost).html_includes(request, :destroyer, :uploader)

@@ -2,8 +2,8 @@
 
 module Posts
   class ApprovalsController < ApplicationController
-    skip_before_action :api_check, except: %i[index]
-    respond_to :html, :json
+    skip_before_action(:api_check, except: %i[index])
+    respond_to(:html, :json)
 
     def index
       @post_approvals = authorize(PostApproval).html_includes(request, :post, :user)

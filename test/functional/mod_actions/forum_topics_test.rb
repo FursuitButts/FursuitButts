@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-require "test_helper"
-require_relative "helper"
+require("test_helper")
+require_relative("helper")
 
 module ModActions
   class ForumTopicsTest < ActiveSupport::TestCase
-    include Helper
-    include Rails.application.routes.url_helpers
+    include(Helper)
+    include(Rails.application.routes.url_helpers)
 
-    context "mod actions for forum topics" do
+    context("mod actions for forum topics") do
       setup do
         as(@user) do
           @topic = create(:forum_topic)
@@ -16,7 +16,7 @@ module ModActions
         set_count!
       end
 
-      should "format forum_topic_delete correctly" do
+      should("format forum_topic_delete correctly") do
         @topic.destroy
 
         assert_matches(
@@ -28,7 +28,7 @@ module ModActions
         )
       end
 
-      should "format forum_topic_hide correctly" do
+      should("format forum_topic_hide correctly") do
         @topic.hide!
 
         assert_matches(
@@ -40,7 +40,7 @@ module ModActions
         )
       end
 
-      should "format forum_topic_lock correctly" do
+      should("format forum_topic_lock correctly") do
         @topic.update!(is_locked: true)
 
         assert_matches(
@@ -52,7 +52,7 @@ module ModActions
         )
       end
 
-      should "format forum_topic_merge correctly" do
+      should("format forum_topic_merge correctly") do
         @target = create(:forum_topic)
         set_count!
         @topic.merge_into!(@target)
@@ -68,7 +68,7 @@ module ModActions
         )
       end
 
-      should "format forum_topic_move correctly" do
+      should("format forum_topic_move correctly") do
         old_category = @topic.category
         category = create(:forum_category)
         set_count!
@@ -87,7 +87,7 @@ module ModActions
         )
       end
 
-      should "format forum_topic_stick correctly" do
+      should("format forum_topic_stick correctly") do
         @topic.update!(is_sticky: true)
 
         assert_matches(
@@ -99,7 +99,7 @@ module ModActions
         )
       end
 
-      should "format forum_topic_update correctly" do
+      should("format forum_topic_update correctly") do
         @original = @topic.dup
         @topic.update!(title: "xxx")
 
@@ -112,7 +112,7 @@ module ModActions
         )
       end
 
-      should "format forum_topic_unhide correctly" do
+      should("format forum_topic_unhide correctly") do
         @topic.update_columns(is_hidden: true)
         @topic.unhide!
 
@@ -125,7 +125,7 @@ module ModActions
         )
       end
 
-      should "format forum_topic_unlock correctly" do
+      should("format forum_topic_unlock correctly") do
         @topic.update_columns(is_locked: true)
         @topic.update!(is_locked: false)
 
@@ -138,7 +138,7 @@ module ModActions
         )
       end
 
-      should "format forum_topic_unmerge correctly" do
+      should("format forum_topic_unmerge correctly") do
         @target = create(:forum_topic)
         @topic.merge_into!(@target)
         set_count!
@@ -155,7 +155,7 @@ module ModActions
         )
       end
 
-      should "format forum_topic_unstick correctly" do
+      should("format forum_topic_unstick correctly") do
         @topic.update_columns(is_sticky: true)
         @topic.update!(is_sticky: false)
 

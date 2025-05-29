@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 class CloudflareServiceTest < ActiveSupport::TestCase
-  context "#ips" do
-    should "work" do
+  context("#ips") do
+    should("work") do
       ipv4 = "173.245.48.0/20"
       ipv6 = "2400:cb00::/32"
       dummy_response = {

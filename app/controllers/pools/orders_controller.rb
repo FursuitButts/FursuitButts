@@ -2,7 +2,7 @@
 
 module Pools
   class OrdersController < ApplicationController
-    respond_to :html, :json, :js
+    respond_to(:html, :json, :js)
 
     def edit
       @pool = authorize(Pool.find(params[:pool_id]), policy_class: ::PoolOrderPolicy)

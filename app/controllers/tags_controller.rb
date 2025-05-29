@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class TagsController < ApplicationController
-  before_action :load_tag, except: %i[index preview meta_search followed]
-  respond_to :html, :json
+  before_action(:load_tag, except: %i[index preview meta_search followed])
+  respond_to(:html, :json)
 
   def index
     @tags = authorize(Tag).search(search_params(Tag))

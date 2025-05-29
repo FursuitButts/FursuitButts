@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class StaticController < ApplicationController
-  respond_to :text, only: %i[robots]
-  respond_to :xml, only: %i[site_map]
+  respond_to(:text, only: %i[robots])
+  respond_to(:xml, only: %i[site_map])
 
   def privacy
     @page = view_context.safe_wiki("help:privacy_policy")

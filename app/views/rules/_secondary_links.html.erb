@@ -2,41 +2,41 @@
 <% category = policy(RuleCategory) %>
 <% quick = policy(QuickRule) %>
 <% content_for(:secondary_links) do %>
-  <%= subnav_link_to "Rules", rules_path  %>
+  <%= subnav_link_to("Rules", rules_path)  %>
   <% if rule.create? %>
-    <%= subnav_link_to "New Rule", new_rule_path %>
+    <%= subnav_link_to("New Rule", new_rule_path) %>
   <% end %>
   <% if category.create? %>
-    <%= subnav_link_to "New Rule Category", new_rule_category_path %>
+    <%= subnav_link_to("New Rule Category", new_rule_category_path) %>
   <% end %>
   <% if quick.create? %>
-    <%= subnav_link_to "New Quick Rule", new_quick_rule_path %>
+    <%= subnav_link_to("New Quick Rule", new_quick_rule_path) %>
   <% end %>
   <% if params[:action] == "order" %>
     |
     <% if rule.reorder? %>
       <% if params[:controller] == "rules" %>
-        <%= subnav_link_to "Edit Rule Order", "#", class: "edit-order-link" %>
+        <%= subnav_link_to("Edit Rule Order", "#", class: "edit-order-link") %>
       <% else %>
-        <%= subnav_link_to "Edit Rule Order", order_rules_path, class: "edit-order-external-link" %>
+        <%= subnav_link_to("Edit Rule Order", order_rules_path, class: "edit-order-external-link") %>
       <% end %>
     <% end %>
     <% if category.reorder? %>
       <% if params[:controller] == "rules/categories" %>
-        <%= subnav_link_to "Edit Category Order", "#", class: "edit-category-order-link" %>
+        <%= subnav_link_to("Edit Category Order", "#", class: "edit-category-order-link") %>
       <% else %>
-        <%= subnav_link_to "Edit Category Order", order_rule_categories_path, class: "edit-category-order-external-link" %>
+        <%= subnav_link_to("Edit Category Order", order_rule_categories_path, class: "edit-category-order-external-link") %>
       <% end %>
     <% end %>
     <% if quick.reorder? %>
       <% if params[:controller] == "rules/quick" %>
-        <%= subnav_link_to "Edit Quick Order", "#", class: "edit-quick-order-link" %>
+        <%= subnav_link_to("Edit Quick Order", "#", class: "edit-quick-order-link") %>
       <% else %>
-        <%= subnav_link_to "Edit Quick Order", order_quick_rules_path, class: "edit-quick-order-external-link" %>
+        <%= subnav_link_to("Edit Quick Order", order_quick_rules_path, class: "edit-quick-order-external-link") %>
       <% end %>
     <% end %>
-    <%= subnav_link_to "Save", "#", class: "save-order-link", li_options: { style: "display: none;" } %>
+    <%= subnav_link_to("Save", "#", class: "save-order-link", li_options: { style: "display: none;" }) %>
   <% elsif rule.reorder? %>
-    <%= subnav_link_to "Reorder Rules", order_rules_path %>
+    <%= subnav_link_to("Reorder Rules", order_rules_path) %>
   <% end %>
 <% end %>

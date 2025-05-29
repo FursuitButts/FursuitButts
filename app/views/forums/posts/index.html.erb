@@ -1,4 +1,4 @@
-<%= render "search" %>
+<%= render("search") %>
 <%= table_for(@forum_posts) do |t| %>
   <% t.column("Topic") do |forum_post| %>
     <%= link_to(forum_post.topic.title, forum_topic_path(forum_post.topic)) %>
@@ -21,7 +21,7 @@
 
 <%= numbered_paginator(@forum_posts) %>
 
-<%= render "forums/topics/secondary_links" %>
+<%= render("forums/topics/secondary_links") %>
 <%= latest_link(@forum_posts) %>
 
 <% content_for(:page_title) do %>

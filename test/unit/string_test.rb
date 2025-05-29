@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 class StringTest < ActiveSupport::TestCase
-  context "String#to_escaped_for_sql_like" do
-    should "work" do
+  context("String#to_escaped_for_sql_like") do
+    should("work") do
       assert_equal('foo\%bar', "foo%bar".to_escaped_for_sql_like)
       assert_equal('foo\_bar', "foo_bar".to_escaped_for_sql_like)
       assert_equal("foo%bar", "foo*bar".to_escaped_for_sql_like)

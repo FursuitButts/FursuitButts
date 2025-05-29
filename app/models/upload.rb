@@ -1,32 +1,32 @@
 # frozen_string_literal: true
 
-require "tmpdir"
+require("tmpdir")
 
 class Upload < ApplicationRecord
   class Error < StandardError; end
   has_media_asset(:upload_media_asset)
 
-  attr_accessor :as_pending, :original_post_id, :locked_rating, :locked_tags, :is_replacement, :replacement_id
+  attr_accessor(:as_pending, :original_post_id, :locked_rating, :locked_tags, :is_replacement, :replacement_id)
 
-  belongs_to :uploader, class_name: "User"
-  belongs_to :post, optional: true
+  belongs_to(:uploader, class_name: "User")
+  belongs_to(:post, optional: true)
 
-  after_initialize :set_locked_tags
-  before_validation :assign_rating_from_tags
-  before_validation :normalize_direct_url, on: :create
+  after_initialize(:set_locked_tags)
+  before_validation(:assign_rating_from_tags)
+  before_validation(:normalize_direct_url, on: :create)
 
-  validate :uploader_is_not_limited, on: :create
-  validate :direct_url_is_whitelisted, on: :create
-  validate :no_excessive_pending_uploads, on: :create
-  validates :rating, inclusion: { in: %w[q e s] }, allow_nil: false
+  validate(:uploader_is_not_limited, on: :create)
+  validate(:direct_url_is_whitelisted, on: :create)
+  validate(:no_excessive_pending_uploads, on: :create)
+  validates(:rating, inclusion: { in: %w[q e s] }, allow_nil: false)
 
-  scope :pending, -> { joins(:upload_media_asset).where("upload_media_asset.status": "pending") }
-  scope :uploading, -> { joins(:upload_media_asset).where("upload_media_asset.status": "uploading") }
-  scope :completed, -> { joins(:upload_media_asset).where("upload_media_asset.status": "active") }
-  scope :in_progress, -> { joins(:upload_media_asset).where("upload_media_asset.status": %w[pending uploading]) }
+  scope(:pending, -> { joins(:upload_media_asset).where("upload_media_asset.status": "pending") })
+  scope(:uploading, -> { joins(:upload_media_asset).where("upload_media_asset.status": "uploading") })
+  scope(:completed, -> { joins(:upload_media_asset).where("upload_media_asset.status": "active") })
+  scope(:in_progress, -> { joins(:upload_media_asset).where("upload_media_asset.status": %w[pending uploading]) })
 
-  delegate :duplicate_post_id, :status, :status_message, :pretty_status,
-           :pending?, :uploading?, :active?, :deleted?, :cancelled?, :expunged?, :failed?, :duplicate?, to: :media_asset, allow_nil: true
+  delegate(:duplicate_post_id, :status, :status_message, :pretty_status,
+           :pending?, :uploading?, :active?, :deleted?, :cancelled?, :expunged?, :failed?, :duplicate?, to: :media_asset, allow_nil: true)
 
   def set_locked_tags
     self.locked_tags ||= ""
@@ -122,9 +122,9 @@ class Upload < ApplicationRecord
     end
   end
 
-  include UploaderMethods
-  include DirectURLMethods
-  extend SearchMethods
+  include(UploaderMethods)
+  include(DirectURLMethods)
+  extend(SearchMethods)
 
   def uploader_is_not_limited
     return if replacement_id.present?

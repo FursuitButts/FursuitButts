@@ -2,23 +2,23 @@
 
 class ForumCategory < ApplicationRecord
   MAX_TOPIC_MOVE_COUNT = 1000
-  has_many :topics, -> { order(id: :desc) }, class_name: "ForumTopic", foreign_key: :category_id
-  has_many :posts, through: :topics
-  has_one :last_topic, -> { order(id: :desc) }, class_name: "ForumTopic", foreign_key: :category_id
-  has_one :last_post, through: :last_topic
-  validates :name, uniqueness: { case_sensitive: false }, length: { minimum: 3, maximum: 100 }
-  validates :description, length: { maximum: -> { FemboyFans.config.forum_category_description_max_size } }
+  has_many(:topics, -> { order(id: :desc) }, class_name: "ForumTopic", foreign_key: :category_id)
+  has_many(:posts, through: :topics)
+  has_one(:last_topic, -> { order(id: :desc) }, class_name: "ForumTopic", foreign_key: :category_id)
+  has_one(:last_post, through: :last_topic)
+  validates(:name, uniqueness: { case_sensitive: false }, length: { minimum: 3, maximum: 100 })
+  validates(:description, length: { maximum: -> { FemboyFans.config.forum_category_description_max_size } })
 
-  after_create :log_create
-  after_update :log_update
-  before_destroy :prevent_destroy_if_topics
-  after_destroy :log_delete
+  after_create(:log_create)
+  after_update(:log_update)
+  before_destroy(:prevent_destroy_if_topics)
+  after_destroy(:log_delete)
 
   before_validation(on: :create) do
     self.order = (ForumCategory.maximum(:order) || 0) + 1 if order.blank?
   end
 
-  attr_accessor :new_category_id # technical bullshit
+  attr_accessor(:new_category_id) # technical bullshit
 
   def can_create_within?(user = CurrentUser.user)
     user.level >= can_create
@@ -75,8 +75,8 @@ class ForumCategory < ApplicationRecord
     end
   end
 
-  include LogMethods
-  extend SearchMethods
+  include(LogMethods)
+  extend(SearchMethods)
 
   def visible?(user = CurrentUser.user)
     user.level >= can_view

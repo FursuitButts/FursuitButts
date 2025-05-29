@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 class PostVoteTest < ActiveSupport::TestCase
   setup do
@@ -10,23 +10,23 @@ class PostVoteTest < ActiveSupport::TestCase
     @post = create(:post)
   end
 
-  context "Voting for a post" do
-    should "interpret up as +1 score" do
+  context("Voting for a post") do
+    should("interpret up as +1 score") do
       vote, _status = VoteManager::Posts.vote!(user: @user, post: @post, score: 1)
       assert_equal(1, vote.score)
     end
 
-    should "interpret down as -1 score" do
+    should("interpret down as -1 score") do
       vote, _status = VoteManager::Posts.vote!(user: @user, post: @post, score: -1)
       assert_equal(-1, vote.score)
     end
 
-    should "not accept any other scores" do
+    should("not accept any other scores") do
       error = assert_raises(UserVote::Error) { VoteManager::Posts.vote!(user: @user, post: @post, score: "xxx") }
       assert_equal("Invalid vote", error.message)
     end
 
-    should "increase the score of the post" do
+    should("increase the score of the post") do
       VoteManager::Posts.vote!(user: @user, post: @post, score: 1)
       @post.reload
 
@@ -34,7 +34,7 @@ class PostVoteTest < ActiveSupport::TestCase
       assert_equal(1, @post.up_score)
     end
 
-    should "decrease the score of the post when removed" do
+    should("decrease the score of the post when removed") do
       VoteManager::Posts.vote!(user: @user, post: @post, score: 1)
       @post.reload
       assert_equal(1, @post.score)

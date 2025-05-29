@@ -1,18 +1,18 @@
 # frozen_string_literal: true
 
 class DtextLink < ApplicationRecord
-  belongs_to :model, polymorphic: true
-  belongs_to :linked_wiki, primary_key: :title, foreign_key: :link_target, class_name: "WikiPage", optional: true
-  belongs_to :linked_tag, primary_key: :name, foreign_key: :link_target, class_name: "Tag", optional: true
-  enum :link_type, { wiki_link: 0, external_link: 1 }
+  belongs_to(:model, polymorphic: true)
+  belongs_to(:linked_wiki, primary_key: :title, foreign_key: :link_target, class_name: "WikiPage", optional: true)
+  belongs_to(:linked_tag, primary_key: :name, foreign_key: :link_target, class_name: "Tag", optional: true)
+  enum(:link_type, { wiki_link: 0, external_link: 1 })
   MODEL_TYPES = %w[WikiPage ForumPost Pool].freeze
 
-  before_validation :normalize_link_target
-  validates :link_target, uniqueness: { scope: %i[model_type model_id] }
+  before_validation(:normalize_link_target)
+  validates(:link_target, uniqueness: { scope: %i[model_type model_id] })
 
-  scope :wiki_page, -> { where(model_type: "WikiPage") }
-  scope :forum_post, -> { where(model_type: "ForumPost") }
-  scope :pool, -> { where(model_type: "Pool") }
+  scope(:wiki_page, -> { where(model_type: "WikiPage") })
+  scope(:forum_post, -> { where(model_type: "ForumPost") })
+  scope(:pool, -> { where(model_type: "Pool") })
 
   def self.new_from_dtext(dtext)
     links = []
@@ -73,7 +73,7 @@ class DtextLink < ApplicationRecord
     end
   end
 
-  extend SearchMethods
+  extend(SearchMethods)
 
   def self.available_includes
     %i[model linked_wiki linked_tag]

@@ -5,13 +5,13 @@
     <tr>
       <th>Date</th>
       <td>
-        <%= compact_time @change_request.created_at %>
-        <%= render "application/update_notice", record: @change_request %>
+        <%= compact_time(@change_request.created_at) %>
+        <%= render("application/update_notice", record: @change_request) %>
       </td>
     </tr>
     <tr>
       <th>User</th>
-      <td><%= link_to_user @change_request.user %></td>
+      <td><%= link_to_user(@change_request.user) %></td>
     </tr>
     <tr>
       <th>Request</th>
@@ -29,16 +29,16 @@
       <td>
         <%= @change_request.status %>
         <% if @change_request.approved? %>
-          by <%= link_to_user @change_request.approver %>
+          by <%= link_to_user(@change_request.approver) %>
         <% elsif @change_request.rejected? %>
-          for reason: <%= link_to @change_request.rejection_reason %>
+          for reason: <%= link_to(@change_request.rejection_reason) %>
         <% end %>
       </td>
     </tr>
   </tbody>
 </table>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   Name Change Request - <%= @change_request.user.pretty_name %>

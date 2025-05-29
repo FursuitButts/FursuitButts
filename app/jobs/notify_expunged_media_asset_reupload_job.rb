@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class NotifyExpungedMediaAssetReuploadJob < ApplicationJob
-  queue_as :default
+  queue_as(:default)
 
   def perform(user, text)
     CurrentUser.as_system do

@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
 class PostSetMaintainer < ApplicationRecord
-  belongs_to :user
-  belongs_to :post_set
+  belongs_to(:user)
+  belongs_to(:post_set)
 
-  validate :ensure_not_set_owner, on: :create
-  validate :ensure_set_public, on: :create
-  validate :ensure_maintainer_count, on: :create
-  validate :ensure_not_duplicate, on: :create
+  validate(:ensure_not_set_owner, on: :create)
+  validate(:ensure_set_public, on: :create)
+  validate(:ensure_maintainer_count, on: :create)
+  validate(:ensure_not_duplicate, on: :create)
 
-  after_create :notify_maintainer
+  after_create(:notify_maintainer)
 
   def notify_maintainer
     r = Rails.application.routes.url_helpers
@@ -150,7 +150,7 @@ class PostSetMaintainer < ApplicationRecord
     where(status: "pending")
   end
 
-  include ValidaitonMethods
+  include(ValidaitonMethods)
 
   def self.available_includes
     %i[post_set user]

@@ -1,6 +1,6 @@
 <h2>New Pool</h2>
 
-<p style="font-weight: bold;">Before creating a pool, read the <%= link_to "pool guidelines", help_page_path(id: "pools") %>.</p>
+<p style="font-weight: bold;">Before creating a pool, read the <%= link_to("pool guidelines", help_page_path(id: "pools")) %>.</p>
 
 <%= custom_form_for(@pool) do |f| %>
   <%= f.input(:name, as: :string, required: true) %>
@@ -10,7 +10,7 @@
   <%= f.button(:submit, "Submit") %>
 <% end %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   New Pool

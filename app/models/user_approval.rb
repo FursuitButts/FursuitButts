@@ -2,13 +2,13 @@
 
 class UserApproval < ApplicationRecord
   class ValidationError < StandardError; end
-  belongs_to_updater optional: true
-  belongs_to :user
-  enum status: {
+  belongs_to_updater(optional: true)
+  belongs_to(:user)
+  enum(status: {
     pending:  "pending",
     approved: "approved",
     rejected: "rejected",
-  }
+  })
 
   module SearchMethods
     def search(params)
@@ -56,6 +56,6 @@ class UserApproval < ApplicationRecord
     end
   end
 
-  include UpdateMethods
-  extend SearchMethods
+  include(UpdateMethods)
+  extend(SearchMethods)
 end

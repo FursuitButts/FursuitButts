@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class PostSearchContext
-  attr_reader :post
+  attr_reader(:post)
 
   def initialize(params)
     tags = params[:q].presence || params[:tags].presence || ""

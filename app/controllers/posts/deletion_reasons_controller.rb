@@ -2,8 +2,8 @@
 
 module Posts
   class DeletionReasonsController < ApplicationController
-    before_action :load_reason, only: %i[edit update destroy]
-    respond_to :html, :json
+    before_action(:load_reason, only: %i[edit update destroy])
+    respond_to(:html, :json)
 
     def index
       @reasons = authorize(PostDeletionReason).html_includes(request, :creator)

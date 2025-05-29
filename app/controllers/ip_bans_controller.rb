@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class IpBansController < ApplicationController
-  respond_to :html, :json
+  respond_to(:html, :json)
 
   def index
     @ip_bans = authorize(IpBan).html_includes(request, :creator)

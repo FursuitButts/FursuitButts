@@ -6,7 +6,7 @@
   <li>Followers: <%= link_to(@tag.follower_count, followers_tag_path(@tag)) %></li>
 </ul>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   Tag - <%= @tag.name %>

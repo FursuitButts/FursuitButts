@@ -1,5 +1,5 @@
-<%= render "sidebar", help_pages: @help_pages %>
-<%= render partial: "secondary_links" %>
+<%= render("sidebar", help_pages: @help_pages) %>
+<%= render(partial: "secondary_links") %>
 
 <% if policy(HelpPage).all?(:create?, :update?, :destroy?) %>
   <section id="content">

@@ -1,4 +1,4 @@
-<%= render partial: "search", locals: { path: pools_path } %>
+<%= render(partial: "search", locals: { path: pools_path }) %>
 <h2>Pools</h2>
 
 <%= table_for(@pools) do |t| %>
@@ -18,7 +18,7 @@
 
 <%= numbered_paginator(@pools) %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   Pools

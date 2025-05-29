@@ -2,7 +2,7 @@
 
 class LockableUserVote < UserVote
   self.abstract_class = true
-  validates :score, inclusion: { in: [-1, 1], message: "must be 1 or -1" }
+  validates(:score, inclusion: { in: [-1, 1], message: "must be 1 or -1" })
 
   def self.model_type
     super.to_s.delete_prefix("lockable_").to_sym

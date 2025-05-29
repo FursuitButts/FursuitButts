@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 class RelatedTagQuery
-  include ActiveModel::Serializers::JSON
+  include(ActiveModel::Serializers::JSON)
 
-  attr_reader :query, :category_id
+  attr_reader(:query, :category_id)
 
   def initialize(query: nil, category_id: nil)
     @query = TagAlias.to_aliased(query.to_s.downcase.strip).join(" ")

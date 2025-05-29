@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 class PostApproval < ApplicationRecord
-  belongs_to :user
-  belongs_to :post, inverse_of: :approvals
+  belongs_to(:user)
+  belongs_to(:post, inverse_of: :approvals)
 
-  validate :validate_approval
+  validate(:validate_approval)
 
   def validate_approval
     post.lock!
@@ -18,7 +18,7 @@ class PostApproval < ApplicationRecord
     end
   end
 
-  concerning :SearchMethods do
+  concerning(:SearchMethods) do
     class_methods do
       def post_tags_match(query)
         where(post_id: Post.tag_match_sql(query))

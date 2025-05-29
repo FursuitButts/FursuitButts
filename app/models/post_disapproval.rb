@@ -1,18 +1,18 @@
 # frozen_string_literal: true
 
 class PostDisapproval < ApplicationRecord
-  belongs_to :post
-  belongs_to :user
-  after_initialize :initialize_attributes, if: :new_record?
-  validates :post_id, uniqueness: { scope: %i[user_id], message: "have already hidden this post" }
-  validates :reason, inclusion: { in: %w[borderline_quality borderline_relevancy other] }
-  validates :message, length: { maximum: FemboyFans.config.disapproval_message_max_size }
+  belongs_to(:post)
+  belongs_to(:user)
+  after_initialize(:initialize_attributes, if: :new_record?)
+  validates(:post_id, uniqueness: { scope: %i[user_id], message: "have already hidden this post" })
+  validates(:reason, inclusion: { in: %w[borderline_quality borderline_relevancy other] })
+  validates(:message, length: { maximum: FemboyFans.config.disapproval_message_max_size })
 
-  scope :with_message, -> { where("message is not null and message <> ''") }
-  scope :without_message, -> { where("message is null or message = ''") }
-  scope :poor_quality, -> { where(reason: "borderline_quality") }
-  scope :not_relevant, -> { where(reason: "borderline_relevancy") }
-  after_save :update_post_index
+  scope(:with_message, -> { where("message is not null and message <> ''") })
+  scope(:without_message, -> { where("message is null or message = ''") })
+  scope(:poor_quality, -> { where(reason: "borderline_quality") })
+  scope(:not_relevant, -> { where(reason: "borderline_relevancy") })
+  after_save(:update_post_index)
 
   def initialize_attributes
     self.user_id ||= CurrentUser.user.id
@@ -48,7 +48,7 @@ class PostDisapproval < ApplicationRecord
     end
   end
 
-  extend SearchMethods
+  extend(SearchMethods)
 
   def update_post_index
     post.update_index

@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 class UserTextVersion < ApplicationRecord
-  belongs_to :updater, class_name: "User"
-  belongs_to :user
-  array_attribute :text_changes # "changes" is used by Rails
+  belongs_to(:updater, class_name: "User")
+  belongs_to(:user)
+  array_attribute(:text_changes) # "changes" is used by Rails
 
   CHANGE_TYPES = {
     about:     "About",
@@ -144,7 +144,7 @@ class UserTextVersion < ApplicationRecord
     end
   end
 
-  extend SearchMethods
+  extend(SearchMethods)
 
   def self.available_includes
     %i[updater user]

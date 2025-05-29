@@ -14,7 +14,7 @@
   <% end %>
 <% end %>
 
-<%= render partial: "popular/secondary_links" %>
+<%= render(partial: "popular/secondary_links") %>
 
 <% content_for(:page_title) do %>
   Missed Searches for <%= date_range_description(@date, @scale, @min_date, @max_date) %>

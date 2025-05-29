@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class DtextLinksController < ApplicationController
-  respond_to :html, :json
+  respond_to(:html, :json)
 
   def index
     @dtext_links = authorize(DtextLink).html_includes(request, :model)

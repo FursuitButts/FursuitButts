@@ -28,79 +28,79 @@ class Post < ApplicationRecord
     end
   end
 
-  include FemboyFans::HasBitFlags
+  include(FemboyFans::HasBitFlags)
   has_bit_flags(Flags.map)
 
-  before_validation :initialize_uploader, on: :create
-  before_validation :merge_old_changes
-  before_validation :apply_source_diff
-  before_validation :apply_tag_diff, if: :should_process_tags?
-  before_validation :normalize_tags, if: :should_process_tags?
-  before_validation :tag_count_not_insane, if: :should_process_tags?
-  before_validation :strip_source
-  before_validation :fix_bg_color
-  before_validation :blank_out_nonexistent_parents
-  before_validation :remove_parent_loops
-  normalizes :description, with: ->(desc) { desc.gsub("\r\n", "\n") }
-  validates :rating, inclusion: { in: %w[s q e], message: "rating must be s, q, or e" }
-  validates :bg_color, format: { with: /\A[A-Fa-f0-9]{6}\z/ }, allow_nil: true
-  validates :description, length: { maximum: FemboyFans.config.post_descr_max_size }, if: :description_changed?
-  validate :added_tags_are_valid, if: :should_process_tags?
-  validate :removed_tags_are_valid, if: :should_process_tags?
-  validate :has_artist_tag, if: :should_process_tags?
-  validate :has_enough_tags, if: :should_process_tags?
-  validate :post_is_not_its_own_parent
-  validate :updater_can_change_rating
-  validate :validate_thumbnail_frame
-  before_save :update_tag_post_counts, if: :should_process_tags?
-  before_save :update_qtags, if: :will_save_change_to_description?
-  after_update :regenerate_image_variants, if: :saved_change_to_thumbnail_frame?
-  after_save :create_post_events
-  after_save :create_version
-  after_save :update_parent_on_save
-  after_save :apply_post_metatags
-  after_commit :update_pool_artists
-  after_commit :update_tag_followers, on: %i[create update], if: :should_update_followers?
-  after_commit :delete_files, on: :destroy
-  after_commit :remove_iqdb_async, on: :destroy
-  after_commit :update_iqdb_async, on: :create
+  before_validation(:initialize_uploader, on: :create)
+  before_validation(:merge_old_changes)
+  before_validation(:apply_source_diff)
+  before_validation(:apply_tag_diff, if: :should_process_tags?)
+  before_validation(:normalize_tags, if: :should_process_tags?)
+  before_validation(:tag_count_not_insane, if: :should_process_tags?)
+  before_validation(:strip_source)
+  before_validation(:fix_bg_color)
+  before_validation(:blank_out_nonexistent_parents)
+  before_validation(:remove_parent_loops)
+  normalizes(:description, with: ->(desc) { desc.gsub("\r\n", "\n") })
+  validates(:rating, inclusion: { in: %w[s q e], message: "rating must be s, q, or e" })
+  validates(:bg_color, format: { with: /\A[A-Fa-f0-9]{6}\z/ }, allow_nil: true)
+  validates(:description, length: { maximum: FemboyFans.config.post_descr_max_size }, if: :description_changed?)
+  validate(:added_tags_are_valid, if: :should_process_tags?)
+  validate(:removed_tags_are_valid, if: :should_process_tags?)
+  validate(:has_artist_tag, if: :should_process_tags?)
+  validate(:has_enough_tags, if: :should_process_tags?)
+  validate(:post_is_not_its_own_parent)
+  validate(:updater_can_change_rating)
+  validate(:validate_thumbnail_frame)
+  before_save(:update_tag_post_counts, if: :should_process_tags?)
+  before_save(:update_qtags, if: :will_save_change_to_description?)
+  after_update(:regenerate_image_variants, if: :saved_change_to_thumbnail_frame?)
+  after_save(:create_post_events)
+  after_save(:create_version)
+  after_save(:update_parent_on_save)
+  after_save(:apply_post_metatags)
+  after_commit(:update_pool_artists)
+  after_commit(:update_tag_followers, on: %i[create update], if: :should_update_followers?)
+  after_commit(:delete_files, on: :destroy)
+  after_commit(:remove_iqdb_async, on: :destroy)
+  after_commit(:update_iqdb_async, on: :create)
 
-  belongs_to :updater, class_name: "User", optional: true # this is handled in versions
-  belongs_to :approver, class_name: "User", optional: true
-  belongs_to :uploader, class_name: "User", counter_cache: "post_count"
-  belongs_to :parent, class_name: "Post", optional: true
-  belongs_to :media_asset, class_name: "UploadMediaAsset", foreign_key: :upload_media_asset_id
-  has_one :upload, dependent: :destroy
-  has_many :flags, class_name: "PostFlag", dependent: :destroy
-  has_many :votes, class_name: "PostVote", dependent: :destroy
-  has_many :notes, dependent: :destroy
-  has_many :appeals, class_name: "PostAppeal", dependent: :destroy
-  has_many :comments, -> { includes(:creator, :updater).order("comments.is_sticky DESC, comments.id") }, dependent: :destroy
-  has_many :children, -> { order("posts.id") }, class_name: "Post", foreign_key: "parent_id"
-  has_many :approvals, class_name: "PostApproval", dependent: :destroy
-  has_many :disapprovals, class_name: "PostDisapproval", dependent: :destroy
-  has_many :favorites
-  has_many :replacements, -> { default_order }, class_name: "PostReplacement", dependent: :destroy
-  has_many :pool_covers, class_name: "Pool", foreign_key: :cover_post_id, dependent: :nullify
+  belongs_to(:updater, class_name: "User", optional: true) # this is handled in versions
+  belongs_to(:approver, class_name: "User", optional: true)
+  belongs_to(:uploader, class_name: "User", counter_cache: "post_count")
+  belongs_to(:parent, class_name: "Post", optional: true)
+  belongs_to(:media_asset, class_name: "UploadMediaAsset", foreign_key: :upload_media_asset_id)
+  has_one(:upload, dependent: :destroy)
+  has_many(:flags, class_name: "PostFlag", dependent: :destroy)
+  has_many(:votes, class_name: "PostVote", dependent: :destroy)
+  has_many(:notes, dependent: :destroy)
+  has_many(:appeals, class_name: "PostAppeal", dependent: :destroy)
+  has_many(:comments, -> { includes(:creator, :updater).order("comments.is_sticky DESC, comments.id") }, dependent: :destroy)
+  has_many(:children, -> { order("posts.id") }, class_name: "Post", foreign_key: "parent_id")
+  has_many(:approvals, class_name: "PostApproval", dependent: :destroy)
+  has_many(:disapprovals, class_name: "PostDisapproval", dependent: :destroy)
+  has_many(:favorites)
+  has_many(:replacements, -> { default_order }, class_name: "PostReplacement", dependent: :destroy)
+  has_many(:pool_covers, class_name: "Pool", foreign_key: :cover_post_id, dependent: :nullify)
 
-  attr_accessor :old_tag_string, :old_parent_id, :old_source, :old_rating,
+  attr_accessor(:old_tag_string, :old_parent_id, :old_source, :old_rating,
                 :do_not_version_changes, :tag_string_diff, :source_diff, :edit_reason, :tag_string_before_parse,
-                :automated_edit
+                :automated_edit)
 
-  has_many :versions, -> { order("post_versions.id ASC") }, class_name: "PostVersion", dependent: :destroy
+  has_many(:versions, -> { order("post_versions.id ASC") }, class_name: "PostVersion", dependent: :destroy)
 
-  scope :pending, -> { where(is_pending: true) }
-  scope :not_pending, -> { where(is_pending: false) }
-  scope :deleted, -> { where(is_deleted: true) }
-  scope :not_deleted, -> { where(is_deleted: false) }
-  scope :flagged, -> { where(is_flagged: true) }
-  scope :not_flagged, -> { where(is_flagged: false) }
-  scope :pending_or_flagged, -> { pending.or(flagged) }
-  scope :has_notes, -> { where.not(last_noted_at: nil) }
-  scope :for_user, ->(user_id) { where(uploader_id: user_id) }
-  scope :expired, -> { pending.where("posts.created_at < ?", PostPruner::MODERATION_WINDOW.days.ago) }
-  scope :with_assets, -> { includes(:media_asset) }
-  scope :with_assets_and_metadata, -> { with_assets.includes(media_asset: :media_metadata) }
+  scope(:pending, -> { where(is_pending: true) })
+  scope(:not_pending, -> { where(is_pending: false) })
+  scope(:deleted, -> { where(is_deleted: true) })
+  scope(:not_deleted, -> { where(is_deleted: false) })
+  scope(:flagged, -> { where(is_flagged: true) })
+  scope(:not_flagged, -> { where(is_flagged: false) })
+  scope(:pending_or_flagged, -> { pending.or(flagged) })
+  scope(:has_notes, -> { where.not(last_noted_at: nil) })
+  scope(:for_user, ->(user_id) { where(uploader_id: user_id) })
+  scope(:expired, -> { pending.where("posts.created_at < ?", PostPruner::MODERATION_WINDOW.days.ago) })
+  scope(:with_assets, -> { includes(:media_asset) })
+  scope(:with_assets_and_metadata, -> { with_assets.includes(media_asset: :media_metadata) })
 
   IMAGE_TYPES = %i[original large preview crop].freeze
 
@@ -132,7 +132,7 @@ class Post < ApplicationRecord
   end
 
   module PostFileMethods
-    extend ActiveSupport::Concern
+    extend(ActiveSupport::Concern)
 
     def delete_files
       media_asset&.expunge!
@@ -305,13 +305,13 @@ class Post < ApplicationRecord
       media_asset.generated_variants.include?(scale)
     end
 
-    delegate :regenerate_video_variants, to: :media_asset
+    delegate(:regenerate_video_variants, to: :media_asset)
 
-    delegate :regenerate_video_variants!, to: :media_asset
+    delegate(:regenerate_video_variants!, to: :media_asset)
 
-    delegate :regenerate_image_variants, to: :media_asset
+    delegate(:regenerate_image_variants, to: :media_asset)
 
-    delegate :regenerate_image_variants!, to: :media_asset
+    delegate(:regenerate_image_variants!, to: :media_asset)
   end
 
   module ImageMethods
@@ -1854,7 +1854,7 @@ class Post < ApplicationRecord
   end
 
   module IqdbMethods
-    extend ActiveSupport::Concern
+    extend(ActiveSupport::Concern)
 
     module ClassMethods
       def remove_iqdb(post_id)
@@ -2010,33 +2010,33 @@ class Post < ApplicationRecord
     end
   end
 
-  include MediaAsset::DelegateProperties
-  include PostFileMethods
-  include FileMethods
-  include ImageMethods
-  include ApprovalMethods
-  include SourceMethods
-  include PresenterMethods
-  include TagMethods
-  include FavoriteMethods
-  include UploaderMethods
-  include PoolMethods
-  include SetMethods
-  include VoteMethods
-  include ParentMethods
-  include DeletionMethods
-  include VersionMethods
-  include NoteMethods
-  include ApiMethods
-  include IqdbMethods
-  include ValidationMethods
-  include PostEventMethods
-  include DocumentStore::Model
-  include PostIndex
-  include ViewMethods
-  include QTagMethods
-  extend CountMethods
-  extend SearchMethods
+  include(MediaAsset::DelegateProperties)
+  include(PostFileMethods)
+  include(FileMethods)
+  include(ImageMethods)
+  include(ApprovalMethods)
+  include(SourceMethods)
+  include(PresenterMethods)
+  include(TagMethods)
+  include(FavoriteMethods)
+  include(UploaderMethods)
+  include(PoolMethods)
+  include(SetMethods)
+  include(VoteMethods)
+  include(ParentMethods)
+  include(DeletionMethods)
+  include(VersionMethods)
+  include(NoteMethods)
+  include(ApiMethods)
+  include(IqdbMethods)
+  include(ValidationMethods)
+  include(PostEventMethods)
+  include(DocumentStore::Model)
+  include(PostIndex)
+  include(ViewMethods)
+  include(QTagMethods)
+  extend(CountMethods)
+  extend(SearchMethods)
 
   def safeblocked?(_user = CurrentUser.user)
     return true if FemboyFans.config.safe_mode? && rating != "s"

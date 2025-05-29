@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 module Posts
   class ReplacementsControllerTest < ActionDispatch::IntegrationTest
-    context "The post replacements controller" do
+    context("The post replacements controller") do
       setup do
         @user = create(:janitor_user, created_at: 2.weeks.ago)
         @admin = create(:admin_user)
@@ -15,8 +15,8 @@ module Posts
         end
       end
 
-      context "create action" do
-        should "work" do
+      context("create action") do
+        should("work") do
           file = fixture_file_upload("alpha.png")
           params = {
             format:           :json,
@@ -34,7 +34,7 @@ module Posts
           end
         end
 
-        should "work with direct url" do
+        should("work with direct url") do
           file = fixture_file_upload("alpha.png")
           as(create(:admin_user)) { create(:upload_whitelist, pattern: "http://example.com/*") }
           CloudflareService.stubs(:ips).returns([])
@@ -55,7 +55,7 @@ module Posts
           end
         end
 
-        should "automatically approve replacements by approvers" do
+        should("automatically approve replacements by approvers") do
           file = fixture_file_upload("alpha.png")
           params = {
             format:           :json,
@@ -73,11 +73,11 @@ module Posts
             assert_equal(post_path(@post), @response.parsed_body["location"])
           end
 
-          assert_equal %w[approved original], @post.replacements.last(2).pluck(:status)
+          assert_equal(%w[approved original], @post.replacements.last(2).pluck(:status))
           assert_equal(false, @user.notifications.replacement_approve.exists?)
         end
 
-        should "not automatically approve replacements by approvers if as_pending=true" do
+        should("not automatically approve replacements by approvers if as_pending=true") do
           file = fixture_file_upload("alpha.png")
           params = {
             format:           :json,
@@ -95,11 +95,11 @@ module Posts
             @post.reload
           end
 
-          assert_equal @response.parsed_body["location"], post_path(@post)
-          assert_equal "pending", @post.replacements.last.status
+          assert_equal(@response.parsed_body["location"], post_path(@post))
+          assert_equal("pending", @post.replacements.last.status)
         end
 
-        context "with a previously destroyed post" do
+        context("with a previously destroyed post") do
           setup do
             @admin = create(:admin_user)
             as(@admin) do
@@ -110,13 +110,13 @@ module Posts
             end
           end
 
-          should "fail and create ticket" do
+          should("fail and create ticket") do
             previous_md5 = @post.md5
             assert_difference({ "Ticket.count" => 1 }) do
               assert_enqueued_jobs(1, only: NotifyExpungedMediaAssetReuploadJob) do
                 file = fixture_file_upload("test.png")
-                post_auth post_replacements_path, @user, params: { post_id: @post.id, post_replacement: { file: file, reason: "test replacement" }, format: :json }
-                assert_response :precondition_failed
+                post_auth(post_replacements_path, @user, params: { post_id: @post.id, post_replacement: { file: file, reason: "test replacement" }, format: :json })
+                assert_response(:precondition_failed)
                 assert_equal("That image has been deleted and cannot be reuploaded", @response.parsed_body["message"])
                 assert_equal("expunged", PostReplacementMediaAsset.last.status)
                 assert_equal(previous_md5, @post.reload.md5)
@@ -135,20 +135,20 @@ module Posts
           # end
         end
 
-        should "restrict access" do
+        should("restrict access") do
           FemboyFans.config.stubs(:disable_age_checks?).returns(true)
           file = fixture_file_upload("alpha.png")
           assert_access(User::Levels::MEMBER, anonymous_response: :forbidden) do |user|
             PostReplacement.delete_all
-            post_auth post_replacements_path, user, params: { post_replacement: { file: file, reason: "test replacement" }, post_id: @post.id, format: :json }
+            post_auth(post_replacements_path, user, params: { post_replacement: { file: file, reason: "test replacement" }, post_id: @post.id, format: :json })
           end
         end
       end
 
-      context "reject action" do
-        should "reject replacement" do
+      context("reject action") do
+        should("reject replacement") do
           janitor = create(:janitor_user)
-          put_auth reject_post_replacement_path(@replacement), janitor
+          put_auth(reject_post_replacement_path(@replacement), janitor)
           assert_redirected_to(post_path(@post))
 
           @replacement.reload
@@ -159,8 +159,8 @@ module Posts
           assert_equal(true, @replacement.creator.notifications.replacement_reject.exists?)
         end
 
-        should "reject replacement with a reason" do
-          put_auth reject_post_replacement_path(@replacement), @user, params: { post_replacement: { reason: "test" } }
+        should("reject replacement with a reason") do
+          put_auth(reject_post_replacement_path(@replacement), @user, params: { post_replacement: { reason: "test" } })
           assert_redirected_to(post_path(@post))
           @replacement.reload
           @post.reload
@@ -170,30 +170,30 @@ module Posts
           assert_not_equal(@post.md5, @replacement.md5)
         end
 
-        should "restrict access" do
+        should("restrict access") do
           assert_access([User::Levels::JANITOR, User::Levels::ADMIN, User::Levels::OWNER], success_response: :redirect) do |user|
             PostReplacement.delete_all
             replacement = create(:png_replacement, creator: @user, post: @post)
-            put_auth reject_post_replacement_path(replacement), user
+            put_auth(reject_post_replacement_path(replacement), user)
           end
         end
       end
 
-      context "reject_with_reason action" do
-        should "render" do
-          get_auth reject_with_reason_post_replacement_path(@replacement), @user
+      context("reject_with_reason action") do
+        should("render") do
+          get_auth(reject_with_reason_post_replacement_path(@replacement), @user)
           assert_response(:success)
         end
 
-        should "restrict access" do
-          assert_access([User::Levels::JANITOR, User::Levels::ADMIN, User::Levels::OWNER]) { |user| get_auth reject_with_reason_post_replacement_path(@replacement), user }
+        should("restrict access") do
+          assert_access([User::Levels::JANITOR, User::Levels::ADMIN, User::Levels::OWNER]) { |user| get_auth(reject_with_reason_post_replacement_path(@replacement), user) }
         end
       end
 
-      context "approve action" do
-        should "replace post" do
-          put_auth approve_post_replacement_path(@replacement), create(:janitor_user)
-          assert_redirected_to post_path(@post)
+      context("approve action") do
+        should("replace post") do
+          put_auth(approve_post_replacement_path(@replacement), create(:janitor_user))
+          assert_redirected_to(post_path(@post))
           @replacement.reload
           @post.reload
           assert_equal(@replacement.md5, @post.md5)
@@ -201,7 +201,7 @@ module Posts
           assert_equal(true, @replacement.creator.notifications.replacement_approve.exists?)
         end
 
-        should "restrict access" do
+        should("restrict access") do
           @janitor = create(:janitor_user)
           as(@janitor) { [Post, Upload, UploadMediaAsset, PostReplacementMediaAsset, PostReplacement].each(&:destroy_all) }
           assert_access([User::Levels::JANITOR, User::Levels::ADMIN, User::Levels::OWNER], anonymous_response: :forbidden) do |user|
@@ -209,16 +209,16 @@ module Posts
               @upload = create(:jpg_upload, uploader: @janitor, uploader_ip_addr: "127.0.0.1")
               create(:png_replacement, post: @upload.post)
             end
-            put_auth approve_post_replacement_path(replacement), user, params: { format: :json }
+            put_auth(approve_post_replacement_path(replacement), user, params: { format: :json })
           end
         end
       end
 
-      context "promote action" do
-        should "create post" do
-          post_auth promote_post_replacement_path(@replacement), create(:janitor_user)
+      context("promote action") do
+        should("create post") do
+          post_auth(promote_post_replacement_path(@replacement), create(:janitor_user))
           last_post = Post.last
-          assert_redirected_to post_path(last_post)
+          assert_redirected_to(post_path(last_post))
           @replacement.reload
           @post.reload
           assert_equal(@replacement.md5, last_post.md5)
@@ -226,7 +226,7 @@ module Posts
           assert_equal(true, @replacement.creator.notifications.replacement_promote.exists?)
         end
 
-        should "restrict access" do
+        should("restrict access") do
           @janitor = create(:janitor_user)
           as(@janitor) { [Post, Upload, UploadMediaAsset, PostReplacementMediaAsset, PostReplacement].each(&:destroy_all) }
           assert_access([User::Levels::JANITOR, User::Levels::ADMIN, User::Levels::OWNER], success_response: :redirect) do |user|
@@ -234,60 +234,60 @@ module Posts
               @upload = create(:jpg_upload, uploader: @janitor, uploader_ip_addr: "127.0.0.1")
               create(:png_replacement, post: @upload.post)
             end
-            post_auth promote_post_replacement_path(replacement), user
+            post_auth(promote_post_replacement_path(replacement), user)
           end
         end
       end
 
-      context "toggle action" do
-        should "change penalize_uploader flag" do
-          put_auth approve_post_replacement_path(@replacement, penalize_current_uploader: true), @user
+      context("toggle action") do
+        should("change penalize_uploader flag") do
+          put_auth(approve_post_replacement_path(@replacement, penalize_current_uploader: true), @user)
           @replacement.reload
-          assert @replacement.penalize_uploader_on_approve
-          put_auth toggle_penalize_post_replacement_path(@replacement), @user
-          assert_redirected_to post_replacement_path(@replacement)
+          assert(@replacement.penalize_uploader_on_approve)
+          put_auth(toggle_penalize_post_replacement_path(@replacement), @user)
+          assert_redirected_to(post_replacement_path(@replacement))
           @replacement.reload
-          assert_not @replacement.penalize_uploader_on_approve
+          assert_not(@replacement.penalize_uploader_on_approve)
         end
 
-        should "restrict access" do
+        should("restrict access") do
           as(create(:admin_user)) { @replacement.approve!(penalize_current_uploader: true) }
-          assert_access([User::Levels::JANITOR, User::Levels::ADMIN, User::Levels::OWNER], anonymous_response: :forbidden) { |user| put_auth toggle_penalize_post_replacement_path(@replacement), user, params: { format: :json } }
+          assert_access([User::Levels::JANITOR, User::Levels::ADMIN, User::Levels::OWNER], anonymous_response: :forbidden) { |user| put_auth(toggle_penalize_post_replacement_path(@replacement), user, params: { format: :json }) }
         end
       end
 
-      context "index action" do
-        should "render" do
-          get post_replacements_path
-          assert_response :success
+      context("index action") do
+        should("render") do
+          get(post_replacements_path)
+          assert_response(:success)
         end
 
-        should "restrict access" do
-          assert_access(User::Levels::ANONYMOUS) { |user| get_auth post_replacements_path, user }
-        end
-      end
-
-      context "new action" do
-        should "render" do
-          get_auth new_post_replacement_path, @user, params: { post_id: @post.id }
-          assert_response :success
-        end
-
-        should "restrict access" do
-          assert_access(User::Levels::MEMBER) { |user| get_auth new_post_replacement_path, user, params: { post_id: @post.id } }
+        should("restrict access") do
+          assert_access(User::Levels::ANONYMOUS) { |user| get_auth(post_replacements_path, user) }
         end
       end
 
-      context "destroy action" do
-        should "work" do
-          delete_auth post_replacement_path(@replacement), @admin
-          assert_redirected_to post_path(@post)
+      context("new action") do
+        should("render") do
+          get_auth(new_post_replacement_path, @user, params: { post_id: @post.id })
+          assert_response(:success)
+        end
+
+        should("restrict access") do
+          assert_access(User::Levels::MEMBER) { |user| get_auth(new_post_replacement_path, user, params: { post_id: @post.id }) }
+        end
+      end
+
+      context("destroy action") do
+        should("work") do
+          delete_auth(post_replacement_path(@replacement), @admin)
+          assert_redirected_to(post_path(@post))
           assert_equal(false, ::PostReplacement.exists?(@replacement.id))
           assert_equal("expunged", @replacement.media_asset.reload.status)
         end
 
-        should "restrict access" do
-          assert_access(User::Levels::ADMIN, success_response: :redirect) { |user| delete_auth post_replacement_path(@replacement), user }
+        should("restrict access") do
+          assert_access(User::Levels::ADMIN, success_response: :redirect) { |user| delete_auth(post_replacement_path(@replacement), user) }
         end
       end
     end

@@ -3,19 +3,19 @@
 
   <div class="section" style="width:450px;">
     <ul class="link-page">
-      <li>» <%= link_to "Login", new_session_path %></li>
+      <li>» <%= link_to("Login", new_session_path) %></li>
 
       <% if FemboyFans.config.enable_signups? %>
-        <li>» <%= link_to "Sign up", new_user_path %></li>
+        <li>» <%= link_to("Sign up", new_user_path) %></li>
       <% else %>
         <li>Signups are disabled</li>
       <% end %>
 
-      <li>» <%= link_to "Reset password", new_users_password_reset_path %></li>
-      <li>» <%= link_to "Login reminder", new_users_login_reminder_path %></li>
+      <li>» <%= link_to("Reset password", new_users_password_reset_path) %></li>
+      <li>» <%= link_to("Login reminder", new_users_login_reminder_path) %></li>
 
       <% if FemboyFans.config.enable_email_verification? %>
-        <li>» <%= link_to "Resend activation email", resend_confirmation_email_path %></li>
+        <li>» <%= link_to("Resend activation email", resend_confirmation_email_path) %></li>
       <% end %>
     </ul>
   </div>
@@ -163,4 +163,4 @@
   Home
 <% end %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>

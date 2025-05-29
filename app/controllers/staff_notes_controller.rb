@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class StaffNotesController < ApplicationController
-  before_action :load_staff_note, only: %i[update destroy]
-  respond_to :html, :json
+  before_action(:load_staff_note, only: %i[update destroy])
+  respond_to(:html, :json)
 
   def index
     @user = User.find_by(id: params[:user_id])

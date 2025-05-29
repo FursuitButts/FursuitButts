@@ -7,12 +7,12 @@
 <%= form_tag(users_password_reset_path, class: "simple_form") do %>
   <div class="input email required">
     <label for="nonce_email" class="required">Email</label>
-    <%= text_field_tag :email %>
+    <%= text_field_tag(:email) %>
   </div>
-  <%= submit_tag "Submit" %>
+  <%= submit_tag("Submit") %>
 <% end %>
 
-<%= render "sessions/secondary_links" %>
+<%= render("sessions/secondary_links") %>
 
 <% content_for(:page_title) do %>
   Reset Password

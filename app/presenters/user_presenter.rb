@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class UserPresenter
-  attr_reader :user
+  attr_reader(:user)
 
   def initialize(user)
     @user = user

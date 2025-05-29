@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 class AvoidPostingsController < ApplicationController
-  respond_to :html, :json
-  before_action :load_avoid_posting, except: %i[index new create]
-  helper_method :search_params
+  respond_to(:html, :json)
+  before_action(:load_avoid_posting, except: %i[index new create])
+  helper_method(:search_params)
 
   def index
     @avoid_postings = authorize(AvoidPosting).html_includes(request, :artist, :creator)

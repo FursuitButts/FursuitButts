@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 class BulkUpdateRequestsController < ApplicationController
-  respond_to :html, :json
-  before_action :load_bulk_update_request, except: %i[new create index]
-  before_action :ensure_lockdown_disabled, except: %i[index show]
+  respond_to(:html, :json)
+  before_action(:load_bulk_update_request, except: %i[new create index])
+  before_action(:ensure_lockdown_disabled, except: %i[index show])
 
   def index
     @bulk_update_requests = authorize(BulkUpdateRequest).html_includes(request, :forum_post, :creator, :approver)

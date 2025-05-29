@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 class DmailFilter < ApplicationRecord
-  belongs_to :user
-  before_validation :initialize_user
-  validates :words, length: { maximum: 1000 }
+  belongs_to(:user)
+  before_validation(:initialize_user)
+  validates(:words, length: { maximum: 1000 })
 
   def initialize_user
     unless user_id

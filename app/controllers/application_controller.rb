@@ -4,28 +4,28 @@ class ApplicationController < ActionController::Base
   class APIThrottled < StandardError; end
   class FeatureUnavailable < StandardError; end
 
-  skip_forgery_protection if: -> { SessionLoader.new(request).has_api_authentication? || request.options? }
-  before_action :reset_current_user
-  before_action :set_current_user
-  before_action :normalize_search
-  before_action :api_check
-  before_action :enable_cors
-  before_action :check_valid_username
-  after_action :reset_current_user
-  layout "default"
+  skip_forgery_protection(if: -> { SessionLoader.new(request).has_api_authentication? || request.options? })
+  before_action(:reset_current_user)
+  before_action(:set_current_user)
+  before_action(:normalize_search)
+  before_action(:api_check)
+  before_action(:enable_cors)
+  before_action(:check_valid_username)
+  after_action(:reset_current_user)
+  layout("default")
 
   self.responder = ApplicationResponder
 
-  include TitleHelper
-  include DeferredPosts
-  include Pundit::Authorization
-  helper_method :deferred_post_ids, :deferred_posts, :search_params, :can_use_attribute?, :can_use_attributes?, :can_use_any_attribute?
+  include(TitleHelper)
+  include(DeferredPosts)
+  include(Pundit::Authorization)
+  helper_method(:deferred_post_ids, :deferred_posts, :search_params, :can_use_attribute?, :can_use_attributes?, :can_use_any_attribute?)
 
-  rescue_from Exception, with: :rescue_exception
+  rescue_from(Exception, with: :rescue_exception)
 
   # This is raised on requests to `/blah.js`. Rails has already rendered StaticController#not_found
   # here, so calling `rescue_exception` would cause a double render error.
-  rescue_from ActionController::InvalidCrossOriginRequest, with: -> {}
+  rescue_from(ActionController::InvalidCrossOriginRequest, with: -> {})
 
   def enable_cors
     response.headers["Access-Control-Allow-Origin"] = "*"

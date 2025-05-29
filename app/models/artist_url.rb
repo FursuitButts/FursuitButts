@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
 class ArtistUrl < ApplicationRecord
-  before_validation :initialize_normalized_url, on: :create
-  before_validation :normalize
-  validates :url, presence: true, uniqueness: { scope: :artist_id }
-  validates :url, length: { in: 1..4096 }
-  validate :validate_url_format
-  belongs_to :artist, touch: true
+  before_validation(:initialize_normalized_url, on: :create)
+  before_validation(:normalize)
+  validates(:url, presence: true, uniqueness: { scope: :artist_id })
+  validates(:url, length: { in: 1..4096 })
+  validate(:validate_url_format)
+  belongs_to(:artist, touch: true)
 
-  scope :url_matches, ->(url) { url_attribute_matches(:url, url) }
-  scope :normalized_url_matches, ->(url) { url_attribute_matches(:normalized_url, url) }
+  scope(:url_matches, ->(url) { url_attribute_matches(:url, url) })
+  scope(:normalized_url_matches, ->(url) { url_attribute_matches(:normalized_url, url) })
 
   def self.parse_prefix(url)
     prefix, url = url.match(/\A(-)?(.*)/)[1, 2]

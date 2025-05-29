@@ -2,7 +2,7 @@
 
 # Captures all the input names used in a form block
 class FormFieldCollector
-  attr_reader :fields
+  attr_reader(:fields)
 
   def initialize
     @fields = []

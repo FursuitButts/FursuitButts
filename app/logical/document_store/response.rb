@@ -2,10 +2,10 @@
 
 module DocumentStore
   class Response
-    include FemboyFans::Paginator::DocumentStoreExtensions
+    include(FemboyFans::Paginator::DocumentStoreExtensions)
 
-    delegate_missing_to :records
-    attr_reader :klass, :search
+    delegate_missing_to(:records)
+    attr_reader(:klass, :search)
 
     def initialize(klass, search)
       @klass = klass

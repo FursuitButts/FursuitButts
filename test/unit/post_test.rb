@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 class PostTest < ActiveSupport::TestCase
   def assert_tag_match(posts, query)
@@ -13,8 +13,8 @@ class PostTest < ActiveSupport::TestCase
     reset_post_index
   end
 
-  context "Deletion:" do
-    context "Expunging a post" do
+  context("Deletion:") do
+    context("Expunging a post") do
       # That belonged in a museum!
       setup do
         @upload = create(:jpg_upload, uploader: @user)
@@ -22,7 +22,7 @@ class PostTest < ActiveSupport::TestCase
         FavoriteManager.add!(user: @post.uploader, post: @post)
       end
 
-      should "delete the files" do
+      should("delete the files") do
         assert_nothing_raised { @post.preview_file }
         assert_nothing_raised { @post.file }
 
@@ -32,55 +32,55 @@ class PostTest < ActiveSupport::TestCase
         assert_raise(Errno::ENOENT) { @post.file }
       end
 
-      should "remove all favorites" do
+      should("remove all favorites") do
         @post.expunge!
 
         assert_equal(0, Favorite.for_user(@post.uploader_id).where(post_id: @post.id).count)
       end
 
-      should "decrement the uploader's upload count" do
+      should("decrement the uploader's upload count") do
         assert_difference("@post.uploader.reload.post_upload_count", -1) do
           @post.expunge!
         end
       end
 
-      should "decrement the user's note update count" do
+      should("decrement the user's note update count") do
         create(:note, post: @post)
         assert_difference(["@post.uploader.reload.note_update_count"], -1) do
           @post.expunge!
         end
       end
 
-      should "decrement the user's post update count" do
+      should("decrement the user's post update count") do
         assert_difference(["@post.uploader.reload.post_update_count"], -1) do
           @post.expunge!
         end
       end
 
-      should "decrement the user's favorite count" do
+      should("decrement the user's favorite count") do
         assert_difference(["@post.uploader.reload.favorite_count"], -1) do
           @post.expunge!
         end
       end
 
-      should "remove the post from iqdb" do
+      should("remove the post from iqdb") do
         request_stub = stub_request(:delete, "#{IqdbProxy.endpoint}/images/#{@post.id}")
         with_inline_jobs { @post.expunge! }
-        assert_requested request_stub
+        assert_requested(request_stub)
       end
 
-      context "that is status locked" do
+      context("that is status locked") do
         setup do
           @post.update(is_status_locked: true)
         end
 
-        should "not destroy the record" do
+        should("not destroy the record") do
           @post.expunge!
           assert_equal(1, Post.where("id = ?", @post.id).count)
         end
       end
 
-      context "that belongs to a pool" do
+      context("that belongs to a pool") do
         setup do
           @pool = create(:pool)
           @pool.add!(@post)
@@ -89,36 +89,36 @@ class PostTest < ActiveSupport::TestCase
           @pool.reload
         end
 
-        should "remove the post from all pools" do
+        should("remove the post from all pools") do
           assert_equal([], @pool.post_ids)
         end
 
-        should "destroy the record" do
+        should("destroy the record") do
           assert_equal([], @post.errors.full_messages)
           assert_equal(0, Post.where("id = ?", @post.id).count)
         end
       end
     end
 
-    context "Deleting a post" do
-      context "that is status locked" do
+    context("Deleting a post") do
+      context("that is status locked") do
         setup do
           @post = create(:post, is_status_locked: true)
         end
 
-        should "fail" do
+        should("fail") do
           @post.delete!("test")
           assert_equal(["Is status locked ; cannot delete post"], @post.errors.full_messages)
           assert_equal(1, Post.where("id = ?", @post.id).count)
         end
       end
 
-      context "that is pending" do
+      context("that is pending") do
         setup do
           @post = create(:post, is_pending: true)
         end
 
-        should "succeed" do
+        should("succeed") do
           @post.delete!("test")
 
           assert_equal(true, @post.is_deleted)
@@ -127,8 +127,8 @@ class PostTest < ActiveSupport::TestCase
         end
       end
 
-      context "that is still in cooldown after being flagged" do
-        should "succeed" do
+      context("that is still in cooldown after being flagged") do
+        should("succeed") do
           flag = create(:post_flag)
           assert_equal([], flag.errors.full_messages)
           flag.post.delete!("test deletion")
@@ -138,7 +138,7 @@ class PostTest < ActiveSupport::TestCase
         end
       end
 
-      should "toggle the is_deleted flag" do
+      should("toggle the is_deleted flag") do
         post = create(:post)
         assert_equal(false, post.is_deleted?)
         post.delete!("test")
@@ -147,26 +147,26 @@ class PostTest < ActiveSupport::TestCase
     end
   end
 
-  context "Parent:" do
+  context("Parent:") do
     setup do
       @parent = create(:post, tag_string: "a b c d", source: "a\nb\nc")
       @post = create(:post, parent_id: @parent.id, tag_string: "c d e f", source: "b\nc\nd")
     end
-    should "Copy tags to parent" do
+    should("Copy tags to parent") do
       @post.copy_tags_to_parent
       @post.parent.save
       assert_equal(@parent.reload.tag_string, "a b c d e f invalid_source")
     end
-    should "Copy sources to parent" do
+    should("Copy sources to parent") do
       @post.copy_sources_to_parent
       @post.parent.save
       assert_equal(@parent.reload.source, "a\nb\nc\nd")
     end
   end
 
-  context "Parenting:" do
-    context "Assigning a parent to a post" do
-      should "update the has_children flag on the parent" do
+  context("Parenting:") do
+    context("Assigning a parent to a post") do
+      should("update the has_children flag on the parent") do
         p1 = create(:post)
         assert_not(p1.has_children?, "Parent should not have any children")
         create(:post, parent_id: p1.id)
@@ -174,7 +174,7 @@ class PostTest < ActiveSupport::TestCase
         assert(p1.has_children?, "Parent not updated after child was added")
       end
 
-      should "update the has_children flag on the old parent" do
+      should("update the has_children flag on the old parent") do
         p1 = create(:post)
         p2 = create(:post)
         c1 = create(:post, parent_id: p1.id)
@@ -187,9 +187,9 @@ class PostTest < ActiveSupport::TestCase
       end
     end
 
-    context "Expunging a post with" do
-      context "a parent" do
-        should "reset the has_children flag of the parent" do
+    context("Expunging a post with") do
+      context("a parent") do
+        should("reset the has_children flag of the parent") do
           p1 = create(:post)
           c1 = create(:post, parent_id: p1.id)
           c1.expunge!
@@ -197,7 +197,7 @@ class PostTest < ActiveSupport::TestCase
           assert_equal(false, p1.has_children?)
         end
 
-        should "update the parent's has_children flag" do
+        should("update the parent's has_children flag") do
           p1 = create(:post)
           c1 = create(:post, parent_id: p1.id)
           c1.expunge!
@@ -206,8 +206,8 @@ class PostTest < ActiveSupport::TestCase
         end
       end
 
-      context "one child" do
-        should "remove the parent of that child" do
+      context("one child") do
+        should("remove the parent of that child") do
           p1 = create(:post)
           c1 = create(:post, parent_id: p1.id)
           p1.expunge!
@@ -216,7 +216,7 @@ class PostTest < ActiveSupport::TestCase
         end
       end
 
-      context "two or more children" do
+      context("two or more children") do
         setup do
           # ensure initial post versions won't be merged.
           travel_to(1.day.ago) do
@@ -227,7 +227,7 @@ class PostTest < ActiveSupport::TestCase
           end
         end
 
-        should "reparent all children to the first child" do
+        should("reparent all children to the first child") do
           @p1.expunge!
           @c1.reload
           @c2.reload
@@ -238,7 +238,7 @@ class PostTest < ActiveSupport::TestCase
           assert_equal(@c1.id, @c3.parent_id)
         end
 
-        should "save a post version record for each child" do
+        should("save a post version record for each child") do
           assert_difference(["@c1.versions.count", "@c2.versions.count", "@c3.versions.count"]) do
             @p1.expunge!
             @c1.reload
@@ -247,16 +247,16 @@ class PostTest < ActiveSupport::TestCase
           end
         end
 
-        should "set the has_children flag on the new parent" do
+        should("set the has_children flag on the new parent") do
           @p1.expunge!
           assert_equal(true, @c1.reload.has_children?)
         end
       end
     end
 
-    context "Deleting a post with" do
-      context "a parent" do
-        should "not reassign favorites and votes to the parent by default" do
+    context("Deleting a post with") do
+      context("a parent") do
+        should("not reassign favorites and votes to the parent by default") do
           p1 = create(:post)
           c1 = create(:post, parent_id: p1.id)
           user = create(:trusted_user)
@@ -270,7 +270,7 @@ class PostTest < ActiveSupport::TestCase
           assert_not(PostVote.exists?(post_id: p1.id, user_id: user.id), "Parent should not have votes")
         end
 
-        should "reassign favorites and votes to the parent if specified" do
+        should("reassign favorites and votes to the parent if specified") do
           p1 = create(:post)
           c1 = create(:post, parent_id: p1.id)
           user = create(:trusted_user)
@@ -284,7 +284,7 @@ class PostTest < ActiveSupport::TestCase
           assert(PostVote.exists?(post_id: p1.id, user_id: user.id), "Parent should have votes")
         end
 
-        should "not update the parent's has_children flag" do
+        should("not update the parent's has_children flag") do
           p1 = create(:post)
           c1 = create(:post, parent_id: p1.id)
           c1.delete!("test")
@@ -292,7 +292,7 @@ class PostTest < ActiveSupport::TestCase
           assert(p1.has_children?, "Parent should have children")
         end
 
-        should "clear the has_active_children flag when the 'move favorites' option is set" do
+        should("clear the has_active_children flag when the 'move favorites' option is set") do
           user = create(:trusted_user)
           p1 = create(:post)
           c1 = create(:post, parent_id: p1.id)
@@ -304,8 +304,8 @@ class PostTest < ActiveSupport::TestCase
         end
       end
 
-      context "one child" do
-        should "not remove the has_children flag" do
+      context("one child") do
+        should("not remove the has_children flag") do
           p1 = create(:post)
           create(:post, parent_id: p1.id)
           p1.delete!("test")
@@ -313,7 +313,7 @@ class PostTest < ActiveSupport::TestCase
           assert_equal(true, p1.has_children?)
         end
 
-        should "not remove the parent of that child" do
+        should("not remove the parent of that child") do
           p1 = create(:post)
           c1 = create(:post, parent_id: p1.id)
           p1.delete!("test")
@@ -322,8 +322,8 @@ class PostTest < ActiveSupport::TestCase
         end
       end
 
-      context "two or more children" do
-        should "not reparent all children to the first child" do
+      context("two or more children") do
+        should("not reparent all children to the first child") do
           p1 = create(:post)
           c1 = create(:post, parent_id: p1.id)
           c2 = create(:post, parent_id: p1.id)
@@ -339,8 +339,8 @@ class PostTest < ActiveSupport::TestCase
       end
     end
 
-    context "Undeleting a post with a parent" do
-      should "update with a new approver" do
+    context("Undeleting a post with a parent") do
+      should("update with a new approver") do
         new_user = create(:moderator_user)
         p1 = create(:post)
         c1 = create(:post, parent_id: p1.id)
@@ -352,7 +352,7 @@ class PostTest < ActiveSupport::TestCase
         assert_equal(new_user.id, c1.approver_id)
       end
 
-      should "preserve the parent's has_children flag" do
+      should("preserve the parent's has_children flag") do
         p1 = create(:post)
         c1 = create(:post, parent_id: p1.id)
         c1.delete!("test")
@@ -364,34 +364,34 @@ class PostTest < ActiveSupport::TestCase
     end
   end
 
-  context "Moderation:" do
-    context "A deleted post" do
+  context("Moderation:") do
+    context("A deleted post") do
       setup do
         @post = create(:post, is_deleted: true)
       end
 
-      context "that is status locked" do
+      context("that is status locked") do
         setup do
           @post.update(is_status_locked: true)
         end
 
-        should "not allow undeletion" do
+        should("not allow undeletion") do
           @post.undelete!
           assert_equal(["Is status locked ; cannot undelete post"], @post.errors.full_messages)
           assert_equal(true, @post.is_deleted?)
         end
       end
 
-      context "when undeleted" do
-        should "be undeleted" do
+      context("when undeleted") do
+        should("be undeleted") do
           @post.undelete!
           assert_equal(false, @post.reload.is_deleted?)
         end
       end
     end
 
-    context "An approved post" do
-      should "be flagged" do
+    context("An approved post") do
+      should("be flagged") do
         post = create(:post)
         assert_difference(-> { PostFlag.count }, 1) do
           create(:post_flag, post: post)
@@ -400,7 +400,7 @@ class PostTest < ActiveSupport::TestCase
         assert_equal(1, post.flags.count)
       end
 
-      should "not be flagged if no reason is given" do
+      should("not be flagged if no reason is given") do
         post = create(:post)
         assert_no_difference(-> { PostFlag.count }) do
           post.flags.create(reason_name: "")
@@ -408,14 +408,14 @@ class PostTest < ActiveSupport::TestCase
       end
     end
 
-    context "An unapproved post" do
-      should "preserve the approver's identity when approved" do
+    context("An unapproved post") do
+      should("preserve the approver's identity when approved") do
         post = create(:post, is_pending: true)
         post.approve!
         assert_equal(post.approver_id, CurrentUser.id)
       end
 
-      context "that was previously approved by person X" do
+      context("that was previously approved by person X") do
         setup do
           @user = create(:moderator_user, name: "xxx")
           @user2 = create(:moderator_user, name: "yyy")
@@ -424,20 +424,20 @@ class PostTest < ActiveSupport::TestCase
           @post.unapprove!
         end
 
-        should "allow person Y to approve the post" do
+        should("allow person Y to approve the post") do
           @post.approve!(@user2)
           assert(@post.valid?)
         end
       end
 
-      context "that has been reapproved" do
+      context("that has been reapproved") do
         setup do
           @post = create(:post)
           create(:post_flag, post: @post)
           @post.reload
         end
 
-        should "no longer be pending" do
+        should("no longer be pending") do
           @post.approve!
           assert(@post.errors.empty?, @post.errors.full_messages.join(", "))
           @post.reload
@@ -447,18 +447,18 @@ class PostTest < ActiveSupport::TestCase
       end
     end
 
-    context "A status locked post" do
+    context("A status locked post") do
       setup do
         @post = create(:post, is_status_locked: true, is_pending: true)
       end
 
-      should "not allow new flags" do
+      should("not allow new flags") do
         flag = build(:post_flag, post: @post)
         flag.validate
         assert_equal(["Post is locked and cannot be flagged"], flag.errors.full_messages)
       end
 
-      should "not allow approval" do
+      should("not allow approval") do
         assert_no_difference(-> { PostApproval.count }) do
           @post.approve!
         end
@@ -466,13 +466,13 @@ class PostTest < ActiveSupport::TestCase
     end
   end
 
-  context "Tagging:" do
-    context "A post" do
+  context("Tagging:") do
+    context("A post") do
       setup do
         @post = create(:post)
       end
 
-      context "as a new user" do
+      context("as a new user") do
         setup do
           @post.update(tag_string: "aaa bbb ccc ddd tagme")
           CurrentUser.user = create(:user)
@@ -484,14 +484,14 @@ class PostTest < ActiveSupport::TestCase
         #   assert_equal(["You must have an account at least 1 week old to remove tags"], @post.errors.full_messages)
         # end
 
-        should "allow you to remove request tags" do
+        should("allow you to remove request tags") do
           @post.update(tag_string: "aaa bbb ccc ddd")
           @post.reload
           assert_equal("aaa bbb ccc ddd", @post.tag_string)
         end
       end
 
-      context "with an artist tag that is then changed to copyright" do
+      context("with an artist tag that is then changed to copyright") do
         setup do
           CurrentUser.user = create(:janitor_user)
           with_inline_jobs do
@@ -501,22 +501,22 @@ class PostTest < ActiveSupport::TestCase
           @post.reload
         end
 
-        should "update the category of the tag" do
+        should("update the category of the tag") do
           assert_equal(TagCategory.copyright, Tag.find_by(name: "abc").category)
         end
 
-        should "update the category cache of the tag" do
+        should("update the category cache of the tag") do
           assert_equal(TagCategory.copyright, Cache.fetch("tc:abc"))
         end
 
-        should "update the tag counts of the posts" do
+        should("update the tag counts of the posts") do
           assert_equal(0, @post.tag_count_artist)
           assert_equal(1, @post.tag_count_copyright)
           assert_equal(0, @post.tag_count_general)
         end
       end
 
-      context "using a tag prefix on an aliased tag" do
+      context("using a tag prefix on an aliased tag") do
         setup do
           create(:tag_alias, antecedent_name: "abc", consequent_name: "xyz")
           @post = Post.find(@post.id)
@@ -524,36 +524,36 @@ class PostTest < ActiveSupport::TestCase
           @post.reload
         end
 
-        should "convert the tag to its normalized version" do
+        should("convert the tag to its normalized version") do
           assert_equal("xyz", @post.tag_string)
         end
       end
 
-      context "with locked tags" do
-        context "without aliases or implications" do
+      context("with locked tags") do
+        context("without aliases or implications") do
           setup do
             @post = create(:post, locked_tags: "abc -what bcd -def", tag_string: "test_tag def")
           end
 
-          should "contain correct tags" do
+          should("contain correct tags") do
             assert_equal("abc bcd test_tag", @post.tag_string)
           end
         end
 
-        context "with aliases" do
+        context("with aliases") do
           setup do
             create(:tag_alias, antecedent_name: "abc", consequent_name: "xyz")
             create(:tag_alias, antecedent_name: "def", consequent_name: "what")
             @post = create(:post, locked_tags: "abc bcd -def", tag_string: "test_tag def what")
           end
 
-          should "contain correct tags" do
+          should("contain correct tags") do
             assert_equal("bcd test_tag xyz", @post.tag_string)
           end
         end
 
-        context "with implications" do
-          should "contain correct tags" do
+        context("with implications") do
+          should("contain correct tags") do
             create(:tag_implication, antecedent_name: "specific_tag", consequent_name: "base_tag")
             create(:tag_implication, antecedent_name: "female/female", consequent_name: "female")
             create(:tag_implication, antecedent_name: "male/male", consequent_name: "male")
@@ -564,7 +564,7 @@ class PostTest < ActiveSupport::TestCase
             assert_equal("def group male male/male test_tag", @post.tag_string)
           end
 
-          should "update the cache when implications change" do
+          should("update the cache when implications change") do
             @post = create(:post, locked_tags: "-group", tag_string: "trio specific_tag")
             assert_equal("specific_tag trio", @post.tag_string)
 
@@ -582,8 +582,8 @@ class PostTest < ActiveSupport::TestCase
           end
         end
 
-        context "with dnp tags" do
-          should "prevent manually adding them" do
+        context("with dnp tags") do
+          should("prevent manually adding them") do
             @post = create(:post, locked_tags: "", tag_string: "a b c")
             @post.tag_string += " conditional_dnp"
             @post.save
@@ -592,7 +592,7 @@ class PostTest < ActiveSupport::TestCase
             assert_equal("", @post.locked_tags)
           end
 
-          should "add dnp tags through an implication" do
+          should("add dnp tags through an implication") do
             create(:tag_implication, antecedent_name: "artist", consequent_name: "avoid_posting")
             @post = create(:post, locked_tags: "", tag_string: "a b c")
 
@@ -603,7 +603,7 @@ class PostTest < ActiveSupport::TestCase
             assert_equal("avoid_posting", @post.locked_tags)
           end
 
-          should "prevent removing them" do
+          should("prevent removing them") do
             create(:tag_implication, antecedent_name: "artist", consequent_name: "avoid_posting")
             @post = create(:post, tag_string: "a artist avoid_posting b c")
 
@@ -615,7 +615,7 @@ class PostTest < ActiveSupport::TestCase
             assert_equal("a avoid_posting b c", @post.tag_string)
           end
 
-          should "not warn about dnp tags when dnp tags didn't change" do
+          should("not warn about dnp tags when dnp tags didn't change") do
             create(:tag_implication, antecedent_name: "artist", consequent_name: "avoid_posting")
             @post = create(:post, tag_string: "a artist avoid_posting b c")
 
@@ -626,7 +626,7 @@ class PostTest < ActiveSupport::TestCase
           end
         end
 
-        context "in the invalid category" do
+        context("in the invalid category") do
           setup do
             @post = create(:post, locked_tags: "invalid_tag -invalid_tag_2", tag_string: "invalid_tag invalid_tag_2 test_tag")
             @post.warnings.clear
@@ -635,7 +635,7 @@ class PostTest < ActiveSupport::TestCase
             tag.each(&:update_category_cache)
           end
 
-          should "remove them" do
+          should("remove them") do
             @post.tag_string += " "
             @post.save
 
@@ -644,7 +644,7 @@ class PostTest < ActiveSupport::TestCase
             assert_empty(@post.locked_tags)
           end
 
-          should "not allow adding" do
+          should("not allow adding") do
             @post.update_column(:locked_tags, "")
 
             @post.locked_tags = "invalid_tag -invalid_tag_2"
@@ -725,24 +725,24 @@ class PostTest < ActiveSupport::TestCase
       #   end
       # end
 
-      context "tagged with a metatag" do
-        context "for typing a tag" do
+      context("tagged with a metatag") do
+        context("for typing a tag") do
           setup do
             @post = create(:post, tag_string: "char:hoge")
             @tags = @post.tag_array
           end
 
-          should "change the type" do
+          should("change the type") do
             assert(Tag.exists?(name: "hoge", category: 4), "expected 'hoge' tag to be created as a character")
           end
         end
 
-        context "for a parent" do
+        context("for a parent") do
           setup do
             @parent = create(:post)
           end
 
-          should "update the parent relationships for both posts" do
+          should("update the parent relationships for both posts") do
             @post.update(tag_string: "aaa parent:#{@parent.id}")
             @post.reload
             @parent.reload
@@ -750,12 +750,12 @@ class PostTest < ActiveSupport::TestCase
             assert(@parent.has_children?)
           end
 
-          should "not allow self-parenting" do
+          should("not allow self-parenting") do
             @post.update(tag_string: "parent:#{@post.id}")
             assert_nil(@post.parent_id)
           end
 
-          should "clear the parent with parent:none" do
+          should("clear the parent with parent:none") do
             @post.update(parent_id: @parent.id)
             assert_equal(@parent.id, @post.parent_id)
 
@@ -763,7 +763,7 @@ class PostTest < ActiveSupport::TestCase
             assert_nil(@post.parent_id)
           end
 
-          should "clear the parent with -parent:1234" do
+          should("clear the parent with -parent:1234") do
             @post.update(parent_id: @parent.id)
             assert_equal(@parent.id, @post.parent_id)
 
@@ -772,14 +772,14 @@ class PostTest < ActiveSupport::TestCase
           end
         end
 
-        context "for a pool" do
-          context "on creation" do
+        context("for a pool") do
+          context("on creation") do
             setup do
               @pool = create(:pool)
               @post = create(:post, tag_string: "aaa pool:#{@pool.id}")
             end
 
-            should "add the post to the pool" do
+            should("add the post to the pool") do
               @post.reload
               @pool.reload
               assert_equal([@post.id], @pool.post_ids)
@@ -787,7 +787,7 @@ class PostTest < ActiveSupport::TestCase
             end
           end
 
-          context "negated" do
+          context("negated") do
             setup do
               @pool = create(:pool)
               @post = create(:post, tag_string: "aaa")
@@ -796,7 +796,7 @@ class PostTest < ActiveSupport::TestCase
               @post.save
             end
 
-            should "remove the post from the pool" do
+            should("remove the post from the pool") do
               @post.reload
               @pool.reload
               assert_equal([], @pool.post_ids)
@@ -804,13 +804,13 @@ class PostTest < ActiveSupport::TestCase
             end
           end
 
-          context "id" do
+          context("id") do
             setup do
               @pool = create(:pool)
               @post.update(tag_string: "aaa pool:#{@pool.id}")
             end
 
-            should "add the post to the pool" do
+            should("add the post to the pool") do
               @post.reload
               @pool.reload
               assert_equal([@post.id], @pool.post_ids)
@@ -818,14 +818,14 @@ class PostTest < ActiveSupport::TestCase
             end
           end
 
-          context "name" do
-            context "that exists" do
+          context("name") do
+            context("that exists") do
               setup do
                 @pool = create(:pool, name: "abc")
                 @post.update(tag_string: "aaa pool:abc")
               end
 
-              should "add the post to the pool" do
+              should("add the post to the pool") do
                 @post.reload
                 @pool.reload
                 assert_equal([@post.id], @pool.post_ids)
@@ -833,8 +833,8 @@ class PostTest < ActiveSupport::TestCase
               end
             end
 
-            context "that doesn't exist" do
-              should "create a new pool and add the post to that pool" do
+            context("that doesn't exist") do
+              should("create a new pool and add the post to that pool") do
                 @post.update(tag_string: "aaa newpool:abc")
                 @pool = Pool.find_by(name: "abc")
                 @post.reload
@@ -844,8 +844,8 @@ class PostTest < ActiveSupport::TestCase
               end
             end
 
-            context "with special characters" do
-              should "not strip '%' from the name" do
+            context("with special characters") do
+              should("not strip '%' from the name") do
                 @post.update(tag_string: "aaa newpool:ichigo_100%")
                 assert(Pool.exists?(name: "ichigo_100%"))
               end
@@ -853,32 +853,32 @@ class PostTest < ActiveSupport::TestCase
           end
         end
 
-        context "for a rating" do
-          context "that is valid" do
-            should "update the rating if the post is unlocked" do
+        context("for a rating") do
+          context("that is valid") do
+            should("update the rating if the post is unlocked") do
               @post.update(tag_string: "aaa rating:e")
               @post.reload
               assert_equal("e", @post.rating)
             end
           end
 
-          context "that is invalid" do
-            should "not update the rating" do
+          context("that is invalid") do
+            should("not update the rating") do
               @post.update(tag_string: "aaa rating:z")
               @post.reload
               assert_equal("q", @post.rating)
             end
           end
 
-          context "that is locked" do
-            should "change the rating if locked in the same update" do
+          context("that is locked") do
+            should("change the rating if locked in the same update") do
               @post.update(tag_string: "rating:e", is_rating_locked: true)
 
               assert(@post.valid?)
               assert_equal("e", @post.reload.rating)
             end
 
-            should "not change the rating if locked previously" do
+            should("not change the rating if locked previously") do
               @post.is_rating_locked = true
               @post.save
 
@@ -890,8 +890,8 @@ class PostTest < ActiveSupport::TestCase
           end
         end
 
-        context "for a fav" do
-          should "add/remove the current user to the post's favorite listing" do
+        context("for a fav") do
+          should("add/remove the current user to the post's favorite listing") do
             @post.update(tag_string: "aaa")
             FavoriteManager.add!(user: CurrentUser.user, post: @post)
             assert_equal("fav:#{@user.id}", @post.fav_string)
@@ -901,8 +901,8 @@ class PostTest < ActiveSupport::TestCase
           end
         end
 
-        context "for a child" do
-          should "add and remove children" do
+        context("for a child") do
+          should("add and remove children") do
             @children = create_list(:post, 3, parent_id: nil)
 
             @post.update(tag_string: "aaa child:#{@children.first.id}..#{@children.last.id}")
@@ -925,44 +925,44 @@ class PostTest < ActiveSupport::TestCase
           end
         end
 
-        context "for a source" do
-          should "set the source with source:foo_bar_baz" do
+        context("for a source") do
+          should("set the source with source:foo_bar_baz") do
             @post.update(tag_string: "source:foo_bar_baz")
             assert_equal("foo_bar_baz", @post.source)
           end
 
-          should 'set the source with source:"foo bar baz"' do
+          should('set the source with source:"foo bar baz"') do
             @post.update(tag_string: 'source:"foo bar baz"')
             assert_equal("foo bar baz", @post.source)
           end
 
-          should 'strip the source with source:"  foo bar baz  "' do
+          should('strip the source with source:"  foo bar baz  "') do
             @post.update(tag_string: 'source:"  foo bar baz  "')
             assert_equal("foo bar baz", @post.source)
           end
 
-          should "clear the source with source:none" do
+          should("clear the source with source:none") do
             @post.update(source: "foobar")
             @post.update(tag_string: "source:none")
             assert_equal("", @post.source)
           end
         end
 
-        context "of" do
+        context("of") do
           setup do
             @janitor = create(:janitor_user)
           end
 
-          context "locked:notes" do
-            context "by a member" do
-              should "not lock the notes" do
+          context("locked:notes") do
+            context("by a member") do
+              should("not lock the notes") do
                 @post.update(tag_string: "locked:notes")
                 assert_equal(false, @post.is_note_locked)
               end
             end
 
-            context "by a janitor" do
-              should "lock/unlock the notes" do
+            context("by a janitor") do
+              should("lock/unlock the notes") do
                 as(@janitor) do
                   @post.update(tag_string: "locked:notes")
                   assert_equal(true, @post.is_note_locked)
@@ -974,16 +974,16 @@ class PostTest < ActiveSupport::TestCase
             end
           end
 
-          context "locked:rating" do
-            context "by a member" do
-              should "not lock the rating" do
+          context("locked:rating") do
+            context("by a member") do
+              should("not lock the rating") do
                 @post.update(tag_string: "locked:rating")
                 assert_equal(false, @post.is_rating_locked)
               end
             end
 
-            context "by a janitor" do
-              should "lock/unlock the rating" do
+            context("by a janitor") do
+              should("lock/unlock the rating") do
                 as(@janitor) do
                   @post.update(tag_string: "locked:rating")
                   assert_equal(true, @post.is_rating_locked)
@@ -995,16 +995,16 @@ class PostTest < ActiveSupport::TestCase
             end
           end
 
-          context "locked:status" do
-            context "by a member" do
-              should "not lock the status" do
+          context("locked:status") do
+            context("by a member") do
+              should("not lock the status") do
                 @post.update(tag_string: "locked:status")
                 assert_equal(false, @post.is_status_locked)
               end
             end
 
-            context "by an admin" do
-              should "lock/unlock the status" do
+            context("by an admin") do
+              should("lock/unlock the status") do
                 as(create(:admin_user)) do
                   @post.update(tag_string: "locked:status")
                   assert_equal(true, @post.is_status_locked)
@@ -1018,15 +1018,15 @@ class PostTest < ActiveSupport::TestCase
         end
       end
 
-      context "tagged with a negated tag" do
-        should "remove the tag if present" do
+      context("tagged with a negated tag") do
+        should("remove the tag if present") do
           @post.update(tag_string: "aaa bbb ccc")
           @post.update(tag_string: "aaa bbb ccc -bbb")
           @post.reload
           assert_equal("aaa ccc", @post.tag_string)
         end
 
-        should "resolve aliases" do
+        should("resolve aliases") do
           create(:tag_alias, antecedent_name: "tr", consequent_name: "translation_request")
           @post.update(tag_string: "aaa translation_request -tr")
 
@@ -1034,8 +1034,8 @@ class PostTest < ActiveSupport::TestCase
         end
       end
 
-      context "tagged with animated_gif or animated_png" do
-        should "remove the tag if not a gif or png" do
+      context("tagged with animated_gif or animated_png") do
+        should("remove the tag if not a gif or png") do
           @post.update(tag_string: "tagme animated_gif")
           assert_equal("tagme", @post.tag_string)
 
@@ -1044,7 +1044,7 @@ class PostTest < ActiveSupport::TestCase
         end
       end
 
-      should "have an array representation of its tags" do
+      should("have an array representation of its tags") do
         post = create(:post)
         post.reload
         post.set_tag_string("aaa bbb")
@@ -1052,7 +1052,7 @@ class PostTest < ActiveSupport::TestCase
         assert_equal(%w[tag1 tag2], post.tag_array_was)
       end
 
-      context "with large dimensions" do
+      context("with large dimensions") do
         setup do
           @post.media_asset.image_width = 10_000
           @post.media_asset.image_height = 10
@@ -1060,61 +1060,61 @@ class PostTest < ActiveSupport::TestCase
           @post.save
         end
 
-        should "have the appropriate dimension tags added automatically" do
+        should("have the appropriate dimension tags added automatically") do
           assert(@post.has_tag?("absurd_res"))
           assert(@post.has_tag?("hi_res"))
         end
       end
 
-      context "with a large file size" do
+      context("with a large file size") do
         setup do
           @post.media_asset.file_size = 26.megabytes
           @post.tag_string = ""
           @post.save
         end
 
-        should "have the appropriate file size tags added automatically" do
+        should("have the appropriate file size tags added automatically") do
           assert(@post.has_tag?("large_filesize"))
         end
       end
 
-      context "with a huge file size" do
+      context("with a huge file size") do
         setup do
           @post.media_asset.file_size = 76.megabytes
           @post.tag_string = ""
           @post.save
         end
 
-        should "have the appropriate file size tags added automatically" do
+        should("have the appropriate file size tags added automatically") do
           assert(@post.has_tag?("huge_filesize"))
         end
       end
 
-      context "with an absurd file size" do
+      context("with an absurd file size") do
         setup do
           @post.media_asset.file_size = 126.megabytes
           @post.tag_string = ""
           @post.save
         end
 
-        should "have the appropriate file size tags added automatically" do
+        should("have the appropriate file size tags added automatically") do
           assert(@post.has_tag?("absurd_filesize"))
         end
       end
 
-      context "with an insane file size" do
+      context("with an insane file size") do
         setup do
           @post.media_asset.file_size = 176.megabytes
           @post.tag_string = ""
           @post.save
         end
 
-        should "have the appropriate file size tags added automatically" do
+        should("have the appropriate file size tags added automatically") do
           assert(@post.has_tag?("insane_filesize"))
         end
       end
 
-      context "with a .webm file extension" do
+      context("with a .webm file extension") do
         setup do
           create(:tag_implication, antecedent_name: "webm", consequent_name: "animated")
           @post.media_asset.file_ext = "webm"
@@ -1123,59 +1123,59 @@ class PostTest < ActiveSupport::TestCase
           @post.save
         end
 
-        should "have the appropriate file type and duration tags added automatically" do
+        should("have the appropriate file type and duration tags added automatically") do
           assert(@post.has_tag?("webm"))
           assert(@post.has_tag?("short_playtime"))
         end
 
-        should "apply implications after adding the file type tag" do
+        should("apply implications after adding the file type tag") do
           assert(@post.has_tag?("animated"), "expected 'webm' to imply 'animated'")
         end
       end
 
-      context "with an invalid source" do
+      context("with an invalid source") do
         setup do
           @post.update(source: "ABCD")
         end
 
-        should "add the invalid_source tag" do
+        should("add the invalid_source tag") do
           assert_match(/invalid_source/, @post.reload.tag_string)
         end
 
-        should "remove the invalid_source tag when the source is removed" do
+        should("remove the invalid_source tag when the source is removed") do
           @post.update(source: "")
           assert_no_match(/invalid_source/, @post.reload.tag_string)
         end
       end
 
-      should "not allow adding invalid_source" do
+      should("not allow adding invalid_source") do
         @post.update(tag_string: "invalid_source")
         assert_no_match(/invalid_source/, @post.reload.tag_string)
       end
 
-      context "that has been updated" do
-        should "create a new version if it's the first version" do
+      context("that has been updated") do
+        should("create a new version if it's the first version") do
           assert_difference("PostVersion.count", 1) do
             create(:post)
           end
         end
 
-        should "create a new version if the post is updated" do
+        should("create a new version if the post is updated") do
           post = create(:post)
           assert_difference("PostVersion.count", 1) do
             post.update(tag_string: "zzz")
           end
         end
 
-        context "as an automated edit" do
-          should "error if attempting to merge into the first" do
+        context("as an automated edit") do
+          should("error if attempting to merge into the first") do
             post = create(:post)
             assert_raises(PostVersion::MergeError, match: "Attempted to merge post ##{post.id} into its first version (#{post.versions.first.id})") do
               post.merge_post_version(post.versions.first)
             end
           end
 
-          should "error if attempting to merge into a non-basic version" do
+          should("error if attempting to merge into a non-basic version") do
             post = create(:post)
             post.update(description: "test")
             assert_raises(PostVersion::MergeError, match: "Attempted to merge post ##{post.id} into non-basic post version ##{post.versions.last.id}") do
@@ -1183,7 +1183,7 @@ class PostTest < ActiveSupport::TestCase
             end
           end
 
-          should "error if attempting to merge into a version made by another updater" do
+          should("error if attempting to merge into a version made by another updater") do
             post = create(:post)
             as(create(:user)) { post.update(tag_string: "zzz") }
             assert_raises(PostVersion::MergeError, match: "Attempted to merge post ##{post.id} into post version ##{post.versions.last.id} created by different updater (#{post.versions.last.updater_id}/#{@user.id})") do
@@ -1191,14 +1191,14 @@ class PostTest < ActiveSupport::TestCase
             end
           end
 
-          should "not attempt to merge into the first version" do
+          should("not attempt to merge into the first version") do
             post = create(:post)
             assert_difference("PostVersion.count", 1) do
               post.update(automated_edit: true, tag_string: "zzz")
             end
           end
 
-          should "merge versions for consecutive edits" do
+          should("merge versions for consecutive edits") do
             post = create(:post)
             assert_difference("PostVersion.count", 1) do
               post.update(tag_string: "zzz")
@@ -1206,7 +1206,7 @@ class PostTest < ActiveSupport::TestCase
             end
           end
 
-          should "not merge non-consecutive edits" do
+          should("not merge non-consecutive edits") do
             post = create(:post)
             assert_difference("PostVersion.count", 2) do
               post.update(tag_string: "zzz")
@@ -1216,7 +1216,7 @@ class PostTest < ActiveSupport::TestCase
             end
           end
 
-          should "not merge non-basic edits" do
+          should("not merge non-basic edits") do
             post = create(:post)
             assert_difference("PostVersion.count", 2) do
               post.update(tag_string: "zzz")
@@ -1224,7 +1224,7 @@ class PostTest < ActiveSupport::TestCase
             end
           end
 
-          should "delete the previous version if all changes are undone" do
+          should("delete the previous version if all changes are undone") do
             post = create(:post)
             post.update(tag_string: "xxx yyy zzz")
             assert_no_difference("PostVersion.count") do
@@ -1233,7 +1233,7 @@ class PostTest < ActiveSupport::TestCase
             end
           end
 
-          should "merge versions for consecutive edits (locked_tags)" do
+          should("merge versions for consecutive edits (locked_tags)") do
             post = create(:post)
             assert_difference("PostVersion.count", 1) do
               post.update(locked_tags: "zzz")
@@ -1241,7 +1241,7 @@ class PostTest < ActiveSupport::TestCase
             end
           end
 
-          should "not merge non-consecutive edits (locked_tags)" do
+          should("not merge non-consecutive edits (locked_tags)") do
             post = create(:post)
             assert_difference("PostVersion.count", 2) do
               post.update(locked_tags: "zzz")
@@ -1251,7 +1251,7 @@ class PostTest < ActiveSupport::TestCase
             end
           end
 
-          should "not merge non-basic edits (locked_tags)" do
+          should("not merge non-basic edits (locked_tags)") do
             post = create(:post)
             assert_difference("PostVersion.count", 2) do
               post.update(locked_tags: "zzz")
@@ -1259,7 +1259,7 @@ class PostTest < ActiveSupport::TestCase
             end
           end
 
-          should "delete the previous version if all changes are undone (locked_tags)" do
+          should("delete the previous version if all changes are undone (locked_tags)") do
             post = create(:post)
             post.update(tag_string: "yyy", locked_tags: "yyy")
             assert_no_difference("PostVersion.count") do
@@ -1269,7 +1269,7 @@ class PostTest < ActiveSupport::TestCase
           end
         end
 
-        should "increment the updater's post_update_count" do
+        should("increment the updater's post_update_count") do
           post = create(:post, tag_string: "aaa bbb ccc")
 
           assert_difference("CurrentUser.user.reload.post_update_count", 1) do
@@ -1277,7 +1277,7 @@ class PostTest < ActiveSupport::TestCase
           end
         end
 
-        should "reset its tag array cache" do
+        should("reset its tag array cache") do
           post = create(:post, tag_string: "aaa bbb ccc")
           create(:user)
           assert_equal(%w[aaa bbb ccc], post.tag_array)
@@ -1288,13 +1288,13 @@ class PostTest < ActiveSupport::TestCase
           assert_equal(%w[ddd eee fff], post.tag_array)
         end
 
-        should "create the actual tag records" do
+        should("create the actual tag records") do
           assert_difference("Tag.count", 3) do
             create(:post, tag_string: "aaa bbb ccc")
           end
         end
 
-        should "update the post counts of relevant tag records" do
+        should("update the post counts of relevant tag records") do
           create(:post, tag_string: "aaa bbb ccc")
           create(:post, tag_string: "bbb ccc ddd")
           post3 = create(:post, tag_string: "ccc ddd eee")
@@ -1312,7 +1312,7 @@ class PostTest < ActiveSupport::TestCase
           assert_equal(1, Tag.find_by(name: "xxx").post_count)
         end
 
-        should "update its tag counts" do
+        should("update its tag counts") do
           artist_tag = create(:artist_tag)
           copyright_tag = create(:copyright_tag)
           general_tag = create(:tag)
@@ -1332,7 +1332,7 @@ class PostTest < ActiveSupport::TestCase
           assert_equal(1, new_post.tag_count)
         end
 
-        should "merge any tag changes that were made after loading the initial set of tags part 1" do
+        should("merge any tag changes that were made after loading the initial set of tags part 1") do
           post = create(:post, tag_string: "aaa bbb ccc")
 
           # user a adds <ddd>
@@ -1352,7 +1352,7 @@ class PostTest < ActiveSupport::TestCase
           assert_equal(%w[aaa bbb ddd eee], TagQuery.scan(final_post.tag_string).sort)
         end
 
-        should "merge any tag changes that were made after loading the initial set of tags part 2" do
+        should("merge any tag changes that were made after loading the initial set of tags part 2") do
           # This is the same as part 1, only the order of operations is reversed.
           # The results should be the same.
 
@@ -1375,7 +1375,7 @@ class PostTest < ActiveSupport::TestCase
           assert_equal(%w[aaa bbb ddd eee], TagQuery.scan(final_post.tag_string).sort)
         end
 
-        should "merge any parent, source, and rating changes that were made after loading the initial set" do
+        should("merge any parent, source, and rating changes that were made after loading the initial set") do
           post = create(:post, parent: nil, source: "", rating: "q")
           parent_post = create(:post)
 
@@ -1407,8 +1407,8 @@ class PostTest < ActiveSupport::TestCase
         end
       end
 
-      context "that has been tagged with a metatag" do
-        should "not include the metatag in its tag string" do
+      context("that has been tagged with a metatag") do
+        should("not include the metatag in its tag string") do
           post = create(:post)
           post.tag_string = "aaa pool:1234 pool:test rating:s fav:bob"
           post.save
@@ -1416,33 +1416,33 @@ class PostTest < ActiveSupport::TestCase
         end
       end
 
-      context "when validating tags" do
-        should "warn when creating a new general tag" do
+      context("when validating tags") do
+        should("warn when creating a new general tag") do
           @post.add_tag("tag")
           @post.save
 
           assert_match(/Created 1 new tag: \[\[tag\]\]/, @post.warnings.full_messages.join)
         end
 
-        should "warn when adding an artist tag without an artist entry" do
+        should("warn when adding an artist tag without an artist entry") do
           @post.add_tag("artist:bkub")
           @post.save
 
           assert_match(/Artist \[\[bkub\]\] requires an artist entry./, @post.warnings.full_messages.join)
         end
 
-        should "warn when a post from a known source is missing an artist tag" do
+        should("warn when a post from a known source is missing an artist tag") do
           post = build(:post, source: "https://www.pixiv.net/member_illust.php?mode=medium&illust_id=65985331")
           post.save
           assert_match(/Artist tag is required/, post.warnings.full_messages.join)
         end
 
-        should "warn when an upload doesn't have enough tags" do
+        should("warn when an upload doesn't have enough tags") do
           post = create(:post, tag_string: "tagme")
           assert_match(/Uploads must have at least \d+ general tags/, post.warnings.full_messages.join)
         end
 
-        should "error if the tagcount is above the limit" do
+        should("error if the tagcount is above the limit") do
           FemboyFans.config.stubs(:max_tags_per_post).returns(5)
           post = create(:post, tag_string: "1 2 3 4 5")
           post.add_tag("6")
@@ -1450,7 +1450,7 @@ class PostTest < ActiveSupport::TestCase
           assert_match(/tag count exceeds maximum/, post.errors.full_messages.join)
         end
 
-        should "error if the tagcount via implications is above the limit" do
+        should("error if the tagcount via implications is above the limit") do
           FemboyFans.config.stubs(:max_tags_per_post).returns(2)
           create(:tag_implication, antecedent_name: "2", consequent_name: "3")
           post = create(:post, tag_string: "1")
@@ -1459,7 +1459,7 @@ class PostTest < ActiveSupport::TestCase
           assert_match(/tag count exceeds maximum/, post.errors.full_messages.join)
         end
 
-        should "allow removing tags when the post is above the limit" do
+        should("allow removing tags when the post is above the limit") do
           FemboyFans.config.stubs(:max_tags_per_post).returns(2)
           post = build(:post, tag_string: "1 2 3")
           post.save(validate: false)
@@ -1471,29 +1471,29 @@ class PostTest < ActiveSupport::TestCase
     end
   end
 
-  context "Updating:" do
-    context "an existing post" do
+  context("Updating:") do
+    context("an existing post") do
       setup { @post = create(:post) }
 
-      should "call Tag.increment_post_counts with the correct params" do
+      should("call Tag.increment_post_counts with the correct params") do
         @post.reload
         Tag.expects(:increment_post_counts).once.with(["abc"])
         @post.update(tag_string: "tag1 abc")
       end
     end
 
-    context "A rating unlocked post" do
+    context("A rating unlocked post") do
       setup { @post = create(:post) }
       subject { @post }
 
-      should "not allow values S, safe, derp" do
+      should("not allow values S, safe, derp") do
         %w[S safe derp].each do |rating|
           subject.rating = rating
           assert_not(subject.valid?)
         end
       end
 
-      should "allow values s, q, e" do
+      should("allow values s, q, e") do
         %w[s q e].each do |rating|
           subject.rating = rating
           assert(subject.valid?)
@@ -1501,18 +1501,18 @@ class PostTest < ActiveSupport::TestCase
       end
     end
 
-    context "A rating locked post" do
+    context("A rating locked post") do
       setup { @post = create(:post, is_rating_locked: true) }
       subject { @post }
 
-      should "not allow values S, safe, derp" do
+      should("not allow values S, safe, derp") do
         %w[S safe derp].each do |rating|
           subject.rating = rating
           assert_not(subject.valid?)
         end
       end
 
-      should "not allow values s, e" do
+      should("not allow values s, e") do
         %w[s e].each do |rating|
           subject.rating = rating
           assert_not(subject.valid?)
@@ -1521,8 +1521,8 @@ class PostTest < ActiveSupport::TestCase
     end
   end
 
-  context "Favorites:" do
-    context "Removing a post from a user's favorites" do
+  context("Favorites:") do
+    context("Removing a post from a user's favorites") do
       setup do
         @user = create(:trusted_user)
         @post = create(:post)
@@ -1530,20 +1530,20 @@ class PostTest < ActiveSupport::TestCase
         @user.reload
       end
 
-      should "decrement the user's favorite_count" do
+      should("decrement the user's favorite_count") do
         assert_difference("@user.reload.favorite_count", -1) do
           FavoriteManager.remove!(user: @user, post: @post)
         end
       end
 
-      should "not decrement the post's score" do
+      should("not decrement the post's score") do
         @member = create(:user)
 
         assert_no_difference("@post.score") { FavoriteManager.add!(user: @member, post: @post) }
         assert_no_difference("@post.score") { FavoriteManager.remove!(user: @member, post: @post) }
       end
 
-      should "not decrement the user's favorite_count if the user did not favorite the post" do
+      should("not decrement the user's favorite_count if the user did not favorite the post") do
         @post2 = create(:post)
         assert_no_difference("@user.reload.favorite_count") do
           FavoriteManager.remove!(user: @user, post: @post2)
@@ -1551,13 +1551,13 @@ class PostTest < ActiveSupport::TestCase
       end
     end
 
-    context "Adding a post to a user's favorites" do
+    context("Adding a post to a user's favorites") do
       setup do
         @user = create(:trusted_user)
         @post = create(:post)
       end
 
-      should "periodically clean the fav_string" do
+      should("periodically clean the fav_string") do
         @post.update_column(:fav_string, "fav:1 fav:1 fav:1")
         @post.update_column(:fav_count, 3)
         @post.append_user_to_fav_string(2)
@@ -1566,19 +1566,19 @@ class PostTest < ActiveSupport::TestCase
       end
 
       # TODO: Needs to reload relationship to obtain non cached value
-      should "increment the user's favorite_count" do
+      should("increment the user's favorite_count") do
         assert_difference("@user.reload.favorite_count", 1) do
           FavoriteManager.add!(user: @user, post: @post)
         end
       end
 
-      should "not increment the post's score" do
+      should("not increment the post's score") do
         @member = create(:user)
         FavoriteManager.add!(user: @user, post: @post)
         assert_equal(0, @post.score)
       end
 
-      should "update the fav strings on the post" do
+      should("update the fav strings on the post") do
         FavoriteManager.add!(user: @user, post: @post)
         @post.reload
         assert_equal("fav:#{@user.id}", @post.fav_string)
@@ -1601,7 +1601,7 @@ class PostTest < ActiveSupport::TestCase
       end
     end
 
-    context "Moving favorites to a parent post" do
+    context("Moving favorites to a parent post") do
       setup do
         @parent = create(:post)
         @child = create(:post, parent: @parent)
@@ -1620,7 +1620,7 @@ class PostTest < ActiveSupport::TestCase
         @parent.reload
       end
 
-      should "move the favorites" do
+      should("move the favorites") do
         assert_equal(0, @child.fav_count)
         assert_equal(0, @child.favorites.count)
         assert_equal("", @child.fav_string)
@@ -1632,9 +1632,9 @@ class PostTest < ActiveSupport::TestCase
     end
   end
 
-  context "Pools:" do
-    context "Removing a post from a pool" do
-      should "update the post's pool string" do
+  context("Pools:") do
+    context("Removing a post from a pool") do
+      should("update the post's pool string") do
         post = create(:post)
         pool = create(:pool)
         pool.add!(post)
@@ -1647,8 +1647,8 @@ class PostTest < ActiveSupport::TestCase
       end
     end
 
-    context "Adding a post to a pool" do
-      should "update the post's pool string" do
+    context("Adding a post to a pool") do
+      should("update the post's pool string") do
         post = create(:post)
         pool = create(:pool)
         pool.add!(post)
@@ -1664,9 +1664,9 @@ class PostTest < ActiveSupport::TestCase
     end
   end
 
-  context "Uploading:" do
-    context "Uploading a post" do
-      should "capture who uploaded the post" do
+  context("Uploading:") do
+    context("Uploading a post") do
+      should("capture who uploaded the post") do
         post = create(:post)
         user1 = create(:user)
         user2 = create(:user)
@@ -1681,16 +1681,16 @@ class PostTest < ActiveSupport::TestCase
         assert_equal(user2.name, post.uploader_name)
       end
 
-      context "tag post counts" do
+      context("tag post counts") do
         setup { @post = build(:post) }
 
-        should "call Tag.increment_post_counts with the correct params" do
+        should("call Tag.increment_post_counts with the correct params") do
           Tag.expects(:increment_post_counts).once.with(%w[tag1 tag2])
           @post.save
         end
       end
 
-      should "increment the uploaders post_upload_count" do
+      should("increment the uploaders post_upload_count") do
         assert_difference(-> { CurrentUser.user.post_upload_count }) do
           create(:post, uploader: CurrentUser.user)
           CurrentUser.user.reload
@@ -1699,41 +1699,41 @@ class PostTest < ActiveSupport::TestCase
     end
   end
 
-  context "Searching:" do
-    should "return posts for the age:<1minute tag" do
+  context("Searching:") do
+    should("return posts for the age:<1minute tag") do
       post = create(:post)
       assert_tag_match([post], "age:<1minute")
     end
 
-    should "return posts for the age:<1minute tag when the user is in Pacific time zone" do
+    should("return posts for the age:<1minute tag when the user is in Pacific time zone") do
       post = create(:post)
       Time.zone = "Pacific Time (US & Canada)"
       assert_tag_match([post], "age:<1minute")
       Time.zone = "Eastern Time (US & Canada)"
     end
 
-    should "return posts for the age:<1minute tag when the user is in Tokyo time zone" do
+    should("return posts for the age:<1minute tag when the user is in Tokyo time zone") do
       post = create(:post)
       Time.zone = "Asia/Tokyo"
       assert_tag_match([post], "age:<1minute")
       Time.zone = "Eastern Time (US & Canada)"
     end
 
-    should "return posts for the ' tag" do
+    should("return posts for the ' tag") do
       post1 = create(:post, tag_string: "'")
       create(:post, tag_string: "aaa bbb")
 
       assert_tag_match([post1], "'")
     end
 
-    should "return posts for the ? tag" do
+    should("return posts for the ? tag") do
       post1 = create(:post, tag_string: "?")
       create(:post, tag_string: "aaa bbb")
 
       assert_tag_match([post1], "?")
     end
 
-    should "return posts for 1 tag" do
+    should("return posts for 1 tag") do
       post1 = create(:post, tag_string: "aaa")
       post2 = create(:post, tag_string: "aaa bbb")
       create(:post, tag_string: "bbb ccc")
@@ -1741,7 +1741,7 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match([post2, post1], "aaa")
     end
 
-    should "return posts for a 2 tag join" do
+    should("return posts for a 2 tag join") do
       create(:post, tag_string: "aaa")
       post2 = create(:post, tag_string: "aaa bbb")
       create(:post, tag_string: "bbb ccc")
@@ -1749,7 +1749,7 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match([post2], "aaa bbb")
     end
 
-    should "return posts for a 2 tag union" do
+    should("return posts for a 2 tag union") do
       post1 = create(:post, tag_string: "aaa")
       create(:post, tag_string: "aaab bbb")
       post3 = create(:post, tag_string: "bbb ccc")
@@ -1757,7 +1757,7 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match([post3, post1], "~aaa ~ccc")
     end
 
-    should "return posts for 1 tag with exclusion" do
+    should("return posts for 1 tag with exclusion") do
       post1 = create(:post, tag_string: "aaa")
       create(:post, tag_string: "aaa bbb")
       create(:post, tag_string: "bbb ccc")
@@ -1765,7 +1765,7 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match([post1], "aaa -bbb")
     end
 
-    should "return posts for 1 tag with a pattern" do
+    should("return posts for 1 tag with a pattern") do
       post1 = create(:post, tag_string: "aaa")
       post2 = create(:post, tag_string: "aaab bbb")
       create(:post, tag_string: "bbb ccc")
@@ -1773,7 +1773,7 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match([post2, post1], "a*")
     end
 
-    should "return posts for 2 tags, one with a pattern" do
+    should("return posts for 2 tags, one with a pattern") do
       create(:post, tag_string: "aaa")
       post2 = create(:post, tag_string: "aaab bbb")
       create(:post, tag_string: "bbb ccc")
@@ -1781,7 +1781,7 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match([post2], "a* bbb")
     end
 
-    should "return posts for the id:<N> metatag" do
+    should("return posts for the id:<N> metatag") do
       posts = create_list(:post, 3)
 
       assert_tag_match([posts[1]], "id:#{posts[1].id}")
@@ -1795,7 +1795,7 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match(posts.reverse, "id:#{posts[0].id}..#{posts[2].id}")
     end
 
-    should "return posts for the fav:<name> metatag" do
+    should("return posts for the fav:<name> metatag") do
       users = create_list(:user, 2)
       posts = users.map do |u|
         as(u) do
@@ -1809,7 +1809,7 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match([posts[1]], "-fav:#{users[0].name}")
     end
 
-    should "return posts for the pool:<name> metatag" do
+    should("return posts for the pool:<name> metatag") do
       create(:pool, name: "test_a")
       create(:pool, name: "test_b")
       post1 = create(:post, tag_string: "pool:test_a")
@@ -1823,7 +1823,7 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match([], "pool:none")
     end
 
-    should "return posts for the parent:<N> metatag" do
+    should("return posts for the parent:<N> metatag") do
       parent = create(:post)
       child = create(:post, tag_string: "parent:#{parent.id}")
 
@@ -1835,7 +1835,7 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match([parent], "child:any")
     end
 
-    should "return posts for the user:<name> metatag" do
+    should("return posts for the user:<name> metatag") do
       users = create_list(:user, 2)
       posts = users.map { |u| create(:post, uploader: u) }
 
@@ -1843,7 +1843,7 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match([posts[1]], "-user:#{users[0].name}")
     end
 
-    should "return posts for the approver:<name> metatag" do
+    should("return posts for the approver:<name> metatag") do
       users = create_list(:user, 2)
       posts = users.map { |u| create(:post, approver: u) }
       posts << create(:post, approver: nil)
@@ -1854,7 +1854,7 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match([posts[2]], "approver:none")
     end
 
-    should "return posts for the commenter:<name> metatag" do
+    should("return posts for the commenter:<name> metatag") do
       users = create_list(:user, 2, created_at: 2.weeks.ago)
       posts = create_list(:post, 2)
       users.zip(posts).map { |u, p| as(u) { create(:comment, post: p) } }
@@ -1863,7 +1863,7 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match([posts[1]], "commenter:#{users[1].name}")
     end
 
-    should "return posts for the commenter:<any|none> metatag" do
+    should("return posts for the commenter:<any|none> metatag") do
       posts = create_list(:post, 2)
       create(:comment, post: posts[0], is_hidden: false)
       create(:comment, post: posts[1], is_hidden: true)
@@ -1872,7 +1872,7 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match([posts[1]], "commenter:none")
     end
 
-    should "Return posts for the disapprover:<name> metatag" do
+    should("Return posts for the disapprover:<name> metatag") do
       posts = create_list(:post, 3, is_pending: true)
       @user = create(:janitor_user)
       @user2 = create(:janitor_user)
@@ -1892,7 +1892,7 @@ class PostTest < ActiveSupport::TestCase
       end
     end
 
-    should "Return posts for the disapprover:<any|none> metatag" do
+    should("Return posts for the disapprover:<any|none> metatag") do
       posts = create_list(:post, 3, is_pending: true)
       @user = create(:janitor_user)
       @user2 = create(:janitor_user)
@@ -1912,7 +1912,7 @@ class PostTest < ActiveSupport::TestCase
       end
     end
 
-    should "Return posts for the disapprovals:<n> metatag" do
+    should("Return posts for the disapprovals:<n> metatag") do
       posts = create_list(:post, 3, is_pending: true)
       @user = create(:janitor_user)
       @user2 = create(:janitor_user)
@@ -1935,7 +1935,7 @@ class PostTest < ActiveSupport::TestCase
       end
     end
 
-    should "Return posts for the disapprovals:<any|none> metatag" do
+    should("Return posts for the disapprovals:<any|none> metatag") do
       posts = create_list(:post, 3, is_pending: true)
       @user = create(:janitor_user)
       @user2 = create(:janitor_user)
@@ -1957,7 +1957,7 @@ class PostTest < ActiveSupport::TestCase
       end
     end
 
-    should "return posts for the noter:<name> metatag" do
+    should("return posts for the noter:<name> metatag") do
       users = create_list(:user, 2)
       posts = create_list(:post, 2)
       users.zip(posts).map { |u, p| create(:note, creator: u, post: p) }
@@ -1966,7 +1966,7 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match([posts[1]], "noter:#{users[1].name}")
     end
 
-    should "return posts for the noter:<any|none> metatag" do
+    should("return posts for the noter:<any|none> metatag") do
       posts = create_list(:post, 2)
       create(:note, post: posts[0], is_active: true)
       create(:note, post: posts[1], is_active: false)
@@ -1975,7 +1975,7 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match([posts[1]], "noter:none")
     end
 
-    should "return posts for the description:<text> metatag" do
+    should("return posts for the description:<text> metatag") do
       posts = create_list(:post, 2)
       posts[0].update_attribute(:description, "abc")
       posts[1].update_attribute(:description, "efg")
@@ -1984,13 +1984,13 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match([posts[1]], "description:efg")
     end
 
-    should "return posts for the date:<d> metatag" do
+    should("return posts for the date:<d> metatag") do
       post = create(:post, created_at: Time.parse("2017-01-01 12:00"))
 
       assert_tag_match([post], "date:2017-01-01")
     end
 
-    should "return posts for the age:<n> metatag" do
+    should("return posts for the age:<n> metatag") do
       post = create(:post)
 
       assert_tag_match([post], "age:<60")
@@ -2003,14 +2003,14 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match([post], "age:<1y")
     end
 
-    should "return posts for the ratio:<x:y> metatag" do
+    should("return posts for the ratio:<x:y> metatag") do
       post = create(:post, media_asset: build(:random_upload_media_asset, image_width: 1000, image_height: 500))
 
       assert_tag_match([post], "ratio:2:1")
       assert_tag_match([post], "ratio:2.0")
     end
 
-    should "return posts for the status:<type> metatag" do
+    should("return posts for the status:<type> metatag") do
       pending = create(:post, is_pending: true)
       flagged = create(:post, is_flagged: true)
       deleted = create(:post, is_deleted: true)
@@ -2033,7 +2033,7 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match(all, "-status:active")
     end
 
-    should "return posts for the filetype:<ext> metatag" do
+    should("return posts for the filetype:<ext> metatag") do
       png = create(:post, media_asset: build(:random_upload_media_asset, file_ext: "png"))
       jpg = create(:post, media_asset: build(:random_upload_media_asset, file_ext: "jpg"))
 
@@ -2041,7 +2041,7 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match([jpg], "-filetype:png")
     end
 
-    should "return posts for the tagcount:<n> metatags" do
+    should("return posts for the tagcount:<n> metatags") do
       as(create(:admin_user)) do
         @post = create(:post, tag_string: "artist:wokada copyright:vocaloid char:hatsune_miku twintails meta:hi lore:test_(lore) cont:test_(va) gender:male")
       end
@@ -2059,14 +2059,14 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match([], "gentags:0")
     end
 
-    should "return posts for the md5:<md5> metatag" do
+    should("return posts for the md5:<md5> metatag") do
       post1 = create(:post, media_asset: build(:random_upload_media_asset, md5: "abcd"))
       create(:post)
 
       assert_tag_match([post1], "md5:abcd")
     end
 
-    should "return posts for a source search" do
+    should("return posts for a source search") do
       post1 = create(:post, source: "abcd")
       post2 = create(:post, source: "abcdefg")
       post3 = create(:post, source: "")
@@ -2078,14 +2078,14 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match([post2, post1], "-source:none")
     end
 
-    should "return posts for a case insensitive source search" do
+    should("return posts for a case insensitive source search") do
       post1 = create(:post, source: "ABCD")
       create(:post, source: "1234")
 
       assert_tag_match([post1], "source:*abcd")
     end
 
-    should "return posts for a pixiv source search" do
+    should("return posts for a pixiv source search") do
       url = "https://i1.pixiv.net/img123/img/artist-name/789.png"
       post = create(:post, source: url)
 
@@ -2095,7 +2095,7 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match([],     "source:https://*.pixiv.net/img*/img/artist-fake/*")
     end
 
-    should "return posts for a rating:<s|q|e> metatag" do
+    should("return posts for a rating:<s|q|e> metatag") do
       s = create(:post, rating: "s")
       q = create(:post, rating: "q")
       e = create(:post, rating: "e")
@@ -2110,7 +2110,7 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match(all - [e], "-rating:e")
     end
 
-    should "return posts for a locked:<rating|note|status> metatag" do
+    should("return posts for a locked:<rating|note|status> metatag") do
       rating_locked = create(:post, is_rating_locked: true)
       note_locked   = create(:post, is_note_locked: true)
       status_locked = create(:post, is_status_locked: true)
@@ -2125,7 +2125,7 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match(all - [status_locked], "-locked:status")
     end
 
-    should "return posts for a upvote:<user>, downvote:<user> metatag" do
+    should("return posts for a upvote:<user>, downvote:<user> metatag") do
       old_user = create(:moderator_user, created_at: 5.days.ago)
       as(old_user) do
         upvoted   = create(:post, tag_string: "abc")
@@ -2139,7 +2139,7 @@ class PostTest < ActiveSupport::TestCase
     end
 
     # FIXME: This test fails randomly at different assertions
-    should "return posts ordered by a particular attribute" do
+    should("return posts ordered by a particular attribute") do
       skip("fails randomly at different assertions")
       posts = (1..2).map do |n|
         tags = ["tagme", "gentag1 gentag2 artist:arttag char:chartag copy:copytag"]
@@ -2204,7 +2204,7 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match(posts, "order:notes_asc")
     end
 
-    should "return posts for order:comment_bumped" do
+    should("return posts for order:comment_bumped") do
       post1 = create(:post)
       post2 = create(:post)
       post3 = create(:post)
@@ -2224,7 +2224,7 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match([post1, post3, post2], "order:comment_bumped_asc")
     end
 
-    should "return posts for a filesize search" do
+    should("return posts for a filesize search") do
       post = create(:post, media_asset: create(:random_upload_media_asset, file_size: 1.megabyte))
 
       assert_tag_match([post], "filesize:1mb")
@@ -2232,7 +2232,7 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match([post], "filesize:1048576b")
     end
 
-    should "not count free tags against the user's search limit" do
+    should("not count free tags against the user's search limit") do
       post1 = create(:post, tag_string: "aaa bbb rating:s")
 
       FemboyFans.config.expects(:is_unlimited_tag?).with("rating:s").once.returns(true)
@@ -2240,21 +2240,21 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match([post1], "aaa bbb rating:s")
     end
 
-    should "succeed for exclusive tag searches with no other tag" do
+    should("succeed for exclusive tag searches with no other tag") do
       create(:post, rating: "s", tag_string: "aaa")
       assert_nothing_raised do
         Post.tag_match("-aaa")
       end
     end
 
-    should "succeed for exclusive tag searches combined with a metatag" do
+    should("succeed for exclusive tag searches combined with a metatag") do
       create(:post, rating: "s", tag_string: "aaa")
       assert_nothing_raised do
         Post.tag_match("-aaa id:>0")
       end
     end
 
-    should "return posts for verified artists" do
+    should("return posts for verified artists") do
       assert_tag_match([], "artverified:true")
       assert_tag_match([], "artverified:false")
       artist = create(:artist, linked_user: @user)
@@ -2267,7 +2267,7 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match([post], "-artverified:false")
     end
 
-    should "return posts for verified artists after update" do
+    should("return posts for verified artists after update") do
       assert_tag_match([], "artverified:true")
       assert_tag_match([], "artverified:false")
       post = create(:post, tag_string: "artist:test", uploader: @user)
@@ -2276,7 +2276,7 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match([post], "artverified:true")
     end
 
-    should "return posts for replacements" do
+    should("return posts for replacements") do
       assert_tag_match([], "pending_replacements:true")
       assert_tag_match([], "pending_replacements:false")
       post = create(:post)
@@ -2284,7 +2284,7 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match([post], "pending_replacements:true")
     end
 
-    should "return no posts when the replacement is not pending anymore" do
+    should("return no posts when the replacement is not pending anymore") do
       post1 = create(:post)
       upload = create(:gif_upload, uploader: @user, tag_string: "tst")
       post2 = upload.post
@@ -2307,18 +2307,18 @@ class PostTest < ActiveSupport::TestCase
       assert_tag_match([promoted_post, post4, post3, post2, post1], "~pending_replacements:false")
     end
 
-    should "not error for values beyond Integer.MAX_VALUE" do
+    should("not error for values beyond Integer.MAX_VALUE") do
       assert_tag_match([], "id:1234567890987654321")
     end
   end
 
-  context "Voting:" do
+  context("Voting:") do
     setup do
       @user = create(:trusted_user, created_at: 7.days.ago)
       @post = create(:post)
     end
 
-    should "not allow duplicate votes" do
+    should("not allow duplicate votes") do
       as(@user) do
         assert_nothing_raised { VoteManager::Posts.vote!(user: @user, post: @post, score: 1) }
         # Need unvote is returned upon duplicates that are accounted for.
@@ -2329,7 +2329,7 @@ class PostTest < ActiveSupport::TestCase
       end
     end
 
-    should "allow undoing of votes" do
+    should("allow undoing of votes") do
       # We deliberately don't call post.reload until the end to verify that
       # post.unvote! returns the correct score even when not forcibly reloaded.
       as(@user) do
@@ -2353,7 +2353,7 @@ class PostTest < ActiveSupport::TestCase
       end
     end
 
-    should "periodically clean the vote_string" do
+    should("periodically clean the vote_string") do
       @post.update_column(:vote_string, "down:1 locked:1 up:1")
       @post.update_column(:score, -1)
       @post.append_user_to_vote_string(2, "down")
@@ -2361,7 +2361,7 @@ class PostTest < ActiveSupport::TestCase
       assert_equal(-2, @post.score)
     end
 
-    should "update the fav strings on the post" do
+    should("update the fav strings on the post") do
       VoteManager::Posts.vote!(user: @user, post: @post, score: 1)
       @post.reload
       assert_equal("up:#{@user.id}", @post.vote_string)
@@ -2383,7 +2383,7 @@ class PostTest < ActiveSupport::TestCase
       assert_not(PostVote.exists?(user_id: @user.id, post_id: @post.id))
     end
 
-    context "Moving votes to a parent post" do
+    context("Moving votes to a parent post") do
       setup do
         FemboyFans.config.stubs(:disable_age_checks?).returns(true)
         @parent = create(:post)
@@ -2404,7 +2404,7 @@ class PostTest < ActiveSupport::TestCase
         @parent.reload
       end
 
-      should "move the votes" do
+      should("move the votes") do
         assert_equal(0, @child.score)
         assert_equal(0, @child.votes.count)
         assert_equal("", @child.vote_string)
@@ -2415,7 +2415,7 @@ class PostTest < ActiveSupport::TestCase
         assert_same_elements(%W[down:#{@user2.id} up:#{@user1.id} down:#{@trusted1.id}], @parent.vote_string.split)
       end
 
-      should "not move locked votes" do
+      should("not move locked votes") do
         vote, _status = VoteManager::Posts.vote!(user: @user3, post: @child, score: 1)
         as(create(:admin_user)) { VoteManager::Posts.lock!(vote.id) }
         with_inline_jobs { @child.give_votes_to_parent }
@@ -2542,15 +2542,15 @@ class PostTest < ActiveSupport::TestCase
   #   end
   # end
 
-  context "Reverting: " do
-    context "a post that is rating locked" do
+  context("Reverting: ") do
+    context("a post that is rating locked") do
       setup do
         @post = create(:post, rating: "s")
         @post.update(rating: "q", is_rating_locked: true)
       end
 
-      should "not revert the rating" do
-        assert_raises ActiveRecord::RecordInvalid do
+      should("not revert the rating") do
+        assert_raises(ActiveRecord::RecordInvalid) do
           @post.revert_to!(@post.versions.first)
         end
 
@@ -2558,7 +2558,7 @@ class PostTest < ActiveSupport::TestCase
         assert_equal(@post.versions.last.rating, @post.reload.rating)
       end
 
-      should "revert the rating after unlocking" do
+      should("revert the rating after unlocking") do
         @post.update(rating: "e", is_rating_locked: false)
         assert_nothing_raised do
           @post.revert_to!(@post.versions.first)
@@ -2569,7 +2569,7 @@ class PostTest < ActiveSupport::TestCase
       end
     end
 
-    context "a post that has been updated" do
+    context("a post that has been updated") do
       setup do
         @post = create(:post, rating: "q", tag_string: "aaa", source: "")
         @post.reload
@@ -2581,14 +2581,14 @@ class PostTest < ActiveSupport::TestCase
         @post.reload
       end
 
-      context "and then reverted to an early version" do
+      context("and then reverted to an early version") do
         setup do
           @version = @post.versions[1]
           @post.revert_to!(@version)
           @post.reload
         end
 
-        should "correctly revert all fields" do
+        should("correctly revert all fields") do
           assert_equal("aaa bbb ccc ddd", @post.tag_string)
           assert_equal("", @post.source)
           assert_equal("q", @post.rating)
@@ -2596,12 +2596,12 @@ class PostTest < ActiveSupport::TestCase
         end
       end
 
-      context "and then reverted to a later version" do
+      context("and then reverted to a later version") do
         setup do
           @post.revert_to(@post.versions[-2])
         end
 
-        should "correctly revert all fields" do
+        should("correctly revert all fields") do
           assert_equal("bbb invalid_source xxx yyy", @post.tag_string)
           assert_equal("xyz", @post.source)
           assert_equal("q", @post.rating)
@@ -2610,8 +2610,8 @@ class PostTest < ActiveSupport::TestCase
     end
   end
 
-  context "URLs:" do
-    should "generate the correct urls for animated gifs" do
+  context("URLs:") do
+    should("generate the correct urls for animated gifs") do
       @post = build(:post, tag_string: "animated_gif", media_asset: build(:random_upload_media_asset, md5: "deadbeef", file_ext: "gif"))
 
       assert_equal("#{FemboyFans.config.hostname}/data/posts/preview/deadbeef.webp", @post.preview_file_url)
@@ -2620,8 +2620,8 @@ class PostTest < ActiveSupport::TestCase
     end
   end
 
-  context "Notes:" do
-    context "#copy_notes_to" do
+  context("Notes:") do
+    context("#copy_notes_to") do
       setup do
         @src = create(:post, tag_string: "translated partially_translated", media_asset: build(:random_upload_media_asset, image_width: 100, image_height: 100))
         @dst = create(:post, tag_string: "translation_request", media_asset: build(:random_upload_media_asset, image_width: 200, image_height: 200))
@@ -2633,33 +2633,33 @@ class PostTest < ActiveSupport::TestCase
         @src.copy_notes_to(@dst)
       end
 
-      should "copy notes and tags" do
+      should("copy notes and tags") do
         assert_equal(1, @dst.notes.active.length)
         assert_equal("low_res partially_translated thumbnail translated", @dst.tag_string)
       end
 
-      should "rescale notes" do
+      should("rescale notes") do
         note = @dst.notes.active.first
         assert_equal([20, 20, 20, 20], [note.x, note.y, note.width, note.height])
       end
     end
   end
 
-  context "Metatags:" do
-    context "set:" do
+  context("Metatags:") do
+    context("set:") do
       setup do
         @set = create(:post_set)
         @post = create(:post)
       end
 
-      context "with an id" do
-        should "work" do
+      context("with an id") do
+        should("work") do
           @post.update(tag_string_diff: "set:#{@set.id}")
           assert_equal([@post.id], @set.reload.post_ids)
           assert_equal("set:#{@set.id}", @post.pool_string)
         end
 
-        should "gracefully fail if the set is full" do
+        should("gracefully fail if the set is full") do
           FemboyFans.config.stubs(:set_post_limit).returns(0)
           @post.update(tag_string_diff: "set:#{@set.id}")
           assert_equal(["Sets can only have up to 0 posts each"], @post.errors.full_messages)
@@ -2668,14 +2668,14 @@ class PostTest < ActiveSupport::TestCase
         end
       end
 
-      context "with a shortname" do
-        should "work" do
+      context("with a shortname") do
+        should("work") do
           @post.update(tag_string_diff: "set:#{@set.shortname}")
           assert_equal([@post.id], @set.reload.post_ids)
           assert_equal("set:#{@set.id}", @post.pool_string)
         end
 
-        should "gracefully fail if the set is full" do
+        should("gracefully fail if the set is full") do
           FemboyFans.config.stubs(:set_post_limit).returns(0)
           @post.update(tag_string_diff: "set:#{@set.shortname}")
           assert_equal(["Sets can only have up to 0 posts each"], @post.errors.full_messages)
@@ -2685,21 +2685,21 @@ class PostTest < ActiveSupport::TestCase
       end
     end
 
-    context "pool:" do
+    context("pool:") do
       setup do
         @pool = create(:pool)
         @pool2 = create(:pool, name: "Test_Pool")
         @post = create(:post)
       end
 
-      context "with an id" do
-        should "work" do
+      context("with an id") do
+        should("work") do
           @post.update(tag_string_diff: "pool:#{@pool.id}")
           assert_equal([@post.id], @pool.reload.post_ids)
           assert_equal("pool:#{@pool.id}", @post.pool_string)
         end
 
-        should "gracefully fail if the pool is full" do
+        should("gracefully fail if the pool is full") do
           FemboyFans.config.stubs(:pool_post_limit).returns(0)
           @post.update(tag_string_diff: "pool:#{@pool.id}")
           assert_equal(["Pools can only have up to 0 posts each"], @post.errors.full_messages)
@@ -2708,20 +2708,20 @@ class PostTest < ActiveSupport::TestCase
         end
       end
 
-      context "with a name" do
-        should "work" do
+      context("with a name") do
+        should("work") do
           @post.update(tag_string_diff: "pool:#{@pool.name}")
           assert_equal([@post.id], @pool.reload.post_ids)
           assert_equal("pool:#{@pool.id}", @post.pool_string)
         end
 
-        should "work with capital letters" do
+        should("work with capital letters") do
           @post.update(tag_string_diff: "pool:#{@pool2.name}")
           assert_equal([@post.id], @pool2.reload.post_ids)
           assert_equal("pool:#{@pool2.id}", @post.pool_string)
         end
 
-        should "gracefully fail if the pool is full" do
+        should("gracefully fail if the pool is full") do
           FemboyFans.config.stubs(:pool_post_limit).returns(0)
           @post.update(tag_string_diff: "pool:#{@pool.name}")
           assert_equal(["Pools can only have up to 0 posts each"], @post.errors.full_messages)
@@ -2731,12 +2731,12 @@ class PostTest < ActiveSupport::TestCase
       end
     end
 
-    context "newpool:" do
+    context("newpool:") do
       setup do
         @post = create(:post)
       end
 
-      should "work" do
+      should("work") do
         assert_difference("Pool.count", 1) do
           @post.update(tag_string_diff: "newpool:test")
         end
@@ -2746,7 +2746,7 @@ class PostTest < ActiveSupport::TestCase
         assert_equal("test", @pool.name)
       end
 
-      should "work with capital letters" do
+      should("work with capital letters") do
         assert_difference("Pool.count", 1) do
           @post.update(tag_string_diff: "newpool:Test2_Pool")
         end

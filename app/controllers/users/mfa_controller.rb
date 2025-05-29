@@ -2,11 +2,11 @@
 
 module Users
   class MFAController < ApplicationController
-    respond_to :html, :json
+    respond_to(:html, :json)
 
-    rescue_from User::MFAError, with: ->(err) { render_expected_error(400, err.message) }
+    rescue_from(User::MFAError, with: ->(err) { render_expected_error(400, err.message) })
 
-    before_action :requires_reauthentication
+    before_action(:requires_reauthentication)
 
     def edit
       @user = authorize(CurrentUser.user, policy_class: MFAPolicy)

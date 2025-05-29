@@ -2,7 +2,7 @@
 
 module Users
   class DeletionsController < ApplicationController
-    before_action :requires_reauthentication
+    before_action(:requires_reauthentication)
 
     def show
       authorize(UserDeletion.new(CurrentUser.user, nil, request))

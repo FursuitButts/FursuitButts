@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "document_store/model" # due to some fuckery we have to force load the file the client is defined in
+require_relative("document_store/model") # due to some fuckery we have to force load the file the client is defined in
 
 class SystemInfo
   def load_all

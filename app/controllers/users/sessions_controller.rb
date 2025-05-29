@@ -2,7 +2,7 @@
 
 module Users
   class SessionsController < ApplicationController
-    respond_to :html, :json
+    respond_to(:html, :json)
 
     def index
       @user_sessions = authorize(UserSession).visible(CurrentUser.user)

@@ -1,6 +1,6 @@
 <h1>New Email Blacklist</h1>
 
-<%= error_messages_for "blacklist" %>
+<%= error_messages_for("blacklist") %>
 
 <%= custom_form_for(@blacklist) do |f| %>
   <%= f.input(:domain, label: "Domain", as: :string) %>
@@ -8,7 +8,7 @@
   <%= f.button(:submit, "Submit") %>
 <% end %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   New Email Blacklist

@@ -2,7 +2,7 @@
 
 module Posts
   class MoveFavoritesController < ApplicationController
-    respond_to :html, :json
+    respond_to(:html, :json)
 
     def show
       @post = authorize(Post.find(params[:id]), :move_favorites?)

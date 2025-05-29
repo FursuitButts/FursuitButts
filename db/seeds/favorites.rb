@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require_relative "base"
+require_relative("base")
 
 users = User.where(level: User::Levels::MEMBER, favorite_count: ...1000).order("id asc")
 
@@ -15,7 +15,7 @@ users.each_with_index do |user, i|
            else
              count > 1000 ? 250 : 100
            end
-    puts "Creating #{count} favorites for #{user.name} (#{i + 1}/#{users.count})"
+    puts("Creating #{count} favorites for #{user.name} (#{i + 1}/#{users.count})")
     favorites = []
     votes = []
     Post.select(:id, :fav_string, :vote_string).limit(count).order("RANDOM()").find_each.with_index do |post, ii|
@@ -47,7 +47,7 @@ users.each_with_index do |user, i|
     Favorite.insert_all(favorites)
     PostVote.insert_all(votes)
     CurrentUser.user.update_columns(favorite_count: Favorite.for_user(CurrentUser.user.id).count)
-    puts "  #{CurrentUser.user.favorite_count}/#{count}"
+    puts("  #{CurrentUser.user.favorite_count}/#{count}")
   end
 end
 

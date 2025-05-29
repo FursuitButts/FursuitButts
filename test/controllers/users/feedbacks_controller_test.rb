@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 module Users
   class FeedbacksControllerTest < ActionDispatch::IntegrationTest
-    context "The user feedbacks controller" do
+    context("The user feedbacks controller") do
       setup do
         @user = create(:user)
         @critic = create(:moderator_user)
@@ -12,78 +12,78 @@ module Users
         @admin = create(:admin_user)
       end
 
-      context "new action" do
-        should "render" do
-          get_auth new_user_feedback_path, @critic, params: { user_feedback: { user_id: @user.id } }
-          assert_response :success
+      context("new action") do
+        should("render") do
+          get_auth(new_user_feedback_path, @critic, params: { user_feedback: { user_id: @user.id } })
+          assert_response(:success)
         end
 
-        should "restrict access" do
-          assert_access(User::Levels::MODERATOR) { |user| get_auth new_user_feedback_path, user }
+        should("restrict access") do
+          assert_access(User::Levels::MODERATOR) { |user| get_auth(new_user_feedback_path, user) }
         end
       end
 
-      context "edit action" do
+      context("edit action") do
         setup do
           as(@critic) do
             @user_feedback = create(:user_feedback, user: @user)
           end
         end
 
-        should "render" do
-          get_auth edit_user_feedback_path(@user_feedback), @critic
-          assert_response :success
+        should("render") do
+          get_auth(edit_user_feedback_path(@user_feedback), @critic)
+          assert_response(:success)
         end
 
-        should "restrict access" do
-          assert_access(User::Levels::MODERATOR) { |user| get_auth edit_user_feedback_path(@user_feedback), user }
+        should("restrict access") do
+          assert_access(User::Levels::MODERATOR) { |user| get_auth(edit_user_feedback_path(@user_feedback), user) }
         end
       end
 
-      context "index action" do
+      context("index action") do
         setup do
           as(@critic) do
             @user_feedback = create(:user_feedback, user: @user)
           end
         end
 
-        should "render" do
-          get_auth user_feedbacks_path, @user
-          assert_response :success
+        should("render") do
+          get_auth(user_feedbacks_path, @user)
+          assert_response(:success)
         end
 
-        context "with search parameters" do
-          should "render" do
-            get_auth user_feedbacks_path, @critic, params: { search: { user_id: @user.id } }
-            assert_response :success
+        context("with search parameters") do
+          should("render") do
+            get_auth(user_feedbacks_path, @critic, params: { search: { user_id: @user.id } })
+            assert_response(:success)
           end
         end
 
-        should "restrict access" do
-          assert_access(User::Levels::ANONYMOUS) { |user| get_auth user_feedbacks_path, user }
+        should("restrict access") do
+          assert_access(User::Levels::ANONYMOUS) { |user| get_auth(user_feedbacks_path, user) }
         end
       end
 
-      context "create action" do
-        should "create a new feedback" do
+      context("create action") do
+        should("create a new feedback") do
           assert_difference(%w[UserFeedback.count Notification.count], 1) do
-            post_auth user_feedbacks_path, @critic, params: { user_feedback: { category: "positive", user_name: @user.name, body: "xxx" } }
+            post_auth(user_feedbacks_path, @critic, params: { user_feedback: { category: "positive", user_name: @user.name, body: "xxx" } })
           end
         end
 
-        should "restrict access" do
-          assert_access(User::Levels::MODERATOR, success_response: :redirect) { |user| post_auth user_feedbacks_path, user, params: { user_feedback: { category: "positive", user_name: @user.name, body: "xxx" } } }
+        should("restrict access") do
+          assert_access(User::Levels::MODERATOR, success_response: :redirect) { |user| post_auth(user_feedbacks_path, user, params: { user_feedback: { category: "positive", user_name: @user.name, body: "xxx" } }) }
         end
       end
 
-      context "update action" do
-        should "update the feedback" do
+      context("update action") do
+        should("update the feedback") do
           as(@critic) do
             @feedback = create(:user_feedback, user: @user, category: "negative")
           end
 
           assert_no_difference("Notification.count") do
-            put_auth user_feedback_path(@feedback), @critic, params: { id: @feedback.id, user_feedback: { category: "positive" } }
+            put_auth(user_feedback_path(@feedback), @critic, params: { id: @feedback.id, user_feedback: { category: "positive" } })
           end
 
           assert_redirected_to(@feedback)
@@ -91,160 +91,160 @@ module Users
           assert_equal("feedback_create", Notification.last.category)
         end
 
-        should "send a new dmail" do
+        should("send a new dmail") do
           as(@critic) do
             @feedback = create(:user_feedback, user: @user, category: "negative")
           end
           assert_difference("Notification.count", 1) do
-            put_auth user_feedback_path(@feedback), @critic, params: { id: @feedback.id, user_feedback: { body: "changed", send_update_notification: true } }
+            put_auth(user_feedback_path(@feedback), @critic, params: { id: @feedback.id, user_feedback: { body: "changed", send_update_notification: true } })
           end
           assert_equal("feedback_update", Notification.last.category)
         end
 
-        should "restrict access" do
-          assert_access(User::Levels::MODERATOR, success_response: :redirect) { |user| put_auth user_feedback_path(as(@mod) { create(:user_feedback) }), user, params: { user_feedback: { category: "positive" } } }
+        should("restrict access") do
+          assert_access(User::Levels::MODERATOR, success_response: :redirect) { |user| put_auth(user_feedback_path(as(@mod) { create(:user_feedback) }), user, params: { user_feedback: { category: "positive" } }) }
         end
       end
 
-      context "destroy action" do
+      context("destroy action") do
         setup do
           as(@critic) do
             @user_feedback = create(:user_feedback, user: @user)
           end
         end
 
-        should "destroy a feedback" do
+        should("destroy a feedback") do
           assert_difference({ "UserFeedback.count" => -1, "Notification.count" => 1, "ModAction.count" => 1 }) do
-            delete_auth user_feedback_path(@user_feedback), @critic
+            delete_auth(user_feedback_path(@user_feedback), @critic)
           end
           assert_equal("feedback_destroy", Notification.last.category)
         end
 
-        context "by a moderator" do
-          should "allow destroying feedbacks they created" do
+        context("by a moderator") do
+          should("allow destroying feedbacks they created") do
             as(@mod) { @user_feedback = create(:user_feedback, user: @user) }
             assert_difference({ "UserFeedback.count" => -1, "Notification.count" => 1, "ModAction.count" => 1 }) do
-              delete_auth user_feedback_path(@user_feedback), @mod
+              delete_auth(user_feedback_path(@user_feedback), @mod)
             end
             assert_equal("feedback_destroy", Notification.last.category)
           end
 
-          should "now allow destroying feedbacks they did not create" do
+          should("now allow destroying feedbacks they did not create") do
             assert_difference(%w[UserFeedback.count Notification.count ModAction.count], 0) do
-              delete_auth user_feedback_path(@user_feedback), @mod
+              delete_auth(user_feedback_path(@user_feedback), @mod)
             end
           end
 
-          should "not allow deleting feedbacks given to themselves" do
+          should("not allow deleting feedbacks given to themselves") do
             as(@critic) do
               @user_feedback = create(:user_feedback, user: @mod)
             end
 
             assert_no_difference(%w[UserFeedback.count Notification.count ModAction.count]) do
-              delete_auth user_feedback_path(@user_feedback), @mod
+              delete_auth(user_feedback_path(@user_feedback), @mod)
             end
           end
         end
 
-        context "by an admin" do
-          should "allow destroying feedbacks they created" do
+        context("by an admin") do
+          should("allow destroying feedbacks they created") do
             as(@admin) { @user_feedback = create(:user_feedback, user: @user) }
             assert_difference({ "UserFeedback.count" => -1, "Notification.count" => 1, "ModAction.count" => 1 }) do
-              delete_auth user_feedback_path(@user_feedback), @admin
+              delete_auth(user_feedback_path(@user_feedback), @admin)
             end
           end
 
-          should "allow destroying feedbacks they did not create" do
+          should("allow destroying feedbacks they did not create") do
             assert_difference({ "UserFeedback.count" => -1, "Notification.count" => 1, "ModAction.count" => 1 }) do
-              delete_auth user_feedback_path(@user_feedback, format: :json), @admin
+              delete_auth(user_feedback_path(@user_feedback, format: :json), @admin)
             end
           end
 
-          should "not allow destroying feedbacks given to themselves" do
+          should("not allow destroying feedbacks given to themselves") do
             as(@critic) do
               @user_feedback = create(:user_feedback, user: @admin)
             end
 
             assert_no_difference(%w[UserFeedback.count Notification.count ModAction.count]) do
-              delete_auth user_feedback_path(@user_feedback), @admin
+              delete_auth(user_feedback_path(@user_feedback), @admin)
             end
           end
         end
 
-        should "restrict access" do
-          assert_access(User::Levels::ADMIN, success_response: :redirect) { |user| delete_auth user_feedback_path(as(@mod) { create(:user_feedback) }), user }
+        should("restrict access") do
+          assert_access(User::Levels::ADMIN, success_response: :redirect) { |user| delete_auth(user_feedback_path(as(@mod) { create(:user_feedback) }), user) }
         end
       end
 
-      context "delete action" do
+      context("delete action") do
         setup do
           as(@critic) do
             @user_feedback = create(:user_feedback, user: @user)
           end
         end
 
-        should "delete a feedback" do
+        should("delete a feedback") do
           assert_difference("ModAction.count", 1) do
-            put_auth delete_user_feedback_path(@user_feedback), @critic
+            put_auth(delete_user_feedback_path(@user_feedback), @critic)
           end
         end
 
-        context "by a moderator" do
-          should "allow deleting feedbacks given to other users" do
+        context("by a moderator") do
+          should("allow deleting feedbacks given to other users") do
             assert_difference({ "UserFeedback.count" => 0, "ModAction.count" => 1, "@user.feedback.active.count" => -1 }) do
-              put_auth delete_user_feedback_path(@user_feedback), @mod
+              put_auth(delete_user_feedback_path(@user_feedback), @mod)
             end
           end
 
-          should "not allow deleting feedbacks given to themselves" do
+          should("not allow deleting feedbacks given to themselves") do
             as(@critic) do
               @user_feedback = create(:user_feedback, user: @mod)
             end
 
             assert_no_difference(%w[UserFeedback.count ModAction.count @mod.feedback.active.count]) do
-              put_auth delete_user_feedback_path(@user_feedback), @mod
+              put_auth(delete_user_feedback_path(@user_feedback), @mod)
             end
           end
         end
 
-        should "restrict access" do
-          assert_access(User::Levels::MODERATOR, success_response: :redirect) { |user| put_auth delete_user_feedback_path(as(@mod) { create(:user_feedback) }), user }
+        should("restrict access") do
+          assert_access(User::Levels::MODERATOR, success_response: :redirect) { |user| put_auth(delete_user_feedback_path(as(@mod) { create(:user_feedback) }), user) }
         end
       end
 
-      context "undelete action" do
+      context("undelete action") do
         setup do
           as(@critic) do
             @user_feedback = create(:user_feedback, user: @user, is_deleted: true)
           end
         end
 
-        should "delete a feedback" do
+        should("delete a feedback") do
           assert_difference("ModAction.count", 1) do
-            put_auth undelete_user_feedback_path(@user_feedback), @critic
+            put_auth(undelete_user_feedback_path(@user_feedback), @critic)
           end
         end
 
-        context "by a moderator" do
-          should "allow undeleting feedbacks given to other users" do
+        context("by a moderator") do
+          should("allow undeleting feedbacks given to other users") do
             assert_difference({ "UserFeedback.count" => 0, "ModAction.count" => 1, "@user.feedback.active.count" => 1 }) do
-              put_auth undelete_user_feedback_path(@user_feedback), @mod
+              put_auth(undelete_user_feedback_path(@user_feedback), @mod)
             end
           end
 
-          should "not allow undeleting feedbacks given to themselves" do
+          should("not allow undeleting feedbacks given to themselves") do
             as(@critic) do
               @user_feedback = create(:user_feedback, user: @mod)
             end
 
             assert_no_difference(%w[UserFeedback.count ModAction.count @mod.feedback.active.count]) do
-              put_auth undelete_user_feedback_path(@user_feedback), @mod
+              put_auth(undelete_user_feedback_path(@user_feedback), @mod)
             end
           end
         end
 
-        should "restrict access" do
-          assert_access(User::Levels::MODERATOR, success_response: :redirect) { |user| put_auth undelete_user_feedback_path(as(@mod) { create(:user_feedback, is_deleted: true) }), user }
+        should("restrict access") do
+          assert_access(User::Levels::MODERATOR, success_response: :redirect) { |user| put_auth(undelete_user_feedback_path(as(@mod) { create(:user_feedback, is_deleted: true) }), user) }
         end
       end
     end

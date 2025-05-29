@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 class PoolVersion < ApplicationRecord
-  belongs_to_updater counter_cache: "pool_update_count"
-  belongs_to :pool
-  before_validation :fill_version, on: :create
-  before_validation :fill_changes, on: :create
+  belongs_to_updater(counter_cache: "pool_update_count")
+  belongs_to(:pool)
+  before_validation(:fill_version, on: :create)
+  before_validation(:fill_changes, on: :create)
 
   module SearchMethods
     def default_order
@@ -32,7 +32,7 @@ class PoolVersion < ApplicationRecord
     end
   end
 
-  extend SearchMethods
+  extend(SearchMethods)
 
   def self.queue(pool, updater, updater_ip_addr)
     create({

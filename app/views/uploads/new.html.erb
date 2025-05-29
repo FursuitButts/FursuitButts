@@ -1,12 +1,12 @@
 <div style="margin-bottom: 1rem;" class="section">
   <h2>Before uploading, read
-    the <%= link_to "how to upload guide", help_page_path(id: "uploading") %>.</h2>
+    the <%= link_to("how to upload guide", help_page_path(id: "uploading")) %>.</h2>
   <p>Make sure you're not posting something on
-    the <%= link_to "Avoid Posting List", avoid_posting_static_path %><br>
-    Review the <%= link_to "Uploading Guidelines", help_page_path(id: "uploading_guidelines") %>
+    the <%= link_to("Avoid Posting List", avoid_posting_static_path) %><br>
+    Review the <%= link_to("Uploading Guidelines", help_page_path(id: "uploading_guidelines")) %>
     <br>
     Unsure what to tag your post
-    with? <%= link_to "Tagging Checklist", help_page_path(id: "tagging_checklist") %></p>
+    with? <%= link_to("Tagging Checklist", help_page_path(id: "tagging_checklist")) %></p>
 </div>
 <div id="uploader"></div>
 <% if CurrentUser.upload_limit <= 5 || CurrentUser.post_upload_throttle <= 5 %>
@@ -16,19 +16,19 @@
       You currently have <span class="post-uploads-remaining-count"><%= CurrentUser.upload_limit %></span> upload<%= CurrentUser.upload_limit == 1 ? "" : "s" %> remaining.
 
       <% if @limit_pieces[:pending] > 0 %>
-        This number will go up as some of your <%= link_to "<span class='post-uploads-remaining-count'>#{@limit_pieces[:pending]}</span> pending/flagged posts".html_safe, posts_path(tags: "user:#{CurrentUser.name} status:pending") %> are approved.
+        This number will go up as some of your <%= link_to("<span class='post-uploads-remaining-count'>#{@limit_pieces[:pending]}</span> pending/flagged posts".html_safe, posts_path(tags: "user:#{CurrentUser.name} status:pending")) %> are approved.
       <% end %>
     </p>
     You have <span class="post-uploads-remaining-count"><%= CurrentUser.post_upload_throttle %></span> uploads remaining this hour.
-    See <%= link_to "here", upload_limit_users_path %> for more details.
+    See <%= link_to("here", upload_limit_users_path) %> for more details.
   </div>
 <% elsif CurrentUser.post_upload_throttle <= 5 %>
   <div id="post-uploads-remaining" class="section<% if CurrentUser.post_upload_throttle <= 0 %> background-red<% end %>" style="width:640px;">
     You have <span class="post-uploads-remaining-count"><%= CurrentUser.post_upload_throttle %></span> uploads remaining this hour.
-    See <%= link_to "here", upload_limit_users_path %> for more details.
+    See <%= link_to("here", upload_limit_users_path) %> for more details.
   </div>
 <% end %>
-<%= javascript_tag nonce: true do -%>
+<%= javascript_tag(nonce: true) do -%>
   var uploaderSettings = {
     compactMode: <%= CurrentUser.compact_uploader?.to_json %>,
     safeSite: <%= CurrentUser.safe_mode?.to_json %>,
@@ -43,7 +43,7 @@
   };
   Danbooru.Uploader.init();
 <% end -%>
-<%= render "posts/partials/common/secondary_links" %>
+<%= render("posts/partials/common/secondary_links") %>
 
 <% content_for(:page_title) do %>
   New Upload

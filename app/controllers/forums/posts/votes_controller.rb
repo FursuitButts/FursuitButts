@@ -3,12 +3,12 @@
 module Forums
   module Posts
     class VotesController < ApplicationController
-      respond_to :html, only: %i[index]
-      respond_to :json
-      before_action :load_forum_post, except: %i[index delete]
-      before_action :validate_forum_post, except: %i[index delete]
-      before_action :validate_no_vote_on_own_post, only: %i[create]
-      before_action :ensure_lockdown_disabled
+      respond_to(:html, only: %i[index])
+      respond_to(:json)
+      before_action(:load_forum_post, except: %i[index delete])
+      before_action(:validate_forum_post, except: %i[index delete])
+      before_action(:validate_no_vote_on_own_post, only: %i[create])
+      before_action(:ensure_lockdown_disabled)
 
       def index
         @forum_post_votes = authorize(ForumPostVote).html_includes(request, :user, forum_post: %i[creator])

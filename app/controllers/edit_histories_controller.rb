@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class EditHistoriesController < ApplicationController
-  respond_to :html
+  respond_to(:html)
 
   def index
     @edit_histories = authorize(EditHistory).html_includes(request, :user)

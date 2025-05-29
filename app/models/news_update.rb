@@ -4,10 +4,10 @@ class NewsUpdate < ApplicationRecord
   belongs_to_creator
   belongs_to_updater
 
-  validates :message, length: { minimum: 1, maximum: FemboyFans.config.news_update_max_size }
+  validates(:message, length: { minimum: 1, maximum: FemboyFans.config.news_update_max_size })
 
-  after_destroy :invalidate_cache
-  after_save :invalidate_cache
+  after_destroy(:invalidate_cache)
+  after_save(:invalidate_cache)
 
   def self.recent
     Cache.fetch("recent_news", expires_in: 1.day) do

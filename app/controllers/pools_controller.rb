@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class PoolsController < ApplicationController
-  before_action :ensure_lockdown_disabled, except: %i[index show gallery]
-  respond_to :html, :json
+  before_action(:ensure_lockdown_disabled, except: %i[index show gallery])
+  respond_to(:html, :json)
 
   def index
     @pools = authorize(Pool).search(search_params(Pool))

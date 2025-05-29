@@ -2,9 +2,9 @@
 
 class IpBan < ApplicationRecord
   belongs_to_creator
-  validates :reason, :ip_addr, presence: true
-  validates :ip_addr, uniqueness: true
-  validate :validate_ip_addr
+  validates(:reason, :ip_addr, presence: true)
+  validates(:ip_addr, uniqueness: true)
+  validate(:validate_ip_addr)
   after_create do |rec|
     StaffAuditLog.log!(:ip_ban_create, CurrentUser.user, ip_addr: rec.subnetted_ip, reason: rec.reason)
     Cache.delete("ipban:#{rec.ip_addr}")

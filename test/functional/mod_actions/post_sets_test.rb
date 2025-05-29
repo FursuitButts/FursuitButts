@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-require "test_helper"
-require_relative "helper"
+require("test_helper")
+require_relative("helper")
 
 module ModActions
   class PostSetsest < ActiveSupport::TestCase
-    include Helper
-    include Rails.application.routes.url_helpers
+    include(Helper)
+    include(Rails.application.routes.url_helpers)
 
-    context "mod actions for post sets" do
+    context("mod actions for post sets") do
       setup do
         as(@user) do
           @set = create(:post_set)
@@ -16,7 +16,7 @@ module ModActions
         set_count!
       end
 
-      should "format set_change_visibility correctly" do
+      should("format set_change_visibility correctly") do
         FemboyFans.config.stubs(:disable_age_checks?).returns(true)
         @set.update!(is_public: true)
 
@@ -29,7 +29,7 @@ module ModActions
         )
       end
 
-      should "format set_delete correctly" do
+      should("format set_delete correctly") do
         @set.destroy
 
         assert_matches(
@@ -40,7 +40,7 @@ module ModActions
         )
       end
 
-      should "format set_update correctly" do
+      should("format set_update correctly") do
         @set.update!(name: "xxx")
 
         assert_matches(

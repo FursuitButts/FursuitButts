@@ -13,7 +13,7 @@
 
 <div class="flag-dialog-body">
 
-  <%= error_messages_for :post_flag %>
+  <%= error_messages_for(:post_flag) %>
 
   <%= custom_form_for(post_flag) do |f| %>
     <%= f.hidden_field(:post_id) %>
@@ -24,7 +24,7 @@
       <% end %>
 
       <label>
-        <%= radio_button_tag "post_flag[reason_name]", flag_reason[:name], false %>
+        <%= radio_button_tag("post_flag[reason_name]", flag_reason[:name], false) %>
         <span class="flag-reason-title"><%= format_text(flag_reason[:reason], inline: true) %></span>
         <div class="dtext-container flag-reason-text"><%= format_text(flag_reason[:text]) %></div>
       </label>

@@ -2,8 +2,8 @@
 
 module PostSets
   class MaintainersController < ApplicationController
-    respond_to :html
-    respond_to :js, except: %i[index]
+    respond_to(:html)
+    respond_to(:js, except: %i[index])
 
     def index
       @invites = authorize(PostSetMaintainer).html_includes(request, :post_set)

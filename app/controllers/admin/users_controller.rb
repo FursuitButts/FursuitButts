@@ -2,7 +2,7 @@
 
 module Admin
   class UsersController < ApplicationController
-    respond_to :html, :json
+    respond_to(:html, :json)
 
     def alt_list
       authorize(%i[admin user])

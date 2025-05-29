@@ -3,7 +3,7 @@
 module ParseValue
   MAX_INT = 2_147_483_647
   MIN_INT = -2_147_483_648
-  extend self
+  extend(self)
 
   def date_range(target)
     case target

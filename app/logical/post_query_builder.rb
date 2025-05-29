@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class PostQueryBuilder
-  attr_accessor :query_string
+  attr_accessor(:query_string)
 
   def initialize(query_string)
     @query_string = query_string

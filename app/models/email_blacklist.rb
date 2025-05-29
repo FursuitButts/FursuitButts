@@ -5,10 +5,10 @@ class EmailBlacklist < ApplicationRecord
 
   belongs_to_creator
 
-  validates :domain, uniqueness: { case_sensitive: false, message: "already exists" }
-  after_create :invalidate_cache
-  after_create :unverify_accounts
-  after_destroy :invalidate_cache
+  validates(:domain, uniqueness: { case_sensitive: false, message: "already exists" })
+  after_create(:invalidate_cache)
+  after_create(:unverify_accounts)
+  after_destroy(:invalidate_cache)
 
   def self.is_banned?(email)
     email_domain = email.split("@").last.strip.downcase

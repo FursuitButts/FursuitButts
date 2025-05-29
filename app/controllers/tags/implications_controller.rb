@@ -2,9 +2,9 @@
 
 module Tags
   class ImplicationsController < ApplicationController
-    respond_to :html, :json
-    wrap_parameters :tag_implication
-    before_action :ensure_lockdown_disabled
+    respond_to(:html, :json)
+    wrap_parameters(:tag_implication)
+    before_action(:ensure_lockdown_disabled)
 
     def index
       @tag_implications = authorize(TagImplication).html_includes(request, :antecedent_tag, :consequent_tag, :approver, :creator)

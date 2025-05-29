@@ -7,23 +7,23 @@ class PostFlag < ApplicationRecord
   COOLDOWN_PERIOD = 1.day
   MAPPED_REASONS = FemboyFans.config.flag_reasons.to_h { |i| [i[:name], i[:reason]] }
 
-  belongs_to_creator class_name: "User", counter_cache: "post_flag_count"
-  belongs_to :post
-  validate :validate_creator_is_not_limited, on: :create
-  validate :validate_post
-  validate :validate_reason
-  validate :update_reason, on: :create
-  validates :reason, presence: true
-  before_save :update_post
-  after_create :create_post_event
-  after_commit :index_post
+  belongs_to_creator(class_name: "User", counter_cache: "post_flag_count")
+  belongs_to(:post)
+  validate(:validate_creator_is_not_limited, on: :create)
+  validate(:validate_post)
+  validate(:validate_reason)
+  validate(:update_reason, on: :create)
+  validates(:reason, presence: true)
+  before_save(:update_post)
+  after_create(:create_post_event)
+  after_commit(:index_post)
 
-  scope :by_users, -> { where.not(creator: User.system) }
-  scope :by_system, -> { where(creator: User.system) }
-  scope :in_cooldown, -> { by_users.where("created_at >= ?", COOLDOWN_PERIOD.ago) }
-  scope :pending, -> { by_users.where(is_resolved: false) }
+  scope(:by_users, -> { where.not(creator: User.system) })
+  scope(:by_system, -> { where(creator: User.system) })
+  scope(:in_cooldown, -> { by_users.where("created_at >= ?", COOLDOWN_PERIOD.ago) })
+  scope(:pending, -> { by_users.where(is_resolved: false) })
 
-  attr_accessor :parent_id, :reason_name, :force_flag
+  attr_accessor(:parent_id, :reason_name, :force_flag)
 
   module SearchMethods
     def post_tags_match(query)
@@ -79,7 +79,7 @@ class PostFlag < ApplicationRecord
     end
   end
 
-  extend SearchMethods
+  extend(SearchMethods)
 
   def type
     return :deletion if is_deletion

@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-require "test_helper"
-require_relative "helper"
+require("test_helper")
+require_relative("helper")
 
 module ModActions
   class ForumPostsTest < ActiveSupport::TestCase
-    include Helper
-    include Rails.application.routes.url_helpers
+    include(Helper)
+    include(Rails.application.routes.url_helpers)
 
-    context "mod actions for forum posts" do
+    context("mod actions for forum posts") do
       setup do
         as(@user) do
           @topic = create(:forum_topic)
@@ -17,7 +17,7 @@ module ModActions
         set_count!
       end
 
-      should "format forum_post_delete correctly" do
+      should("format forum_post_delete correctly") do
         @post.destroy
 
         assert_matches(
@@ -29,7 +29,7 @@ module ModActions
         )
       end
 
-      should "format forum_post_hide correctly" do
+      should("format forum_post_hide correctly") do
         @post.hide!
 
         assert_matches(
@@ -41,7 +41,7 @@ module ModActions
         )
       end
 
-      should "format forum_post_unhide correctly" do
+      should("format forum_post_unhide correctly") do
         @post.update_columns(is_hidden: true)
         @post.unhide!
 
@@ -54,7 +54,7 @@ module ModActions
         )
       end
 
-      should "format forum_post_update correctly" do
+      should("format forum_post_update correctly") do
         @original = @post.dup
         @post.update!(body: "xxx")
 

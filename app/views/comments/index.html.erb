@@ -1,15 +1,15 @@
 <h1>Comments</h1>
 
-<%= render "posts/partials/common/inline_blacklist" %>
+<%= render("posts/partials/common/inline_blacklist") %>
 
-<%= render "search" %>
+<%= render("search") %>
 <% if params[:group_by] == "comment" %>
-  <%= render "index_by_comment" %>
+  <%= render("index_by_comment") %>
 <% else %>
-  <%= render "index_by_post" %>
+  <%= render("index_by_post") %>
 <% end %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   Comments

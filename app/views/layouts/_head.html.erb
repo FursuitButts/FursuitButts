@@ -22,13 +22,13 @@
 <meta name="enable-autocomplete" content="<%= CurrentUser.user.enable_autocomplete %>">
 <meta name="style-usernames" content="<%= CurrentUser.user.style_usernames? %>">
 <% if CurrentUser.user.custom_style.present? %>
-  <%= stylesheet_link_tag custom_style_users_path(md5: Digest::MD5.hexdigest(CurrentUser.user.custom_style)), media: "screen", nonce: true %>
+  <%= stylesheet_link_tag(custom_style_users_path(md5: Digest::MD5.hexdigest(CurrentUser.user.custom_style)), media: "screen", nonce: true) %>
 <% end %>
 
 <% if flash[:notice] =~ /error/i %>
   <meta name="errors" content="true">
 <% end %>
-<%= auto_discovery_link_tag :atom, posts_path(format: "atom", tags: params[:tags]) %>
+<%= auto_discovery_link_tag(:atom, posts_path(format: "atom", tags: params[:tags])) %>
 
 <%= stylesheet_pack_tag("application", nonce: true) %>
 <%= javascript_pack_tag("application", nonce: true, defer: false) %>
@@ -68,5 +68,5 @@
   </style>
 </noscript>
 
-<%= raw FemboyFans.config.custom_html_header_content %>
-<%= yield :html_header %>
+<%= raw(FemboyFans.config.custom_html_header_content) %>
+<%= yield(:html_header) %>

@@ -1,20 +1,20 @@
 # frozen_string_literal: true
 
-require "test_helper"
-require_relative "helper"
+require("test_helper")
+require_relative("helper")
 
 module ModActions
   class WikiPagesTest < ActiveSupport::TestCase
-    include Helper
-    include Rails.application.routes.url_helpers
+    include(Helper)
+    include(Rails.application.routes.url_helpers)
 
-    context "mod actions for wiki pages" do
+    context("mod actions for wiki pages") do
       setup do
         @wiki = create(:wiki_page)
         set_count!
       end
 
-      should "format wiki_page_delete correctly" do
+      should("format wiki_page_delete correctly") do
         @wiki.destroy
 
         assert_matches(
@@ -25,7 +25,7 @@ module ModActions
         )
       end
 
-      should "format wiki_page_protect correctly" do
+      should("format wiki_page_protect correctly") do
         level = User::Levels::ADMIN
         @wiki.update!(protection_level: level)
 
@@ -38,7 +38,7 @@ module ModActions
         )
       end
 
-      should "format wiki_page_merge correctly" do
+      should("format wiki_page_merge correctly") do
         @target = create(:wiki_page)
         @wiki.merge_into!(@target)
 
@@ -52,7 +52,7 @@ module ModActions
         )
       end
 
-      should "format wiki_page_rename correctly" do
+      should("format wiki_page_rename correctly") do
         @original = @wiki.dup
         @wiki.update!(title: "aaa")
 
@@ -65,7 +65,7 @@ module ModActions
         )
       end
 
-      should "format wiki_page_unprotect correctly" do
+      should("format wiki_page_unprotect correctly") do
         @wiki.update_columns(protection_level: User::Levels::ADMIN)
         @wiki.update!(protection_level: nil)
 

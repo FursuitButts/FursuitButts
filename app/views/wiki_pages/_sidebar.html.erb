@@ -1,7 +1,7 @@
 <aside id="sidebar">
-  <%= render "posts/partials/index/blacklist" %>
-  <%= render "wiki_pages/recent_changes" %>
+  <%= render("posts/partials/index/blacklist") %>
+  <%= render("wiki_pages/recent_changes") %>
   <% if @wiki_page.present? && @wiki_page.title.present? %>
-    <%= render "wiki_pages/options" %>
+    <%= render("wiki_pages/options") %>
   <% end %>
 </aside>

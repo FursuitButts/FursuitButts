@@ -6,9 +6,9 @@
 #   tags in one call instead of fetching them sequentially.
 
 class TagSetPresenter < Presenter
-  include Rails.application.routes.url_helpers
+  include(Rails.application.routes.url_helpers)
 
-  attr_reader :tag_names
+  attr_reader(:tag_names)
 
   # @param [Array<String>] tag_names a list of tags to present. Tags will be presented in
   # the order given. The list should not contain duplicates. The list may

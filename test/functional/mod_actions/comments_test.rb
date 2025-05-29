@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-require "test_helper"
-require_relative "helper"
+require("test_helper")
+require_relative("helper")
 
 module ModActions
   class CommentsTest < ActiveSupport::TestCase
-    include Helper
-    include Rails.application.routes.url_helpers
+    include(Helper)
+    include(Rails.application.routes.url_helpers)
 
-    context "mod actions for comments" do
+    context("mod actions for comments") do
       setup do
         as(@user) do
           @comment = create(:comment)
@@ -16,7 +16,7 @@ module ModActions
         set_count!
       end
 
-      should "format comment_delete correctly" do
+      should("format comment_delete correctly") do
         @comment.destroy
 
         assert_matches(
@@ -28,7 +28,7 @@ module ModActions
         )
       end
 
-      should "format comment_hide correctly" do
+      should("format comment_hide correctly") do
         @comment.hide!
 
         assert_matches(
@@ -39,7 +39,7 @@ module ModActions
         )
       end
 
-      should "format comment_unhide correctly" do
+      should("format comment_unhide correctly") do
         @comment.update_columns(is_hidden: true)
         @comment.unhide!
 
@@ -51,7 +51,7 @@ module ModActions
         )
       end
 
-      should "format comment_update correctly" do
+      should("format comment_update correctly") do
         @original = @comment.dup
         @comment.update!(body: "xxx")
 

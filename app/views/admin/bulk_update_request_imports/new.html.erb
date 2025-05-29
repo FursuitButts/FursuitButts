@@ -15,7 +15,7 @@ mass update aaa -> bbb
     <label for="batch_text">
       Script
     </label>
-    <%= text_area "batch", "script", size: "60x20", value: @importer.try(:text) %>
+    <%= text_area("batch", "script", size: "60x20", value: @importer.try(:text)) %>
     <% if @error %>
       <span class="error"><%= @error.message %></span>
     <% end %>
@@ -25,13 +25,13 @@ mass update aaa -> bbb
     <label for="batch_forum_id">
       Forum ID
     </label>
-    <%= text_field "batch", "forum_id", value: @importer.try(:forum_id) %>
+    <%= text_field("batch", "forum_id", value: @importer.try(:forum_id)) %>
   </div>
 
-  <%= submit_tag "Import" %>
+  <%= submit_tag("Import") %>
 <% end %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   Bulk Update Request Import

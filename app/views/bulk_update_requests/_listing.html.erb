@@ -29,7 +29,7 @@
   <% end %>
   <% t.column(:status) %>
   <% t.column do |request| %>
-    <%= link_to "Show", bulk_update_request_path(request) %>
+    <%= link_to("Show", bulk_update_request_path(request)) %>
     <% if request.policy(CurrentUser.user).approve? %>
       | <%= link_to("Approve", approve_bulk_update_request_path(request), "method": :post, "data-confirm": "Are you sure you want to approve this bulk update request?") %>
     <% end %>

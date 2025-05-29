@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class MoveForumCategoryTopicsJob < ApplicationJob
-  queue_as :default
+  queue_as(:default)
 
   def perform(user, old_category, new_category)
     old_can_create = old_category.can_create

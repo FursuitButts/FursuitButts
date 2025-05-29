@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "sidekiq-unique-jobs"
+require("sidekiq-unique-jobs")
 
 Sidekiq.configure_server do |config|
   # config.failures_default_mode = :exhausted

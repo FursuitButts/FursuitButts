@@ -2,7 +2,7 @@
 
 module AvoidPostings
   class VersionsController < ApplicationController
-    respond_to :html, :json
+    respond_to(:html, :json)
 
     def index
       @avoid_posting_versions = authorize(AvoidPostingVersion).html_includes(request, :updater, :avoid_posting)

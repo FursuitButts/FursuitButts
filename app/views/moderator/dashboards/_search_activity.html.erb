@@ -1,7 +1,7 @@
 <%= form_tag(moderator_dashboard_path, method: :get, class: "simple_form") do %>
   <div class="input">
     <label for="min_date">Minimum Date</label>
-    <%= text_field_tag :min_date, @dashboard.min_date %>
+    <%= text_field_tag(:min_date, @dashboard.min_date) %>
   </div>
 
   <div class="input">
@@ -9,5 +9,5 @@
     <%= user_level_select_tag(:max_level) %><br>
   </div>
 
-  <%= submit_tag "Search" %>
+  <%= submit_tag("Search") %>
 <% end %>

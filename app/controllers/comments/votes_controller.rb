@@ -2,10 +2,10 @@
 
 module Comments
   class VotesController < ApplicationController
-    respond_to :html, only: %i[index]
-    respond_to :json
-    skip_before_action :api_check
-    before_action :ensure_lockdown_disabled
+    respond_to(:html, only: %i[index])
+    respond_to(:json)
+    skip_before_action(:api_check)
+    before_action(:ensure_lockdown_disabled)
 
     def index
       @comment_votes = authorize(CommentVote).html_includes(request, :user, comment: %i[creator post])

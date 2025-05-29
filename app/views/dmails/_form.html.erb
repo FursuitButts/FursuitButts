@@ -1,4 +1,4 @@
-<%= error_messages_for :dmail %>
+<%= error_messages_for(:dmail) %>
 <%= custom_form_for(dmail) do |f| %>
   <%= f.input(:to_name, label: "To", autocomplete: "user", input_html: { value: dmail.to.try(:name) }) %>
   <%= f.input(:title, as: :string, input_html: { size: 100 }) %>

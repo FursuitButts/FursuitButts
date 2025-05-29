@@ -1,11 +1,11 @@
 <aside id="sidebar">
-  <%= render "posts/partials/common/search", path: posts_path, tags: params[:tags], tags_dom_id: "tags" %>
+  <%= render("posts/partials/common/search", path: posts_path, tags: params[:tags], tags_dom_id: "tags") %>
 
   <% if CurrentUser.user.is_member? %>
-    <%= render "posts/partials/index/mode_menu" %>
+    <%= render("posts/partials/index/mode_menu") %>
   <% end %>
 
-  <%= render "posts/partials/index/blacklist" %>
+  <%= render("posts/partials/index/blacklist") %>
 
   <section id="tag-list">
     <h1>Tags</h1>
@@ -13,7 +13,7 @@
     <%= @post_set.presenter.post_index_sidebar_tag_list_html(current_query: params[:tags]) %>
   </section>
 
-  <%= render "posts/partials/index/related" %>
+  <%= render("posts/partials/index/related") %>
 </aside>
 
 <% if FemboyFans.config.reports_enabled? && @post_set.is_simple_tags? && @post_set.current_page == 1 %>
@@ -28,11 +28,11 @@
   <!-- TODO: Fix tag array with forced -status:deleted -->
 
   <div class="mobile-search">
-    <%= link_to "(search help)", help_page_path(id: "cheatsheet"), class: "search-help" %>
+    <%= link_to("(search help)", help_page_path(id: "cheatsheet"), class: "search-help") %>
     <div class="search-form">
       <%= form_tag(posts_path, method: "get") do %>
         <% if params[:random] %>
-          <%= hidden_field_tag :random, params[:random] %>
+          <%= hidden_field_tag(:random, params[:random]) %>
         <% end %>
         <div class="search-input"><%= text_field_tag("tags", params[:tags], "id": "mobile-search-input", "data-autocomplete": "tag-query") %></div>
         <div class="search-button"><%= tag.button(tag.i(class: "fa-solid fa-magnifying-glass"), type: "submit") %></div>
@@ -40,12 +40,12 @@
     </div>
   </div>
 
-  <%= render "posts/partials/index/edit" %>
-  <%= render "posts/partials/index/posts", post_set: @post_set %>
+  <%= render("posts/partials/index/edit") %>
+  <%= render("posts/partials/index/posts", post_set: @post_set) %>
 </section>
 
 
-<%= render "posts/partials/common/secondary_links" %>
+<%= render("posts/partials/common/secondary_links") %>
 
 <% content_for(:page_title) do %>
   <% if @post_set.public_tag_string.present? %>
@@ -61,5 +61,5 @@
   <% if prev_page_url %>
     <%= tag.link(rel: "prev", href: prev_page_url) %>
   <% end %>
-  <%= render "posts/partials/index/seo_meta_tags" %>
+  <%= render("posts/partials/index/seo_meta_tags") %>
 <% end %>

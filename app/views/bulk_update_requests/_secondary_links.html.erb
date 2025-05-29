@@ -1,8 +1,8 @@
 <% content_for(:secondary_links) do %>
-  <%= subnav_link_to "Listing", bulk_update_requests_path %>
-  <%= subnav_link_to "New", new_bulk_update_request_path %>
+  <%= subnav_link_to("Listing", bulk_update_requests_path) %>
+  <%= subnav_link_to("New", new_bulk_update_request_path) %>
   <% if policy(BulkUpdateRequestImporter).create? %>
     |
-    <%= subnav_link_to "Import", new_admin_bulk_update_request_import_path %>
+    <%= subnav_link_to("Import", new_admin_bulk_update_request_import_path) %>
   <% end %>
 <% end %>

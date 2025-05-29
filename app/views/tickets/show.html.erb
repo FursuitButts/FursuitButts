@@ -37,7 +37,7 @@
           <td id="claimed_by"><%= link_to("Claim", claim_ticket_path(@ticket), method: :post) %></td>
         <% else %>
           <td id="claimed_by">
-            <%= link_to_user @ticket.claimant %>
+            <%= link_to_user(@ticket.claimant) %>
             <% if @ticket.claimant.id == CurrentUser.user.id %>
               | <%= link_to("Unclaim", unclaim_ticket_path(@ticket), method: :post) %>
             <% end %>
@@ -68,7 +68,7 @@
       </tr>
     <% end %>
 
-    <%= render partial: "tickets/types/#{@ticket.model_type.underscore}" %>
+    <%= render(partial: "tickets/types/#{@ticket.model_type.underscore}") %>
 
     <tr>
       <td><span class='title'>Reason</span></td>
@@ -81,7 +81,7 @@
       <tr>
         <td><span class='title'>Handled by</span></td>
         <% if @ticket.handler.present? %>
-          <td><%= link_to_user @ticket.handler %></td>
+          <td><%= link_to_user(@ticket.handler) %></td>
         <% else %>
           <td>Unknown</td>
         <% end %>
@@ -107,7 +107,7 @@
       <% end %>
       <div class="ticket-responses">
         <% FemboyFans.config.ticket_quick_response_buttons.each do |btn| %>
-        <%= button_tag btn[:name], type: "button", data: { text: btn[:text] } %>
+        <%= button_tag(btn[:name], type: "button", data: { text: btn[:text] }) %>
         <% end %>
       </div>
       <table>
@@ -125,7 +125,7 @@
   <%= @ticket.type_title %>
 <% end %>
 
-<% render partial: "secondary_links" %>
+<% render(partial: "secondary_links") %>
 
 <% content_for(:page_title) do %>
   <%= @ticket.type_title %>

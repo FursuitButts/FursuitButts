@@ -1,20 +1,20 @@
 # frozen_string_literal: true
 
-require "test_helper"
-require_relative "helper"
+require("test_helper")
+require_relative("helper")
 
 module ModActions
   class TakedownsTest < ActiveSupport::TestCase
-    include Helper
-    include Rails.application.routes.url_helpers
+    include(Helper)
+    include(Rails.application.routes.url_helpers)
 
-    context "mod actions for takedowns" do
+    context("mod actions for takedowns") do
       setup do
         @takedown = create(:takedown)
         set_count!
       end
 
-      should "format takedown_process correctly" do
+      should("format takedown_process correctly") do
         with_inline_jobs { @takedown.process!(CurrentUser.user, "Artist requested removal") }
 
         assert_matches(
@@ -24,7 +24,7 @@ module ModActions
         )
       end
 
-      should "format takedown-delete" do
+      should("format takedown-delete") do
         @takedown.destroy
 
         assert_matches(

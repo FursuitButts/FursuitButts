@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 class TicketsControllerTest < ActionDispatch::IntegrationTest
   def assert_ticket_create_permissions(users, model:, **params)
@@ -19,7 +19,7 @@ class TicketsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  context "The tickets controller" do
+  context("The tickets controller") do
     setup do
       @admin = create(:admin_user)
       @janitor = create(:janitor_user)
@@ -28,292 +28,292 @@ class TicketsControllerTest < ActionDispatch::IntegrationTest
       @bad_actor = create(:user, created_at: 2.weeks.ago)
     end
 
-    context "update action" do
+    context("update action") do
       setup do
         as(@bad_actor) do
           @ticket = create(:ticket, creator: @reporter, model: create(:comment))
         end
       end
 
-      should "send a new dmail if the status is changed" do
+      should("send a new dmail if the status is changed") do
         assert_difference(-> { Dmail.count }, 2) do
-          put_auth ticket_path(@ticket), @admin, params: { ticket: { status: "approved", response: "abc" } }
+          put_auth(ticket_path(@ticket), @admin, params: { ticket: { status: "approved", response: "abc" } })
         end
       end
 
-      should "send a new dmail if the response is changed" do
+      should("send a new dmail if the response is changed") do
         assert_no_difference(-> { Dmail.count }) do
-          put_auth ticket_path(@ticket), @admin, params: { ticket: { response: "abc" } }
+          put_auth(ticket_path(@ticket), @admin, params: { ticket: { response: "abc" } })
         end
 
         assert_difference(-> { Dmail.count }, 2) do
-          put_auth ticket_path(@ticket), @admin, params: { ticket: { response: "def", send_update_dmail: true } }
+          put_auth(ticket_path(@ticket), @admin, params: { ticket: { response: "def", send_update_dmail: true } })
         end
       end
 
-      should "reject empty responses" do
+      should("reject empty responses") do
         assert_no_changes(-> { @ticket.reload.status }) do
-          put_auth ticket_path(@ticket), @admin, params: { ticket: { status: "approved", response: "" } }
+          put_auth(ticket_path(@ticket), @admin, params: { ticket: { status: "approved", response: "" } })
         end
       end
 
-      should "restrict access" do
-        assert_access(User::Levels::MODERATOR, success_response: :redirect) { |user| put_auth ticket_path(@ticket), user, params: { ticket: { response: SecureRandom.hex(6) } } }
+      should("restrict access") do
+        assert_access(User::Levels::MODERATOR, success_response: :redirect) { |user| put_auth(ticket_path(@ticket), user, params: { ticket: { response: SecureRandom.hex(6) } }) }
       end
     end
 
-    context "for an artist ticket" do
+    context("for an artist ticket") do
       setup do
-        as @bad_actor do
+        as(@bad_actor) do
           @content = create(:artist, creator: @bad_actor)
         end
       end
 
-      should "allow reporting artists" do
+      should("allow reporting artists") do
         assert_ticket_create_permissions([[@user, true], [@janitor, true], [@admin, true], [@bad_actor, true]], model: @content)
       end
 
-      should "restrict access to users" do
+      should("restrict access to users") do
         @ticket = create(:ticket, creator: @reporter, model: @content)
-        get_auth ticket_path(@ticket), @user
-        assert_response :forbidden
+        get_auth(ticket_path(@ticket), @user)
+        assert_response(:forbidden)
       end
 
-      should "not restrict access to janitors" do
+      should("not restrict access to janitors") do
         @ticket = create(:ticket, creator: @reporter, model: @content)
-        get_auth ticket_path(@ticket), @janitor
-        assert_response :success
+        get_auth(ticket_path(@ticket), @janitor)
+        assert_response(:success)
       end
     end
 
-    context "for a comment ticket" do
+    context("for a comment ticket") do
       setup do
-        as @bad_actor do
+        as(@bad_actor) do
           @content = create(:comment, creator: @bad_actor)
         end
       end
 
-      should "restrict reporting" do
+      should("restrict reporting") do
         assert_ticket_create_permissions([[@user, true], [@janitor, true], [@admin, true], [@bad_actor, true]], model: @content)
         @content.update_columns(is_hidden: true)
         assert_ticket_create_permissions([[@user, false], [@janitor, false], [@admin, true], [@bad_actor, true]], model: @content)
       end
 
-      should "restrict access" do
+      should("restrict access") do
         @ticket = create(:ticket, creator: @reporter, model: @content)
-        get_auth ticket_path(@ticket), @user
-        assert_response :forbidden
-        get_auth ticket_path(@ticket), @janitor
-        assert_response :forbidden
+        get_auth(ticket_path(@ticket), @user)
+        assert_response(:forbidden)
+        get_auth(ticket_path(@ticket), @janitor)
+        assert_response(:forbidden)
       end
     end
 
-    context "for a dmail ticket" do
+    context("for a dmail ticket") do
       setup do
-        as @bad_actor do
+        as(@bad_actor) do
           @content = create(:dmail, from: @bad_actor, to: @reporter, owner: @reporter)
         end
       end
 
-      should "disallow reporting dmails you did not recieve" do
+      should("disallow reporting dmails you did not recieve") do
         assert_ticket_create_permissions([[@reporter, true], [@user, false], [@janitor, false], [@admin, false], [@bad_actor, false]], model: @content)
       end
 
-      should "restrict access" do
+      should("restrict access") do
         @ticket = create(:ticket, creator: @reporter, model: @content)
-        get_auth ticket_path(@ticket), @reporter
-        assert_response :success
-        get_auth ticket_path(@ticket), @admin
-        assert_response :success
-        get_auth ticket_path(@ticket), @janitor
-        assert_response :forbidden
-        get_auth ticket_path(@ticket), @user
-        assert_response :forbidden
-        get_auth ticket_path(@ticket), @bad_actor
-        assert_response :forbidden
+        get_auth(ticket_path(@ticket), @reporter)
+        assert_response(:success)
+        get_auth(ticket_path(@ticket), @admin)
+        assert_response(:success)
+        get_auth(ticket_path(@ticket), @janitor)
+        assert_response(:forbidden)
+        get_auth(ticket_path(@ticket), @user)
+        assert_response(:forbidden)
+        get_auth(ticket_path(@ticket), @bad_actor)
+        assert_response(:forbidden)
       end
     end
 
-    context "for a forum ticket" do
+    context("for a forum ticket") do
       setup do
-        as @bad_actor do
+        as(@bad_actor) do
           @content = create(:forum_topic, creator: @bad_actor).original_post
         end
       end
 
-      should "restrict reporting" do
+      should("restrict reporting") do
         assert_ticket_create_permissions([[@janitor, true], [@admin, true], [@bad_actor, true]], model: @content)
         @content.update_columns(is_hidden: true)
         assert_ticket_create_permissions([[@janitor, false], [@admin, true], [@bad_actor, true]], model: @content)
       end
 
-      should "restrict access" do
+      should("restrict access") do
         @ticket = create(:ticket, creator: @reporter, model: @content)
-        get_auth ticket_path(@ticket), @admin
-        assert_response :success
-        get_auth ticket_path(@ticket), @reporter
-        assert_response :success
-        get_auth ticket_path(@ticket), @janitor
-        assert_response :forbidden
+        get_auth(ticket_path(@ticket), @admin)
+        assert_response(:success)
+        get_auth(ticket_path(@ticket), @reporter)
+        assert_response(:success)
+        get_auth(ticket_path(@ticket), @janitor)
+        assert_response(:forbidden)
       end
     end
 
-    context "for a pool ticket" do
+    context("for a pool ticket") do
       setup do
-        as @bad_actor do
+        as(@bad_actor) do
           @content = create(:pool, creator: @bad_actor)
         end
       end
 
-      should "allow reporting pools" do
+      should("allow reporting pools") do
         assert_ticket_create_permissions([[@reporter, true], [@user, true], [@janitor, true], [@admin, true], [@bad_actor, true]], model: @content)
       end
 
-      should "restrict access to users" do
+      should("restrict access to users") do
         @ticket = create(:ticket, creator: @reporter, model: @content)
-        get_auth ticket_path(@ticket), @user
-        assert_response :forbidden
+        get_auth(ticket_path(@ticket), @user)
+        assert_response(:forbidden)
       end
 
-      should "not restrict access to janitors" do
+      should("not restrict access to janitors") do
         @ticket = create(:ticket, creator: @reporter, model: @content)
-        get_auth ticket_path(@ticket), @janitor
-        assert_response :success
+        get_auth(ticket_path(@ticket), @janitor)
+        assert_response(:success)
       end
     end
 
-    context "for a post ticket" do
+    context("for a post ticket") do
       setup do
-        as @bad_actor do
+        as(@bad_actor) do
           @content = create(:post, uploader: @bad_actor)
         end
       end
 
-      should "allow reports" do
+      should("allow reports") do
         assert_ticket_create_permissions([[@janitor, true], [@admin, true], [@bad_actor, true]], model: @content)
       end
 
-      should "not restrict access" do
+      should("not restrict access") do
         @ticket = create(:ticket, creator: @reporter, model: @content)
-        get_auth ticket_path(@ticket), @janitor
-        assert_response :success
+        get_auth(ticket_path(@ticket), @janitor)
+        assert_response(:success)
       end
     end
 
-    context "for a post set ticket" do
+    context("for a post set ticket") do
       setup do
-        as @bad_actor do
+        as(@bad_actor) do
           @content = create(:post_set, is_public: true, creator: @bad_actor)
         end
       end
 
-      should "disallow reporting sets you can't see" do
+      should("disallow reporting sets you can't see") do
         assert_ticket_create_permissions([[@reporter, true], [@user, true], [@janitor, true], [@admin, true], [@bad_actor, true]], model: @content)
         @content.update_columns(is_public: false)
         assert_ticket_create_permissions([[@reporter, false], [@user, false], [@janitor, false], [@admin, true], [@bad_actor, true]], model: @content)
       end
 
-      should "restrict access" do
+      should("restrict access") do
         @ticket = create(:ticket, creator: @reporter, model: @content)
-        get_auth ticket_path(@ticket), @janitor
-        assert_response :forbidden
-        get_auth ticket_path(@ticket), @user
-        assert_response :forbidden
+        get_auth(ticket_path(@ticket), @janitor)
+        assert_response(:forbidden)
+        get_auth(ticket_path(@ticket), @user)
+        assert_response(:forbidden)
       end
     end
 
-    context "for a tag ticket" do
+    context("for a tag ticket") do
       setup do
-        as @bad_actor do
+        as(@bad_actor) do
           @content = create(:tag)
         end
       end
 
-      should "allow reporting tags" do
+      should("allow reporting tags") do
         assert_ticket_create_permissions([[@reporter, true], [@user, true], [@janitor, true], [@admin, true], [@bad_actor, true]], model: @content)
       end
 
-      should "restrict access to users" do
+      should("restrict access to users") do
         @ticket = create(:ticket, creator: @reporter, model: @content)
-        get_auth ticket_path(@ticket), @user
-        assert_response :forbidden
+        get_auth(ticket_path(@ticket), @user)
+        assert_response(:forbidden)
       end
 
-      should "not restrict access to janitors" do
+      should("not restrict access to janitors") do
         @ticket = create(:ticket, creator: @reporter, model: @content)
-        get_auth ticket_path(@ticket), @janitor
-        assert_response :success
+        get_auth(ticket_path(@ticket), @janitor)
+        assert_response(:success)
       end
     end
 
-    context "for a user ticket" do
+    context("for a user ticket") do
       setup do
         @content = create(:user)
       end
 
-      should "allow reporting users" do
+      should("allow reporting users") do
         assert_ticket_create_permissions([[@reporter, true], [@user, true], [@janitor, true], [@admin, true], [@bad_actor, true]], model: @content)
       end
 
-      should "restrict access" do
+      should("restrict access") do
         @ticket = create(:ticket, creator: @reporter, model: @content)
-        get_auth ticket_path(@ticket), @reporter
-        assert_response :success
-        get_auth ticket_path(@ticket), @admin
-        assert_response :success
-        get_auth ticket_path(@ticket), @janitor
-        assert_response :forbidden
-        get_auth ticket_path(@ticket), @user
-        assert_response :forbidden
+        get_auth(ticket_path(@ticket), @reporter)
+        assert_response(:success)
+        get_auth(ticket_path(@ticket), @admin)
+        assert_response(:success)
+        get_auth(ticket_path(@ticket), @janitor)
+        assert_response(:forbidden)
+        get_auth(ticket_path(@ticket), @user)
+        assert_response(:forbidden)
       end
 
-      should "not restrict access to janitors for commendations" do
+      should("not restrict access to janitors for commendations") do
         @ticket = create(:ticket, creator: @reporter, model: @content, report_type: "commendation")
-        get_auth ticket_path(@ticket), @reporter
-        assert_response :success
-        get_auth ticket_path(@ticket), @admin
-        assert_response :success
-        get_auth ticket_path(@ticket), @janitor
-        assert_response :success
-        get_auth ticket_path(@ticket), @user
-        assert_response :forbidden
+        get_auth(ticket_path(@ticket), @reporter)
+        assert_response(:success)
+        get_auth(ticket_path(@ticket), @admin)
+        assert_response(:success)
+        get_auth(ticket_path(@ticket), @janitor)
+        assert_response(:success)
+        get_auth(ticket_path(@ticket), @user)
+        assert_response(:forbidden)
       end
 
-      should "not restrict access to janitors for janitor created tickets" do
+      should("not restrict access to janitors for janitor created tickets") do
         @janitor2 = create(:janitor_user)
         @ticket = create(:ticket, creator: @janitor2, model: @content)
-        get_auth ticket_path(@ticket), @janitor2
-        assert_response :success
-        get_auth ticket_path(@ticket), @admin
-        assert_response :success
-        get_auth ticket_path(@ticket), @janitor
-        assert_response :success
-        get_auth ticket_path(@ticket), @user
-        assert_response :forbidden
+        get_auth(ticket_path(@ticket), @janitor2)
+        assert_response(:success)
+        get_auth(ticket_path(@ticket), @admin)
+        assert_response(:success)
+        get_auth(ticket_path(@ticket), @janitor)
+        assert_response(:success)
+        get_auth(ticket_path(@ticket), @user)
+        assert_response(:forbidden)
       end
     end
 
-    context "for a wiki page ticket" do
+    context("for a wiki page ticket") do
       setup do
-        as @bad_actor do
+        as(@bad_actor) do
           @content = create(:wiki_page, creator: @bad_actor)
         end
       end
 
-      should "allow reporting wiki pages" do
+      should("allow reporting wiki pages") do
         assert_ticket_create_permissions([[@reporter, true], [@user, true], [@janitor, true], [@admin, true], [@bad_actor, true]], model: @content)
       end
 
-      should "restrict access to users" do
+      should("restrict access to users") do
         @ticket = create(:ticket, creator: @reporter, model: @content)
-        get_auth ticket_path(@ticket), @user
-        assert_response :forbidden
+        get_auth(ticket_path(@ticket), @user)
+        assert_response(:forbidden)
       end
 
-      should "not restrict access to janitors" do
+      should("not restrict access to janitors") do
         @ticket = create(:ticket, creator: @reporter, model: @content)
-        get_auth ticket_path(@ticket), @janitor
-        assert_response :success
+        get_auth(ticket_path(@ticket), @janitor)
+        assert_response(:success)
       end
     end
   end

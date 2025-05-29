@@ -14,10 +14,10 @@
     <tr data-id="<%= q.id %>">
       <td><%= q.header %></td>
       <td><%= q.reason %></td>
-      <td><%= link_to q.rule.name, rules_path(anchor: q.rule.anchor) %></td>
+      <td><%= link_to(q.rule.name, rules_path(anchor: q.rule.anchor)) %></td>
       <td>
-        <%= link_to "Edit", edit_quick_rule_path(q) %> |
-        <%= link_to "Delete", quick_rule_path(q), method: :delete %>
+        <%= link_to("Edit", edit_quick_rule_path(q)) %> |
+        <%= link_to("Delete", quick_rule_path(q), method: :delete) %>
       </td>
     </tr>
   <% end %>

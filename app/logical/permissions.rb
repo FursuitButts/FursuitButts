@@ -3,7 +3,7 @@
 module Permissions
   module_function
 
-  mattr_accessor :names, default: {}
+  mattr_accessor(:names, default: {})
 
   IGNORED_CONTROLLERS = %w[
     admin/dashboards admin/exceptions admin/danger_zone

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module FileMethods
-  extend ActiveSupport::Concern
+  extend(ActiveSupport::Concern)
   VIDEO_EXTENSIONS = %w[webm mp4].freeze
   IMAGE_EXTENSIONS = %w[png jpg gif webp].freeze
   EXTENSIONS = (IMAGE_EXTENSIONS + VIDEO_EXTENSIONS).freeze

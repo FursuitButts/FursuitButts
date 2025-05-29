@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class FileValidator
-  attr_reader :record, :file_path
+  attr_reader(:record, :file_path)
 
   def initialize(record, file_path)
     @record = record

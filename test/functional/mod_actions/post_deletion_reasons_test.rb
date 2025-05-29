@@ -1,20 +1,20 @@
 # frozen_string_literal: true
 
-require "test_helper"
-require_relative "helper"
+require("test_helper")
+require_relative("helper")
 
 module ModActions
   class PostDeletionReasonsTest < ActiveSupport::TestCase
-    include Helper
-    include Rails.application.routes.url_helpers
+    include(Helper)
+    include(Rails.application.routes.url_helpers)
 
-    context "mod actions for post deletion reasons" do
+    context("mod actions for post deletion reasons") do
       setup do
         @reason = create(:post_deletion_reason)
         set_count!
       end
 
-      should "format post_deletion_reason_create correctly" do
+      should("format post_deletion_reason_create correctly") do
         @reason = create(:post_deletion_reason)
 
         assert_matches(
@@ -25,7 +25,7 @@ module ModActions
         )
       end
 
-      should "format post_deletion_reason_delete correctly" do
+      should("format post_deletion_reason_delete correctly") do
         @reason.destroy
 
         assert_matches(
@@ -37,7 +37,7 @@ module ModActions
         )
       end
 
-      should "format post_deletion_reasons_reorder correctly" do
+      should("format post_deletion_reasons_reorder correctly") do
         PostDeletionReason.log_reorder(2)
 
         assert_matches(
@@ -48,12 +48,12 @@ module ModActions
         )
       end
 
-      context "post_deletion_reason_update" do
+      context("post_deletion_reason_update") do
         setup do
           @original = @reason.dup
         end
 
-        should "format no changes correctly" do
+        should("format no changes correctly") do
           @reason.save
 
           assert_matches(
@@ -69,7 +69,7 @@ module ModActions
           )
         end
 
-        should "format reason changes correctly" do
+        should("format reason changes correctly") do
           @reason.update!(reason: "xxx")
 
           assert_matches(
@@ -88,7 +88,7 @@ module ModActions
           )
         end
 
-        should "format prompt changes correctly" do
+        should("format prompt changes correctly") do
           @reason.update!(prompt: "xxx")
 
           assert_matches(
@@ -107,7 +107,7 @@ module ModActions
           )
         end
 
-        should "format title changes correctly" do
+        should("format title changes correctly") do
           @reason.update!(title: "xxx")
 
           assert_matches(
@@ -126,7 +126,7 @@ module ModActions
           )
         end
 
-        should "format all changes correctly" do
+        should("format all changes correctly") do
           @reason.update!(reason: "xxx", prompt: "yyy", title: "zzz")
           assert_matches(
             actions:    %w[post_deletion_reason_update],

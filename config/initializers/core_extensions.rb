@@ -43,5 +43,5 @@ module FemboyFans
 end
 
 class String
-  include FemboyFans::Extensions::String
+  include(FemboyFans::Extensions::String)
 end

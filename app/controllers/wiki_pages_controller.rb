@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class WikiPagesController < ApplicationController
-  respond_to :html, :json, :js
+  respond_to(:html, :json, :js)
 
   def index
     authorize(WikiPage)

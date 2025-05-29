@@ -1,6 +1,6 @@
 <h1>Mod Actions</h1>
 
-<%= render "search" %>
+<%= render("search") %>
 
 <%= table_for(@mod_actions) do |t| %>
   <% t.column("User") do |mod_action| %>
@@ -28,7 +28,7 @@
 
 <%= numbered_paginator(@mod_actions) %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   Mod Actions

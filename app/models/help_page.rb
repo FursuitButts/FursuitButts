@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
 class HelpPage < ApplicationRecord
-  normalizes :name, with: ->(name) { name.downcase.strip.tr(" ", "_") }
-  after_create :log_create
-  after_update :log_update
-  after_destroy :invalidate_cache
-  after_destroy :log_delete
-  after_save :invalidate_cache
-  belongs_to :wiki_page
-  delegate :title, to: :wiki_page, prefix: true, allow_nil: true
+  normalizes(:name, with: ->(name) { name.downcase.strip.tr(" ", "_") })
+  after_create(:log_create)
+  after_update(:log_update)
+  after_destroy(:invalidate_cache)
+  after_destroy(:log_delete)
+  after_save(:invalidate_cache)
+  belongs_to(:wiki_page)
+  delegate(:title, to: :wiki_page, prefix: true, allow_nil: true)
 
   def wiki_page_title=(name)
     self.wiki_page = WikiPage.titled(name)
@@ -53,7 +53,7 @@ class HelpPage < ApplicationRecord
     end
   end
 
-  include LogMethods
+  include(LogMethods)
 
   def self.available_includes
     %i[wiki_page]

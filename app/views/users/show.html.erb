@@ -1,23 +1,23 @@
 <div class="profile-container">
-  <%= render "statistics", presenter: @presenter, user: @user %>
-  <%= render "staff_notes/partials/for_user", user: @user %>
+  <%= render("statistics", presenter: @presenter, user: @user) %>
+  <%= render("staff_notes/partials/for_user", user: @user) %>
 
   <div class="blacklist-section">
-    <%= render "posts/partials/common/inline_blacklist" %>
+    <%= render("posts/partials/common/inline_blacklist") %>
       </div>
       <div class="bottom-section">
       <div class="posts-section">
       <div class="posts">
-        <%= render "post_summary", presenter: @presenter, user: @user %>
+        <%= render("post_summary", presenter: @presenter, user: @user) %>
       </div>
     </div>
-    <%= render "about", presenter: @presenter, user: @user %>
+    <%= render("about", presenter: @presenter, user: @user) %>
   </div>
 </div>
 
 <% render(partial: "static/embed", locals: { record: @user, name: @user.pretty_name, description: @user.title.presence || @user.level_string, post: @user.avatar }) %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   User - <%= @presenter.name %>

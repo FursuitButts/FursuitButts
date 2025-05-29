@@ -1,13 +1,13 @@
 
 <% content_for(:secondary_links) do %>
-  <%= subnav_link_to "Listing", moderator_user_text_versions_path %>
+  <%= subnav_link_to("Listing", moderator_user_text_versions_path) %>
   <% case params[:action] %>
 <% when "for_user" %>
-    <%= render "user_links", user: @user %>
+    <%= render("user_links", user: @user) %>
   <% when "show" %>
-    <%= render "user_links", user: @text_version.user %>
+    <%= render("user_links", user: @text_version.user) %>
   <% when "diff" %>
-    <%= render "user_links", user: @thisversion.user %>
+    <%= render("user_links", user: @thisversion.user) %>
   <% else %>
   <% end %>
 <% end %>

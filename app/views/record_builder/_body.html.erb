@@ -4,7 +4,7 @@
   <div class="record-header">
     <div class="quick-record">
       <% QuickRule.order(:order).where.not(header: [nil, ""]).each do |quick| %>
-        <%= link_to quick.header, "#", class: "quick-record-link", data: { reason: quick.reason, rule: quick.rule.anchor } %>
+        <%= link_to(quick.header, "#", class: "quick-record-link", data: { reason: quick.reason, rule: quick.rule.anchor }) %>
       <% end %>
     </div>
     <button type="button" class="remove-section-button">Remove Section</button>

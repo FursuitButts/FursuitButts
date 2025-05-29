@@ -1,8 +1,8 @@
-<%= render "search" %>
+<%= render("search") %>
 
 <%= table_for(@artists) do |t| %>
   <% t.column("Primary Name", width: "50%") do |artist| %>
-    <%= link_to h(artist.name), artist_path(artist) %>
+    <%= link_to(h(artist.name), artist_path(artist)) %>
   <% end %>
   <% t.column("Secondary Names", width: "50%") do |artist| %>
     <%= artist.other_names_string %>
@@ -11,7 +11,7 @@
 
 <%= numbered_paginator(@artists) %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   Artists

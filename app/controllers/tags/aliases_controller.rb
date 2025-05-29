@@ -2,9 +2,9 @@
 
 module Tags
   class AliasesController < ApplicationController
-    respond_to :html, :json
-    wrap_parameters :tag_alias
-    before_action :ensure_lockdown_disabled
+    respond_to(:html, :json)
+    wrap_parameters(:tag_alias)
+    before_action(:ensure_lockdown_disabled)
 
     def index
       @tag_aliases = authorize(TagAlias).html_includes(request, :antecedent_tag, :consequent_tag, :creator, :approver)

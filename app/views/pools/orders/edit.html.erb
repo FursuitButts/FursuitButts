@@ -1,7 +1,7 @@
 <h2>Order Pool: <%= @pool.pretty_name %></h2>
 <p>Drag and drop the list below to determine ordering.</p>
 
-<%= render "posts/partials/common/inline_blacklist" %>
+<%= render("posts/partials/common/inline_blacklist") %>
 
 <ul id="sortable">
   <% @pool.posts.paginate(1, limit: 1_000).each do |post| %>
@@ -12,10 +12,10 @@
 </ul>
 
 <%= custom_form_for(@pool, html: { id: "ordering-form" }) do |f| %>
-  <%= submit_tag "Save" %>
+  <%= submit_tag("Save") %>
 <% end %>
 
-<%= render "pools/secondary_links" %>
+<%= render("pools/secondary_links") %>
 
 <% content_for(:page_title) do %>
   Order Pool - <%= @pool.pretty_name %>

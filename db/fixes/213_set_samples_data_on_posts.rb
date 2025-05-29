@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "config", "environment"))
+require(File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "config", "environment")))
 
 def handle_rescales(post, rescales, video)
   data = []
@@ -23,7 +23,7 @@ end
 
 Post.find_in_batches(batch_size: 10_000) do |posts|
   posts.each do |post|
-    puts post.id
+    puts(post.id)
     data = []
     [
       ["preview", (post.has_preview? && File.open(post.preview_file_path)) || nil],

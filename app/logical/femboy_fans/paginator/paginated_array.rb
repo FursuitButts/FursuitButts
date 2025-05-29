@@ -3,7 +3,7 @@
 module FemboyFans
   module Paginator
     class PaginatedArray < Array
-      attr_reader :pagination_mode, :max_numbered_pages, :orig_size, :current_page, :records_per_page, :total_count
+      attr_reader(:pagination_mode, :max_numbered_pages, :orig_size, :current_page, :records_per_page, :total_count)
 
       def initialize(orig_array, options = {})
         @current_page = options[:current_page]

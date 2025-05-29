@@ -1,7 +1,7 @@
 <% if post.deleteblocked? -%>
   <p>You can not view this image.</p>
 <% elsif post.loginblocked? %>
-  <p>You must be logged in to view this image. <%= link_to "(learn more)", help_page_path(id: "global_blacklist") %></p>
+  <p>You must be logged in to view this image. <%= link_to("(learn more)", help_page_path(id: "global_blacklist")) %></p>
 <% elsif post.safeblocked? -%>
   <p>This image is unavailable in safe mode (<%= FemboyFans.config.app_name %>). Go
     to <%= link_to(FemboyFans.config.canonical_app_name, FemboyFans.config.canonical_app_url) %> or disable safe mode to view.</p>

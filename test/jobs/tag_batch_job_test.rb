@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 class TagBatchJobTest < ActiveJob::TestCase
   setup do
     CurrentUser.user = create(:user)
   end
 
-  should "update posts" do
+  should("update posts") do
     p1 = create(:post, tag_string: "a aa b c e")
     p2 = create(:post, tag_string: "a dd y c z")
     assert_difference("PostVersion.count", 2) do
@@ -20,7 +20,7 @@ class TagBatchJobTest < ActiveJob::TestCase
     assert_equal("d dd f y z", p2.tag_string)
   end
 
-  should "ignore aliases when the job tries to replace the old with the new tag" do
+  should("ignore aliases when the job tries to replace the old with the new tag") do
     post = create(:post, tag_string: "extra new_tag")
     create(:tag_alias, antecedent_name: "old_tag", consequent_name: "new_tag", status: "active")
     TagBatchJob.perform_now("old_tag", "new_tag", CurrentUser.user.id)
@@ -28,7 +28,7 @@ class TagBatchJobTest < ActiveJob::TestCase
     assert_equal("extra new_tag", post.reload.tag_string)
   end
 
-  should "ignore aliases when the job tries to replace the new with the old tag" do
+  should("ignore aliases when the job tries to replace the new with the old tag") do
     CurrentUser.user = create(:user)
     post = create(:post, tag_string: "extra new_tag")
     create(:tag_alias, antecedent_name: "old_tag", consequent_name: "new_tag", status: "active")
@@ -37,7 +37,7 @@ class TagBatchJobTest < ActiveJob::TestCase
     assert_equal("extra new_tag", post.reload.tag_string)
   end
 
-  should "migrate users blacklists" do
+  should("migrate users blacklists") do
     initial_blacklist = <<~BLACKLIST.chomp
       tag
       a tag

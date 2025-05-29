@@ -1,17 +1,17 @@
 <h1>IP Addresses</h1>
 
 <% if params[:search][:user_id].present? || params[:search][:user_name].present? %>
-  <%= render "search" %>
+  <%= render("search") %>
   <div id="p-ip-listing">
-    <%= render "ip_listing" %>
+    <%= render("ip_listing") %>
   </div>
 <% elsif params[:search][:ip_addr] %>
-  <%= render "search" %>
+  <%= render("search") %>
   <div id="p-user-listing">
-    <%= render "user_listing" %>
+    <%= render("user_listing") %>
   </div>
 <% else %>
-  <%= render "search" %>
+  <%= render("search") %>
 <% end %>
 
 <% content_for(:page_title) do %>

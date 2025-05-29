@@ -176,6 +176,7 @@ Style/MissingRespondToMissing:
 
 Style/MethodCallWithArgsParentheses:
   Enabled: true
+  IgnoreMacros: false
 
 Layout/HashAlignment:
   Enabled: true

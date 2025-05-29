@@ -1,16 +1,16 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 class ForumPostTest < ActiveSupport::TestCase
-  context "A forum post" do
+  context("A forum post") do
     setup do
       @user = create(:user)
       CurrentUser.user = @user
       @topic = create(:forum_topic)
     end
 
-    context "that has an alias, implication, or bulk update request" do
+    context("that has an alias, implication, or bulk update request") do
       setup do
         @post = build(:forum_post, topic_id: @topic.id, body: "[[aaa]] -> [[bbb]]")
         @tag_alias = create(:tag_alias, forum_post: @post)
@@ -18,11 +18,11 @@ class ForumPostTest < ActiveSupport::TestCase
         @mod = create(:moderator_user)
       end
 
-      should "be votable" do
+      should("be votable") do
         assert(@post.has_voting?)
       end
 
-      should "only be hidable by moderators" do
+      should("only be hidable by moderators") do
         @post.hide!
 
         assert_equal(["Post is for an alias, implication, or bulk update request. It cannot be hidden"], @post.errors.full_messages)
@@ -37,7 +37,7 @@ class ForumPostTest < ActiveSupport::TestCase
       end
     end
 
-    context "that belongs to a topic with several pages of posts" do
+    context("that belongs to a topic with several pages of posts") do
       setup do
         FemboyFans.config.stubs(:records_per_page).returns(3)
         @posts = []
@@ -49,12 +49,12 @@ class ForumPostTest < ActiveSupport::TestCase
         end
       end
 
-      context "that is deleted" do
+      context("that is deleted") do
         setup do
           CurrentUser.user = create(:moderator_user)
         end
 
-        should "update the topic's updated_at timestamp" do
+        should("update the topic's updated_at timestamp") do
           @topic.reload
           assert_in_delta(@posts[-1].updated_at.to_i, @topic.updated_at.to_i, 1)
           @posts[-1].hide!
@@ -63,41 +63,41 @@ class ForumPostTest < ActiveSupport::TestCase
         end
       end
 
-      should "know which page it's on" do
+      should("know which page it's on") do
         assert_equal(2, @posts[3].forum_topic_page)
         assert_equal(2, @posts[4].forum_topic_page)
         assert_equal(3, @posts[5].forum_topic_page)
         assert_equal(3, @posts[6].forum_topic_page)
       end
 
-      should "update the topic's updated_at when destroyed" do
+      should("update the topic's updated_at when destroyed") do
         @posts.last.destroy
         @topic.reload
         assert_equal(@posts[8].updated_at.to_s, @topic.updated_at.to_s)
       end
     end
 
-    context "belonging to a locked topic" do
+    context("belonging to a locked topic") do
       setup do
         @post = create(:forum_post, topic_id: @topic.id, body: "zzz")
         @topic.update_attribute(:is_locked, true)
         @post.reload
       end
 
-      should "not be updateable" do
+      should("not be updateable") do
         @post.update(body: "xxx")
         @post.reload
         assert_equal("zzz", @post.body)
       end
 
-      should "not be deletable" do
+      should("not be deletable") do
         assert_difference("ForumPost.count", 0) do
           @post.destroy
         end
       end
     end
 
-    should "update the topic when created" do
+    should("update the topic when created") do
       @original_topic_updated_at = @topic.updated_at
       travel_to(1.second.from_now) do
         create(:forum_post, topic_id: @topic.id)
@@ -106,73 +106,73 @@ class ForumPostTest < ActiveSupport::TestCase
       assert_not_equal(@original_topic_updated_at.to_s, @topic.updated_at.to_s)
     end
 
-    should "be searchable by body content" do
+    should("be searchable by body content") do
       create(:forum_post, topic_id: @topic.id, body: "xxx")
       assert_equal(1, ForumPost.search(body_matches: "xxx").count)
       assert_equal(0, ForumPost.search(body_matches: "aaa").count)
     end
 
-    should "initialize its creator" do
+    should("initialize its creator") do
       post = create(:forum_post, topic_id: @topic.id)
       assert_equal(@user.id, post.creator_id)
     end
 
-    context "that is edited by a moderator" do
+    context("that is edited by a moderator") do
       setup do
         @post = create(:forum_post, topic_id: @topic.id)
         @mod = create(:moderator_user)
         CurrentUser.user = @mod
       end
 
-      should "create a mod action" do
+      should("create a mod action") do
         assert_difference(-> { ModAction.count }, 1) do
           @post.update(body: "nope")
         end
       end
 
-      should "credit the moderator as the updater" do
+      should("credit the moderator as the updater") do
         @post.update(body: "test")
         assert_equal(@mod.id, @post.updater_id)
       end
     end
 
-    context "that is hidden by a moderator" do
+    context("that is hidden by a moderator") do
       setup do
         @post = create(:forum_post, topic_id: @topic.id)
         @mod = create(:moderator_user)
         CurrentUser.user = @mod
       end
 
-      should "create a mod action" do
+      should("create a mod action") do
         assert_difference(-> { ModAction.count }, 1) do
           @post.update(is_hidden: true)
         end
       end
 
-      should "credit the moderator as the updater" do
+      should("credit the moderator as the updater") do
         @post.update(is_hidden: true)
         assert_equal(@mod.id, @post.updater_id)
       end
     end
 
-    context "that is deleted" do
+    context("that is deleted") do
       setup do
         @post = create(:forum_post, topic_id: @topic.id)
       end
 
-      should "create a mod action" do
+      should("create a mod action") do
         assert_difference(-> { ModAction.count }, 1) do
           @post.destroy
         end
       end
     end
 
-    context "during validation" do
+    context("during validation") do
       subject { build(:forum_post) }
-      should_not allow_value(" ").for(:body)
+      should_not(allow_value(" ").for(:body))
     end
 
-    context "when modified" do
+    context("when modified") do
       setup do
         @forum_post = create(:forum_post, topic_id: @topic.id)
         original_body = @forum_post.body
@@ -184,22 +184,22 @@ class ForumPostTest < ActiveSupport::TestCase
             @body_history.push(body)
           end
 
-          define_method :body_history do
+          define_method(:body_history) do
             @body_history
           end
         end
       end
 
       instance_exec do
-        define_method :verify_history do |history, forum_post, edit_type, user = forum_post.creator_id|
-          throw "history is nil (#{forum_post.id}:#{edit_type}:#{user}:#{forum_post.creator_id})" if history.nil?
+        define_method(:verify_history) do |history, forum_post, edit_type, user = forum_post.creator_id|
+          throw("history is nil (#{forum_post.id}:#{edit_type}:#{user}:#{forum_post.creator_id})") if history.nil?
           assert_equal(forum_post.body_history[history.version - 1], history.body, "history body did not match")
           assert_equal(edit_type, history.edit_type, "history edit_type did not match")
           assert_equal(user, history.user_id, "history user_id did not match")
         end
       end
 
-      should "create edit histories when body is changed" do
+      should("create edit histories when body is changed") do
         @mod = create(:moderator_user)
         assert_difference("EditHistory.count", 3) do
           @forum_post.update(body: "test")
@@ -212,7 +212,7 @@ class ForumPostTest < ActiveSupport::TestCase
         end
       end
 
-      should "create edit histories when hidden is changed" do
+      should("create edit histories when hidden is changed") do
         @mod = create(:moderator_user)
         assert_difference("EditHistory.count", 3) do
           @forum_post.hide!
@@ -225,7 +225,7 @@ class ForumPostTest < ActiveSupport::TestCase
         end
       end
 
-      should "create edit histories when warning is changed" do
+      should("create edit histories when warning is changed") do
         @mod = create(:moderator_user)
         assert_difference("EditHistory.count", 7) do
           as(@mod) do

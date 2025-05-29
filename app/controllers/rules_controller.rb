@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 class RulesController < ApplicationController
-  before_action :load_categories, only: %i[index new create edit update order]
-  respond_to :html, :json
-  respond_to :js, only: %i[reorder]
+  before_action(:load_categories, only: %i[index new create edit update order])
+  respond_to(:html, :json)
+  respond_to(:js, only: %i[reorder])
 
   def index
     @wiki = view_context.safe_wiki(FemboyFans.config.rules_body_wiki_page)

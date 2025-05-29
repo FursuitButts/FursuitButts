@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require_relative "base"
+require_relative("base")
 
 CATEGORY = 2
 
@@ -14,7 +14,7 @@ category = ForumCategory.find(CATEGORY)
 ApplicationRecord.transaction do
   TOTAL.times do |i|
     Faker::UniqueGenerator.clear
-    puts "Creating topics.. #{i + 1}/#{TOTAL}" if (i + 1) % STEP == 0 || (i + 1) == TOTAL
+    puts("Creating topics.. #{i + 1}/#{TOTAL}") if (i + 1) % STEP == 0 || (i + 1) == TOTAL
     users.sample.use do
       category.topics.create!(title: "Topic #{i + 1}", original_post_attributes: { body: 4.times.map { 4.times.map { Faker::Hacker.unique.say_something_smart }.join("\n") }.join("\n\n") })
     end

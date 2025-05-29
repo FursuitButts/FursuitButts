@@ -2,7 +2,7 @@
 
 module Notes
   class VersionsController < ApplicationController
-    respond_to :html, :json
+    respond_to(:html, :json)
 
     def index
       @note_versions = authorize(NoteVersion).html_includes(request, :updater)

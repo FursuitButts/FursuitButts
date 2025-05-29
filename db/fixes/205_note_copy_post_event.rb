@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "config", "environment"))
+require(File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "config", "environment")))
 
 Note.where("body LIKE '%from post #%'").where(x: 0, y: 0, width: 0, height: 0, is_active: false).find_each do |note|
   if note.body =~ /Copied (\d+) notes? from post #(\d+)/

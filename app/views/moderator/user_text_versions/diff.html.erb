@@ -1,14 +1,14 @@
-<h1>Text Versions for <%= link_to_user @thisversion.user %></h1>
+<h1>Text Versions for <%= link_to_user(@thisversion.user) %></h1>
 <% show_ip = policy(UserTextVersion).can_see_ip_addr? %>
-<p>Showing differences between <%= link_to compact_time(@thisversion.created_at), moderator_user_text_version_path(@thisversion) %> (<%= link_to_user @thisversion.updater %>)<% if show_ip %> (<%= link_to_ip @thisversion.updater_ip_addr %>)<% end %> and <%= link_to compact_time(@otherversion.created_at), moderator_user_text_version_path(@otherversion) %> (<%= link_to_user @otherversion.updater %>)<% if show_ip %> (<%= link_to_ip @otherversion.updater_ip_addr %>)<% end %></p>
+<p>Showing differences between <%= link_to(compact_time(@thisversion.created_at), moderator_user_text_version_path(@thisversion)) %> (<%= link_to_user(@thisversion.updater) %>)<% if show_ip %> (<%= link_to_ip(@thisversion.updater_ip_addr) %>)<% end %> and <%= link_to(compact_time(@otherversion.created_at), moderator_user_text_version_path(@otherversion)) %> (<%= link_to_user(@otherversion.updater) %>)<% if show_ip %> (<%= link_to_ip(@otherversion.updater_ip_addr) %>)<% end %></p>
 
 <div class="styled-dtext">
   <% @otherversion.changes_from(@thisversion, CurrentUser).each do |change| %>
-    <%= render "diff_container", title: UserTextVersion::CHANGE_TYPES[change], othertext: @otherversion.send("#{change}_text"), thistext: @thisversion.send("#{change}_text"), single: @otherversion.changes_from(@thisversion, CurrentUser).empty? %>
+    <%= render("diff_container", title: UserTextVersion::CHANGE_TYPES[change], othertext: @otherversion.send("#{change}_text"), thistext: @thisversion.send("#{change}_text"), single: @otherversion.changes_from(@thisversion, CurrentUser).empty?) %>
   <% end %>
 </div>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 <% content_for(:page_title) do %>
   User Text Diff: #<%= @otherversion.version %> - #<%= @thisversion.version %> for <%= @thisversion.user.name %>
 <% end %>

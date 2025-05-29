@@ -2,7 +2,7 @@
 
 module PostSets
   class PostRelationship < PostSets::Post
-    attr_reader :parent, :children
+    attr_reader(:parent, :children)
 
     def initialize(parent_id, options = {})
       @want_parent = options[:want_parent]

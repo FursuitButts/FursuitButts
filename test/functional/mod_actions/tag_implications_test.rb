@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
-require "test_helper"
-require_relative "helper"
+require("test_helper")
+require_relative("helper")
 
 module ModActions
   class TagImplicationsTest < ActiveSupport::TestCase
-    include Helper
-    include Rails.application.routes.url_helpers
+    include(Helper)
+    include(Rails.application.routes.url_helpers)
 
-    context "mod actions for tag implications" do
-      should "format tag_implication_create correctly" do
+    context("mod actions for tag implications") do
+      should("format tag_implication_create correctly") do
         @implication = create(:tag_implication, antecedent_name: "aaa", consequent_name: "bbb")
         assert_matches(
           actions:          %w[tag_implication_create],
@@ -19,7 +19,7 @@ module ModActions
         )
       end
 
-      should "format tag_implication_update correctly" do
+      should("format tag_implication_update correctly") do
         @implication = create(:tag_implication, antecedent_name: "aaa", consequent_name: "bbb")
         set_count!
         @implication.update!(status: "pending")

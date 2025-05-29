@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 module Downloads
   class FileTest < ActiveSupport::TestCase
@@ -13,14 +13,14 @@ module Downloads
       assert_equal(file.url.to_s, output)
     end
 
-    context "A post download that is whitelisted" do
+    context("A post download that is whitelisted") do
       setup do
         CurrentUser.user = create(:user)
         CloudflareService.stubs(:ips).returns([])
         create(:upload_whitelist, pattern: "https://example.com/*")
       end
 
-      should "not follow redirects to non-whitelisted domains" do
+      should("not follow redirects to non-whitelisted domains") do
         stub_request(:get, "https://example.com/file.png").to_return(status: 301, headers: { location: "https://femboy.fan/abc" })
         error = assert_raises(Downloads::File::Error) do
           Downloads::File.new("https://example.com/file.png").download!
@@ -29,26 +29,26 @@ module Downloads
       end
     end
 
-    context "A post download" do
+    context("A post download") do
       setup do
         CurrentUser.user = create(:user)
         CloudflareService.stubs(:ips).returns([])
         create(:upload_whitelist, pattern: "*")
       end
 
-      context "for a banned IP" do
+      context("for a banned IP") do
         setup do
           Resolv.expects(:getaddress).returns("127.0.0.1").at_least_once
         end
 
-        should "not try to download the file" do
+        should("not try to download the file") do
           error = assert_raises(Downloads::File::Error) do
             Downloads::File.new("http://evil.com").download!
           end
           assert_match("from 127.0.0.1 are not", error.message)
         end
 
-        should "not follow redirects to banned IPs" do
+        should("not follow redirects to banned IPs") do
           url = "http://httpbin.org/redirect-to?url=http://127.0.0.1"
           stub_request(:get, url).to_return(status: 301, headers: { location: "http://127.0.0.1" })
 
@@ -58,7 +58,7 @@ module Downloads
           assert_match("from 127.0.0.1 are not", error.message)
         end
 
-        should "not follow redirects that resolve to a banned IP" do
+        should("not follow redirects that resolve to a banned IP") do
           url = "http://httpbin.org/redirect-to?url=http://127.0.0.1.nip.io"
           stub_request(:get, url).to_return(status: 301, headers: { location: "http://127.0.0.1.xip.io" })
 
@@ -69,8 +69,8 @@ module Downloads
         end
       end
 
-      context "that fails" do
-        should "retry three times before giving up" do
+      context("that fails") do
+        should("retry three times before giving up") do
           download = Downloads::File.new("https://example.com/1")
           stub_request(:get, "https://example.com/1").to_raise(Errno::ETIMEDOUT).times(2).then.to_return(body: "foo")
           assert_equal("foo", download.download!.read)
@@ -80,7 +80,7 @@ module Downloads
           assert_raises(Faraday::Error) { download.download! }
         end
 
-        should "return an uncorrupted file on the second try" do
+        should("return an uncorrupted file on the second try") do
           source = "https://example.com"
           download = Downloads::File.new(source)
           stub_request(:get, source).to_raise(Errno::ETIMEDOUT).then.to_return(body: "abc")
@@ -89,7 +89,7 @@ module Downloads
           assert_equal("abc", tempfile.read)
         end
 
-        should "raise for 404" do
+        should("raise for 404") do
           stub_request(:get, "https://example.com").to_return(status: 404)
           download = Downloads::File.new("https://example.com")
           e = assert_raises(Downloads::File::Error) { download.download! }
@@ -97,7 +97,7 @@ module Downloads
         end
       end
 
-      should "throw an exception when the file is larger than the maximum" do
+      should("throw an exception when the file is larger than the maximum") do
         source = "https://example.com"
         download = Downloads::File.new(source)
         stub_request(:get, source).to_return(body: "body")
@@ -106,7 +106,7 @@ module Downloads
         end
       end
 
-      should "store the file in the tempfile path" do
+      should("store the file in the tempfile path") do
         source = "https://example.com"
         download = Downloads::File.new(source)
         stub_request(:get, source).to_return(body: "body")
@@ -115,7 +115,7 @@ module Downloads
         assert_equal(tempfile.read, "body")
       end
 
-      should "correctly follow redirects" do
+      should("correctly follow redirects") do
         redirect_url = "https://example.com/redirected"
         initial_request = stub_request(:get, "https://example.com").to_return(body: "Your are being redirected", status: 302, headers: { location: redirect_url })
         redirect_request = stub_request(:get, redirect_url).to_return(body: "Actual content")
@@ -127,20 +127,20 @@ module Downloads
         assert_equal("Actual content", file.read)
       end
 
-      context "url normalization" do
-        should "correctly escapes cyrilic characters" do
+      context("url normalization") do
+        should("correctly escapes cyrilic characters") do
           input = "https://d.furaffinity.net/art/peyzazhik/1629082282/1629082282.peyzazhik_заливать-гитару.jpg"
           output = "https://d.furaffinity.net/art/peyzazhik/1629082282/1629082282.peyzazhik_%D0%B7%D0%B0%D0%BB%D0%B8%D0%B2%D0%B0%D1%82%D1%8C-%D0%B3%D0%B8%D1%82%D0%B0%D1%80%D1%83.jpg"
           assert_correct_escaping(input, output)
         end
 
-        should "correctly escapes square brackets" do
+        should("correctly escapes square brackets") do
           input = "https://d.furaffinity.net/art/kinniro/1461084939/1461084939.kinniro_[commission]41.png"
           output = "https://d.furaffinity.net/art/kinniro/1461084939/1461084939.kinniro_%5Bcommission%5D41.png"
           assert_correct_escaping(input, output)
         end
 
-        should "correctly escapes ＠" do
+        should("correctly escapes ＠") do
           input = "https://d.furaffinity.net/art/fr95/1635001690/1635001679.fr95_co＠f-r9512.png"
           output = "https://d.furaffinity.net/art/fr95/1635001690/1635001679.fr95_co%EF%BC%A0f-r9512.png"
           assert_correct_escaping(input, output)

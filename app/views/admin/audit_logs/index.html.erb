@@ -1,6 +1,6 @@
 <h1>Audit Logs</h1>
 
-<%= render "search" %>
+<%= render("search") %>
 
 <%= table_for(@audit_logs) do |t| %>
   <% t.column("User", width: "20%") do |log| %>
@@ -16,7 +16,7 @@
 
 <%= numbered_paginator(@audit_logs) %>
 
-<%= render partial: "moderator/dashboards/secondary_links" %>
+<%= render(partial: "moderator/dashboards/secondary_links") %>
 
 <% content_for(:page_title) do %>
   Audit Logs

@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 class UserPasswordResetNonce < ApplicationRecord
-  has_secure_token :key
-  after_create :deliver_notice
-  belongs_to :user
+  has_secure_token(:key)
+  after_create(:deliver_notice)
+  belongs_to(:user)
 
   def self.prune!
     where("created_at < ?", 2.days.ago).destroy_all

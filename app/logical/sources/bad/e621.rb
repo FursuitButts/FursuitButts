@@ -3,7 +3,7 @@
 module Sources
   module Bad
     class E621 < Base
-      attr_reader :has_post, :has_md5
+      attr_reader(:has_post, :has_md5)
 
       DOMAINS = %w[e621.net e926.net].freeze
       POST_REGEX = %r{(?:e621|e926)\.net/posts/\d+}

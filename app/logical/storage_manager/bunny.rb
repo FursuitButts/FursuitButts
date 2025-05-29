@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require "net/ftp"
+require("net/ftp")
 
 module StorageManager
   class Bunny < StorageManager::Ftp
-    attr_reader :api_key
+    attr_reader(:api_key)
 
     def initialize(host:, port:, username:, password:, api_key:, **options)
       super(host: host, port: port, username: username, password: password, **options)

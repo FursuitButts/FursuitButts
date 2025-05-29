@@ -1,14 +1,14 @@
 <h1>Edit Artist</h1>
 
 <% if @artist.editable_by?(CurrentUser.user) %>
-  <%= render "form" %>
+  <%= render("form") %>
 
 <% elsif @artist.is_locked? %>
   <p>This artist entry is locked and cannot be edited.</p>
 
 <% end %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   Edit Artist - <%= @artist.name %>

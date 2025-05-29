@@ -2,12 +2,12 @@
 
 <%= custom_form_for(@user, url: update_users_path, method: :post) do |f| %>
   <h2 id="edit-options">
-    <%= link_to "Basic", "#basic-settings", class: "active" %>
-    | <%= link_to "Advanced", "#advanced-settings" %>
-    | <%= link_to "Enhancements", "#enhancement-settings" %>
+    <%= link_to("Basic", "#basic-settings", class: "active") %>
+    | <%= link_to("Advanced", "#advanced-settings") %>
+    | <%= link_to("Enhancements", "#enhancement-settings") %>
     <% if CurrentUser.user.id == @user.id %>
-      | <%= link_to "Security", "#security-settings" %>
-      | <%= link_to "Delete account", users_deletion_path, id: "delete-account" %>
+      | <%= link_to("Security", "#security-settings") %>
+      | <%= link_to("Delete account", users_deletion_path, id: "delete-account") %>
     <% end %>
   </h2>
 
@@ -15,7 +15,7 @@
     <div class="input">
       <label>Name</label>
 
-      <p><%= link_to "Request a name change", new_user_name_change_request_path %></p>
+      <p><%= link_to("Request a name change", new_user_name_change_request_path) %></p>
     </div>
 
     <div class="input">
@@ -27,7 +27,7 @@
           <em>blank</em>
         <% end %>
         –
-        <%= link_to "Change your email", new_users_email_change_path %>
+        <%= link_to("Change your email", new_users_email_change_path) %>
       </p>
     </div>
 
@@ -103,8 +103,8 @@
 
     <div class="input text optional field_with_hint">
       <label class="text optional" for="user_dmail_filter_attributes_words">Dmail filter</label>
-      <%= hidden_field_tag "user[dmail_filter_attributes][id]", @user.dmail_filter.try(:id) %>
-      <%= text_field_tag "user[dmail_filter_attributes][words]", @user.dmail_filter.try(:words), id: "user_dmail_filter_attributes_words", class: "text optional", size: 40 %>
+      <%= hidden_field_tag("user[dmail_filter_attributes][id]", @user.dmail_filter.try(:id)) %>
+      <%= text_field_tag("user[dmail_filter_attributes][words]", @user.dmail_filter.try(:words), id: "user_dmail_filter_attributes_words", class: "text optional", size: 40) %>
       <span class="hint">A list of banned words (space delimited). Any dmail you receive with a banned word will automatically be deleted.</span>
     </div>
 
@@ -139,7 +139,7 @@
     <div class="input">
       <label>Password</label>
 
-      <p><%= link_to "Change your password", edit_user_password_path(user_id: @user.id) %></p>
+      <p><%= link_to("Change your password", edit_user_password_path(user_id: @user.id)) %></p>
     </div>
 
     <div class="input">
@@ -170,7 +170,7 @@
 <% end %>
 
 <% content_for(:html_header) do %>
-  <%= javascript_tag nonce: true do -%>
+  <%= javascript_tag(nonce: true) do -%>
     $(function() {
       $("#advanced-settings-section,#enhancement-settings-section,#security-settings-section").hide();
       $("#edit-options a:not(#delete-account)").on("click", function(e) {
@@ -185,4 +185,4 @@
   <% end -%>
 <% end %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>

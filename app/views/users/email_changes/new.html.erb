@@ -9,16 +9,16 @@
 <%= form_tag(users_email_change_path, class: "simple_form") do %>
   <div class="input">
     <label>New Email</label>
-    <%= email_field :email_change, :email %>
+    <%= email_field(:email_change, :email) %>
   </div>
 
   <div class="input">
     <label>Password</label>
-    <%= password_field :email_change, :password %>
+    <%= password_field(:email_change, :password) %>
   </div>
 
   <div>
-    <%= submit_tag "Submit" %>
+    <%= submit_tag("Submit") %>
   </div>
 <% end %>
 

@@ -2,9 +2,9 @@
 
 module Users
   class DmailFiltersController < ApplicationController
-    before_action :load_dmail, except: %i[show]
-    before_action :load_dmail_filter
-    respond_to :html, :json
+    before_action(:load_dmail, except: %i[show])
+    before_action(:load_dmail_filter)
+    respond_to(:html, :json)
 
     def show
       authorize(@dmail_filter)

@@ -5,8 +5,8 @@ class UserVote < ApplicationRecord
 
   self.abstract_class = true
 
-  after_initialize :initialize_attributes, if: :new_record?
-  scope :for_user, ->(uid) { where("user_id = ?", uid) }
+  after_initialize(:initialize_attributes, if: :new_record?)
+  scope(:for_user, ->(uid) { where("user_id = ?", uid) })
 
   def self.inherited(child_class)
     super
@@ -117,7 +117,7 @@ class UserVote < ApplicationRecord
     end
   end
 
-  extend SearchMethods
+  extend(SearchMethods)
 
   def visible?(user = CurrentUser.user)
     user.is_moderator? || user_id == user.id

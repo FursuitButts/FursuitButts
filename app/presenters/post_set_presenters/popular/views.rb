@@ -3,9 +3,9 @@
 module PostSetPresenters
   module Popular
     class Views < Base
-      attr_accessor :post_set, :tag_set_presenter
+      attr_accessor(:post_set, :tag_set_presenter)
 
-      delegate :posts, :date, to: :post_set
+      delegate(:posts, :date, to: :post_set)
 
       def initialize(post_set)
         @post_set = post_set

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 class TagTest < ActiveSupport::TestCase
   setup do
@@ -8,22 +8,22 @@ class TagTest < ActiveSupport::TestCase
     CurrentUser.user = @janitor
   end
 
-  context "A tag category fetcher" do
-    should "fetch for a single tag" do
+  context("A tag category fetcher") do
+    should("fetch for a single tag") do
       create(:artist_tag, name: "test")
       assert_equal(TagCategory.artist, Tag.category_for("test"))
     end
 
-    should "fetch for a single tag with strange markup" do
+    should("fetch for a single tag with strange markup") do
       create(:artist_tag, name: "!@ab")
       assert_equal(TagCategory.artist, Tag.category_for("!@ab"))
     end
 
-    should "return general for a tag that doesn't exist" do
+    should("return general for a tag that doesn't exist") do
       assert_equal(TagCategory.general, Tag.category_for("missing"))
     end
 
-    should "fetch for multiple tags" do
+    should("fetch for multiple tags") do
       create(:artist_tag, name: "aaa")
       create(:copyright_tag, name: "bbb")
       categories = Tag.categories_for(%w[aaa bbb ccc])
@@ -33,12 +33,12 @@ class TagTest < ActiveSupport::TestCase
     end
   end
 
-  context "A tag category mapping" do
-    should "exist" do
+  context("A tag category mapping") do
+    should("exist") do
       assert_nothing_raised { TagCategory.categories }
     end
 
-    should "have convenience methods for all categories" do
+    should("have convenience methods for all categories") do
       assert_equal(0, TagCategory.general)
       assert_equal(1, TagCategory.artist)
       assert_equal(2, TagCategory.contributor)
@@ -50,7 +50,7 @@ class TagTest < ActiveSupport::TestCase
       assert_equal(8, TagCategory.lore)
     end
 
-    should "have a regular expression for matching category names and shortcuts" do
+    should("have a regular expression for matching category names and shortcuts") do
       regexp = TagCategory.regexp
 
       assert_match(regexp, "artist")
@@ -66,7 +66,7 @@ class TagTest < ActiveSupport::TestCase
       assert_no_match(regexp, "woodle")
     end
 
-    should "map a category name to its value" do
+    should("map a category name to its value") do
       mapping = [
         [0, %w[general gen unknown]],
         [1, %w[artist art]],
@@ -87,13 +87,13 @@ class TagTest < ActiveSupport::TestCase
     end
   end
 
-  context "A tag" do
-    should "know its category name" do
+  context("A tag") do
+    should("know its category name") do
       @tag = create(:artist_tag)
       assert_equal("Artist", @tag.category_name)
     end
 
-    should "reset its category after updating" do
+    should("reset its category after updating") do
       tag = create(:artist_tag)
       assert_equal(TagCategory.artist, Cache.fetch("tc:#{tag.name}"))
 
@@ -101,24 +101,24 @@ class TagTest < ActiveSupport::TestCase
       assert_equal(TagCategory.copyright, Cache.fetch("tc:#{tag.name}"))
     end
 
-    context "not be settable to an invalid category" do
-      should validate_inclusion_of(:category).in_array(TagCategory.ids)
+    context("not be settable to an invalid category") do
+      should(validate_inclusion_of(:category).in_array(TagCategory.ids))
     end
 
-    should "create a version upon creation" do
+    should("create a version upon creation") do
       assert_difference("TagVersion.count", 1) do
         create(:tag)
       end
     end
 
-    should "create a version when category is changed" do
+    should("create a version when category is changed") do
       tag = create(:tag)
       assert_difference("TagVersion.count", 1) do
         tag.update(category: TagCategory.artist)
       end
     end
 
-    should "create a version when is_locked is changed" do
+    should("create a version when is_locked is changed") do
       tag = create(:tag)
       assert_difference("TagVersion.count", 1) do
         tag.update(is_locked: true)
@@ -126,15 +126,15 @@ class TagTest < ActiveSupport::TestCase
     end
   end
 
-  context "A tag" do
-    should "be found when one exists" do
+  context("A tag") do
+    should("be found when one exists") do
       tag = create(:tag)
       assert_difference("Tag.count", 0) do
         Tag.find_or_create_by_name(tag.name)
       end
     end
 
-    should "change the type for an existing tag" do
+    should("change the type for an existing tag") do
       tag = create(:tag)
       assert_difference("Tag.count", 0) do
         assert_equal(TagCategory.general, tag.category)
@@ -144,7 +144,7 @@ class TagTest < ActiveSupport::TestCase
       end
     end
 
-    should "not change the category is the tag is locked" do
+    should("not change the category is the tag is locked") do
       tag = create(:tag, is_locked: true)
       assert_equal(true, tag.is_locked?)
       Tag.find_or_create_by_name("artist:#{tag.name}")
@@ -152,34 +152,34 @@ class TagTest < ActiveSupport::TestCase
       assert_equal(0, tag.category)
     end
 
-    should "not change category when the tag is too large to be changed by a janitor" do
+    should("not change category when the tag is too large to be changed by a janitor") do
       tag = create(:tag, post_count: 1001)
       Tag.find_or_create_by_name("artist:#{tag.name}", user: @janitor)
 
       assert_equal(0, tag.reload.category)
     end
 
-    should "not change category when the tag is too large to be changed by a member" do
+    should("not change category when the tag is too large to be changed by a member") do
       tag = create(:tag, post_count: 101)
       Tag.find_or_create_by_name("artist:#{tag.name}", user: create(:member_user))
 
       assert_equal(0, tag.reload.category)
     end
 
-    should "update post tag counts when the category is changed" do
+    should("update post tag counts when the category is changed") do
       post = create(:post, tag_string: "test")
       assert_equal(1, post.tag_count_general)
       assert_equal(0, post.tag_count_character)
 
       tag = Tag.find_by_normalized_name("test")
       with_inline_jobs { tag.update_attribute(:category, 4) }
-      assert_equal tag.errors.full_messages, []
+      assert_equal(tag.errors.full_messages, [])
       post.reload
       assert_equal(0, post.tag_count_general)
       assert_equal(1, post.tag_count_character)
     end
 
-    should "be created when one doesn't exist" do
+    should("be created when one doesn't exist") do
       assert_difference("Tag.count", 1) do
         tag = Tag.find_or_create_by_name("hoge")
         assert_equal("hoge", tag.name)
@@ -187,7 +187,7 @@ class TagTest < ActiveSupport::TestCase
       end
     end
 
-    should "be created with the type when one doesn't exist" do
+    should("be created with the type when one doesn't exist") do
       assert_difference("Tag.count", 1) do
         tag = Tag.find_or_create_by_name("artist:hoge")
         assert_equal("hoge", tag.name)
@@ -195,44 +195,44 @@ class TagTest < ActiveSupport::TestCase
       end
     end
 
-    context "during name validation" do
+    context("during name validation") do
       # tags with spaces or uppercase are allowed because they are normalized
       # to lowercase with underscores.
-      should allow_value(" foo ").for(:name).on(:create)
-      should allow_value("foo bar").for(:name).on(:create)
-      should allow_value("FOO").for(:name).on(:create)
-      should allow_value("foo_(bar)").for(:name).on(:create)
-      should allow_value("foo_(bar_(baz))").for(:name).on(:create)
+      should(allow_value(" foo ").for(:name).on(:create))
+      should(allow_value("foo bar").for(:name).on(:create))
+      should(allow_value("FOO").for(:name).on(:create))
+      should(allow_value("foo_(bar)").for(:name).on(:create))
+      should(allow_value("foo_(bar_(baz))").for(:name).on(:create))
 
-      should_not allow_value("").for(:name).on(:create)
-      should_not allow_value("___").for(:name).on(:create)
+      should_not(allow_value("").for(:name).on(:create))
+      should_not(allow_value("___").for(:name).on(:create))
       %w|- ~ + _ ` ( ) { } [ ] /|.each do |x|
-        should_not allow_value("#{x}foo").for(:name).on(:create)
+        should_not(allow_value("#{x}foo").for(:name).on(:create))
       end
-      should_not allow_value("foo_").for(:name).on(:create)
-      should_not allow_value("foo__bar").for(:name).on(:create)
-      should_not allow_value("foo*bar").for(:name).on(:create)
-      should_not allow_value("foo,bar").for(:name).on(:create)
-      should_not allow_value("foo\abar").for(:name).on(:create)
-      should_not allow_value("café").for(:name).on(:create)
-      should_not allow_value("東方").for(:name).on(:create)
-      should_not allow_value("FAV:blah").for(:name).on(:create)
+      should_not(allow_value("foo_").for(:name).on(:create))
+      should_not(allow_value("foo__bar").for(:name).on(:create))
+      should_not(allow_value("foo*bar").for(:name).on(:create))
+      should_not(allow_value("foo,bar").for(:name).on(:create))
+      should_not(allow_value("foo\abar").for(:name).on(:create))
+      should_not(allow_value("café").for(:name).on(:create))
+      should_not(allow_value("東方").for(:name).on(:create))
+      should_not(allow_value("FAV:blah").for(:name).on(:create))
 
-      should_not allow_value("foo)").for(:name).on(:create)
-      should_not allow_value("foo(").for(:name).on(:create)
-      should_not allow_value("foo)(").for(:name).on(:create)
-      should_not allow_value("foo(()").for(:name).on(:create)
-      should_not allow_value("foo())").for(:name).on(:create)
+      should_not(allow_value("foo)").for(:name).on(:create))
+      should_not(allow_value("foo(").for(:name).on(:create))
+      should_not(allow_value("foo)(").for(:name).on(:create))
+      should_not(allow_value("foo(()").for(:name).on(:create))
+      should_not(allow_value("foo())").for(:name).on(:create))
 
       metatags = TagQuery::METATAGS + TagCategory.mapping.keys
       metatags.each do |metatag|
-        should_not allow_value("#{metatag}:foo").for(:name).on(:create)
+        should_not(allow_value("#{metatag}:foo").for(:name).on(:create))
       end
     end
   end
 
-  context "A tag with a negative post count" do
-    should "be fixed" do
+  context("A tag with a negative post count") do
+    should("be fixed") do
       reset_post_index
       tag = create(:tag, name: "touhou", post_count: -10)
       create(:post, tag_string: "touhou")
@@ -242,8 +242,8 @@ class TagTest < ActiveSupport::TestCase
     end
   end
 
-  context "An aliased tag with a non-zero post count" do
-    should "be fixed" do
+  context("An aliased tag with a non-zero post count") do
+    should("be fixed") do
       reset_post_index
       tag = create(:tag, name: "foo", post_count: 1)
       create(:post, tag_string: "foo")
@@ -257,7 +257,7 @@ class TagTest < ActiveSupport::TestCase
       assert_equal(0, tag.reload.post_count)
     end
 
-    should "not be fixed if the alias is inactive" do
+    should("not be fixed if the alias is inactive") do
       reset_post_index
       tag = create(:tag, name: "foo", post_count: 1)
       create(:post, tag_string: "foo")

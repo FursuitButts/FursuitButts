@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-require "test_helper"
-require_relative "helper"
+require("test_helper")
+require_relative("helper")
 
 module Sources
   class E621Test < ActiveSupport::TestCase
-    extend Sources::Helper
+    extend(Sources::Helper)
 
-    context "A source from E621" do
+    context("A source from E621") do
       alternate_should_work(
         "https://e621.net/posts/3242510",
         Sources::Alternates::E621,
@@ -15,7 +15,7 @@ module Sources
       )
     end
 
-    context "A source from E926" do
+    context("A source from E926") do
       alternate_should_work(
         "https://e926.net/posts/3242510",
         Sources::Alternates::E621,
@@ -23,7 +23,7 @@ module Sources
       )
     end
 
-    context "A direct link from E621" do
+    context("A direct link from E621") do
       setup do
         stub_request(:get, "https://e621.net/posts.json?md5=b919c42410b3e90a3dd2667612ccebc2").to_return(status: 200, body: %({"post":{"id":3242510}}), headers: {})
       end
@@ -35,7 +35,7 @@ module Sources
       )
     end
 
-    context "A direct link from E926" do
+    context("A direct link from E926") do
       setup do
         stub_request(:get, "https://e621.net/posts.json?md5=b919c42410b3e90a3dd2667612ccebc2").to_return(status: 200, body: %({"post":{"id":3242510}}), headers: {})
       end

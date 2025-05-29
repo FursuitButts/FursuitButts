@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
 class UploadWhitelist < ApplicationRecord
-  before_save :clean_pattern
-  after_create :log_create
-  after_update :log_update
-  after_destroy :log_delete
-  after_save :clear_cache
+  before_save(:clean_pattern)
+  after_create(:log_create)
+  after_update(:log_update)
+  after_destroy(:log_delete)
+  after_save(:clear_cache)
 
-  validates :pattern, presence: true
-  validates :pattern, uniqueness: true
-  validates :pattern, format: { with: %r{\A[a-zA-Z0-9.%:_\-*\/?&]+\z} }
+  validates(:pattern, presence: true)
+  validates(:pattern, uniqueness: true)
+  validates(:pattern, format: { with: %r{\A[a-zA-Z0-9.%:_\-*\/?&]+\z} })
 
   def clean_pattern
     self.pattern = pattern.downcase.tr("%", "*")
@@ -81,6 +81,6 @@ class UploadWhitelist < ApplicationRecord
     [false, "#{url.host} not in whitelist"]
   end
 
-  include LogMethods
-  extend SearchMethods
+  include(LogMethods)
+  extend(SearchMethods)
 end

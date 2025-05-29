@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
-require "dotenv"
+require("dotenv")
 
 # Should be "production" by default, otherwise use other env
 rails_env = ENV.fetch("RAILS_ENV", "production")
 
 Dotenv.load(".env.#{rails_env}")
 
-timeout 180
-listen ENV.fetch("PITCHFORK_LISTEN_ADDRESS"), tcp_nopush: true, backlog: 2048
-worker_processes ENV.fetch("PITCHFORK_WORKER_COUNT").to_i
+timeout(180)
+listen(ENV.fetch("PITCHFORK_LISTEN_ADDRESS"), tcp_nopush: true, backlog: 2048)
+worker_processes(ENV.fetch("PITCHFORK_WORKER_COUNT").to_i)
 
 # Each worker will have its own copy of this data structure.
 WorkerData = Data.define(:max_requests, :max_mem)

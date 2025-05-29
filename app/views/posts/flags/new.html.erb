@@ -1,6 +1,6 @@
-<%= render "posts/flags/new", post_flag: @post_flag %>
+<%= render("posts/flags/new", post_flag: @post_flag) %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   New Flag - #<%= @post_flag.post_id %>

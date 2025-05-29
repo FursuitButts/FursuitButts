@@ -1,5 +1,5 @@
 <% content_for(:secondary_links) do %>
-  <%= subnav_link_to "Listing", mod_actions_path %>
+  <%= subnav_link_to("Listing", mod_actions_path) %>
   <%= subnav_link_to_if(policy(StaffAuditLog).index?, "Audit Logs", admin_audit_logs_path) %>
 <% end %>
 <%= latest_link(@mod_actions) %>

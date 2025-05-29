@@ -1,4 +1,4 @@
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% is_self = @user == CurrentUser.user %>
 <h1>Followed Tags<%= ": #{link_to_user(@user)}".html_safe unless is_self %></h1>

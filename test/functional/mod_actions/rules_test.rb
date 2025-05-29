@@ -1,21 +1,21 @@
 # frozen_string_literal: true
 
-require "test_helper"
-require_relative "helper"
+require("test_helper")
+require_relative("helper")
 
 module ModActions
   class RulesTest < ActiveSupport::TestCase
-    include Helper
-    include Rails.application.routes.url_helpers
+    include(Helper)
+    include(Rails.application.routes.url_helpers)
 
-    context "mod actions for rules" do
+    context("mod actions for rules") do
       setup do
         @category = create(:rule_category)
         @rule = create(:rule, category: @category)
         set_count!
       end
 
-      should "format rule_create correctly" do
+      should("format rule_create correctly") do
         @rule = create(:rule, category: @category)
 
         assert_matches(
@@ -31,7 +31,7 @@ module ModActions
         )
       end
 
-      should "format rule_delete correctly" do
+      should("format rule_delete correctly") do
         @rule.destroy
 
         assert_matches(
@@ -43,7 +43,7 @@ module ModActions
         )
       end
 
-      should "format rules_reorder correctly" do
+      should("format rules_reorder correctly") do
         Rule.log_reorder(2)
 
         assert_matches(
@@ -54,12 +54,12 @@ module ModActions
         )
       end
 
-      context "rule_update" do
+      context("rule_update") do
         setup do
           @original = @rule.dup
         end
 
-        should "format name changes correctly" do
+        should("format name changes correctly") do
           @rule.update!(name: "aaa")
 
           assert_matches(
@@ -78,7 +78,7 @@ module ModActions
           )
         end
 
-        should "format description changes correctly" do
+        should("format description changes correctly") do
           @rule.update!(description: "aaa")
 
           assert_matches(
@@ -97,7 +97,7 @@ module ModActions
           )
         end
 
-        should "format category changes correctly" do
+        should("format category changes correctly") do
           @category = create(:rule_category)
           set_count!
           @rule.update!(category: @category)
@@ -118,7 +118,7 @@ module ModActions
           )
         end
 
-        should "format all changes correctly" do
+        should("format all changes correctly") do
           @category = create(:rule_category)
           set_count!
           @rule.update!(name: "aaa", description: "bbb", category: @category)

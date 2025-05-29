@@ -2,9 +2,9 @@
 
 class AvoidPostingVersion < ApplicationRecord
   belongs_to_updater
-  belongs_to :avoid_posting
-  has_one :artist, through: :avoid_posting
-  delegate :artist_id, :artist_name, to: :avoid_posting
+  belongs_to(:avoid_posting)
+  has_one(:artist, through: :avoid_posting)
+  delegate(:artist_id, :artist_name, to: :avoid_posting)
 
   def status
     if is_active?
@@ -35,7 +35,7 @@ class AvoidPostingVersion < ApplicationRecord
     end
   end
 
-  extend SearchMethods
+  extend(SearchMethods)
 
   def self.available_includes
     %i[artist updater avoid_posting]

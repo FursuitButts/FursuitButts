@@ -1,4 +1,4 @@
-<%= render "search" %>
+<%= render("search") %>
 
 <h1>Changes</h1>
 
@@ -12,19 +12,19 @@
 <% end %>
 
 <% if @post_versions.empty? %>
-  <%= render "posts/blank" %>
+  <%= render("posts/blank") %>
 <% else %>
-<%= render "listing" %>
+<%= render("listing") %>
 
 
   <% if params[:lr] && policy(UserRevert).create? %>
-    <p><%= link_to "Revert this user's changes", new_user_revert_path(user_id: params[:lr]) %></p>
+    <p><%= link_to("Revert this user's changes", new_user_revert_path(user_id: params[:lr])) %></p>
   <% end %>
 
   <%= numbered_paginator(@post_versions) %>
 <% end %>
 
-<%= javascript_tag nonce: true do -%>
+<%= javascript_tag(nonce: true) do -%>
   $(".closebutton").on("click", function(e) {
     $(e.target.parentNode).hide();
   });
@@ -33,7 +33,7 @@
   });
 <% end -%>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   Post Changes

@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 class FavoritesController < ApplicationController
-  respond_to :html, :json
-  before_action :ensure_lockdown_disabled, except: %i[index]
-  skip_before_action :api_check
+  respond_to(:html, :json)
+  before_action(:ensure_lockdown_disabled, except: %i[index])
+  skip_before_action(:api_check)
 
   def index
     if params[:tags]

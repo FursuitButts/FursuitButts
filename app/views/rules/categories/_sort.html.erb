@@ -15,12 +15,12 @@
     <tbody class="category" data-category-id="<%= category.id %>">
       <tr id="category-<%= category.id %>" data-id="<%= category.id %>">
         <td><%= category.order %> (<%= category.id %>)</td>
-        <td><%= link_to_user category.creator %></td>
-        <td><%= compact_time category.updated_at %></td>
+        <td><%= link_to_user(category.creator) %></td>
+        <td><%= compact_time(category.updated_at) %></td>
         <td><%= category.name %></td>
         <td>
-          <%= link_to "Edit", edit_rule_category_path(category) %> |
-          <%= link_to "Delete", rule_category_path(category), method: :delete, data: { confirm: "Are you sure you want to delete this rule category?" } %>
+          <%= link_to("Edit", edit_rule_category_path(category)) %> |
+          <%= link_to("Delete", rule_category_path(category), method: :delete, data: { confirm: "Are you sure you want to delete this rule category?" }) %>
         </td>
       </tr>
     </tbody>

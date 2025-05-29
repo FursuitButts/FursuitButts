@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
 class ApiKey < ApplicationRecord
-  belongs_to :user
-  array_attribute :permissions
-  array_attribute :permitted_ip_addresses
+  belongs_to(:user)
+  array_attribute(:permissions)
+  array_attribute(:permitted_ip_addresses)
 
-  before_validation :normalize_permissions
-  validates :name, uniqueness: { scope: :user_id }, presence: true
-  validates :key, uniqueness: true
-  validate :validate_permissions, if: :permissions_changed?
-  has_secure_token :key
+  before_validation(:normalize_permissions)
+  validates(:name, uniqueness: { scope: :user_id }, presence: true)
+  validates(:key, uniqueness: true)
+  validate(:validate_permissions, if: :permissions_changed?)
+  has_secure_token(:key)
 
   module PermissionMethods
     def has_permission?(ip, controller, action)
@@ -54,8 +54,8 @@ class ApiKey < ApplicationRecord
     end
   end
 
-  include PermissionMethods
-  extend SearchMethods
+  include(PermissionMethods)
+  extend(SearchMethods)
 
   def normalize_permissions
     self.permissions = permissions.compact_blank

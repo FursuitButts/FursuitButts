@@ -3,9 +3,9 @@
 module Forums
   module Topics
     class MovesController < ApplicationController
-      respond_to :html, :json
+      respond_to(:html, :json)
 
-      wrap_parameters :forum_topic
+      wrap_parameters(:forum_topic)
 
       def show
         @forum_topic = authorize(ForumTopic.find(params[:id]), :move?)

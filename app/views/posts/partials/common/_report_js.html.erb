@@ -1,7 +1,7 @@
 <%# locals: (sig:, url:) %>
 
 <% if FemboyFans.config.reports_enabled? %>
-  <%= javascript_tag nonce: true do -%>
+  <%= javascript_tag(nonce: true) do -%>
     $(function() {
       $.ajax({
         url: "<%= FemboyFans.config.reports_server %><%= url %>",

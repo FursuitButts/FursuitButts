@@ -1,11 +1,11 @@
 <%# locals: (votes:) -%>
 
 <% content_for(:secondary_links) do %>
-  <%= subnav_link_to "Listing", { action: :index } %>
+  <%= subnav_link_to("Listing", { action: :index }) %>
   <% if votes.present? %>
     |
     <% if %w[post_votes comment_votes].include?(params[:controller]) %>
-      <%= subnav_link_to "Posts", posts_path(tags: "id:#{votes.map(&:post_id).join(',')}") %>
+      <%= subnav_link_to("Posts", posts_path(tags: "id:#{votes.map(&:post_id).join(',')}")) %>
     <% end %>
     <%= latest_link(votes, raw: true) %>
   <% end %>

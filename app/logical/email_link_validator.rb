@@ -17,5 +17,5 @@ class EmailLinkValidator
     @validator ||= ActiveSupport::MessageVerifier.new(FemboyFans.config.email_key, serializer: JSON, digest: "SHA256")
   end
 
-  private_class_method :validator
+  private_class_method(:validator)
 end

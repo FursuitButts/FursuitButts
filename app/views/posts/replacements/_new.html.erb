@@ -11,12 +11,12 @@
   </div>
   <br>
 
-  <%= render "posts/partials/show/avoid_posting", post: post %>
+  <%= render("posts/partials/show/avoid_posting", post: post) %>
   <br />
   <div id="replacement-uploader" class="simple_form"></div>
 </div>
 
-<%= javascript_tag nonce: true do -%>
+<%= javascript_tag(nonce: true) do -%>
   var uploaderSettings = {
     maxFileSize: <%= FemboyFans.config.max_file_size %>,
     maxFileSizeMap: <%= sanitize(FemboyFans.config.max_file_sizes.to_json) %>,

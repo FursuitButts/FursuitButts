@@ -1,4 +1,4 @@
-<h1>Tag: <%= link_to @tag.name, posts_path(tags: @tag.name), class: "tag-type-#{@tag.category}" %></h1>
+<h1>Tag: <%= link_to(@tag.name, posts_path(tags: @tag.name), class: "tag-type-#{@tag.category}") %></h1>
 
 <%= custom_form_for(@tag, policy: policy(@tag)) do |f| %>
   <% if @tag.is_locked? %>
@@ -16,7 +16,7 @@
   <%= f.button(:submit, "Submit") %>
 <% end %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   Edit Tag - <%= @tag.name %>

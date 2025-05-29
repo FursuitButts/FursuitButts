@@ -1,6 +1,6 @@
 <h1>Post Events</h1>
 
-<%= render "search" %>
+<%= render("search") %>
 
 <%= table_for(@events, class: "striped autofit") do |t| %>
   <% t.column("Post") do |event| %>
@@ -32,7 +32,7 @@
 
 <%= numbered_paginator(@events) %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   Events

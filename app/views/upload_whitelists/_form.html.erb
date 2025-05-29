@@ -1,5 +1,5 @@
 <%= custom_form_for(@whitelist) do |f| %>
-  <%= error_messages_for "whitelist" %>
+  <%= error_messages_for("whitelist") %>
 
   <%= f.input(:pattern, label: "Pattern", as: :string, hint: "* matches zero or more, ? matches exactly one character. See more #{link_to('here', 'https://apidock.com/ruby/v2_5_5/File/fnmatch/class')}.".html_safe) %>
   <%= f.input(:note, label: "Note", as: :string) %>

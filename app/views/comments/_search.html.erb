@@ -1,5 +1,5 @@
 <%= form_search(path: comments_path, policy: policy(Comment)) do |f| %>
-  <%= hidden_field_tag "group_by", "comment", id: "group_by_full" %>
+  <%= hidden_field_tag("group_by", "comment", id: "group_by_full") %>
   <%= f.user(:creator, label: "Commenter") %>
   <%= f.input(:body_matches, label: "Body") %>
   <%= f.input(:post_tags_match, label: "Tags", autocomplete: "tag-query") %>

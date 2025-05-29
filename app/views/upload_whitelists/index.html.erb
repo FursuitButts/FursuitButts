@@ -1,4 +1,4 @@
-<%= render "search" %>
+<%= render("search") %>
 <h1>Upload Whitelists</h1>
 
 <%= table_for(@whitelists) do |t| %>
@@ -27,7 +27,7 @@
 
 <%= numbered_paginator(@whitelists) %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   Upload Whitelists

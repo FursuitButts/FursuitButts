@@ -19,9 +19,9 @@
       <td>
         <% if !@takedown.reason_hidden || CurrentUser.user.is_janitor? || @show_instructions %>
           <% if @takedown.source.match(%r{^https?://}i) %>
-            <%= link_to @takedown.source, @takedown.source, rel: "noopener noreferrer nofollow" %>
+            <%= link_to(@takedown.source, @takedown.source, rel: "noopener noreferrer nofollow") %>
           <% else %>
-            <%= link_to @takedown.source, "https://#{@takedown.source}", rel: "noopener noreferrer nofollow" %>
+            <%= link_to(@takedown.source, "https://#{@takedown.source}", rel: "noopener noreferrer nofollow") %>
           <% end %>
         <% else %>
           <span class="text-error">[Source hidden by submitter]</span>
@@ -32,7 +32,7 @@
     <tr>
       <td><label>Reason</label></td>
       <% if !@takedown.reason_hidden || CurrentUser.user.is_janitor? || @show_instructions %>
-        <td><%= h @takedown.reason %>
+        <td><%= h(@takedown.reason) %>
           <% if @takedown.reason_hidden %><span class="text-error">(HIDDEN)</span><% end %></td>
       <% else %>
         <td><span class="text-error">[Reason hidden by submitter]</span></td>
@@ -49,7 +49,7 @@
 
       <tr>
         <td><label>Email</label></td>
-        <td><%= link_to @takedown.email, "mailto:#{@takedown.email}", rel: "noopener noreferrer nofollow" %></td>
+        <td><%= link_to(@takedown.email, "mailto:#{@takedown.email}", rel: "noopener noreferrer nofollow") %></td>
       </tr>
 
       <tr>
@@ -61,7 +61,7 @@
     <% if CurrentUser.user.is_janitor? %>
       <tr>
         <td><label>User</label></td>
-        <td><%= link_to_user @takedown.creator %></td>
+        <td><%= link_to_user(@takedown.creator) %></td>
       </tr>
 
       <tr><td colspan="2">&nbsp;</td></tr>
@@ -88,7 +88,7 @@
       <tr>
         <td><label>Approver</label></td>
 
-        <td><%= link_to_user @takedown.approver %></td>
+        <td><%= link_to_user(@takedown.approver) %></td>
       </tr>
     <% end %>
   </table>
@@ -110,19 +110,19 @@
   <% unless @takedown.instructions.blank? %>
     <h3>Special instructions</h3>
     <div class="box-section">
-      <%= h @takedown.instructions %>
+      <%= h(@takedown.instructions) %>
     </div>
   <% end %>
 <% end %>
 <% if CurrentUser.can_handle_takedowns? %>
-  <%= render "editor" %>
+  <%= render("editor") %>
 <% end %>
 
 <% if @show_instructions %>
   <% if @takedown.instructions.present? %>
     <h3>Special instructions</h3>
     <div class="box-section">
-      <%= h @takedown.instructions %>
+      <%= h(@takedown.instructions) %>
     </div>
   <% end %>
 
@@ -182,7 +182,7 @@
 <% end %>
 
 
-<%= render partial: "secondary_links" %>
+<%= render(partial: "secondary_links") %>
 
 <% content_for(:page_title) do %>
   Takedown #<%= @takedown.id %>

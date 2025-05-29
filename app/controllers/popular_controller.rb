@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class PopularController < ApplicationController
-  respond_to :html, :json
+  respond_to(:html, :json)
 
   def index
   end
@@ -83,7 +83,7 @@ class PopularController < ApplicationController
 
   # used for routes that don't have a post set
   class NavLinks
-    attr_reader :date, :path, :top_path
+    attr_reader(:date, :path, :top_path)
 
     def initialize(date, path, top_path)
       @date = date

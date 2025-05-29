@@ -2,8 +2,8 @@
 
 module Users
   class BlocksController < ApplicationController
-    before_action :load_user
-    respond_to :html, :json
+    before_action(:load_user)
+    respond_to(:html, :json)
 
     def index
       authorize(@user, policy_class: UserBlockPolicy)

@@ -1,19 +1,19 @@
 <footer id="page-footer">
   <span class="left">
     Running <%= FemboyFans.config.app_name %> (<%= link_to(GitHelper.instance.public_ref.short_commit, GitHelper.instance.public_commit_url) %>)
-    – <%= link_to "Rules", rules_path %>
-    – <%= link_to "Takedowns", takedown_static_path %>
-    – <%= link_to "Privacy", privacy_policy_path %>
-    – <%= link_to "Contact", contact_path %>
+    – <%= link_to("Rules", rules_path) %>
+    – <%= link_to("Takedowns", takedown_static_path) %>
+    – <%= link_to("Privacy", privacy_policy_path) %>
+    – <%= link_to("Contact", contact_path) %>
   </span>
   <span class="logo-container">
     <a href="/"><%= image_pack_tag("Blep.png", class: "footer-logo") %></a>
   </span>
   <span class="right">
-    <%= link_to "Themes / Gestures", theme_path %>
+    <%= link_to("Themes / Gestures", theme_path) %>
     <% if CurrentUser.user.enable_keyboard_navigation %>
-      – <%= link_to "Keyboard Shortcuts", keyboard_shortcuts_path %>
+      – <%= link_to("Keyboard Shortcuts", keyboard_shortcuts_path) %>
     <% end %>
-    – <%= link_to disable_mobile_mode? ? "Enable mobile mode support" : "Disable mobile mode support", toggle_mobile_mode_path, rel: "nofollow" %>
+    – <%= link_to(disable_mobile_mode? ? "Enable mobile mode support" : "Disable mobile mode support", toggle_mobile_mode_path, rel: "nofollow") %>
   </span>
 </footer>

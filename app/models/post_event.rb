@@ -2,8 +2,8 @@
 
 class PostEvent < ApplicationRecord
   belongs_to_creator
-  belongs_to :post
-  enum :action, {
+  belongs_to(:post)
+  enum(:action, {
     deleted:                 0,
     undeleted:               1,
     approved:                2,
@@ -34,7 +34,7 @@ class PostEvent < ApplicationRecord
     appeal_rejected:         27,
     copied_notes:            28,
     set_min_edit_level:      29,
-  }
+  })
 
   MOD_ONLY_SEARCH_ACTIONS = [
     actions[:comment_locked],
@@ -57,7 +57,7 @@ class PostEvent < ApplicationRecord
     min_edit_level
   ].freeze
 
-  store_accessor :extra_data, *EXTRA_DATA
+  store_accessor(:extra_data, *EXTRA_DATA)
 
   def self.search_options_for(user)
     options = actions.keys
@@ -117,8 +117,8 @@ class PostEvent < ApplicationRecord
     end
   end
 
-  include ApiMethods
-  extend SearchMethods
+  include(ApiMethods)
+  extend(SearchMethods)
 
   BLANK = { text: ->(_log) { "" }, json: [] }.freeze
   FORMATTERS = {

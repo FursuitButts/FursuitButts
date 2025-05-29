@@ -1,10 +1,10 @@
 <h1>Edit Tag Alias</h1>
 
-<%= error_messages_for :tag_alias %>
+<%= error_messages_for(:tag_alias) %>
 
-<%= render "form", tag_alias: @tag_alias %>
+<%= render("form", tag_alias: @tag_alias) %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   Edit Tag Alias

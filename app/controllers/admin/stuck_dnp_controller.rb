@@ -2,7 +2,7 @@
 
 module Admin
   class StuckDnpController < ApplicationController
-    wrap_parameters :stuck_dnp
+    wrap_parameters(:stuck_dnp)
 
     def new
       authorize(:stuck_dnp)

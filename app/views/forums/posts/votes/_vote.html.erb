@@ -2,10 +2,10 @@
 
 <li class="vote-score-<%= vote.vote_type %> <%= "own-forum-vote" if vote.user_id == CurrentUser.id %>">
   <% if votable && forum_post.voting_active? && vote.user_id == CurrentUser.id %>
-    <%= link_to tag.i(class: "fa-regular #{vote.fa_class}"), "#", "class": "forum-vote-remove", 'data-forum-id': forum_post.id %>
-    <%= link_to_user vote.user %>
+    <%= link_to(tag.i(class: "fa-regular #{vote.fa_class}"), "#", "class": "forum-vote-remove", 'data-forum-id': forum_post.id) %>
+    <%= link_to_user(vote.user) %>
   <% else %>
     <%= tag.i(class: "fa-regular #{vote.fa_class}") %>
-    <%= link_to_user vote.user %>
+    <%= link_to_user(vote.user) %>
   <% end %>
 </li>

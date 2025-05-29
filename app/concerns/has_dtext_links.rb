@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module HasDtextLinks
-  extend ActiveSupport::Concern
+  extend(ActiveSupport::Concern)
 
   class_methods do
     # Declare a field that has DText links. Any wiki links or external links

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class EmailsController < ApplicationController
-  respond_to :html
+  respond_to(:html)
 
   def resend_confirmation
     if IpBan.is_banned?(CurrentUser.ip_addr)

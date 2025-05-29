@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class HelpController < ApplicationController
-  respond_to :html, :json
-  helper WikiPagesHelper
+  respond_to(:html, :json)
+  helper(WikiPagesHelper)
 
   def index
     @help_pages = authorize(HelpPage).help_index

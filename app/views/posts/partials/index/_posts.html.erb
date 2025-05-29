@@ -1,7 +1,7 @@
 <div id="posts" class="user-disable-cropped-<%= FemboyFans.config.enable_image_cropping? && CurrentUser.user.disable_cropped_thumbnails? %>">
   <div id="posts-container">
     <% if @posts.empty? %>
-      <%= render "posts/blank" %>
+      <%= render("posts/blank") %>
     <% else %>
       <% @posts.each do |post| %>
         <%= post.preview_html(self, { tags: @post_set.public_tag_string, show_cropped: true, stats: true }) %>
@@ -15,7 +15,7 @@
         <%= post_set.safe_posts.size %> post(s) on this page were hidden by safe mode (<%= FemboyFans.config.app_name %>). Go to <%= link_to(FemboyFans.config.canonical_app_name, FemboyFans.config.canonical_app_url) %> or disable safe mode to view.<br>
       <% end %>
       <% if post_set.login_blocked_posts.present? %>
-        <%= post_set.login_blocked_posts.size %> post(s) on this page were hidden because you need to be logged in to view them. <%= link_to "(learn more)", help_page_path(id: "global_blacklist") %>
+        <%= post_set.login_blocked_posts.size %> post(s) on this page were hidden because you need to be logged in to view them. <%= link_to("(learn more)", help_page_path(id: "global_blacklist")) %>
       <% end %>
     </div>
   <% end %>

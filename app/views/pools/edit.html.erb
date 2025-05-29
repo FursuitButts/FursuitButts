@@ -1,7 +1,7 @@
 <h2>Edit Pool: <%= @pool.pretty_name %></h2>
 
 <%= custom_form_for(@pool) do |f| %>
-  <%= error_messages_for "pool" %>
+  <%= error_messages_for("pool") %>
 
   <%= f.input(:name, as: :string, input_html: { value: @pool.pretty_name }) %>
   <%= f.input(:description, as: :dtext, limit: FemboyFans.config.pool_descr_max_size, allow_color: false) %>
@@ -10,7 +10,7 @@
   <%= f.button(:submit) %>
 <% end %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   Edit Pool - <%= @pool.pretty_name %>

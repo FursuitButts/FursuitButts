@@ -3,20 +3,20 @@
 class Rule < ApplicationRecord
   belongs_to_creator
   belongs_to_updater
-  belongs_to :category, class_name: "RuleCategory"
-  validates :name, presence: true, uniqueness: { case_sensitive: false }, length: { min: 3, maximum: 100 }
-  validates :description, presence: true, length: { maximum: 50_000 }
-  validates :order, uniqueness: { scope: :category_id }, numericality: { only_integer: true, greater_than: 0 }
-  has_many :quick_rules, -> { order(:order) }
+  belongs_to(:category, class_name: "RuleCategory")
+  validates(:name, presence: true, uniqueness: { case_sensitive: false }, length: { min: 3, maximum: 100 })
+  validates(:description, presence: true, length: { maximum: 50_000 })
+  validates(:order, uniqueness: { scope: :category_id }, numericality: { only_integer: true, greater_than: 0 })
+  has_many(:quick_rules, -> { order(:order) })
 
   before_validation(on: :create) do
     self.order = (Rule.where(category: category).maximum(:order) || 0) + 1 if order.blank?
     self.anchor = name.parameterize if anchor.blank?
   end
 
-  after_create :log_create
-  after_update :log_update
-  after_destroy :log_delete
+  after_create(:log_create)
+  after_update(:log_update)
+  after_destroy(:log_delete)
 
   module LogMethods
     def log_create
@@ -39,7 +39,7 @@ class Rule < ApplicationRecord
     end
   end
 
-  include LogMethods
+  include(LogMethods)
 
   def self.log_reorder(changes)
     ModAction.log!(:rules_reorder, nil, total: changes)

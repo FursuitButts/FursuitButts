@@ -2,7 +2,7 @@
 
 module Posts
   class DeletedController < ApplicationController
-    respond_to :html, :json
+    respond_to(:html, :json)
 
     def index
       authorize(Post, :deleted?)

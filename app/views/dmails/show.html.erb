@@ -3,11 +3,11 @@
   <h2><%= @dmail.title %></h2>
 
   <ul style="margin-bottom: 1em;">
-    <li><strong>Sender</strong>: <%= link_to_user @dmail.from %></li>
-    <li><strong>Recipient</strong>: <%= link_to_user @dmail.to %></li>
+    <li><strong>Sender</strong>: <%= link_to_user(@dmail.from) %></li>
+    <li><strong>Recipient</strong>: <%= link_to_user(@dmail.to) %></li>
     <li><strong>Date</strong>: <%= compact_time(@dmail.created_at) %></li>
     <% if policy(@dmail).can_see_ip_addr? %>
-      <li><strong>Sender IP</strong>: <%= link_to_ip @dmail.creator_ip_addr %></li>
+      <li><strong>Sender IP</strong>: <%= link_to_ip(@dmail.creator_ip_addr) %></li>
     <% end %>
     <% if CurrentUser.user.is_moderator? && @dmail.is_spam? %>
       <li><strong>Marked As Spam</strong></li>
@@ -33,13 +33,13 @@
 
   <p>
     <%= link_to_if(!@dmail.is_automated? || @dmail.respond_to_id.present?, "Respond", new_dmail_path(respond_to_id: @dmail)) %>
-    | <%= link_to "Forward", new_dmail_path(respond_to_id: @dmail, forward: true) %>
-    | <%= link_to "Share", dmail_url(@dmail, key: @dmail.key), id: "share-dmail-link" %>
+    | <%= link_to("Forward", new_dmail_path(respond_to_id: @dmail, forward: true)) %>
+    | <%= link_to("Share", dmail_url(@dmail, key: @dmail.key), id: "share-dmail-link") %>
     | <%= link_to_unless(@dmail.is_automated?, "Filter messages like these", edit_users_dmail_filter_path(dmail_id: @dmail.id)) %>
     <% if @dmail.owner_id == CurrentUser.id %>
-      | <%= link_to "Delete", dmail_path(@dmail), method: :delete, data: { confirm: "Are you sure you want to delete this DMail?" } %>
+      | <%= link_to("Delete", dmail_path(@dmail), method: :delete, data: { confirm: "Are you sure you want to delete this DMail?" }) %>
       <% if @dmail.to_id == CurrentUser.id %>
-        | <%= link_to "Mark as unread", mark_as_unread_dmail_path(@dmail), method: :put, data: { confirm: "Are you sure you want to mark this DMail as unread?" } %>
+        | <%= link_to("Mark as unread", mark_as_unread_dmail_path(@dmail), method: :put, data: { confirm: "Are you sure you want to mark this DMail as unread?" }) %>
         | <%= link_to_unless(@dmail.is_automated?, "Block sender", new_user_block_path(@dmail.to, user_block: { target_id: @dmail.from_id })) %>
         | <%= link_to_if((!@dmail.is_automated? || @dmail.respond_to_id.present?) && TicketPolicy.new(CurrentUser.user, @dmail).create?, "Report", model_new_ticket_path(model: @dmail)) %>
       <% end %>
@@ -61,10 +61,10 @@
   <span style="display: none;" id="dmail-share-key"><%= @dmail.key %></span>
 </div>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <%= content_for(:html_header) do %>
-  <% javascript_tag nonce: true do -%>
+  <% javascript_tag(nonce: true) do -%>
     $(function() {
       $("#share-dmail-link").on("click", function(e) {
         e.preventDefault();

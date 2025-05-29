@@ -1,20 +1,20 @@
 # frozen_string_literal: true
 
-require "test_helper"
-require_relative "helper"
+require("test_helper")
+require_relative("helper")
 
 module ModActions
   class HelpPagesTest < ActiveSupport::TestCase
-    include Helper
-    include Rails.application.routes.url_helpers
+    include(Helper)
+    include(Rails.application.routes.url_helpers)
 
-    context "mod actions for help pages" do
+    context("mod actions for help pages") do
       setup do
         @help = create(:help_page)
         set_count!
       end
 
-      should "format help_create correctly" do
+      should("format help_create correctly") do
         @help = create(:help_page)
 
         assert_matches(
@@ -27,7 +27,7 @@ module ModActions
         )
       end
 
-      should "format help_delete correctly" do
+      should("format help_delete correctly") do
         @help.destroy
 
         assert_matches(
@@ -40,7 +40,7 @@ module ModActions
         )
       end
 
-      should "format help_update correctly" do
+      should("format help_update correctly") do
         @original = @help.dup
         @help.update!(title: "xxx")
 

@@ -1,4 +1,4 @@
-<%= form_search path: post_versions_path do |f| %>
+<%= form_search(path: post_versions_path) do |f| %>
   <%= f.user(:updater, label: "User") %>
   <%= f.input(:post_id, label: "Post #") %>
   <%= f.input(:reason, label: "Reason") %>

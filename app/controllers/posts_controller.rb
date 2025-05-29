@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class PostsController < ApplicationController
-  respond_to :html, :json
-  before_action :ensure_lockdown_disabled, except: %i[index show show_seq random uploaders]
+  respond_to(:html, :json)
+  before_action(:ensure_lockdown_disabled, except: %i[index show show_seq random uploaders])
 
   def index
     if params[:md5].present?

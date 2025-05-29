@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 class UserTest < ActiveSupport::TestCase
-  context "A user" do
+  context("A user") do
     setup do
       # stubbed to true in test_helper.rb
       FemboyFans.config.stubs(:disable_throttles?).returns(false)
@@ -11,8 +11,8 @@ class UserTest < ActiveSupport::TestCase
       CurrentUser.user = @user
     end
 
-    should "not validate if the originating ip address is banned" do
-      assert_raises ActiveRecord::RecordInvalid do
+    should("not validate if the originating ip address is banned") do
+      assert_raises(ActiveRecord::RecordInvalid) do
         as(create(:user)) do
           create(:ip_ban, ip_addr: "1.2.3.4")
         end
@@ -23,7 +23,7 @@ class UserTest < ActiveSupport::TestCase
       end
     end
 
-    should "limit post uploads" do
+    should("limit post uploads") do
       assert_equal(:REJ_UPLOAD_NEWBIE, @user.can_upload_with_reason)
       @user.update_columns(created_at: 15.days.ago, base_upload_limit: 2)
       assert_equal(true, @user.can_upload_with_reason)
@@ -39,7 +39,7 @@ class UserTest < ActiveSupport::TestCase
       assert_equal(:REJ_UPLOAD_LIMIT, @user.can_upload_with_reason)
     end
 
-    should "limit comment votes" do
+    should("limit comment votes") do
       # allow creating one more comment than votes so creating a vote can fail later on
       FemboyFans.config.stubs(:comment_vote_limit).returns(1)
       FemboyFans.config.stubs(:member_comment_limit).returns(FemboyFans.config.comment_vote_limit + 1)
@@ -56,7 +56,7 @@ class UserTest < ActiveSupport::TestCase
       comment = as(user2) do
         create(:comment)
       end
-      assert_raises ActiveRecord::RecordInvalid do
+      assert_raises(ActiveRecord::RecordInvalid) do
         VoteManager::Comments.vote!(comment: comment, user: @user, score: -1)
       end
 
@@ -64,7 +64,7 @@ class UserTest < ActiveSupport::TestCase
       assert_equal(@user.can_comment_vote_with_reason, true)
     end
 
-    should "limit comments" do
+    should("limit comments") do
       FemboyFans.config.stubs(:member_comment_limit).returns(2)
       assert_equal(@user.can_comment_with_reason, :REJ_NEWBIE)
       @user.update_column(:level, User::Levels::TRUSTED)
@@ -76,7 +76,7 @@ class UserTest < ActiveSupport::TestCase
       assert_equal(@user.can_comment_with_reason, :REJ_LIMITED)
     end
 
-    should "limit forum post/topics" do
+    should("limit forum post/topics") do
       assert_equal(@user.can_forum_post_with_reason, :REJ_NEWBIE)
       @user.update_column(:created_at, 1.year.ago)
       topic = create(:forum_topic)
@@ -87,7 +87,7 @@ class UserTest < ActiveSupport::TestCase
       assert_equal(@user.can_forum_post_with_reason, :REJ_LIMITED)
     end
 
-    should "verify" do
+    should("verify") do
       assert(@user.is_verified?)
       @user = create(:user)
       @user.mark_unverified!
@@ -96,12 +96,12 @@ class UserTest < ActiveSupport::TestCase
       assert(@user.is_verified?)
     end
 
-    should "authenticate" do
+    should("authenticate") do
       assert(User.authenticate(@user.name, "password"), "Authentication should have succeeded")
       assert_not(User.authenticate(@user.name, "password2"), "Authentication should not have succeeded")
     end
 
-    should "normalize its level" do
+    should("normalize its level") do
       user = create(:user, level: User::Levels::ADMIN)
       assert(user.is_moderator?)
       assert(user.is_trusted?)
@@ -122,62 +122,62 @@ class UserTest < ActiveSupport::TestCase
       assert_not(user.is_trusted?)
     end
 
-    context "name" do
-      should "be #{FemboyFans.config.default_guest_name} given an invalid user id" do
+    context("name") do
+      should("be #{FemboyFans.config.default_guest_name} given an invalid user id") do
         assert_equal(FemboyFans.config.default_guest_name, User.id_to_name(-1))
       end
 
-      should "not contain whitespace" do
+      should("not contain whitespace") do
         # U+2007: https://en.wikipedia.org/wiki/Figure_space
         user = build(:user, name: "foo\u2007bar")
         user.save
         assert_equal(["Name must contain only alphanumeric characters, hypens, apostrophes, tildes and underscores"], user.errors.full_messages)
       end
 
-      should "not contain a colon" do
+      should("not contain a colon") do
         user = build(:user, name: "a:b")
         user.save
         assert_equal(["Name must contain only alphanumeric characters, hypens, apostrophes, tildes and underscores"], user.errors.full_messages)
       end
 
-      should "not begin with an underscore" do
+      should("not begin with an underscore") do
         user = build(:user, name: "_x")
         user.save
         assert_equal(["Name must not begin with a special character", "Name cannot begin or end with an underscore"], user.errors.full_messages)
       end
 
-      should "not end with an underscore" do
+      should("not end with an underscore") do
         user = build(:user, name: "x_")
         user.save
         assert_equal(["Name cannot begin or end with an underscore"], user.errors.full_messages)
       end
 
-      should "be fetched given a user id" do
+      should("be fetched given a user id") do
         @user = create(:user)
         assert_equal(@user.name, User.id_to_name(@user.id))
       end
 
-      should "be updated" do
+      should("be updated") do
         @user = create(:user)
         @user.update_attribute(:name, "danzig")
         assert_equal(@user.name, User.id_to_name(@user.id))
       end
     end
 
-    context "ip address" do
+    context("ip address") do
       setup do
         @user = create(:user)
       end
 
-      context "in the json representation" do
-        should "not appear" do
+      context("in the json representation") do
+        should("not appear") do
           assert(@user.to_json !~ /addr/)
         end
       end
     end
 
-    context "password" do
-      should "match the confirmation" do
+    context("password") do
+      should("match the confirmation") do
         @user = create(:user)
         @user.old_password = "password"
         @user.password = "zugzug5"
@@ -187,7 +187,7 @@ class UserTest < ActiveSupport::TestCase
         assert(User.authenticate(@user.name, "zugzug5"), "Authentication should have succeeded")
       end
 
-      should "fail if the confirmation does not match" do
+      should("fail if the confirmation does not match") do
         @user = create(:user)
         @user.password = "zugzug6"
         @user.password_confirmation = "zugzug5"
@@ -195,7 +195,7 @@ class UserTest < ActiveSupport::TestCase
         assert_equal(["Password confirmation doesn't match Password"], @user.errors.full_messages)
       end
 
-      should "not be too short" do
+      should("not be too short") do
         @user = create(:user)
         @user.password = "x5"
         @user.password_confirmation = "x5"
@@ -227,24 +227,24 @@ class UserTest < ActiveSupport::TestCase
       #   assert(@user.bcrypt_password == "123456")
       # end
 
-      context "in the json representation" do
+      context("in the json representation") do
         setup do
           @user = create(:user)
         end
 
-        should "not appear" do
+        should("not appear") do
           assert(@user.to_json !~ /password/)
         end
       end
     end
 
-    context "that might be a sock puppet" do
+    context("that might be a sock puppet") do
       setup do
         @user = create(:user, last_ip_addr: "127.0.0.2")
         FemboyFans.config.unstub(:enable_sock_puppet_validation?)
       end
 
-      should "not validate" do
+      should("not validate") do
         as(nil, "127.0.0.2") do
           @user = build(:user)
           @user.save
@@ -253,12 +253,12 @@ class UserTest < ActiveSupport::TestCase
       end
     end
 
-    context "that might have a banned email" do
+    context("that might have a banned email") do
       setup do
         @blacklist = EmailBlacklist.create(domain: ".xyz", reason: "what", creator_id: @user.id)
       end
 
-      should "not validate" do
+      should("not validate") do
         as(nil, "127.0.0.2") do
           @user = build(:user)
           @user.email = "what@mine.xyz"
@@ -268,8 +268,8 @@ class UserTest < ActiveSupport::TestCase
       end
     end
 
-    context "when searched by name" do
-      should "match wildcards" do
+    context("when searched by name") do
+      should("match wildcards") do
         user1 = create(:user, name: "foo")
         user2 = create(:user, name: "foobar")
         user3 = create(:user, name: "bar123baz")
@@ -280,13 +280,13 @@ class UserTest < ActiveSupport::TestCase
       end
     end
 
-    context "when fixing counts" do
-      should "not raise" do
+    context("when fixing counts") do
+      should("not raise") do
         assert_nothing_raised { @user.refresh_counts! }
       end
     end
 
-    should "create a pending user approval after creation" do
+    should("create a pending user approval after creation") do
       assert_difference("UserApproval.count", 1) do
         @restricted = create(:restricted_user)
       end

@@ -3,14 +3,14 @@
 class PostReplacementMediaAsset < MediaAssetWithVariants
   STORAGE_ID_SIZE = 16
 
-  has_one :post_replacement
-  validates :storage_id, length: { is: STORAGE_ID_SIZE * 2 }, uniqueness: true, if: :storage_id_changed?
-  after_initialize :initialize_storage_id
-  after_finalize :update_post_replacement
+  has_one(:post_replacement)
+  validates(:storage_id, length: { is: STORAGE_ID_SIZE * 2 }, uniqueness: true, if: :storage_id_changed?)
+  after_initialize(:initialize_storage_id)
+  after_finalize(:update_post_replacement)
 
-  attr_accessor :backup_post_id
+  attr_accessor(:backup_post_id)
 
-  scope :duplicate_relevant, -> { active.joins(:post_replacement).where.not("post_replacements.id": nil).where("post_replacements.status": %w[pending uploading]) }
+  scope(:duplicate_relevant, -> { active.joins(:post_replacement).where.not("post_replacements.id": nil).where("post_replacements.status": %w[pending uploading]) })
 
   def update_post_replacement
     return unless post_replacement&.valid?
@@ -117,9 +117,9 @@ class PostReplacementMediaAsset < MediaAssetWithVariants
     end
   end
 
-  include StorageMethods
-  include VariantMethods
-  extend SearchMethods
+  include(StorageMethods)
+  include(VariantMethods)
+  extend(SearchMethods)
 
   def self.available_includes
     %i[creator post_replacement]

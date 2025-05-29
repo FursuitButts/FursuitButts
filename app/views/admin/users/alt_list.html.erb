@@ -3,10 +3,10 @@
   <tbody>
     <% @alts.each do |u1, alt_ids| %>
       <tr class="alt-header" data-alt="<%= u1 %>">
-        <td><%= link_to u1, user_path(id: u1) %></td>
-        <td><%= link_to_user @users[u1], include_activation: true %></td>
+        <td><%= link_to(u1, user_path(id: u1)) %></td>
+        <td><%= link_to_user(@users[u1], include_activation: true) %></td>
         <td><%= @users[u1].email %></td>
-        <td><%= link_to_ip @users[u1].last_ip_addr %></td>
+        <td><%= link_to_ip(@users[u1].last_ip_addr) %></td>
         <td><%= alt_ids.count %> alts</td>
       </tr>
       <tr id="alt-details-<%= u1 %>" style="display:none;">
@@ -15,10 +15,10 @@
             <tbody>
               <% alt_ids.each do |u2| %>
                 <tr>
-                  <td><%= link_to u2, user_path(id: u2) %></td>
-                  <td><%= link_to_user @users[u2], include_activation: true %></td>
-                  <td>Created: <%= time_ago_in_words_tagged @users[u2].created_at %></td>
-                  <td>Last Login: <%= time_ago_in_words_tagged @users[u2].last_logged_in_at %></td>
+                  <td><%= link_to(u2, user_path(id: u2)) %></td>
+                  <td><%= link_to_user(@users[u2], include_activation: true) %></td>
+                  <td>Created: <%= time_ago_in_words_tagged(@users[u2].created_at) %></td>
+                  <td>Last Login: <%= time_ago_in_words_tagged(@users[u2].last_logged_in_at) %></td>
                   <td>Email: <%= @users[u2].email %></td>
                 </tr>
               <% end %>
@@ -32,7 +32,7 @@
 
 <%= numbered_paginator(@alts) %>
 
-<%= javascript_tag nonce: true do -%>
+<%= javascript_tag(nonce: true) do -%>
 $(function() {
   $(".alt-header").on('click', function(evt) {
     var target = $(evt.currentTarget);

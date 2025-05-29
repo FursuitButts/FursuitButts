@@ -1,4 +1,4 @@
-<%= render "search" %>
+<%= render("search") %>
 <h1>Email Blacklists</h1>
 
 <%= table_for(@blacklists) do |t| %>
@@ -8,17 +8,17 @@
   <% end %>
   <% t.column("Domain") do |blacklist| %>
     <%= blacklist.domain %>
-    <%= link_to "»", users_path(search: { email_matches: "*@*#{blacklist.domain}" }) %>
+    <%= link_to("»", users_path(search: { email_matches: "*@*#{blacklist.domain}" })) %>
   <% end %>
   <% t.column(:reason, name: "Ban Reason") %>
   <% t.column do |blacklist| %>
-    <%= link_to "Delete", email_blacklist_path(blacklist), method: :delete, data: { confirm: "Are you sure? This cannot be undone." } %>
+    <%= link_to("Delete", email_blacklist_path(blacklist), method: :delete, data: { confirm: "Are you sure? This cannot be undone." }) %>
   <% end %>
 <% end %>
 
 <%= numbered_paginator(@blacklists) %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   Email Blacklists

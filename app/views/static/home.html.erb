@@ -84,7 +84,7 @@
   }
 </style>
 
-<%= javascript_tag nonce: true do -%>
+<%= javascript_tag(nonce: true) do -%>
   var mascots = <%= Mascot.active_for_browser.to_json.html_safe %>;
 <% end -%>
 

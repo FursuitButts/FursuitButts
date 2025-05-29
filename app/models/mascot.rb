@@ -4,18 +4,18 @@ class Mascot < ApplicationRecord
   has_media_asset(:mascot_media_asset)
   belongs_to_creator
 
-  array_attribute :available_on, parse: /[^,]+/, join_character: ","
-  attr_reader :direct_url # required for the media asset shared code
+  array_attribute(:available_on, parse: /[^,]+/, join_character: ",")
+  attr_reader(:direct_url) # required for the media asset shared code
 
-  validates :display_name, uniqueness: { case_sensitive: false }
-  validates :display_name, :background_color, :artist_url, :artist_name, presence: true
-  validates :artist_url, format: { with: %r{\Ahttps?://}, message: "must start with http:// or https://" }, length: { maximum: 1_000 }
-  validates :display_name, :artist_name, length: { maximum: 100 }
-  validates :file, presence: true, on: :create
+  validates(:display_name, uniqueness: { case_sensitive: false })
+  validates(:display_name, :background_color, :artist_url, :artist_name, presence: true)
+  validates(:artist_url, format: { with: %r{\Ahttps?://}, message: "must start with http:// or https://" }, length: { maximum: 1_000 })
+  validates(:display_name, :artist_name, length: { maximum: 100 })
+  validates(:file, presence: true, on: :create)
 
-  after_create :log_create
-  after_update :log_update
-  after_destroy :log_delete
+  after_create(:log_create)
+  after_update(:log_update)
+  after_destroy(:log_delete)
   after_destroy { mascot_media_asset.destroy }
 
   def self.active_for_browser
@@ -58,8 +58,8 @@ class Mascot < ApplicationRecord
     end
   end
 
-  include FileMethods
-  include LogMethods
+  include(FileMethods)
+  include(LogMethods)
 
   def self.available_includes
     %i[creator]

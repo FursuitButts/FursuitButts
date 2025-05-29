@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 class UserEvent < ApplicationRecord
-  belongs_to :user
-  belongs_to :user_session
+  belongs_to(:user)
+  belongs_to(:user_session)
 
-  enum :category, {
+  enum(:category, {
     login:                                   0,
     reauthenticate:                          25,
     failed_login:                            50,
@@ -29,9 +29,9 @@ class UserEvent < ApplicationRecord
     backup_codes_generate:                   800,
     backup_code_login:                       840,
     backup_code_reauthenticate:              845,
-  }
+  })
 
-  delegate :session_id, :ip_addr, :ip_geolocation, to: :user_session
+  delegate(:session_id, :ip_addr, :ip_geolocation, to: :user_session)
 
   module ConstructorMethods
     def create_from_request!(user, category, request)
@@ -65,6 +65,6 @@ class UserEvent < ApplicationRecord
     end
   end
 
-  extend SearchMethods
-  extend ConstructorMethods
+  extend(SearchMethods)
+  extend(ConstructorMethods)
 end

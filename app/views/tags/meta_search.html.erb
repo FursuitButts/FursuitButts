@@ -31,7 +31,7 @@
   <% if @meta_search.tag_aliases.blank? %>
     <p>No results</p>
   <% else %>
-    <%= render "tag_relationships/listing", tag_relations: @meta_search.tag_aliases %>
+    <%= render("tag_relationships/listing", tag_relations: @meta_search.tag_aliases) %>
   <% end %>
 </section>
 
@@ -40,11 +40,11 @@
   <% if @meta_search.tag_implications.blank? %>
     <p>No results</p>
   <% else %>
-    <%= render "tag_relationships/listing", tag_relations: @meta_search.tag_implications %>
+    <%= render("tag_relationships/listing", tag_relations: @meta_search.tag_implications) %>
   <% end %>
 </section>
 
-<%= render "tags/secondary_links" %>
+<%= render("tags/secondary_links") %>
 
 <% content_for(:page_title) do %>
   MetaSearch - Tags

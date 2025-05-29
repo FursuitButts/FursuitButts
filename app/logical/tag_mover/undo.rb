@@ -2,7 +2,7 @@
 
 class TagMover
   class Undo
-    attr_reader :undo_data, :user, :tcr, :applied
+    attr_reader(:undo_data, :user, :tcr, :applied)
 
     def initialize(undo_data, user: User.system, tcr: nil)
       @undos = undo_data.map { |undo| [undo.first.to_sym, undo.second.transform_keys(&:to_sym)] }

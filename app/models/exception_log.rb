@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class ExceptionLog < ApplicationRecord
-  serialize :extra_params, coder: JSON
+  serialize(:extra_params, coder: JSON)
 
   def self.add!(exception, user_id: nil, request: nil, source: nil, **extra)
     source ||= request.present? ? request.filtered_parameters.slice(:controller, :action).values.join("#") : "Unknown"

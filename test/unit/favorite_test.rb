@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 class FavoriteTest < ActiveSupport::TestCase
   setup do
@@ -12,8 +12,8 @@ class FavoriteTest < ActiveSupport::TestCase
     CurrentUser.user = @user1
   end
 
-  context "A favorite" do
-    should "delete from all tables" do
+  context("A favorite") do
+    should("delete from all tables") do
       FavoriteManager.add!(user: @user1, post: @p1)
       @user1.reload
       assert_equal(1, @user1.favorite_count)
@@ -22,7 +22,7 @@ class FavoriteTest < ActiveSupport::TestCase
       assert_equal(0, Favorite.count)
     end
 
-    should "know which table it belongs to" do
+    should("know which table it belongs to") do
       FavoriteManager.add!(user: @user1, post: @p1)
       FavoriteManager.add!(user: @user1, post: @p2)
       FavoriteManager.add!(user: @user2, post: @p1)
@@ -37,7 +37,7 @@ class FavoriteTest < ActiveSupport::TestCase
       assert_equal(@p1.id, favorites[0].post_id)
     end
 
-    should "not allow duplicates" do
+    should("not allow duplicates") do
       FavoriteManager.add!(user: @user1, post: @p1)
       error = assert_raises(Favorite::Error) { FavoriteManager.add!(user: @user1, post: @p1) }
 
@@ -46,7 +46,7 @@ class FavoriteTest < ActiveSupport::TestCase
       assert_equal(1, @user1.favorite_count)
     end
 
-    should "not allow exceeding the user's favorite limit" do
+    should("not allow exceeding the user's favorite limit") do
       @user1.stubs(:favorite_limit).returns(0)
       error = assert_raises(Favorite::Error) { FavoriteManager.add!(user: @user1, post: @p1) }
 

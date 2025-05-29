@@ -1,102 +1,102 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 class ForumTopicTest < ActiveSupport::TestCase
-  context "A forum topic" do
+  context("A forum topic") do
     setup do
       @user = create(:user)
       CurrentUser.user = @user
       @topic = create(:forum_topic, title: "xxx", original_post_attributes: { body: "aaa" })
     end
 
-    context "#read_by?" do
-      context "with an existing visit" do
+    context("#read_by?") do
+      context("with an existing visit") do
         setup do
           @user.forum_category_visits.find_or_create_by!(forum_category: @topic.category).update!(last_read_at: Time.now)
         end
 
-        context "and last_post_created_at in the future" do
+        context("and last_post_created_at in the future") do
           setup do
             @topic.update_column(:last_post_created_at, 1.day.from_now)
           end
 
-          should "return false" do
+          should("return false") do
             assert_equal(false, @topic.read_by?(@user))
           end
 
-          should "return true if muted" do
+          should("return true if muted") do
             create(:forum_topic_status, user: @user, forum_topic: @topic, mute: true)
             assert_equal(true, @topic.read_by?(@user))
           end
         end
 
-        context "and last_post_created_at in the past" do
+        context("and last_post_created_at in the past") do
           setup do
             @topic.update_column(:last_post_created_at, 1.day.from_now)
           end
 
-          context "that predates the topic" do
+          context("that predates the topic") do
             setup do
               @user.forum_category_visits.find_or_create_by!(forum_category: @topic.category).update!(last_read_at: 16.hours.from_now)
             end
 
-            should "return false" do
+            should("return false") do
               assert_equal(false, @topic.read_by?(@user))
             end
 
-            should "return true if muted" do
+            should("return true if muted") do
               create(:forum_topic_status, user: @user, forum_topic: @topic, mute: true)
               assert_equal(true, @topic.read_by?(@user))
             end
           end
 
-          context "that postdates the topic" do
+          context("that postdates the topic") do
             setup do
               @user.forum_category_visits.find_or_create_by!(forum_category: @topic.category).update!(last_read_at: 2.days.from_now)
             end
 
-            should "return true" do
+            should("return true") do
               assert_equal(true, @topic.read_by?(@user))
             end
           end
         end
       end
 
-      context "with no existing visit" do
-        context "and last_post_created_at in the future" do
-          should "return false" do
+      context("with no existing visit") do
+        context("and last_post_created_at in the future") do
+          should("return false") do
             assert_equal(false, @topic.read_by?(@user))
           end
 
-          should "return true if muted" do
+          should("return true if muted") do
             create(:forum_topic_status, user: @user, forum_topic: @topic, mute: true)
             assert_equal(true, @topic.read_by?(@user))
           end
         end
 
-        context "and last_post_created_at in the past" do
-          context "that predates the topic" do
+        context("and last_post_created_at in the past") do
+          context("that predates the topic") do
             setup do
               @user.forum_category_visits.find_or_create_by!(forum_category: @topic.category).update!(last_read_at: 1.day.ago)
             end
 
-            should "return false" do
+            should("return false") do
               assert_equal(false, @topic.read_by?(@user))
             end
 
-            should "return true if muted" do
+            should("return true if muted") do
               create(:forum_topic_status, user: @user, forum_topic: @topic, mute: true)
               assert_equal(true, @topic.read_by?(@user))
             end
           end
 
-          context "that postdates the topic" do
+          context("that postdates the topic") do
             setup do
               @user.forum_category_visits.find_or_create_by!(forum_category: @topic.category).update!(last_read_at: 1.day.from_now)
             end
 
-            should "return true" do
+            should("return true") do
               assert_equal(true, @topic.read_by?(@user))
             end
           end
@@ -104,9 +104,9 @@ class ForumTopicTest < ActiveSupport::TestCase
       end
     end
 
-    context "#mark_as_read!" do
-      context "without a previous visit" do
-        should "create a new visit" do
+    context("#mark_as_read!") do
+      context("without a previous visit") do
+        should("create a new visit") do
           @topic.mark_as_read!(@user)
           visit = @user.forum_category_visits.find_by(forum_category: @topic.category)
           assert(visit)
@@ -114,12 +114,12 @@ class ForumTopicTest < ActiveSupport::TestCase
         end
       end
 
-      context "with a previous visit" do
+      context("with a previous visit") do
         setup do
           @user.forum_category_visits.find_or_create_by!(forum_category: @topic.category).update!(last_read_at: 1.day.ago)
         end
 
-        should "update the visit" do
+        should("update the visit") do
           @topic.mark_as_read!(@user)
           visit = @user.forum_category_visits.find_by(forum_category: @topic.category)
           assert(visit)
@@ -128,60 +128,60 @@ class ForumTopicTest < ActiveSupport::TestCase
       end
     end
 
-    context "constructed with nested attributes for its original post" do
-      should "create a matching forum post" do
+    context("constructed with nested attributes for its original post") do
+      should("create a matching forum post") do
         assert_difference(%w[ForumTopic.count ForumPost.count], 1) do
           @topic = create(:forum_topic, title: "abc", original_post_attributes: { body: "abc" })
         end
       end
     end
 
-    should "be searchable by title" do
+    should("be searchable by title") do
       assert_equal(1, ForumTopic.attribute_matches(:title, "xxx").count)
       assert_equal(0, ForumTopic.attribute_matches(:title, "aaa").count)
     end
 
-    should "be searchable by category id" do
+    should("be searchable by category id") do
       assert_equal(0, ForumTopic.search(category_id: 0).count)
       assert_equal(1, ForumTopic.search(category_id: FemboyFans.config.alias_implication_forum_category).count)
     end
 
-    should "initialize its creator" do
+    should("initialize its creator") do
       assert_equal(@user.id, @topic.creator_id)
     end
 
-    context "updated by a second user" do
+    context("updated by a second user") do
       setup do
         @second_user = create(:user)
         CurrentUser.user = @second_user
       end
 
-      should "record its updater" do
+      should("record its updater") do
         @topic.update(title: "abc")
         assert_equal(@second_user.id, @topic.updater_id)
       end
     end
 
-    context "with multiple posts that has been deleted" do
+    context("with multiple posts that has been deleted") do
       setup do
         create_list(:forum_post, 5, topic_id: @topic.id)
       end
 
-      should "delete any associated posts" do
+      should("delete any associated posts") do
         assert_difference("ForumPost.count", -6) do
           @topic.destroy
         end
       end
     end
 
-    context "that has an alias, implication, or bulk update request" do
+    context("that has an alias, implication, or bulk update request") do
       setup do
         @tag_alias = create(:tag_alias, forum_post: @topic.original_post)
         @topic.original_post.update_columns(tag_change_request_id: @tag_alias.id, tag_change_request_type: "TagAlias", allow_voting: true)
         @mod = create(:moderator_user)
       end
 
-      should "only be hidable by moderators" do
+      should("only be hidable by moderators") do
         @topic.hide!
 
         assert_equal(["Topic is for an alias, implication, or bulk update request. It cannot be hidden"], @topic.errors.full_messages)
@@ -196,8 +196,8 @@ class ForumTopicTest < ActiveSupport::TestCase
       end
     end
 
-    context "merge_into!" do
-      should "merge the topic into the target topic" do
+    context("merge_into!") do
+      should("merge the topic into the target topic") do
         @target = create(:forum_topic)
         @post = @topic.original_post
         assert_difference(%w[EditHistory.merged.count ModAction.count], 1) do
@@ -210,14 +210,14 @@ class ForumTopicTest < ActiveSupport::TestCase
       end
     end
 
-    context "undo_merge!" do
+    context("undo_merge!") do
       setup do
         @target = create(:forum_topic)
         @post = @topic.original_post
         @topic.merge_into!(@target)
       end
 
-      should "undo the topic merge" do
+      should("undo the topic merge") do
         assert_difference(%w[EditHistory.unmerged.count ModAction.count], 1) do
           @topic.undo_merge!
         end
@@ -228,7 +228,7 @@ class ForumTopicTest < ActiveSupport::TestCase
         assert_equal("forum_topic_unmerge", ModAction.last.action)
       end
 
-      should "fail if the target no longer exists" do
+      should("fail if the target no longer exists") do
         @target.destroy!
         assert_raises(ForumTopic::MergeError, "Merge target does not exist") { @topic.reload.undo_merge! }
       end

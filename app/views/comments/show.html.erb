@@ -5,13 +5,13 @@
       <%= PostPresenter.preview(@comment.post, inline: true, show_deleted: true) %>
     </div>
     <div class="comments-list">
-      <%= render "comments/partials/show/comment", comment: @comment, post: nil %>
+      <%= render("comments/partials/show/comment", comment: @comment, post: nil) %>
     </div>
   </div>
 
 </div>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   Comment

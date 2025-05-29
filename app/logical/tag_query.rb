@@ -43,8 +43,8 @@ class TagQuery
     random
   ] + COUNT_METATAGS + TagCategory.short_name_list.flat_map { |str| %W[#{str}tags #{str}tags_asc] }
 
-  delegate :[], :include?, to: :@q
-  attr_reader :q, :resolve_aliases
+  delegate(:[], :include?, to: :@q)
+  attr_reader(:q, :resolve_aliases)
 
   def initialize(query, resolve_aliases: true, free_tags_count: 0)
     @q = {

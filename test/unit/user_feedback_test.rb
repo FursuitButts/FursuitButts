@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 class UserFeedbackTest < ActiveSupport::TestCase
-  context "A user's feedback" do
+  context("A user's feedback") do
     setup do
       @user = create(:user)
       @mod = create(:moderator_user)
@@ -11,7 +11,7 @@ class UserFeedbackTest < ActiveSupport::TestCase
       CurrentUser.user = @mod
     end
 
-    should "create a notification on create" do
+    should("create a notification on create") do
       assert_difference("Notification.count", 1) do
         @record = create(:user_feedback, user: @user, body: "good job!")
       end
@@ -20,7 +20,7 @@ class UserFeedbackTest < ActiveSupport::TestCase
       assert_equal({ "user_id" => @mod.id, "record_id" => @record.id, "record_type" => @record.category }, @notification.data)
     end
 
-    should "create a notification on update" do
+    should("create a notification on update") do
       @record = create(:user_feedback, user: @user, body: "good job!")
       assert_difference("Notification.count", 1) do
         CurrentUser.scoped(@admin) do
@@ -32,7 +32,7 @@ class UserFeedbackTest < ActiveSupport::TestCase
       assert_equal({ "user_id" => @admin.id, "record_id" => @record.id, "record_type" => @record.category }, @notification.data)
     end
 
-    should "create a notification on destroy" do
+    should("create a notification on destroy") do
       @record = create(:user_feedback, user: @user, body: "good job!")
       assert_difference("Notification.count", 1) do
         @record.destroy
@@ -42,7 +42,7 @@ class UserFeedbackTest < ActiveSupport::TestCase
       assert_equal({ "user_id" => @mod.id, "record_id" => @record.id, "record_type" => @record.category }, @notification.data)
     end
 
-    should "create a notification on delete" do
+    should("create a notification on delete") do
       @record = create(:user_feedback, user: @user, body: "good job!")
       assert_difference("Notification.count", 1) do
         @record.update(is_deleted: true)
@@ -52,7 +52,7 @@ class UserFeedbackTest < ActiveSupport::TestCase
       assert_equal({ "user_id" => @mod.id, "record_id" => @record.id, "record_type" => @record.category }, @notification.data)
     end
 
-    should "create a notification on undelete" do
+    should("create a notification on undelete") do
       @record = create(:user_feedback, user: @user, body: "good job!", is_deleted: true)
       assert_difference("Notification.count", 1) do
         @record.update(is_deleted: false)
@@ -62,13 +62,13 @@ class UserFeedbackTest < ActiveSupport::TestCase
       assert_equal({ "user_id" => @mod.id, "record_id" => @record.id, "record_type" => @record.category }, @notification.data)
     end
 
-    should "not validate if the creator is the user" do
+    should("not validate if the creator is the user") do
       feedback = build(:user_feedback, user: @mod)
       feedback.save
       assert_equal(["You cannot submit feedback for yourself"], feedback.errors.full_messages)
     end
 
-    should "not validate if the creator has no permissions" do
+    should("not validate if the creator has no permissions") do
       trusted = create(:trusted_user)
 
       CurrentUser.user = trusted

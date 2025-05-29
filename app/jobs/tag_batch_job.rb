@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class TagBatchJob < ApplicationJob
-  queue_as :tags
+  queue_as(:tags)
 
   def perform(*args)
     antecedent = args[0]

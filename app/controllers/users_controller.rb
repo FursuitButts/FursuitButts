@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 class UsersController < ApplicationController
-  respond_to :html, :json
-  skip_before_action :api_check
-  before_action :logged_in_only, only: %i[edit upload_limit update]
+  respond_to(:html, :json)
+  skip_before_action(:api_check)
+  before_action(:logged_in_only, only: %i[edit upload_limit update])
 
   def index
     if params[:name].present?

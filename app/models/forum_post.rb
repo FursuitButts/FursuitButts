@@ -1,49 +1,49 @@
 # frozen_string_literal: true
 
 class ForumPost < ApplicationRecord
-  include UserWarnable
+  include(UserWarnable)
   simple_versioning
   mentionable
-  has_dtext_links :body
-  belongs_to_creator counter_cache: "forum_post_count"
+  has_dtext_links(:body)
+  belongs_to_creator(counter_cache: "forum_post_count")
   belongs_to_updater
-  belongs_to :topic, class_name: "ForumTopic"
-  has_one :category, through: :topic
-  belongs_to :original_topic, class_name: "ForumTopic", optional: true
-  belongs_to :warning_user, class_name: "User", optional: true
-  has_many :votes, class_name: "ForumPostVote"
-  has_many :tickets, as: :model
-  has_many :versions, class_name: "EditHistory", as: :versionable, dependent: :destroy
-  has_one :spam_ticket, -> { spam }, class_name: "Ticket", as: :model
-  has_one :last_edit_version, -> { where(edit_type: "edit").order(created_at: :desc) }, class_name: "EditHistory", as: :versionable
+  belongs_to(:topic, class_name: "ForumTopic")
+  has_one(:category, through: :topic)
+  belongs_to(:original_topic, class_name: "ForumTopic", optional: true)
+  belongs_to(:warning_user, class_name: "User", optional: true)
+  has_many(:votes, class_name: "ForumPostVote")
+  has_many(:tickets, as: :model)
+  has_many(:versions, class_name: "EditHistory", as: :versionable, dependent: :destroy)
+  has_one(:spam_ticket, -> { spam }, class_name: "Ticket", as: :model)
+  has_one(:last_edit_version, -> { where(edit_type: "edit").order(created_at: :desc) }, class_name: "EditHistory", as: :versionable)
 
-  belongs_to :tag_change_request, polymorphic: true, optional: true
-  before_validation :initialize_is_hidden, on: :create
-  before_create :auto_report_spam
-  after_create :update_topic_updated_at_on_create
+  belongs_to(:tag_change_request, polymorphic: true, optional: true)
+  before_validation(:initialize_is_hidden, on: :create)
+  before_create(:auto_report_spam)
+  after_create(:update_topic_updated_at_on_create)
   # no counter cache since we're more than one association away
-  after_create -> { category.increment!(:post_count) }
-  after_create :log_create
-  after_update :log_update
-  before_destroy :validate_topic_is_unlocked
-  after_destroy :update_topic_updated_at_on_destroy
-  normalizes :body, with: ->(body) { body.gsub("\r\n", "\n") }
-  validates :body, :creator_id, presence: true
-  validates :body, length: { minimum: 1, maximum: FemboyFans.config.forum_post_max_size }
-  validate :validate_topic_is_unlocked
-  validate :validate_topic_id_not_invalid
-  validate :validate_topic_is_not_restricted, on: :create
-  validate :validate_topic_is_not_stale, on: :create
-  validate :validate_category_allows_replies, on: :create
-  validate :validate_creator_is_not_limited, on: :create
-  validate :validate_not_aibur, if: :will_save_change_to_is_hidden?
-  after_destroy -> { category.decrement!(:post_count) }
-  after_destroy :log_destroy
-  after_save :delete_topic_if_original_post
+  after_create(-> { category.increment!(:post_count) })
+  after_create(:log_create)
+  after_update(:log_update)
+  before_destroy(:validate_topic_is_unlocked)
+  after_destroy(:update_topic_updated_at_on_destroy)
+  normalizes(:body, with: ->(body) { body.gsub("\r\n", "\n") })
+  validates(:body, :creator_id, presence: true)
+  validates(:body, length: { minimum: 1, maximum: FemboyFans.config.forum_post_max_size })
+  validate(:validate_topic_is_unlocked)
+  validate(:validate_topic_id_not_invalid)
+  validate(:validate_topic_is_not_restricted, on: :create)
+  validate(:validate_topic_is_not_stale, on: :create)
+  validate(:validate_category_allows_replies, on: :create)
+  validate(:validate_creator_is_not_limited, on: :create)
+  validate(:validate_not_aibur, if: :will_save_change_to_is_hidden?)
+  after_destroy(-> { category.decrement!(:post_count) })
+  after_destroy(:log_destroy)
+  after_save(:delete_topic_if_original_post)
 
-  attr_accessor :bypass_limits, :is_merging
+  attr_accessor(:bypass_limits, :is_merging)
 
-  scope :votable, -> { where(allow_voting: true) }
+  scope(:votable, -> { where(allow_voting: true) })
 
   module SearchMethods
     def topic_title_matches(title)
@@ -152,8 +152,8 @@ class ForumPost < ApplicationRecord
     end
   end
 
-  extend SearchMethods
-  include LogMethods
+  extend(SearchMethods)
+  include(LogMethods)
 
   def has_voting?
     allow_voting?

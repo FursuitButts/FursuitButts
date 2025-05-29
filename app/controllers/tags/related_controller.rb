@@ -2,8 +2,8 @@
 
 module Tags
   class RelatedController < ApplicationController
-    respond_to :html, only: %i[show]
-    respond_to :json
+    respond_to(:html, only: %i[show])
+    respond_to(:json)
 
     def show
       @related_tags = authorize(RelatedTagQuery.new(query: params[:search][:query], category_id: params[:search][:category_id]))

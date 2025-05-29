@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-require "test_helper"
-require_relative "helper"
+require("test_helper")
+require_relative("helper")
 
 module Sources
   class FuraffinityTest < ActiveSupport::TestCase
-    extend Sources::Helper
+    extend(Sources::Helper)
 
-    context "A modern source from Furaffinity" do
+    context("A modern source from Furaffinity") do
       alternate_should_work(
         "https://www.furaffinity.net/view/27836238/",
         Sources::Alternates::Furaffinity,
@@ -15,7 +15,7 @@ module Sources
       )
     end
 
-    context "An old CDN direct link from Furaffinity" do
+    context("An old CDN direct link from Furaffinity") do
       alternate_should_work(
         "https://d.facdn.net/art/zephyr42/1530401739/1530401739.zephyr42_zephyrfullscene_fullsize_preview.png",
         Sources::Alternates::Furaffinity,
@@ -23,7 +23,7 @@ module Sources
       )
     end
 
-    context "A broken CDN direct link from Furaffinity" do
+    context("A broken CDN direct link from Furaffinity") do
       alternate_should_work(
         "https://d2.facdn.net/art/zephyr42/1530401739/1530401739.zephyr42_zephyrfullscene_fullsize_preview.png",
         Sources::Alternates::Furaffinity,
@@ -31,7 +31,7 @@ module Sources
       )
     end
 
-    context "An FA submission link using /full/" do
+    context("An FA submission link using /full/") do
       alternate_should_work(
         "https://www.furaffinity.net/full/27836238/",
         Sources::Alternates::Furaffinity,
@@ -39,7 +39,7 @@ module Sources
       )
     end
 
-    context "An FA submission link with an upload-successful query" do
+    context("An FA submission link with an upload-successful query") do
       alternate_should_work(
         "https://www.furaffinity.net/view/27836238/?upload-successful",
         Sources::Alternates::Furaffinity,
@@ -47,7 +47,7 @@ module Sources
       )
     end
 
-    context "An FA submission link with a comment anchor" do
+    context("An FA submission link with a comment anchor") do
       alternate_should_work(
         "https://www.furaffinity.net/view/27836238/#cid:130552607",
         Sources::Alternates::Furaffinity,

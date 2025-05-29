@@ -1,26 +1,26 @@
 # frozen_string_literal: true
 
 class SpamDetector
-  include Rakismet::Model
+  include(Rakismet::Model)
 
   AUTOBAN_THRESHOLD = 2
   AUTOBAN_WINDOW = 1.hour
   AUTOBAN_DURATION = -1
   BYPASS = ->(user) { user.is_trusted? || user.older_than!(1.month) }
 
-  attr_accessor :record, :post, :user, :user_ip, :content, :comment_type
+  attr_accessor(:record, :post, :user, :user_ip, :content, :comment_type)
 
-  delegate :name, :email, to: :user, prefix: :author
+  delegate(:name, :email, to: :user, prefix: :author)
 
   # The attributes to pass to Akismet
-  rakismet_attrs user_ip:      :user_ip,
+  rakismet_attrs(user_ip:      :user_ip,
                  author:       proc { user.name },
                  author_email: proc { user.email },
                  blog_lang:    "en",
                  blog_charset: "UTF-8",
                  comment_type: :comment_type,
                  content:      :content,
-                 permalink:    :permalink
+                 permalink:    :permalink)
   def self.enabled?
     FemboyFans.config.rakismet_key.present? && FemboyFans.config.rakismet_url.present? && !Rails.env.test?
   end

@@ -3,22 +3,22 @@
 class AvoidPosting < ApplicationRecord
   belongs_to_creator
   belongs_to_updater
-  belongs_to :artist
-  has_many :versions, -> { order("avoid_posting_versions.id ASC") }, class_name: "AvoidPostingVersion", dependent: :destroy
-  validates :artist_id, uniqueness: { message: "already has an avoid posting entry" }
-  validates :details, length: { maximum: 1024 }
-  validates :staff_notes, length: { maximum: 4096 }
-  after_create :log_create
-  after_create :create_version
-  after_update :log_update, if: :saved_change_to_watched_attributes?
-  after_update :create_version, if: :saved_change_to_watched_attributes?
-  after_destroy :log_destroy
-  validates_associated :artist
-  accepts_nested_attributes_for :artist
-  after_commit :invalidate_cache
+  belongs_to(:artist)
+  has_many(:versions, -> { order("avoid_posting_versions.id ASC") }, class_name: "AvoidPostingVersion", dependent: :destroy)
+  validates(:artist_id, uniqueness: { message: "already has an avoid posting entry" })
+  validates(:details, length: { maximum: 1024 })
+  validates(:staff_notes, length: { maximum: 4096 })
+  after_create(:log_create)
+  after_create(:create_version)
+  after_update(:log_update, if: :saved_change_to_watched_attributes?)
+  after_update(:create_version, if: :saved_change_to_watched_attributes?)
+  after_destroy(:log_destroy)
+  validates_associated(:artist)
+  accepts_nested_attributes_for(:artist)
+  after_commit(:invalidate_cache)
 
-  scope :active, -> { where(is_active: true) }
-  scope :deleted, -> { where(is_active: false) }
+  scope(:active, -> { where(is_active: true) })
+  scope(:deleted, -> { where(is_active: false) })
 
   module LogMethods
     def log_create
@@ -66,8 +66,8 @@ class AvoidPosting < ApplicationRecord
   end
 
   module ArtistMethods
-    delegate :other_names, :other_names_string, :linked_user_id, :linked_user, :any_name_matches, to: :artist
-    delegate :name, to: :artist, prefix: true, allow_nil: true
+    delegate(:other_names, :other_names_string, :linked_user_id, :linked_user, :any_name_matches, to: :artist)
+    delegate(:name, to: :artist, prefix: true, allow_nil: true)
   end
 
   module SearchMethods
@@ -133,9 +133,9 @@ class AvoidPosting < ApplicationRecord
     Cache.delete("avoid_posting_list")
   end
 
-  include LogMethods
-  include ArtistMethods
-  extend SearchMethods
+  include(LogMethods)
+  include(ArtistMethods)
+  extend(SearchMethods)
 
   def self.available_includes
     %i[artist creator updater]

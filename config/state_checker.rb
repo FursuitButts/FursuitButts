@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class StateChecker
-  include Singleton
+  include(Singleton)
 
   def check!
     ENV["SECRET_TOKEN"].present? || check_secret_token

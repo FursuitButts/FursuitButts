@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 class DestroyedPost < ApplicationRecord
-  belongs_to :destroyer, class_name: "User"
-  belongs_to :uploader, class_name: "User", optional: true
-  after_update :log_notify_change, if: :saved_change_to_notify?
+  belongs_to(:destroyer, class_name: "User")
+  belongs_to(:uploader, class_name: "User", optional: true)
+  after_update(:log_notify_change, if: :saved_change_to_notify?)
 
   def log_notify_change
     action = notify? ? :enable_post_notifications : :disable_post_notifications
@@ -41,7 +41,7 @@ class DestroyedPost < ApplicationRecord
     end
   end
 
-  extend SearchMethods
+  extend(SearchMethods)
 
   def notify_reupload(uploader, replacement_post_id: nil)
     return if notify == false

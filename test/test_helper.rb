@@ -2,21 +2,21 @@
 
 ENV["RAILS_ENV"] ||= "test"
 ENV["MT_NO_EXPECTATIONS"] = "true"
-require_relative "../config/environment"
-require "rails/test_help"
+require_relative("../config/environment")
+require("rails/test_help")
 
-require "factory_bot_rails"
-require "mocha/minitest"
-require "shoulda-context"
-require "shoulda-matchers"
-require "webmock/minitest"
-require "simplecov"
+require("factory_bot_rails")
+require("mocha/minitest")
+require("shoulda-context")
+require("shoulda-matchers")
+require("webmock/minitest")
+require("simplecov")
 SimpleCov.start
 
-require "simplecov-cobertura"
+require("simplecov-cobertura")
 SimpleCov.formatter = SimpleCov::Formatter::CoberturaFormatter
 
-require "sidekiq/testing"
+require("sidekiq/testing")
 Sidekiq::Testing.fake!
 # https://github.com/sidekiq/sidekiq/issues/5907#issuecomment-1536457365
 Sidekiq.configure_client do |cfg|
@@ -35,8 +35,8 @@ WebMock.disable_net_connect!(allow: [
 ])
 
 FactoryBot::SyntaxRunner.class_eval do
-  include ActiveSupport::Testing::FileFixtures
-  include ActionDispatch::TestProcess::FixtureFile
+  include(ActiveSupport::Testing::FileFixtures)
+  include(ActionDispatch::TestProcess::FixtureFile)
   self.file_fixture_path = ActiveSupport::TestCase.file_fixture_path
 end
 
@@ -49,8 +49,8 @@ Post.document_store.create_index!(delete_existing: true)
 PostVersion.document_store.create_index!(delete_existing: true)
 
 class ActiveSupport::TestCase # rubocop:disable Style/ClassAndModuleChildren
-  include ActionDispatch::TestProcess::FixtureFile
-  include FactoryBot::Syntax::Methods
+  include(ActionDispatch::TestProcess::FixtureFile)
+  include(FactoryBot::Syntax::Methods)
 
   storage_root = Rails.root.join("tmp/test-storage2").to_s
   setup do

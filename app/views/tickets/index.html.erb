@@ -1,4 +1,4 @@
-<%= render partial: "search" %>
+<%= render(partial: "search") %>
 
 <h2>Tickets</h2>
 
@@ -46,7 +46,7 @@
 
 <%= numbered_paginator(@tickets) %>
 
-<% render partial: "secondary_links" %>
+<% render(partial: "secondary_links") %>
 
 <% content_for(:page_title) do %>
   Tickets

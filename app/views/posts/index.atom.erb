@@ -24,8 +24,8 @@
       <summary><%= post.tag_string %></summary>
       <content type="xhtml">
         <div xmlns="http://www.w3.org/1999/xhtml">
-          <%= link_to post_url(post) do %>
-            <%= image_tag post.preview_file_url %>
+          <%= link_to(post_url(post)) do %>
+            <%= image_tag(post.preview_file_url) %>
           <% end %>
           <p><%= post.tag_string %></p>
         </div>

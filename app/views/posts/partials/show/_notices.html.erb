@@ -6,10 +6,10 @@
 
     <% if CurrentUser.user.can_approve_posts? %>
       <div class="notice-pending-toolbar">
-        <%= render "posts/disapprovals/counts", disapprovals: post.disapprovals, post: post %>
+        <%= render("posts/disapprovals/counts", disapprovals: post.disapprovals, post: post) %>
 
-        <%= render "posts/partials/show/quick_mod", post: post %>
-        <%= render "posts/disapprovals/detailed_rejection_dialog" %>
+        <%= render("posts/partials/show/quick_mod", post: post) %>
+        <%= render("posts/disapprovals/detailed_rejection_dialog") %>
       </div>
     <% end %>
   </div>
@@ -17,7 +17,7 @@
   <div class="notice notice-appealed">
     <p>This post is being appealed (<%= link_to("learn more", help_page_path("modqueue")) %>): </p>
     <% appeal = post.appeals.pending.last %>
-    <%= render "posts/partials/show/appeal_reason", post: post, appeal: appeal %>
+    <%= render("posts/partials/show/appeal_reason", post: post, appeal: appeal) %>
 
     <% if CurrentUser.user.can_approve_posts? %>
       <div>
@@ -33,22 +33,22 @@
   <div class="notice notice-deleted">
     <% if post.flags.unresolved.deletion.any? %>
       <p>This post was deleted for following reason: </p>
-      <%= render "posts/partials/show/flag_reasons", post: post %>
+      <%= render("posts/partials/show/flag_reasons", post: post) %>
     <% else %>
       <p>This post was deleted</p>
     <% end %>
 
-    <%= render "posts/disapprovals/counts", disapprovals: post.disapprovals, post: post %>
+    <%= render("posts/disapprovals/counts", disapprovals: post.disapprovals, post: post) %>
   </div>
 <% elsif post.is_flagged? %>
   <div class="notice notice-flagged">
-    <p>This post was flagged for review (<%= link_to "learn more", help_page_path(id: "flagging") %>): </p>
+    <p>This post was flagged for review (<%= link_to("learn more", help_page_path(id: "flagging")) %>): </p>
 
-    <%= render "posts/partials/show/flag_reasons", post: post %>
+    <%= render("posts/partials/show/flag_reasons", post: post) %>
 
     <% if CurrentUser.user.can_approve_posts? %>
       <div>
-        <%= link_to "Delete", delete_post_path(post), class: "button btn-neutral" %>
+        <%= link_to("Delete", delete_post_path(post), class: "button btn-neutral") %>
         | <%= tag.a("Unflag", "href": "#", "data-pid": post.id, 'data-type': "none", "class": "unflag-post-link button btn-neutral") %>
         <% if post.is_approvable? %>
           | <%= tag.a("Unflag+approve", "href": "#", "data-pid": post.id, 'data-type': "approve", "class": "unflag-post-link button btn-neutral") %>
@@ -62,11 +62,11 @@
 <% end %>
 
 <% if post.is_pending? || post.is_flagged? %>
-  <%= render "posts/partials/show/avoid_posting", post: post %>
+  <%= render("posts/partials/show/avoid_posting", post: post) %>
 <% end %>
 
 <% if post.replacements.pending.any? %>
   <div class="notice notice-flagged">
-    <p>This post has <%= link_to "pending replacements.", post_replacements_path(search: { post_id: @post.id }) %></p>
+    <p>This post has <%= link_to("pending replacements.", post_replacements_path(search: { post_id: @post.id })) %></p>
   </div>
 <% end %>

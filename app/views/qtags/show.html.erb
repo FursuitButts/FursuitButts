@@ -1,9 +1,9 @@
 <h1>Posts With #<%= params[:id] %></h1>
 
-<%= render "posts/partials/common/inline_blacklist" %>
+<%= render("posts/partials/common/inline_blacklist") %>
 <% @posts.each do |match| %>
   <%= PostPresenter.preview(match, show_deleted: false) %>
 <% end %>
 
 <%= numbered_paginator(@posts) %>
-<%= render "posts/partials/common/secondary_links" %>
+<%= render("posts/partials/common/secondary_links") %>

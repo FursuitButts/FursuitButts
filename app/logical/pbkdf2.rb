@@ -26,9 +26,9 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-require "securerandom"
-require "openssl"
-require "base64"
+require("securerandom")
+require("openssl")
+require("base64")
 
 module Pbkdf2
   PBKDF2_ITERATIONS = 20_000

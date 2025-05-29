@@ -2,7 +2,7 @@
 
 class BulkUpdateRequestImporter
   class Error < RuntimeError; end
-  attr_accessor :text, :forum_id, :creator_id, :creator_ip_addr
+  attr_accessor(:text, :forum_id, :creator_id, :creator_ip_addr)
 
   def initialize(text, forum_id, creator = nil, ip_addr = nil)
     @forum_id = forum_id

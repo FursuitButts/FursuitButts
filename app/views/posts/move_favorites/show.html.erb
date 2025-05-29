@@ -7,8 +7,8 @@
 <p style="clear: both;">This will move all the post's favorites to its parent post. Are you sure?</p>
 
 <%= form_tag(move_favorites_post_path(@post), style: "clear: both;", method: :post, class: "simple_form") do %>
-  <%= submit_tag "Submit" %>
-  <%= submit_tag "Cancel" %>
+  <%= submit_tag("Submit") %>
+  <%= submit_tag("Cancel") %>
 <% end %>
 
 <% content_for(:page_title) do %>

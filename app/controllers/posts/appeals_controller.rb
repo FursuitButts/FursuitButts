@@ -2,7 +2,7 @@
 
 module Posts
   class AppealsController < ApplicationController
-    respond_to :html, :json
+    respond_to(:html, :json)
 
     def index
       @search_params = search_params(PostAppeal)

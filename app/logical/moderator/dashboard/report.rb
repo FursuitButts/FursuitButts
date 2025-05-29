@@ -3,7 +3,7 @@
 module Moderator
   module Dashboard
     class Report
-      attr_reader :min_date, :max_level
+      attr_reader(:min_date, :max_level)
 
       def initialize(min_date, max_level)
         @min_date = min_date.present? ? min_date.to_date : 1.week.ago

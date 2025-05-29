@@ -6,34 +6,34 @@ class Pool < ApplicationRecord
 
   ARTIST_EXCLUSION_TAGS = TagCategory::ARTIST.exclusion
 
-  array_attribute :post_ids, parse: %r{(?:https://#{FemboyFans.config.domain}/posts/)?(\d+)}i, cast: :to_i
+  array_attribute(:post_ids, parse: %r{(?:https://#{FemboyFans.config.domain}/posts/)?(\d+)}i, cast: :to_i)
   belongs_to_creator
-  has_dtext_links :description
+  has_dtext_links(:description)
 
-  normalizes :description, with: ->(desc) { desc.gsub("\r\n", "\n") }
-  validates :name, uniqueness: { case_sensitive: false, if: :name_changed? }
-  validates :name, length: { minimum: 1, maximum: 250 }
-  validates :description, length: { maximum: FemboyFans.config.pool_descr_max_size }
-  validate :user_not_create_limited, on: :create
-  validate :user_not_limited, on: :update, if: :limited_attribute_changed?
-  validate :user_not_posts_limited, on: :update, if: :post_ids_changed?
-  validate :validate_name, if: :name_changed?
-  validate :updater_can_remove_posts
-  validate :post_not_edit_restricted
-  validate :validate_number_of_posts
-  before_validation :normalize_post_ids
-  before_validation :normalize_name
-  before_save :update_cover_post, if: :will_save_change_to_post_ids?
-  after_create :synchronize!
-  before_destroy :remove_all_posts
-  after_destroy :log_delete
-  after_save :create_version
-  after_save :synchronize, if: :saved_change_to_post_ids?
-  has_one :cover_post, class_name: "Post", foreign_key: :id, primary_key: :cover_post_id
+  normalizes(:description, with: ->(desc) { desc.gsub("\r\n", "\n") })
+  validates(:name, uniqueness: { case_sensitive: false, if: :name_changed? })
+  validates(:name, length: { minimum: 1, maximum: 250 })
+  validates(:description, length: { maximum: FemboyFans.config.pool_descr_max_size })
+  validate(:user_not_create_limited, on: :create)
+  validate(:user_not_limited, on: :update, if: :limited_attribute_changed?)
+  validate(:user_not_posts_limited, on: :update, if: :post_ids_changed?)
+  validate(:validate_name, if: :name_changed?)
+  validate(:updater_can_remove_posts)
+  validate(:post_not_edit_restricted)
+  validate(:validate_number_of_posts)
+  before_validation(:normalize_post_ids)
+  before_validation(:normalize_name)
+  before_save(:update_cover_post, if: :will_save_change_to_post_ids?)
+  after_create(:synchronize!)
+  before_destroy(:remove_all_posts)
+  after_destroy(:log_delete)
+  after_save(:create_version)
+  after_save(:synchronize, if: :saved_change_to_post_ids?)
+  has_one(:cover_post, class_name: "Post", foreign_key: :id, primary_key: :cover_post_id)
 
-  has_many :versions, -> { order("id asc") }, class_name: "PoolVersion", dependent: :destroy
+  has_many(:versions, -> { order("id asc") }, class_name: "PoolVersion", dependent: :destroy)
 
-  attr_accessor :skip_sync
+  attr_accessor(:skip_sync)
 
   def limited_attribute_changed?
     name_changed? || description_changed? || is_active_changed?
@@ -98,7 +98,7 @@ class Pool < ApplicationRecord
     end
   end
 
-  extend SearchMethods
+  extend(SearchMethods)
 
   def user_not_create_limited
     allowed = creator.can_pool_with_reason
@@ -371,7 +371,7 @@ class Pool < ApplicationRecord
     end
   end
 
-  include LogMethods
+  include(LogMethods)
 
   def self.rewrite_wiki_links!(old_name, new_name)
     Pool.linked_to(old_name).each do |pool|

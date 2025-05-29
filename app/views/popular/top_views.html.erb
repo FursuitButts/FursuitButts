@@ -3,7 +3,7 @@
   Total Views: <%= ActiveSupport::NumberHelper.number_to_delimited(@stats["viewCount"]) %>
 </p>
 
-<%= render "posts/partials/common/inline_blacklist" %>
+<%= render("posts/partials/common/inline_blacklist") %>
 
 <p id="popular-nav-links">
   <span class="period">
@@ -18,9 +18,9 @@
 </div>
 
 
-<%= render partial: "popular/secondary_links" %>
+<%= render(partial: "popular/secondary_links") %>
 <% content_for(:secondary_links) { "|" } %>
-<%= render "posts/partials/common/secondary_links" %>
+<%= render("posts/partials/common/secondary_links") %>
 
 <% content_for(:page_title) do %>
   Most Viewed Posts Of All Time

@@ -3,7 +3,7 @@
 module FemboyFans
   module Paginator
     module ActiveRecordExtension
-      include BaseExtension
+      include(BaseExtension)
 
       def paginate_numbered
         limit(records_per_page).offset((current_page - 1) * records_per_page)

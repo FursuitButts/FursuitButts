@@ -1,4 +1,4 @@
 <% content_for(:secondary_links) do %>
-  <%= subnav_link_to "Listing", mascots_path %>
+  <%= subnav_link_to("Listing", mascots_path) %>
   <%= subnav_link_to_if(policy(Mascot).create?, "New", new_mascot_path) %>
 <% end %>

@@ -3,11 +3,11 @@
 module Forums
   module Topics
     class MergesController < ApplicationController
-      respond_to :html, :json
+      respond_to(:html, :json)
 
-      rescue_from ForumTopic::MergeError, with: ->(err) { render_expected_error(422, err.message) }
+      rescue_from(ForumTopic::MergeError, with: ->(err) { render_expected_error(422, err.message) })
 
-      wrap_parameters :forum_topic
+      wrap_parameters(:forum_topic)
 
       def show
         @forum_topic = authorize(ForumTopic.find(params[:id]), :merge?)

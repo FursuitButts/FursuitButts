@@ -2,8 +2,8 @@
 
 module Posts
   class VersionsController < ApplicationController
-    respond_to :html, :json
-    respond_to :js, only: %i[undo]
+    respond_to(:html, :json)
+    respond_to(:js, only: %i[undo])
 
     def index
       @post_versions = PostVersion.search(search_params).paginate(params[:page], limit: params[:limit], max_count: 10_000, includes: [:updater, { post: [:versions] }])

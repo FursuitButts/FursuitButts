@@ -1,6 +1,6 @@
 <% if CurrentUser.can_approve_posts? && !disapprovals.empty? %>
   <p>
-    It has been reviewed by <%= link_to pluralize(disapprovals.length, "approver"), post_disapprovals_path(search: { post_id: post.id }) %>.
+    It has been reviewed by <%= link_to(pluralize(disapprovals.length, "approver"), post_disapprovals_path(search: { post_id: post.id })) %>.
 
     <% if disapprovals.map(&:reason).grep("borderline_quality").count > 0 %>
       <%= disapprovals.map(&:reason).grep("borderline_quality").count %> believe it doesn't meet the quality standards.

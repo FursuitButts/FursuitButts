@@ -3,7 +3,7 @@
 
   <p><%= @message || @exception.message.dup.force_encoding("utf-8") %></p>
   <p>Log ID: <%= @log_code || "(none)" %></p>
-  <%= render "static/backtrace", backtrace: @exception.backtrace %>
+  <%= render("static/backtrace", backtrace: @exception.backtrace) %>
 <% elsif @message %>
   <p><%= @message %></p>
   <p>Log ID: <%= @log_code || "(none)" %></p>

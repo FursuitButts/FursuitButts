@@ -2,7 +2,7 @@
 # frozen_string_literal: true
 
 ENV["RAILS_ENV"] ||= "production"
-require File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "config", "environment"))
+require(File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "config", "environment")))
 unless Rails.env.production?
   puts("Skipping db export, not running in production mode")
   exit(0)

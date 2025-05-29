@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 class MFA
-  include ActiveModel::API
+  include(ActiveModel::API)
 
-  attr_reader :totp, :secret, :username, :issuer, :last_used_at
+  attr_reader(:totp, :secret, :username, :issuer, :last_used_at)
 
   # Create a new TOTP verifier.
   #

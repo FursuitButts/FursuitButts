@@ -2,8 +2,8 @@
 
 class ModAction < ApplicationRecord
   belongs_to_creator
-  belongs_to :subject, polymorphic: true, optional: true
-  cattr_accessor :disable_logging, default: false
+  belongs_to(:subject, polymorphic: true, optional: true)
+  cattr_accessor(:disable_logging, default: false)
 
   # make sure to update the openapi spec when changing the values, actions, or classes
 
@@ -39,7 +39,7 @@ class ModAction < ApplicationRecord
     post_id
   ].freeze
 
-  store_accessor :values, *VALUES
+  store_accessor(:values, *VALUES)
 
   def self.log(...)
     Rails.logger.warn("ModAction: use ModAction.log! instead of ModAction.log")
@@ -670,7 +670,7 @@ class ModAction < ApplicationRecord
     end
   end
 
-  extend SearchMethods
+  extend(SearchMethods)
 
   def self.without_logging(&)
     self.disable_logging = true

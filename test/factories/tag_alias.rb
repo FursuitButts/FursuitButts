@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 FactoryBot.define do
-  factory :tag_alias do
+  factory(:tag_alias) do
     antecedent_name { "aaa" }
     consequent_name { "bbb" }
     status { "active" }

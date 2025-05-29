@@ -46,5 +46,5 @@ class SearchFormBuilder < SimpleForm::FormBuilder
     @options[:search_params][attribute_name] || options[:default]&.to_s
   end
 
-  include FormBuilderCommon
+  include(FormBuilderCommon)
 end

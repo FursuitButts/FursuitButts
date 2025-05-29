@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 class UserBlock < ApplicationRecord
-  belongs_to :user
-  belongs_to :target, class_name: "User"
-  validates :target_id, uniqueness: { scope: :user_id }
-  validate :validate_staff_user_not_blocking_messages
-  validate :validate_target_valid
+  belongs_to(:user)
+  belongs_to(:target, class_name: "User")
+  validates(:target_id, uniqueness: { scope: :user_id })
+  validate(:validate_staff_user_not_blocking_messages)
+  validate(:validate_target_valid)
 
   def target_name=(value)
     self.target_id = User.name_to_id(value)

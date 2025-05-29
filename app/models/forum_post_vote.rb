@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
 class ForumPostVote < UserVote
-  belongs_to :forum_post
-  validates :score, inclusion: { in: [-1, 0, 1], message: "must be 1, 0 or -1" }
-  validates :user_id, uniqueness: { scope: :forum_post_id }
-  validate :validate_user_is_not_limited, on: :create
-  scope :by, ->(user_id) { where(user_id: user_id) }
-  scope :excluding_user, ->(user_id) { where.not(user_id: user_id) }
-  scope :for_forum_post, ->(forum_post_id) { where(forum_post_id: forum_post_id) }
-  after_commit :update_forum_post_scores
+  belongs_to(:forum_post)
+  validates(:score, inclusion: { in: [-1, 0, 1], message: "must be 1, 0 or -1" })
+  validates(:user_id, uniqueness: { scope: :forum_post_id })
+  validate(:validate_user_is_not_limited, on: :create)
+  scope(:by, ->(user_id) { where(user_id: user_id) })
+  scope(:excluding_user, ->(user_id) { where.not(user_id: user_id) })
+  scope(:for_forum_post, ->(forum_post_id) { where(forum_post_id: forum_post_id) })
+  after_commit(:update_forum_post_scores)
 
   def update_forum_post_scores
     ForumPost.update_scores(id: forum_post_id)

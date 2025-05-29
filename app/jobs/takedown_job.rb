@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class TakedownJob < ApplicationJob
-  queue_as :high
-  sidekiq_options lock: :until_executing, lock_args_method: :lock_args
+  queue_as(:high)
+  sidekiq_options(lock: :until_executing, lock_args_method: :lock_args)
 
   def self.lock_args(args)
     [args[0]]

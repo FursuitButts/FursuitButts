@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 class TagCorrection
-  include ActiveModel::Model
-  include ActiveModel::Serializers::JSON
+  include(ActiveModel::Model)
+  include(ActiveModel::Serializers::JSON)
 
-  attr_reader :tag
+  attr_reader(:tag)
 
-  delegate :category, :post_count, :real_post_count, to: :tag
+  delegate(:category, :post_count, :real_post_count, to: :tag)
 
   def initialize(tag_id)
     @tag = Tag.find(tag_id)

@@ -22,11 +22,11 @@
 <%= form_tag(users_deletion_path, method: :delete, class: "simple_form") do %>
   <div class="input">
     <label>Password</label>
-    <%= password_field_tag :password %>
+    <%= password_field_tag(:password) %>
   </div>
 
   <div class="input">
-    <%= submit_tag "Submit" %>
+    <%= submit_tag("Submit") %>
   </div>
 <% end %>
 

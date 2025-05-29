@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class MascotsController < ApplicationController
-  respond_to :html, :json
+  respond_to(:html, :json)
 
   def index
     @mascots = authorize(Mascot).with_assets.search(search_params(Mascot))

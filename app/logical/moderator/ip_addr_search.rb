@@ -2,7 +2,7 @@
 
 module Moderator
   class IpAddrSearch
-    attr_reader :params
+    attr_reader(:params)
 
     def initialize(params)
       @params = params

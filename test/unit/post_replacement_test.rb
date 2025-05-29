@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 class PostReplacementTest < ActiveSupport::TestCase
-  include ActiveJob::TestHelper
+  include(ActiveJob::TestHelper)
   setup do
     @user = create(:user, created_at: 2.weeks.ago)
     @mod_user = create(:moderator_user, created_at: 2.weeks.ago)
@@ -13,55 +13,55 @@ class PostReplacementTest < ActiveSupport::TestCase
     CurrentUser.user = @user
   end
 
-  context "User Limits:" do
-    should "fail on too many per post in one day" do
+  context("User Limits:") do
+    should("fail on too many per post in one day") do
       FemboyFans.config.stubs(:post_replacement_per_day_limit).returns(-1)
       @replacement = @post.replacements.create(attributes_for(:png_replacement).merge(creator: @user))
-      assert_equal ["Creator has already suggested too many replacements for this post today"], @replacement.errors.full_messages
+      assert_equal(["Creator has already suggested too many replacements for this post today"], @replacement.errors.full_messages)
     end
 
-    should "fail on too many per post total" do
+    should("fail on too many per post total") do
       FemboyFans.config.stubs(:post_replacement_per_post_limit).returns(-1)
       @replacement = @post.replacements.create(attributes_for(:png_replacement).merge(creator: @user))
-      assert_equal ["Creator already has too many pending replacements for this post"], @replacement.errors.full_messages
+      assert_equal(["Creator already has too many pending replacements for this post"], @replacement.errors.full_messages)
     end
 
-    should "fail if user has no remaining upload limit" do
+    should("fail if user has no remaining upload limit") do
       User.any_instance.stubs(:upload_limit).returns(0)
       FemboyFans.config.stubs(:disable_throttles?).returns(false)
       @replacement = @post.replacements.create(attributes_for(:png_replacement).merge(creator: @user))
-      assert_equal ["Creator have reached your upload limit"], @replacement.errors.full_messages
+      assert_equal(["Creator have reached your upload limit"], @replacement.errors.full_messages)
     end
   end
 
-  context "Upload:" do
-    should "allow non duplicate replacement submission" do
+  context("Upload:") do
+    should("allow non duplicate replacement submission") do
       @replacement = @post.replacements.create(attributes_for(:png_replacement).merge(creator: @user))
-      assert_equal @replacement.errors.size, 0
-      assert_equal @post.replacements.size, 1
-      assert_equal @replacement.status, "pending"
-      assert @replacement.storage_id
-      assert_equal Digest::MD5.file(file_fixture("test.png")).hexdigest, Digest::MD5.file(@replacement.replacement_file_path).hexdigest
+      assert_equal(@replacement.errors.size, 0)
+      assert_equal(@post.replacements.size, 1)
+      assert_equal(@replacement.status, "pending")
+      assert(@replacement.storage_id)
+      assert_equal(Digest::MD5.file(file_fixture("test.png")).hexdigest, Digest::MD5.file(@replacement.replacement_file_path).hexdigest)
     end
 
-    should "not allow duplicate replacement submission" do
+    should("not allow duplicate replacement submission") do
       @replacement = @post.replacements.create(attributes_for(:jpg_replacement).merge(creator: @user))
       assert_equal("duplicate", @replacement.media_asset.status)
       assert_equal("duplicate of post ##{@post.id}", @replacement.media_asset.status_message)
     end
 
-    should "not allow duplicate of pending replacement submission" do
+    should("not allow duplicate of pending replacement submission") do
       @replacement = @post.replacements.create(attributes_for(:png_replacement).merge(creator: @user))
-      assert_equal @replacement.errors.size, 0
-      assert_equal @post.replacements.size, 1
-      assert_equal @replacement.status, "pending"
-      assert @replacement.storage_id
+      assert_equal(@replacement.errors.size, 0)
+      assert_equal(@post.replacements.size, 1)
+      assert_equal(@replacement.status, "pending")
+      assert(@replacement.storage_id)
       @new_replacement = @post.replacements.create(attributes_for(:png_replacement).merge(creator: @user))
       assert_equal("duplicate", @new_replacement.media_asset.status)
       assert_equal("duplicate of post replacement ##{@replacement.id}", @new_replacement.media_asset.status_message)
     end
 
-    should "not allow invalid or blank file replacements" do
+    should("not allow invalid or blank file replacements") do
       @replacement = @post.replacements.create(attributes_for(:empty_replacement).merge(creator: @user))
       assert_equal(["Data is empty"], @replacement.errors.full_messages)
       @replacement = @post.replacements.create(attributes_for(:jpg_invalid_replacement).merge(creator: @user))
@@ -69,39 +69,39 @@ class PostReplacementTest < ActiveSupport::TestCase
       assert_equal("File is corrupt", @replacement.media_asset.status_message)
     end
 
-    should "not allow files that are too large" do
+    should("not allow files that are too large") do
       FemboyFans.config.stubs(:max_file_sizes).returns({ "png" => 0 })
       @replacement = @post.replacements.create(attributes_for(:png_replacement).merge(creator: @user))
       assert_equal("failed", @replacement.media_asset.status)
       assert_equal("File size is too large. Maximum allowed for this file type is 0 Bytes", @replacement.media_asset.status_message)
     end
 
-    should "not allow an apng that is too large" do
+    should("not allow an apng that is too large") do
       FemboyFans.config.stubs(:max_apng_file_size).returns(0)
       @replacement = @post.replacements.create(attributes_for(:apng_replacement).merge(creator: @user))
       assert_equal("failed", @replacement.media_asset.status)
       assert_equal("File size is too large. Maximum allowed for this file type is 0 Bytes", @replacement.media_asset.status_message)
     end
 
-    should "affect user upload limit" do
+    should("affect user upload limit") do
       assert_difference(-> { @user.post_replacements.pending.count }, 1) do
         @replacement = @post.replacements.create(attributes_for(:png_replacement).merge(creator: @user))
       end
     end
   end
 
-  context "Reject:" do
+  context("Reject:") do
     setup do
       @replacement = create(:png_replacement, creator: @user, post: @post)
-      assert @replacement
+      assert(@replacement)
     end
 
-    should "mark replacement as rejected" do
+    should("mark replacement as rejected") do
       @replacement.reject!
-      assert_equal "rejected", @replacement.status
+      assert_equal("rejected", @replacement.status)
     end
 
-    should "allow duplicate replacement after rejection" do
+    should("allow duplicate replacement after rejection") do
       @replacement.reject!
       assert_equal("rejected", @replacement.reload.status)
       @new_replacement = @post.replacements.create(attributes_for(:png_replacement).merge(creator: @user))
@@ -109,13 +109,13 @@ class PostReplacementTest < ActiveSupport::TestCase
       assert(@new_replacement.valid?)
     end
 
-    should "give user back their upload slot" do
+    should("give user back their upload slot") do
       assert_difference(-> { @user.post_replacements.pending.count }, -1) do
         @replacement.reject!
       end
     end
 
-    should "increment the users rejected replacements count" do
+    should("increment the users rejected replacements count") do
       assert_difference({
         -> { @user.post_replacement_rejected_count }  => 1,
         -> { @user.post_replacements.rejected.count } => 1,
@@ -125,34 +125,34 @@ class PostReplacementTest < ActiveSupport::TestCase
       end
     end
 
-    should "work only once for pending replacements" do
+    should("work only once for pending replacements") do
       @replacement.reject!
-      assert_equal [], @replacement.errors.full_messages
+      assert_equal([], @replacement.errors.full_messages)
       @replacement.reject!
-      assert_equal ["Status must be pending to reject"], @replacement.errors.full_messages
+      assert_equal(["Status must be pending to reject"], @replacement.errors.full_messages)
     end
   end
 
-  context "Approve:" do
+  context("Approve:") do
     setup do
       @note = create(:note, post: @post, x: 100, y: 200, width: 100, height: 50)
       @replacement = create(:png_replacement, creator: @user, post: @post)
     end
 
-    should "not create a new post" do
+    should("not create a new post") do
       assert_difference({ "Post.count" => 0, "UploadMediaAsset.count" => 1 }) do
         @replacement.approve!(penalize_current_uploader: true)
       end
     end
 
-    should "fail if post cannot be backed up" do
+    should("fail if post cannot be backed up") do
       @post.media_asset.md5 = "123" # Breaks file path, should force backup to fail.
       assert_raise(PostReplacement::ProcessingError) do
         @replacement.approve!(penalize_current_uploader: true)
       end
     end
 
-    should "update post with new image" do
+    should("update post with new image") do
       old_md5 = @post.md5
       @replacement.approve!(penalize_current_uploader: true)
       @post.reload
@@ -165,22 +165,22 @@ class PostReplacementTest < ActiveSupport::TestCase
       assert_equal(@replacement.file_size, @post.file_size)
     end
 
-    should "work if the approver is above their upload limit" do
+    should("work if the approver is above their upload limit") do
       User.any_instance.stubs(:upload_limit).returns(0)
       FemboyFans.config.stubs(:disable_throttles?).returns(false)
 
       @replacement.approve!(penalize_current_uploader: true)
-      assert_equal @replacement.md5, @post.md5
+      assert_equal(@replacement.md5, @post.md5)
     end
 
-    should "generate videos samples if replacement is video" do
+    should("generate videos samples if replacement is video") do
       @replacement = create(:webm_replacement, creator: @user, post: @post)
       assert_enqueued_jobs(1, only: UploadMediaAssetVideoVariantsJob) do
         @replacement.approve!(penalize_current_uploader: true)
       end
     end
 
-    should "delete original files immediately" do
+    should("delete original files immediately") do
       old_media_asset = @post.media_asset
       @replacement.approve!(penalize_current_uploader: true)
       @post.reload
@@ -190,14 +190,14 @@ class PostReplacementTest < ActiveSupport::TestCase
       end
     end
 
-    should "not be able to approve on deleted post" do
+    should("not be able to approve on deleted post") do
       @post.update_column(:is_deleted, true)
       assert_raises(PostReplacement::ProcessingError) do
         @replacement.approve!(penalize_current_uploader: true)
       end
     end
 
-    should "create backup replacement" do
+    should("create backup replacement") do
       old_md5 = @post.md5
       old_source = @post.source
       assert_difference("@post.replacements.size", 1) do
@@ -211,7 +211,7 @@ class PostReplacementTest < ActiveSupport::TestCase
       assert_equal(old_md5, MediaAsset.md5(new_replacement.replacement_file_path))
     end
 
-    should "update users upload counts" do
+    should("update users upload counts") do
       assert_difference({
         -> { Post.for_user(@mod_user.id).not_flagged.not_deleted.not_pending.count } => -1,
         -> { Post.for_user(@user.id).not_flagged.not_deleted.not_pending.count }     => 1,
@@ -220,7 +220,7 @@ class PostReplacementTest < ActiveSupport::TestCase
       end
     end
 
-    should "update the original users upload limit if penalized" do
+    should("update the original users upload limit if penalized") do
       assert_difference({
         -> { @mod_user.own_post_replaced_count }                                     => 1,
         -> { @mod_user.own_post_replaced_penalize_count }                            => 1,
@@ -231,7 +231,7 @@ class PostReplacementTest < ActiveSupport::TestCase
       end
     end
 
-    should "not update the original users upload limit if not penalizing" do
+    should("not update the original users upload limit if not penalizing") do
       assert_difference({
         -> { @mod_user.own_post_replaced_count }                                         => 1,
         -> { @mod_user.own_post_replaced_penalize_count }                                => 0,
@@ -242,7 +242,7 @@ class PostReplacementTest < ActiveSupport::TestCase
       end
     end
 
-    should "correctly resize the post's notes" do
+    should("correctly resize the post's notes") do
       @replacement.approve!(penalize_current_uploader: true)
       @note.reload
       assert_equal(153, @note.x)
@@ -251,59 +251,59 @@ class PostReplacementTest < ActiveSupport::TestCase
       assert_equal(152, @note.height)
     end
 
-    should "only work on pending, original, and rejected replacements" do
+    should("only work on pending, original, and rejected replacements") do
       @replacement.promote!
       @replacement.approve!(penalize_current_uploader: false)
       assert_equal(["Status must be pending, original, or rejected to approve"], @replacement.errors.full_messages)
     end
 
-    should "only work once" do
+    should("only work once") do
       @replacement.approve!(penalize_current_uploader: false)
-      assert_equal [], @replacement.errors.full_messages
+      assert_equal([], @replacement.errors.full_messages)
       @replacement.approve!(penalize_current_uploader: false)
-      assert_equal ["Status must be pending, original, or rejected to approve"], @replacement.errors.full_messages
+      assert_equal(["Status must be pending, original, or rejected to approve"], @replacement.errors.full_messages)
     end
 
-    context "when the replacement is a webm" do
+    context("when the replacement is a webm") do
       setup do
         @replacement = create(:webm_replacement, creator: @user, post: @post)
       end
 
-      should "detect the correct duration" do
+      should("detect the correct duration") do
         @replacement.approve!(penalize_current_uploader: false)
         @post.reload
         assert_equal(0.48, @post.duration)
       end
 
-      should "update the framecount" do
+      should("update the framecount") do
         @replacement.approve!(penalize_current_uploader: false)
         assert_equal(24, @post.reload.framecount)
       end
 
-      should "reset thumbnail_frame" do
+      should("reset thumbnail_frame") do
         @post.update_column(:thumbnail_frame, 5)
         @replacement.approve!(penalize_current_uploader: false)
         assert_nil(@post.reload.thumbnail_frame)
       end
     end
 
-    context "when the replacement is an mp4" do
+    context("when the replacement is an mp4") do
       setup do
         @replacement = create(:mp4_replacement, creator: @user, post: @post)
       end
 
-      should "detect the correct duration" do
+      should("detect the correct duration") do
         @replacement.approve!(penalize_current_uploader: false)
         @post.reload
         assert_equal(5.7, @post.duration)
       end
 
-      should "update the framecount" do
+      should("update the framecount") do
         @replacement.approve!(penalize_current_uploader: false)
         assert_equal(10, @post.reload.framecount)
       end
 
-      should "reset thumbnail_frame" do
+      should("reset thumbnail_frame") do
         @post.update_column(:thumbnail_frame, 5)
         @replacement.approve!(penalize_current_uploader: false)
         assert_nil(@post.reload.thumbnail_frame)
@@ -311,13 +311,13 @@ class PostReplacementTest < ActiveSupport::TestCase
     end
   end
 
-  context "Toggle:" do
+  context("Toggle:") do
     setup do
       @replacement = create(:png_replacement, creator: @user, post: @post)
-      assert @replacement
+      assert(@replacement)
     end
 
-    should "change the users upload limit" do
+    should("change the users upload limit") do
       @replacement.approve!(penalize_current_uploader: false)
       assert_difference({
         -> { @mod_user.own_post_replaced_penalize_count }                            => 1,
@@ -328,19 +328,19 @@ class PostReplacementTest < ActiveSupport::TestCase
       end
     end
 
-    should "only work on appoved replacements" do
+    should("only work on appoved replacements") do
       @replacement.toggle_penalize!
       assert_equal(["Status must be approved to penalize"], @replacement.errors.full_messages)
     end
   end
 
-  context "Promote:" do
+  context("Promote:") do
     setup do
       @replacement = create(:png_replacement, creator: @user, post: @post)
-      assert @replacement
+      assert(@replacement)
     end
 
-    should "create a new post with replacement contents" do
+    should("create a new post with replacement contents") do
       upload = @replacement.promote!
       assert(upload)
       assert_equal([], upload.errors.full_messages)
@@ -355,7 +355,7 @@ class PostReplacementTest < ActiveSupport::TestCase
       assert_equal(upload.file_size, @replacement.file_size)
     end
 
-    should "credit replacer with new post" do
+    should("credit replacer with new post") do
       assert_difference({
         -> { Post.for_user(@mod_user.id).not_flagged.not_deleted.not_pending.count } => 0,
         -> { Post.for_user(@user.id).not_flagged.not_deleted.count }                 => 1,
@@ -367,7 +367,7 @@ class PostReplacementTest < ActiveSupport::TestCase
       end
     end
 
-    should "only work on pending replacements" do
+    should("only work on pending replacements") do
       @replacement.approve!(penalize_current_uploader: false)
       @replacement.promote!
       assert_equal(["Status must be pending to promote"], @replacement.errors.full_messages)

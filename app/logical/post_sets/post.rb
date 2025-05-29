@@ -2,7 +2,7 @@
 
 module PostSets
   class Post < PostSets::Base
-    attr_reader :tag_array, :public_tag_array, :page, :limit, :random, :post_count
+    attr_reader(:tag_array, :public_tag_array, :page, :limit, :random, :post_count)
 
     def initialize(tags, page = 1, limit: nil, random: nil)
       super()

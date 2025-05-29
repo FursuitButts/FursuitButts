@@ -4,11 +4,11 @@ class MediaAssetWithVariants < MediaAsset
   class VariantNotFoundError < StandardError; end
   self.abstract_class = true
 
-  after_create :generate_variants_after_finalize, if: :file_now?
-  after_finalize :generate_variants_after_finalize, if: :file_later?
+  after_create(:generate_variants_after_finalize, if: :file_now?)
+  after_finalize(:generate_variants_after_finalize, if: :file_later?)
 
   module VariantMethods
-    extend ActiveSupport::Concern
+    extend(ActiveSupport::Concern)
 
     module ClassMethods
       def variant_valid?(options, width, height)
@@ -110,7 +110,7 @@ class MediaAssetWithVariants < MediaAsset
   end
 
   module StorageMethods
-    delegate :file_path, :backup_file_path, :file_url, to: :original
+    delegate(:file_path, :backup_file_path, :file_url, to: :original)
 
     def store_file_finalize
       raise(StandardError, "file not present") if file.nil?
@@ -140,15 +140,15 @@ class MediaAssetWithVariants < MediaAsset
     end
   end
 
-  include VariantMethods
-  include StorageMethods
+  include(VariantMethods)
+  include(StorageMethods)
 
   class Variant
-    include ActiveModel::Serializers::JSON
+    include(ActiveModel::Serializers::JSON)
 
-    attr_reader :media_asset, :type, :format, :ext, :options
+    attr_reader(:media_asset, :type, :format, :ext, :options)
 
-    delegate_missing_to :media_asset
+    delegate_missing_to(:media_asset)
 
     def initialize(media_asset, type, format, ext, options)
       @media_asset = media_asset

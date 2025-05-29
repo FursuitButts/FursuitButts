@@ -1,22 +1,22 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 class PostDisapprovalTest < ActiveSupport::TestCase
-  context "In all cases" do
+  context("In all cases") do
     setup do
       @alice = create(:moderator_user, name: "alice")
       CurrentUser.user = @alice
     end
 
-    context "A post disapproval" do
+    context("A post disapproval") do
       setup do
         @post1 = create(:post, is_pending: true)
         @post2 = create(:post, is_pending: true)
       end
 
-      context "#search" do
-        should "work" do
+      context("#search") do
+        should("work") do
           disapproval1 = create(:post_disapproval, user: @alice, post: @post1, reason: "borderline_quality")
           disapproval2 = create(:post_disapproval, user: @alice, post: @post2, reason: "borderline_relevancy", message: "looks human")
 

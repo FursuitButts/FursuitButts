@@ -1,17 +1,17 @@
 # frozen_string_literal: true
 
 class UserInfo
-  include ActiveModel::Serializers::JSON
+  include(ActiveModel::Serializers::JSON)
   THROTTLE_LIST = User::LimitMethods.throttles.map(&:name).sort
-  attr_reader :user
+  attr_reader(:user)
 
   def initialize(user)
     @user = user
   end
 
   class Throttle
-    include ActiveModel::Serializers::JSON
-    attr_reader :user, :throttle, :bypass, :newbie, :level, :limit
+    include(ActiveModel::Serializers::JSON)
+    attr_reader(:user, :throttle, :bypass, :newbie, :level, :limit)
 
     def initialize(user, throttle)
       @user = user

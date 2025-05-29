@@ -1051,5 +1051,5 @@ module FemboyFans
     @config ||= EnvironmentConfiguration.new
   end
 
-  module_function :config
+  module_function(:config)
 end

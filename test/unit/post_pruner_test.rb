@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 class PostPrunerTest < ActiveSupport::TestCase
   setup do
@@ -13,12 +13,12 @@ class PostPrunerTest < ActiveSupport::TestCase
     PostPruner.new.prune!
   end
 
-  should "prune expired pending posts" do
+  should("prune expired pending posts") do
     @old_post.reload
     assert(@old_post.is_deleted?)
   end
 
-  should "prune old pending appeals" do
+  should("prune old pending appeals") do
     @old_appeal.reload
     assert(@old_appeal.rejected?)
   end

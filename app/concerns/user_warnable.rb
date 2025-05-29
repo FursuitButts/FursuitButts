@@ -1,16 +1,16 @@
 # frozen_string_literal: true
 
 module UserWarnable
-  extend ActiveSupport::Concern
+  extend(ActiveSupport::Concern)
 
   included do
-    enum :warning_type, {
+    enum(:warning_type, {
       warning: 1,
       record:  2,
       ban:     3,
-    }
+    })
 
-    scope :user_warned, -> { where.not(warning_type: nil) }
+    scope(:user_warned, -> { where.not(warning_type: nil) })
   end
 
   def user_warned!(type, user)

@@ -1,20 +1,20 @@
 # frozen_string_literal: true
 
-require "test_helper"
-require_relative "helper"
+require("test_helper")
+require_relative("helper")
 
 module ModActions
   class PostReplacementRejectionReasonsTest < ActiveSupport::TestCase
-    include Helper
-    include Rails.application.routes.url_helpers
+    include(Helper)
+    include(Rails.application.routes.url_helpers)
 
-    context "mod actions for post replacement rejection reasons" do
+    context("mod actions for post replacement rejection reasons") do
       setup do
         @reason = create(:post_replacement_rejection_reason)
         set_count!
       end
 
-      should "format post_replacement_rejection_reason_create correctly" do
+      should("format post_replacement_rejection_reason_create correctly") do
         @reason = create(:post_replacement_rejection_reason)
 
         assert_matches(
@@ -25,7 +25,7 @@ module ModActions
         )
       end
 
-      should "format post_replacement_rejection_reason_delete correctly" do
+      should("format post_replacement_rejection_reason_delete correctly") do
         @reason.destroy
 
         assert_matches(
@@ -37,7 +37,7 @@ module ModActions
         )
       end
 
-      should "format post_replacement_rejection_reasons_reorder correctly" do
+      should("format post_replacement_rejection_reasons_reorder correctly") do
         PostReplacementRejectionReason.log_reorder(2)
 
         assert_matches(
@@ -48,12 +48,12 @@ module ModActions
         )
       end
 
-      context "post_replacement_rejection_reason_update" do
+      context("post_replacement_rejection_reason_update") do
         setup do
           @original = @reason.dup
         end
 
-        should "format no changes correctly" do
+        should("format no changes correctly") do
           @reason.save
 
           assert_matches(
@@ -65,7 +65,7 @@ module ModActions
           )
         end
 
-        should "format reason changes correctly" do
+        should("format reason changes correctly") do
           @reason.update!(reason: "xxx")
 
           assert_matches(

@@ -1,20 +1,20 @@
 # frozen_string_literal: true
 
-require "test_helper"
-require_relative "helper"
+require("test_helper")
+require_relative("helper")
 
 module ModActions
   class RuleCategoriesTest < ActiveSupport::TestCase
-    include Helper
-    include Rails.application.routes.url_helpers
+    include(Helper)
+    include(Rails.application.routes.url_helpers)
 
-    context "mod actions for rule categories" do
+    context("mod actions for rule categories") do
       setup do
         @category = create(:rule_category)
         set_count!
       end
 
-      should "format rule_category_create correctly" do
+      should("format rule_category_create correctly") do
         @category = create(:rule_category)
 
         assert_matches(
@@ -25,7 +25,7 @@ module ModActions
         )
       end
 
-      should "format rule_category_delete correctly" do
+      should("format rule_category_delete correctly") do
         @category.destroy
 
         assert_matches(
@@ -36,7 +36,7 @@ module ModActions
         )
       end
 
-      should "format rule_categories_reorder correctly" do
+      should("format rule_categories_reorder correctly") do
         RuleCategory.log_reorder(2)
 
         assert_matches(
@@ -47,12 +47,12 @@ module ModActions
         )
       end
 
-      context "rule_category_update" do
+      context("rule_category_update") do
         setup do
           @original = @category.dup
         end
 
-        should "format name changes correctly" do
+        should("format name changes correctly") do
           @category.update!(name: "aaa")
 
           assert_matches(

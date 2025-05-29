@@ -6,14 +6,14 @@ module ChunkedUpload
   class InvalidChecksumError < StandardError; end
   class EmptyError < StandardError; end
   class FileTooLargeError < StandardError; end
-  extend ActiveSupport::Concern
+  extend(ActiveSupport::Concern)
 
   included do
-    define_model_callbacks :finalize, :cancel
-    attr_reader :is_all, :no_save
+    define_model_callbacks(:finalize, :cancel)
+    attr_reader(:is_all, :no_save)
 
-    after_destroy :remove_tempfile!
-    after_create :update_tempfile, if: :file_now?
+    after_destroy(:remove_tempfile!)
+    after_create(:update_tempfile, if: :file_now?)
 
     def tempfile_path
       part = id.present? ? id : (@temp_id ||= SecureRandom.hex(4))

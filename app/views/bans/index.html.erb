@@ -1,15 +1,15 @@
 <h1>Bans</h1>
 
-<%= render "search" %>
+<%= render("search") %>
 
 <%= table_for(@bans, class: "striped autofit") do |t| %>
   <% t.column("User") do |ban| %>
     <%= link_to_user(ban.user) %>
-    <%= link_to "»", bans_path(search: search_params(ban).merge(user_name: ban.user.name)) %>
+    <%= link_to("»", bans_path(search: search_params(ban).merge(user_name: ban.user.name))) %>
   <% end %>
   <% t.column("Banner") do |ban| %>
     <%= link_to_user(ban.banner) %>
-    <%= link_to "»", bans_path(search: search_params(ban).merge(banner_name: ban.banner.name)) %>
+    <%= link_to("»", bans_path(search: search_params(ban).merge(banner_name: ban.banner.name))) %>
   <% end %>
   <% t.column("Banned") do |ban| %>
     <%= time_ago_in_words_tagged(ban.created_at) %>
@@ -31,7 +31,7 @@
 
 <%= numbered_paginator(@bans) %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   Bans

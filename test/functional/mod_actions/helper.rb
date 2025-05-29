@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module ModActions
-  include Rails.application.routes.url_helpers
+  include(Rails.application.routes.url_helpers)
 
   module Helper
     def self.included(mod)

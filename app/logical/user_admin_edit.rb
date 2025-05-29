@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 class UserAdminEdit
-  attr_reader :user, :promoter, :options
+  attr_reader(:user, :promoter, :options)
 
-  delegate :errors, to: :user
+  delegate(:errors, to: :user)
 
   PREFERENCES = [
     [:can_approve_posts, "approve posts", :is_admin?],

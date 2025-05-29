@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 class MediaAssetTest < ActiveSupport::TestCase
-  include ActiveJob::TestHelper
+  include(ActiveJob::TestHelper)
   setup do
     @user = create(:user)
     CurrentUser.user = @user
   end
 
-  should "delete files after 24 hours" do
+  should("delete files after 24 hours") do
     assert_enqueued_jobs(1, only: MediaAssetDeleteTempfileJob) do
       @upload = create(:jpg_upload)
     end
@@ -19,7 +19,7 @@ class MediaAssetTest < ActiveSupport::TestCase
     assert_not(File.exist?(@upload.media_asset.tempfile_path))
   end
 
-  should "expire after 4 hours" do
+  should("expire after 4 hours") do
     @asset = create(:upload_media_asset)
     travel_to(5.hours.from_now) do
       MediaAsset.prune_expired!

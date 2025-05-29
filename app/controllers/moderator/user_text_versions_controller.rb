@@ -2,7 +2,7 @@
 
 module Moderator
   class UserTextVersionsController < ApplicationController
-    respond_to :html
+    respond_to(:html)
 
     def index
       @text_versions = authorize(UserTextVersion).html_includes(request, :user, :updater)

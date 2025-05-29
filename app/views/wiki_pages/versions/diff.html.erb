@@ -5,7 +5,7 @@
     Merged from <%= link_to(@thispage.merged_from_title, mod_actions_path(search: { subject_id: @thispage.merged_from_id, subject_type: "WikiPage" })) %>
   </div>
 <% else %>
-  <p>Showing differences between <%= compact_time @otherpage.updated_at %> (<%= link_to_user @otherpage.updater %>) and <%= compact_time @thispage.updated_at %> (<%= link_to_user @thispage.updater %>)</p>
+  <p>Showing differences between <%= compact_time(@otherpage.updated_at) %> (<%= link_to_user(@otherpage.updater) %>) and <%= compact_time(@thispage.updated_at) %> (<%= link_to_user(@thispage.updater) %>)</p>
 
   <% if @otherpage.parent != @thispage.parent %>
     <div class="wiki-page-redirect-history">
@@ -29,7 +29,7 @@
   </div>
 <% end %>
 
-<%= render "wiki_pages/secondary_links" %>
+<%= render("wiki_pages/secondary_links") %>
 
 <% content_for(:page_title) do %>
   Wiki Page Versions Comparison - <%= @thispage.pretty_title %>

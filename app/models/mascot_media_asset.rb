@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class MascotMediaAsset < MediaAsset
-  has_one :mascot
+  has_one(:mascot)
 
   module StorageMethods
     def path_prefix
@@ -27,9 +27,9 @@ class MascotMediaAsset < MediaAsset
     end
   end
 
-  include StorageMethods
-  include FileMethods
-  extend SearchMethods
+  include(StorageMethods)
+  include(FileMethods)
+  extend(SearchMethods)
 
   def self.available_includes
     %i[creator mascot]

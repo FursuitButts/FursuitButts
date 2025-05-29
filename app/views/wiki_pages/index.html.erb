@@ -1,9 +1,9 @@
-<%= render "sidebar" %>
+<%= render("sidebar") %>
 
 <section id="content">
   <h1>Wiki</h1>
 
-  <%= render "search" %>
+  <%= render("search") %>
   <%= table_for(@wiki_pages) do |t| %>
     <% t.column("Title") do |wiki_page| %>
       <span class="category-<%= wiki_page.category_id %>">
@@ -25,4 +25,4 @@
   Wiki
 <% end %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>

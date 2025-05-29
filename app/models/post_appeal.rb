@@ -1,24 +1,24 @@
 # frozen_string_literal: true
 
 class PostAppeal < ApplicationRecord
-  belongs_to_creator counter_cache: "post_appealed_count"
-  belongs_to :post
+  belongs_to_creator(counter_cache: "post_appealed_count")
+  belongs_to(:post)
 
-  validates :reason, length: { maximum: 140 }
-  validate :validate_post_is_appealable, on: :create
-  validate :validate_creator_is_not_limited, on: :create
-  validates :creator, uniqueness: { scope: :post, message: "has already appealed this post" }, on: :create
-  after_create :prune_disapprovals
-  after_create :create_post_event
+  validates(:reason, length: { maximum: 140 })
+  validate(:validate_post_is_appealable, on: :create)
+  validate(:validate_creator_is_not_limited, on: :create)
+  validates(:creator, uniqueness: { scope: :post, message: "has already appealed this post" }, on: :create)
+  after_create(:prune_disapprovals)
+  after_create(:create_post_event)
 
-  enum :status, {
+  enum(:status, {
     pending:  0,
     accepted: 1,
     rejected: 2,
-  }
+  })
 
-  scope :expired, -> { pending.where("post_appeals.created_at < ?", PostPruner::MODERATION_WINDOW.days.ago) }
-  scope :for_user, ->(user_id) { where(creator_id: user_id) }
+  scope(:expired, -> { pending.where("post_appeals.created_at < ?", PostPruner::MODERATION_WINDOW.days.ago) })
+  scope(:for_user, ->(user_id) { where(creator_id: user_id) })
 
   def prune_disapprovals
     PostDisapproval.where(post: post).delete_all
@@ -79,7 +79,7 @@ class PostAppeal < ApplicationRecord
     end
   end
 
-  extend SearchMethods
+  extend(SearchMethods)
 
   def self.available_includes
     %i[creator post]

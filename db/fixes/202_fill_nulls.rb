@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "config", "environment"))
+require(File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "config", "environment")))
 
 system = User.system
 Comment.where(updater_ip_addr: nil).update_all(creator_ip_addr: "0.0.0.0")

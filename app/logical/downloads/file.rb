@@ -2,12 +2,12 @@
 
 module Downloads
   class File
-    include ActiveModel::Validations
+    include(ActiveModel::Validations)
     class Error < StandardError; end
 
-    attr_reader :url
+    attr_reader(:url)
 
-    validate :validate_url
+    validate(:validate_url)
 
     def initialize(url, exception: true)
       begin

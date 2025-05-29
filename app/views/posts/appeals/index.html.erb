@@ -1,6 +1,6 @@
 <h1>Appeals</h1>
-<%= render "search" %>
-<%= render "posts/partials/common/inline_blacklist" %>
+<%= render("search") %>
+<%= render("posts/partials/common/inline_blacklist") %>
 
 <%= table_for(@post_appeals) do |t| %>
   <% t.column("Post", width: "1%") do |post_appeal| %>
@@ -23,7 +23,7 @@
   <% t.column("Appealed", width: "15%") do |post_appeal| %>
     <%= link_to_user(post_appeal.creator) %>
     <%= link_to("»", post_appeals_path(search: @search_params.merge(creator_id: post_appeal.creator_id))) %>
-    <p><%= compact_time post_appeal.created_at %></p>
+    <p><%= compact_time(post_appeal.created_at) %></p>
   <% end %>
   <% t.column("Approver", width: "15%") do |post_appeal| %>
     <% if post_appeal.post.approver %>
@@ -38,7 +38,7 @@
 
 <%= numbered_paginator(@post_appeals) %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   Appeals

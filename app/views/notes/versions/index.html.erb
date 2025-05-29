@@ -1,6 +1,6 @@
 <h1>Note Changes</h1>
 
-<%= render "search" %>
+<%= render("search") %>
 
 <% revert = params.dig(:search, :post_id).present? || params.dig(:search, :note_id).present? %>
 <%= table_for(@note_versions, class: "striped autofit") do |t| %>
@@ -40,7 +40,7 @@
 
 <%= numbered_paginator(@note_versions) %>
 
-<%= render "notes/secondary_links" %>
+<%= render("notes/secondary_links") %>
 <%= latest_link(@note_versions) %>
 
 <% content_for(:page_title) do %>

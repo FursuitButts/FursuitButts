@@ -1,5 +1,5 @@
 <%= custom_form_for(@post_set) do |f| %>
-  <%= error_messages_for :post_set %>
+  <%= error_messages_for(:post_set) %>
   <%= f.input(:name, as: :string) %>
 
   <%= f.input(:shortname, label: "Short Name", as: :string,

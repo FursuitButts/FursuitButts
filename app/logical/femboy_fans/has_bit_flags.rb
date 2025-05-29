@@ -2,7 +2,7 @@
 
 module FemboyFans
   module HasBitFlags
-    extend ActiveSupport::Concern
+    extend(ActiveSupport::Concern)
 
     module ClassMethods
       # NOTE: the ordering of attributes has to be fixed#

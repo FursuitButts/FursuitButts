@@ -3,20 +3,20 @@
 class Note < ApplicationRecord
   class RevertError < StandardError; end
 
-  attr_accessor :html_id
+  attr_accessor(:html_id)
 
-  belongs_to :post
+  belongs_to(:post)
   belongs_to_creator
-  has_many :versions, -> { order("note_versions.id ASC") }, class_name: "NoteVersion", dependent: :destroy
-  normalizes :body, with: ->(body) { body.gsub("\r\n", "\n") }
-  validates :creator_id, :x, :y, :width, :height, :body, presence: true
-  validate :user_not_limited
-  validate :post_must_exist
-  validate :note_within_image
-  validates :body, length: { minimum: 1, maximum: FemboyFans.config.note_max_size }, if: :body_changed?
-  after_save :update_post
-  after_save :create_version
-  validate :post_must_not_be_note_locked
+  has_many(:versions, -> { order("note_versions.id ASC") }, class_name: "NoteVersion", dependent: :destroy)
+  normalizes(:body, with: ->(body) { body.gsub("\r\n", "\n") })
+  validates(:creator_id, :x, :y, :width, :height, :body, presence: true)
+  validate(:user_not_limited)
+  validate(:post_must_exist)
+  validate(:note_within_image)
+  validates(:body, length: { minimum: 1, maximum: FemboyFans.config.note_max_size }, if: :body_changed?)
+  after_save(:update_post)
+  after_save(:create_version)
+  validate(:post_must_not_be_note_locked)
 
   module SearchMethods
     def active
@@ -55,7 +55,7 @@ class Note < ApplicationRecord
     end
   end
 
-  extend SearchMethods
+  extend(SearchMethods)
 
   def user_not_limited
     allowed = CurrentUser.can_note_edit_with_reason

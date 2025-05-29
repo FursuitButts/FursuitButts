@@ -1,10 +1,10 @@
-<%= render "wiki_pages/sidebar" %>
+<%= render("wiki_pages/sidebar") %>
 
 <section id="content">
   <h1 id="wiki-page-title"><%= @wiki_page_version.pretty_title %> <span class="version">(<%= time_ago_in_words_tagged(@wiki_page_version.updated_at) %>)</span></h1>
 
   <% if @wiki_page_version.parent.present? %>
-    <div class="wiki-page-redirect"><i class="fa-solid fa-turn-up fa-rotate-90"></i> Redirects to <%= link_to @wiki_page_version.parent, show_or_new_wiki_pages_path(title: @wiki_page_version.parent) %></div>
+    <div class="wiki-page-redirect"><i class="fa-solid fa-turn-up fa-rotate-90"></i> Redirects to <%= link_to(@wiki_page_version.parent, show_or_new_wiki_pages_path(title: @wiki_page_version.parent)) %></div>
   <% end %>
   <% if @wiki_page_version.protection_level.present? %>
     <% name = User::Levels.id_to_name(@wiki_page_version.protection_level) %>
@@ -20,7 +20,7 @@
   </div>
 </section>
 
-<%= render "wiki_pages/secondary_links" %>
+<%= render("wiki_pages/secondary_links") %>
 
 <% content_for(:page_title) do %>
   Wiki Page Version

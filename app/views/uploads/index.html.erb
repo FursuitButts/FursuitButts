@@ -1,5 +1,5 @@
-<%= render "uploads/search" %>
-<%= render "posts/partials/common/inline_blacklist" %>
+<%= render("uploads/search") %>
+<%= render("posts/partials/common/inline_blacklist") %>
 
 <%= table_for(@uploads, class: "striped autofit") do |t| %>
   <% t.column("Upload") do |upload| %>
@@ -61,7 +61,7 @@
 
 <%= numbered_paginator(@uploads) %>
 
-<%= render "uploads/secondary_links" %>
+<%= render("uploads/secondary_links") %>
 
 <% content_for(:page_title) do %>
   Uploads

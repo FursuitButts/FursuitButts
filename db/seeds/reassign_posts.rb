@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require_relative "base"
+require_relative("base")
 
 posts = Post.joins(:uploader).where("users.level": User::Levels::SYSTEM)
 total = posts.count
@@ -15,7 +15,7 @@ raise("Failed to find any users") if users.empty?
 
 ApplicationRecord.transaction do
   posts.find_each.with_index do |post, i|
-    puts "Reassigning posts.. #{i + 1}/#{total}" if (i + 1) % step == 0 || (i + 1) == total
+    puts("Reassigning posts.. #{i + 1}/#{total}") if (i + 1) % step == 0 || (i + 1) == total
     user = users.sample
     post.update_column(:uploader_id, user.id)
     post.versions.find_each do |version|

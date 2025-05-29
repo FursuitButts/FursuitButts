@@ -7,7 +7,7 @@
            data-is-hidden="<%= forum_post.id == original_forum_post_id ? @forum_topic.is_hidden? : forum_post.is_hidden? %>">
     <div class="author-info">
       <div class="name-rank">
-        <h4 class="author-name"><%= link_to_user forum_post.creator %></h4>
+        <h4 class="author-name"><%= link_to_user(forum_post.creator) %></h4>
         <%= forum_post.creator.level_string_pretty %>
         <% if forum_post.is_hidden? %>
           <span<% if forum_post.hidden_at.present? %> title="<%= time_ago_in_words(forum_post.hidden_at) %> ago"<% end %>>(hidden)</span>
@@ -17,7 +17,7 @@
         <%= user_avatar(forum_post.creator) %>
       </div>
       <div class="post-time">
-        <%= link_to time_ago_in_words_tagged(forum_post.created_at), forum_topic_path(forum_post.topic_id, page: forum_post.forum_topic_page, anchor: "forum_post_#{forum_post.id}") %>
+        <%= link_to(time_ago_in_words_tagged(forum_post.created_at), forum_topic_path(forum_post.topic_id, page: forum_post.forum_topic_page, anchor: "forum_post_#{forum_post.id}")) %>
       </div>
     </div>
     <div class="content">
@@ -28,9 +28,9 @@
 
         <%= format_text(parse_embedded_tag_request_text(forum_post.body), allow_color: CurrentUser.id == forum_post.creator_id || (CurrentUser.is_anonymous? || !CurrentUser.disable_colors?)) %>
       </div>
-      <%= render "application/update_notice", record: forum_post %>
-      <%= render "application/warned_notice", record: forum_post %>
-      <%= render "forums/posts/partials/common/merged_notice", record: forum_post %>
+      <%= render("application/update_notice", record: forum_post) %>
+      <%= render("application/warned_notice", record: forum_post) %>
+      <%= render("forums/posts/partials/common/merged_notice", record: forum_post) %>
       <div class="content-menu">
         <menu>
           <% if CurrentUser.user.is_member? && !@forum_topic&.is_stale_for?(CurrentUser.user) && params[:controller] != "forums/posts" %>
@@ -79,13 +79,13 @@
             <li><%= link_to("Show Edits", forum_post_edits_path(forum_post)) %></li>
           <% end %>
           <% if mark %>
-            <%= render "user_warnable/buttons", model: forum_post %>
+            <%= render("user_warnable/buttons", model: forum_post) %>
           <% end %>
           <% if policy(forum_post).can_see_ip_addr? %>
             <li>|</li>
             <li class="ip-address">
               <strong>IP</strong>
-              <span><%= link_to_ip forum_post.creator_ip_addr %></span>
+              <span><%= link_to_ip(forum_post.creator_ip_addr) %></span>
             </li>
             <% if forum_post.is_spam? %>
               <% unless policy(forum_post).can_see_ip_addr? %>
@@ -120,9 +120,9 @@
         </menu>
         <% if policy(forum_post).update? %>
           <% if forum_post.is_original_post?(original_forum_post_id) %>
-            <%= render "forums/topics/form", forum_topic: forum_post.topic %>
+            <%= render("forums/topics/form", forum_topic: forum_post.topic) %>
           <% else %>
-            <%= render "forums/posts/partials/edit/form", forum_post: forum_post %>
+            <%= render("forums/posts/partials/edit/form", forum_post: forum_post) %>
           <% end %>
         <% end %>
       </div>

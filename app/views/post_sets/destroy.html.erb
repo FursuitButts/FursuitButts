@@ -3,17 +3,17 @@
 <div class="section" style="width: 500px;">
   <% form_tag(action: "destroy") do %>
     <p>Are you sure you wish to delete "<%= @post_set.name %>"?</p>
-    <%= submit_tag "Yes" %> <%= tag.button("No", id: "cancel-button") %>
+    <%= submit_tag("Yes") %> <%= tag.button("No", id: "cancel-button") %>
   <% end %>
 </div>
 
-<%= javascript_tag nonce: true do -%>
+<%= javascript_tag(nonce: true) do -%>
   $(function() {
     $("cancel-button").on("click", history.back);
   });
 <% end -%>
 
-<%= render partial: "secondary_links" %>
+<%= render(partial: "secondary_links") %>
 
 <% content_for(:page_title) do %>
   Set Deleted

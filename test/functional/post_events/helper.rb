@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module PostEvents
-  include Rails.application.routes.url_helpers
+  include(Rails.application.routes.url_helpers)
 
   module Helper
     def self.included(mod)

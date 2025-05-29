@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "config", "environment"))
+require(File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "config", "environment")))
 
 UserStatus.find_each do |user_status|
   user_status.update_column(:post_replacement_rejected_count, PostReplacement.rejected.for_user(user_status.user.id).count)

@@ -1,6 +1,6 @@
 <h1>Notes</h1>
 
-<%= render "search" %>
+<%= render("search") %>
 <%= table_for(@notes, class: "striped autofit") do |t| %>
   <% t.column("Post") do |note| %>
     <%= link_to(note.post_id, post_path(note.post_id)) %>
@@ -23,7 +23,7 @@
 
 <%= numbered_paginator(@notes) %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   Notes

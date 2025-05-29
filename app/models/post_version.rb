@@ -3,11 +3,11 @@
 class PostVersion < ApplicationRecord
   class UndoError < StandardError; end
   class MergeError < StandardError; end
-  belongs_to :post
-  belongs_to_updater counter_cache: "post_update_count"
+  belongs_to(:post)
+  belongs_to_updater(counter_cache: "post_update_count")
 
-  before_validation :fill_version, on: :create
-  before_validation :fill_changes, on: :create
+  before_validation(:fill_version, on: :create)
+  before_validation(:fill_changes, on: :create)
 
   module SearchMethods
     def for_user(user_id)
@@ -23,9 +23,9 @@ class PostVersion < ApplicationRecord
     end
   end
 
-  extend SearchMethods
-  include DocumentStore::Model
-  include PostVersionIndex
+  extend(SearchMethods)
+  include(DocumentStore::Model)
+  include(PostVersionIndex)
 
   def self.queue(post)
     create({

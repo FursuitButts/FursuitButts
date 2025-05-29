@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class DmailsController < ApplicationController
-  respond_to :html
-  respond_to :json, except: %i[new create]
+  respond_to(:html)
+  respond_to(:json, except: %i[new create])
 
   def index
     @query = authorize(Dmail).html_includes(request, :from, :to, :owner)

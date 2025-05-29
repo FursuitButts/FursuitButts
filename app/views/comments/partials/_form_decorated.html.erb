@@ -1,6 +1,6 @@
 <%# locals: (comment:) -%>
 
-<%= error_messages_for :comment  %>
+<%= error_messages_for(:comment)  %>
 
 <div class="comment-form">
   <div class="comment-avatar">
@@ -8,6 +8,6 @@
   </div>
 
   <div class="comment-edit">
-    <%= render "comments/partials/form", comment: comment %>
+    <%= render("comments/partials/form", comment: comment) %>
   </div>
 </div>

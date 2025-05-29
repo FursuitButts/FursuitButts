@@ -1,9 +1,9 @@
-<%= render partial: "search" %>
+<%= render(partial: "search") %>
 <div>
 
   <%= table_for(@tag_versions) do |t| %>
     <% t.column("Tag") do |change| %>
-      <%= link_to change.tag.name, edit_tag_path(change.tag) %>
+      <%= link_to(change.tag.name, edit_tag_path(change.tag)) %>
     <% end %>
     <% t.column("User") do |change| %>
       <%= link_to_user(change.updater) %>
@@ -30,7 +30,7 @@
 
 <%= numbered_paginator(@tag_versions) %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   Tag Type Versions

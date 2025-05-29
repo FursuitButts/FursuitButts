@@ -5,7 +5,7 @@
   <%= f.button(:submit, "Update") %>
 <% end %>
 
-<%= render partial: "secondary_links" %>
+<%= render(partial: "secondary_links") %>
 
 <% content_for(:page_title) do %>
   Set Post List - <%= @post_set.name %>

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class EmailBlacklistsController < ApplicationController
-  respond_to :html, :json, :js
+  respond_to(:html, :json, :js)
 
   def index
     @blacklists = authorize(EmailBlacklist).html_includes(request, :creator)

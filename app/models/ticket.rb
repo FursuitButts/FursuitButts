@@ -1,32 +1,32 @@
 # frozen_string_literal: true
 
 class Ticket < ApplicationRecord
-  belongs_to_creator counter_cache: "ticket_count"
-  belongs_to :model, polymorphic: true
-  belongs_to :claimant, class_name: "User", optional: true
-  belongs_to :handler, class_name: "User", optional: true
-  belongs_to :accused, class_name: "User", optional: true
-  after_initialize :classify
-  before_validation :initialize_fields, on: :create
-  normalizes :reason, with: ->(reason) { reason.gsub("\r\n", "\n") }
-  validates :reason, presence: true
-  validates :reason, length: { minimum: 2, maximum: FemboyFans.config.ticket_max_size }
-  validates :response, length: { minimum: 2, maximum: FemboyFans.config.ticket_max_size }, on: :update
-  validates :report_type, presence: true
-  validate :validate_model_type
-  validate :validate_report_type
-  enum :status, %i[pending partial approved rejected].index_with(&:to_s)
-  after_create :autoban_accused_user
-  after_update :log_update
-  after_update :create_dmail
-  validate :validate_model_exists, on: :create
-  validate :validate_creator_is_not_limited, on: :create
+  belongs_to_creator(counter_cache: "ticket_count")
+  belongs_to(:model, polymorphic: true)
+  belongs_to(:claimant, class_name: "User", optional: true)
+  belongs_to(:handler, class_name: "User", optional: true)
+  belongs_to(:accused, class_name: "User", optional: true)
+  after_initialize(:classify)
+  before_validation(:initialize_fields, on: :create)
+  normalizes(:reason, with: ->(reason) { reason.gsub("\r\n", "\n") })
+  validates(:reason, presence: true)
+  validates(:reason, length: { minimum: 2, maximum: FemboyFans.config.ticket_max_size })
+  validates(:response, length: { minimum: 2, maximum: FemboyFans.config.ticket_max_size }, on: :update)
+  validates(:report_type, presence: true)
+  validate(:validate_model_type)
+  validate(:validate_report_type)
+  enum(:status, %i[pending partial approved rejected].index_with(&:to_s))
+  after_create(:autoban_accused_user)
+  after_update(:log_update)
+  after_update(:create_dmail)
+  validate(:validate_model_exists, on: :create)
+  validate(:validate_creator_is_not_limited, on: :create)
 
-  scope :for_creator, ->(uid) { where(creator_id: uid) }
-  scope :automated, -> { for_creator(User.system.id) }
-  scope :spam, -> { automated.where(reason: "Spam.") }
+  scope(:for_creator, ->(uid) { where(creator_id: uid) })
+  scope(:automated, -> { for_creator(User.system.id) })
+  scope(:spam, -> { automated.where(reason: "Spam.") })
 
-  attr_accessor :record_type, :send_update_dmail
+  attr_accessor(:record_type, :send_update_dmail)
 
   MODEL_TYPES = %w[Artist Comment Dmail ForumPost Pool Post PostSet Tag User WikiPage].freeze
 
@@ -411,12 +411,12 @@ class Ticket < ApplicationRecord
     end
   end
 
-  include ClassifyMethods
-  include ValidationMethods
-  include ClaimMethods
-  include NotificationMethods
-  include PubSubMethods
-  extend SearchMethods
+  include(ClassifyMethods)
+  include(ValidationMethods)
+  include(ClaimMethods)
+  include(NotificationMethods)
+  include(PubSubMethods)
+  extend(SearchMethods)
 
   def self.available_includes
     %i[handler]

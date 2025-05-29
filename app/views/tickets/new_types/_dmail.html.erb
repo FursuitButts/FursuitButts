@@ -1,5 +1,5 @@
 <h4>You are reporting the following private message:</h4>
-<div class="author"><%= link_to_user @ticket.model.from %></div>
+<div class="author"><%= link_to_user(@ticket.model.from) %></div>
 <span class="date"><%= time_ago_in_words_tagged(@ticket.model.created_at) %></span>
 <br><br>
 <div class="dtext-container">

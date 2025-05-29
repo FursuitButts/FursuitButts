@@ -2,8 +2,8 @@
 
 module DocumentStore
   class InstanceMethodProxy
-    delegate :client, :index_name, to: :class_document_store
-    delegate_missing_to :@target
+    delegate(:client, :index_name, to: :class_document_store)
+    delegate_missing_to(:@target)
 
     def initialize(target)
       @target = target

@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 class ArtistVersion < ApplicationRecord
-  array_attribute :urls
-  array_attribute :other_names
+  array_attribute(:urls)
+  array_attribute(:other_names)
 
-  belongs_to_updater counter_cache: "artist_update_count"
-  belongs_to :artist
-  belongs_to :linked_user, class_name: "User", optional: true
+  belongs_to_updater(counter_cache: "artist_update_count")
+  belongs_to(:artist)
+  belongs_to(:linked_user, class_name: "User", optional: true)
 
   module SearchMethods
     def for_user(user_id)
@@ -40,7 +40,7 @@ class ArtistVersion < ApplicationRecord
     end
   end
 
-  extend SearchMethods
+  extend(SearchMethods)
 
   def previous
     ArtistVersion.where("artist_id = ? and created_at < ?", artist_id, created_at).order("created_at desc").first

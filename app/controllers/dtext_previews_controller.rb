@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class DtextPreviewsController < ApplicationController
-  skip_forgery_protection only: :create
+  skip_forgery_protection(only: :create)
 
   def create
     body = params[:body] || ""

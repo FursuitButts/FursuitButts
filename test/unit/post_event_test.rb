@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 class PostEventTest < ActiveSupport::TestCase
   setup do
@@ -22,8 +22,8 @@ class PostEventTest < ActiveSupport::TestCase
     end
   end
 
-  context "certain actions" do
-    should "create a post event" do
+  context("certain actions") do
+    should("create a post event") do
       assert_post_events_created(@janitor, :approved) do
         @post.approve!(@janitor)
       end
@@ -121,26 +121,26 @@ class PostEventTest < ActiveSupport::TestCase
       end
     end
 
-    context "replacements" do
+    context("replacements") do
       setup do
         upload = create(:gif_upload, uploader: @user, tag_string: "tst")
         @post = upload.post
         @replacement = create(:png_replacement, creator: @user, post: @post)
       end
 
-      should "reject" do
+      should("reject") do
         assert_post_events_created(@admin, :replacement_rejected) do
           @replacement.reject!
         end
       end
 
-      should "approve" do
+      should("approve") do
         assert_post_events_created(@admin, :replacement_accepted) do
           @replacement.approve!(penalize_current_uploader: true)
         end
       end
 
-      should "destroy" do
+      should("destroy") do
         assert_post_events_created(@admin, :replacement_deleted) do
           @replacement.destroy!
         end

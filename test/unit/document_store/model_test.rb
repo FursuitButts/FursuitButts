@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 module DocumentStore
   class ModelTest < ActiveSupport::TestCase
@@ -17,25 +17,25 @@ module DocumentStore
       stub_request(method, "http://#{FemboyFans.config.elasticsearch_host}:9200#{path}")
     end
 
-    test "it deletes the index" do
+    test("it deletes the index") do
       delete_request = stub_elasticsearch(:delete, "/posts_test")
       Post.document_store.delete_index!
-      assert_requested delete_request
+      assert_requested(delete_request)
     end
 
-    test "it checks for the existance of the index" do
+    test("it checks for the existance of the index") do
       head_request = stub_elasticsearch(:head, "/posts_test")
       Post.document_store.index_exist?
-      assert_requested head_request
+      assert_requested(head_request)
     end
 
-    test "it skips creating the index if it already exists" do
+    test("it skips creating the index if it already exists") do
       head_request = stub_elasticsearch(:head, "/posts_test").to_return(status: 200)
       Post.document_store.create_index!
-      assert_requested head_request
+      assert_requested(head_request)
     end
 
-    test "it creates the index if it doesn't exist" do
+    test("it creates the index if it doesn't exist") do
       head_request = stub_elasticsearch(:head, "/posts_test").to_return(status: 404)
       put_request = stub_elasticsearch(:put, "/posts_test").with(body: Post.document_store.index)
       assert(Post.document_store.index.present?)
@@ -46,7 +46,7 @@ module DocumentStore
       assert_requested(put_request)
     end
 
-    test "it recreates the index if delete_existing is true and the index already exists" do
+    test("it recreates the index if delete_existing is true and the index already exists") do
       head_request = stub_elasticsearch(:head, "/posts_test").to_return(status: 200)
       delete_request = stub_elasticsearch(:delete, "/posts_test")
       put_request = stub_elasticsearch(:put, "/posts_test")
@@ -58,19 +58,19 @@ module DocumentStore
       assert_requested(put_request)
     end
 
-    test "it deletes by query" do
+    test("it deletes by query") do
       post_request = stub_elasticsearch(:post, "/posts_test/_delete_by_query?q=*").with(body: "{}")
       Post.document_store.delete_by_query(query: "*", body: {})
       assert_requested(post_request)
     end
 
-    test "it refreshes the index" do
+    test("it refreshes the index") do
       post_request = stub_elasticsearch(:post, "/posts_test/_refresh")
       Post.document_store.refresh_index!
       assert_requested(post_request)
     end
 
-    test "models share the same client" do
+    test("models share the same client") do
       assert_equal(Post.document_store.client.object_id, PostVersion.document_store.client.object_id)
     end
   end

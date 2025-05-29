@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 module Notes
   class VersionsControllerTest < ActionDispatch::IntegrationTest
-    context "The note versions controller" do
+    context("The note versions controller") do
       setup do
         @user = create(:user)
       end
 
-      context "index action" do
+      context("index action") do
         setup do
           as(@user) do
             @note = create(:note)
@@ -25,18 +25,18 @@ module Notes
           end
         end
 
-        should "list all versions" do
-          get note_versions_path
-          assert_response :success
+        should("list all versions") do
+          get(note_versions_path)
+          assert_response(:success)
         end
 
-        should "list all versions that match the search criteria" do
-          get note_versions_path, params: { search: { updater_id: @user2.id } }
-          assert_response :success
+        should("list all versions that match the search criteria") do
+          get(note_versions_path, params: { search: { updater_id: @user2.id } })
+          assert_response(:success)
         end
 
-        should "restrict access" do
-          assert_access(User::Levels::ANONYMOUS) { |user| get_auth note_versions_path, user }
+        should("restrict access") do
+          assert_access(User::Levels::ANONYMOUS) { |user| get_auth(note_versions_path, user) }
         end
       end
     end

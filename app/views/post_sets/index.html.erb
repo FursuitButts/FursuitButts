@@ -1,4 +1,4 @@
-<%= render partial: "search" %>
+<%= render(partial: "search") %>
 
 <h2>Sets</h2>
 
@@ -30,11 +30,11 @@
       <% if set.is_owner?(CurrentUser.user) %>
         <div class="set-status set-status-owner" title="You own this set">Owner</div>
       <% elsif set.is_maintainer?(CurrentUser.user) %>
-        <div class="set-status set-status-maintainer" title="You are a maintainer of this set and can add and remove posts. Click to view invites"><%= link_to "Maint.", controller: "post_sets/maintainers", action: "index" %></div>
+        <div class="set-status set-status-maintainer" title="You are a maintainer of this set and can add and remove posts. Click to view invites"><%= link_to("Maint.", controller: "post_sets/maintainers", action: "index") %></div>
       <% elsif set.is_invited?(CurrentUser.user) %>
-        <div class="set-status set-status-invited" title="You have been invited to maintain this set. Click to view invites"><%= link_to "Invited", controller: "post_sets/maintainers", action: "index" %></div>
+        <div class="set-status set-status-invited" title="You have been invited to maintain this set. Click to view invites"><%= link_to("Invited", controller: "post_sets/maintainers", action: "index") %></div>
       <% elsif set.is_blocked?(CurrentUser.user) %>
-        <div class="set-status set-status-blocked" title="You have blocked the owner of this set from inviting you to maintain it. Click to view invites"><%= link_to "Blocked", controller: "post_sets/maintainers", action: "index" %></div>
+        <div class="set-status set-status-blocked" title="You have blocked the owner of this set from inviting you to maintain it. Click to view invites"><%= link_to("Blocked", controller: "post_sets/maintainers", action: "index") %></div>
       <% end %>
     <% end %>
   <% end %>
@@ -43,7 +43,7 @@
 <%= numbered_paginator(@post_sets) %>
 
 
-<%= render partial: "secondary_links" %>
+<%= render(partial: "secondary_links") %>
 
 <% content_for(:page_title) do %>
   Sets

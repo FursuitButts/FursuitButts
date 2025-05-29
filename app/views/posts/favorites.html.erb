@@ -11,7 +11,7 @@
     <% @users.each do |user| %>
       <tr>
         <td>
-          <%= link_to_user user %>
+          <%= link_to_user(user) %>
         </td>
         <td>
           <%= link_to(user.favorite_count, favorites_path(user_id: user.id)) %>
@@ -22,7 +22,7 @@
 </table>
 <%= numbered_paginator(@users) %>
 
-<%= render "posts/partials/common/secondary_links" %>
+<%= render("posts/partials/common/secondary_links") %>
 
 <% content_for(:page_title) do %>
   Post Favorites - #<%= params[:post_id] %>

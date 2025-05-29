@@ -3,7 +3,7 @@
 module PostSets
   module Popular
     class TopViews < PostSets::Base
-      attr_reader :limit
+      attr_reader(:limit)
 
       def initialize(limit: Reports::LIMIT)
         @limit = limit

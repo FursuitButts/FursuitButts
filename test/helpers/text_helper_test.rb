@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 class TextHelperTest < ActionView::TestCase
-  should "not call diff" do
+  should("not call diff") do
     Open3.expects(:capture3).never
     text_diff("abc", "def")
   end
 
-  should "strip the header info" do
+  should("strip the header info") do
     expected = <<~HTML.chomp
       <div class="diff">
         <ul>
@@ -22,7 +22,7 @@ class TextHelperTest < ActionView::TestCase
     assert_equal(expected, actual)
   end
 
-  should "escape html entities" do
+  should("escape html entities") do
     expected = <<~HTML.chomp
       <div class="diff">
         <ul>

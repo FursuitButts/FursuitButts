@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class ForumUpdater
-  attr_reader :forum_topic, :forum_post, :expected_title
+  attr_reader(:forum_topic, :forum_post, :expected_title)
 
   def initialize(forum_topic, options = {})
     @forum_topic = forum_topic

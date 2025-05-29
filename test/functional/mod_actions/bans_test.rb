@@ -1,25 +1,25 @@
 # frozen_string_literal: true
 
-require "test_helper"
-require_relative "helper"
+require("test_helper")
+require_relative("helper")
 
 module ModActions
   class BansTest < ActiveSupport::TestCase
-    include Helper
-    include Rails.application.routes.url_helpers
+    include(Helper)
+    include(Rails.application.routes.url_helpers)
 
     def format_expires_at(timestamp)
       timestamp.nil? ? "never" : DateTime.parse(timestamp).strftime("%Y-%m-%d %H:%M")
     end
 
-    context "mod actions for bans" do
+    context("mod actions for bans") do
       setup do
         @ban = create(:ban, user: @user)
         set_count!
       end
 
-      context "ban_create" do
-        should "format permanent bans correctly" do
+      context("ban_create") do
+        should("format permanent bans correctly") do
           @ban = create(:ban, duration: -1, user: @user)
 
           assert_matches(
@@ -32,7 +32,7 @@ module ModActions
           )
         end
 
-        should "format temporary bans correctly" do
+        should("format temporary bans correctly") do
           @ban = create(:ban, duration: 1, user: @user)
 
           assert_matches(
@@ -46,7 +46,7 @@ module ModActions
         end
 
         # should be impossible in normal usage
-        should "format invalid durations correctly" do
+        should("format invalid durations correctly") do
           @ban = build(:ban, duration: nil, user: @user)
           @ban.save(validate: false)
 
@@ -61,7 +61,7 @@ module ModActions
         end
       end
 
-      should "format ban_delete correctly" do
+      should("format ban_delete correctly") do
         @ban.destroy
         assert_matches(
           actions: %w[ban_delete],
@@ -71,12 +71,12 @@ module ModActions
         )
       end
 
-      context "ban_update" do
+      context("ban_update") do
         setup do
           @original = @ban.dup
         end
 
-        should "format no changes correctly" do
+        should("format no changes correctly") do
           @ban.save
 
           assert_matches(
@@ -91,7 +91,7 @@ module ModActions
           )
         end
 
-        should "format duration changes correctly" do
+        should("format duration changes correctly") do
           @ban.update!(duration: -1)
 
           assert_matches(
@@ -109,7 +109,7 @@ module ModActions
           )
         end
 
-        should "format reason changes correctly" do
+        should("format reason changes correctly") do
           @ban.update!(reason: "xxx")
 
           assert_matches(
@@ -127,7 +127,7 @@ module ModActions
           )
         end
 
-        should "format both duration and reason changes correctly" do
+        should("format both duration and reason changes correctly") do
           @ban.update!(duration: -1, reason: "xxx")
 
           assert_matches(

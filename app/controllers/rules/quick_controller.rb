@@ -2,7 +2,7 @@
 
 module Rules
   class QuickController < ApplicationController
-    respond_to :html, :json
+    respond_to(:html, :json)
 
     def index
       @quick = authorize(QuickRule).order(:order).paginate(params[:page], limit: params[:limit])

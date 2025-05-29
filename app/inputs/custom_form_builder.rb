@@ -18,5 +18,5 @@ class CustomFormBuilder < SimpleForm::FormBuilder
     super
   end
 
-  include FormBuilderCommon
+  include(FormBuilderCommon)
 end

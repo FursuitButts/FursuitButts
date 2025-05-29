@@ -2,9 +2,9 @@
 
 module Rules
   class CategoriesController < ApplicationController
-    respond_to :html, except: %i[index]
-    respond_to :json
-    respond_to :js, only: %i[reorder]
+    respond_to(:html, except: %i[index])
+    respond_to(:json)
+    respond_to(:js, only: %i[reorder])
 
     def index
       @categories = authorize(RuleCategory).order(:order).paginate(params[:page], limit: params[:limit])

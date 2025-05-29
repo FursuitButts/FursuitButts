@@ -5,7 +5,7 @@ class User < ApplicationRecord
   class MFAError < StandardError; end
 
   class PrivilegeError < StandardError
-    attr_accessor :message
+    attr_accessor(:message)
 
     def initialize(msg = nil)
       @message = "Access Denied: #{msg}" if msg
@@ -73,10 +73,10 @@ class User < ApplicationRecord
   VALID_LEVELS = (Levels.constants - %i[ANONYMOUS LOCKED]).map { |v| Levels.const_get(v) }.freeze
 
   module Preferences
-    mattr_accessor :settable, default: []
-    mattr_accessor :private, default: []
-    mattr_accessor :public, default: []
-    mattr_accessor :anonymous, default: []
+    mattr_accessor(:settable, default: [])
+    mattr_accessor(:private, default: [])
+    mattr_accessor(:public, default: [])
+    mattr_accessor(:anonymous, default: [])
 
     def self.pref(value, settable: true, private: true, public: false, anonymous: settable)
       self.settable << value if settable
@@ -153,92 +153,92 @@ class User < ApplicationRecord
     end
   end
 
-  include FemboyFans::HasBitFlags
+  include(FemboyFans::HasBitFlags)
   has_bit_flags(Preferences.map, field: "bit_prefs")
 
   def prefs_list
     Preferences.to_list(bit_prefs)
   end
 
-  attr_accessor :password, :old_password, :validate_email_format, :is_admin_edit
+  attr_accessor(:password, :old_password, :validate_email_format, :is_admin_edit)
 
-  after_initialize :initialize_attributes, if: :new_record?
-  before_validation :sanitize_upload_notifications, if: :will_save_change_to_upload_notifications?
+  after_initialize(:initialize_attributes, if: :new_record?)
+  before_validation(:sanitize_upload_notifications, if: :will_save_change_to_upload_notifications?)
 
-  validates :email, presence: { if: :enable_email_verification? }
-  validates :email, uniqueness: { case_sensitive: false, if: :enable_email_verification? }
-  validates :email, format: { with: /\A.+@[^ ,;@]+\.[^ ,;@]+\z/, if: :enable_email_verification? }
-  validates :email, length: { maximum: 100 }
-  validate :validate_email_address_allowed, on: %i[create update], if: ->(rec) { (rec.new_record? && rec.email.present?) || (rec.email.present? && rec.email_changed?) }
+  validates(:email, presence: { if: :enable_email_verification? })
+  validates(:email, uniqueness: { case_sensitive: false, if: :enable_email_verification? })
+  validates(:email, format: { with: /\A.+@[^ ,;@]+\.[^ ,;@]+\z/, if: :enable_email_verification? })
+  validates(:email, length: { maximum: 100 })
+  validate(:validate_email_address_allowed, on: %i[create update], if: ->(rec) { (rec.new_record? && rec.email.present?) || (rec.email.present? && rec.email_changed?) })
 
-  normalizes :profile_about, :profile_artinfo, with: ->(value) { value.gsub("\r\n", "\n") }
-  validates :name, user_name: true, on: :create
-  validates :default_image_size, inclusion: { in: %w[large fit fitv original] }
-  validates :per_page, inclusion: { in: 1..FemboyFans.config.max_per_page }
-  validates :comment_threshold, presence: true
-  validates :comment_threshold, numericality: { only_integer: true, less_than: 50_000, greater_than: -50_000 }
-  validates :password, length: { minimum: 6, maximum: 128, if: ->(rec) { rec.new_record? || rec.password.present? || rec.old_password.present? } }, unless: :is_system?
-  validates :password, confirmation: true, unless: :is_system?
-  validates :password_confirmation, presence: { if: ->(rec) { rec.new_record? || rec.old_password.present? } }, unless: :is_system?
-  validate :validate_ip_addr_is_not_banned, on: :create
-  validate :validate_sock_puppets, on: :create, if: -> { FemboyFans.config.enable_sock_puppet_validation? && !is_system? }
-  validate :validate_prefs, if: :will_save_change_to_bit_prefs?
-  before_validation :normalize_blacklisted_tags, if: ->(rec) { rec.blacklisted_tags_changed? }
-  before_validation :staff_cant_disable_dmail
-  before_validation :blank_out_nonexistent_avatars
-  validates :blacklisted_tags, length: { maximum: FemboyFans.config.blacklisted_tags_max_size }
-  validates :custom_style, length: { maximum: FemboyFans.config.custom_style_max_size }
-  validates :profile_about, length: { maximum: FemboyFans.config.user_about_max_size }
-  validates :profile_artinfo, length: { maximum: FemboyFans.config.user_about_max_size }
-  validates :time_zone, inclusion: { in: ActiveSupport::TimeZone.all.map(&:name) }
-  validates :upload_notifications, inclusion: { in: -> { User.upload_notifications_options } }
-  before_create :promote_to_owner_if_first_user
-  before_create :encrypt_password_on_create
+  normalizes(:profile_about, :profile_artinfo, with: ->(value) { value.gsub("\r\n", "\n") })
+  validates(:name, user_name: true, on: :create)
+  validates(:default_image_size, inclusion: { in: %w[large fit fitv original] })
+  validates(:per_page, inclusion: { in: 1..FemboyFans.config.max_per_page })
+  validates(:comment_threshold, presence: true)
+  validates(:comment_threshold, numericality: { only_integer: true, less_than: 50_000, greater_than: -50_000 })
+  validates(:password, length: { minimum: 6, maximum: 128, if: ->(rec) { rec.new_record? || rec.password.present? || rec.old_password.present? } }, unless: :is_system?)
+  validates(:password, confirmation: true, unless: :is_system?)
+  validates(:password_confirmation, presence: { if: ->(rec) { rec.new_record? || rec.old_password.present? } }, unless: :is_system?)
+  validate(:validate_ip_addr_is_not_banned, on: :create)
+  validate(:validate_sock_puppets, on: :create, if: -> { FemboyFans.config.enable_sock_puppet_validation? && !is_system? })
+  validate(:validate_prefs, if: :will_save_change_to_bit_prefs?)
+  before_validation(:normalize_blacklisted_tags, if: ->(rec) { rec.blacklisted_tags_changed? })
+  before_validation(:staff_cant_disable_dmail)
+  before_validation(:blank_out_nonexistent_avatars)
+  validates(:blacklisted_tags, length: { maximum: FemboyFans.config.blacklisted_tags_max_size })
+  validates(:custom_style, length: { maximum: FemboyFans.config.custom_style_max_size })
+  validates(:profile_about, length: { maximum: FemboyFans.config.user_about_max_size })
+  validates(:profile_artinfo, length: { maximum: FemboyFans.config.user_about_max_size })
+  validates(:time_zone, inclusion: { in: ActiveSupport::TimeZone.all.map(&:name) })
+  validates(:upload_notifications, inclusion: { in: -> { User.upload_notifications_options } })
+  before_create(:promote_to_owner_if_first_user)
+  before_create(:encrypt_password_on_create)
   # after_create :notify_sock_puppets
-  after_create :create_user_approval, if: ->(rec) { rec.is_restricted? }
-  before_update :encrypt_password_on_update
-  after_update :log_update, if: :is_admin_edit
-  after_save :update_cache
+  after_create(:create_user_approval, if: ->(rec) { rec.is_restricted? })
+  before_update(:encrypt_password_on_update)
+  after_update(:log_update, if: :is_admin_edit)
+  after_save(:update_cache)
   after_update(if: ->(rec) { rec.saved_change_to_profile_about? || rec.saved_change_to_profile_artinfo? || rec.saved_change_to_blacklisted_tags? }) do |rec|
     UserTextVersion.create_version(rec)
   end
 
-  has_many :api_keys, dependent: :destroy
-  has_one :dmail_filter
-  has_many :sent_dmails, ->(user) { owned_by(user) }, class_name: "Dmail", foreign_key: "from_id"
-  has_many :received_dmails, ->(user) { owned_by(user) }, class_name: "Dmail", foreign_key: "to_id"
-  has_one :recent_ban, -> { order("bans.id desc") }, class_name: "Ban"
-  has_many :bans, -> { order("bans.id desc") }
-  has_many :dmails, -> { order("dmails.id desc") }, foreign_key: "owner_id"
-  has_many :favorites, -> { order(id: :desc) }
-  has_many :feedback, class_name: "UserFeedback", dependent: :destroy
-  has_many :comments, foreign_key: "creator_id"
-  has_many :forum_posts, -> { order("forum_posts.created_at, forum_posts.id") }, foreign_key: "creator_id"
-  has_many :forum_category_visits
-  has_many :tickets, foreign_key: "creator_id"
-  has_many :note_versions, foreign_key: "updater_id"
-  has_many :posts, foreign_key: "uploader_id"
-  has_many :post_approvals, dependent: :destroy
-  has_many :post_disapprovals, dependent: :destroy
-  has_many :post_replacements, foreign_key: :creator_id
-  has_many :post_sets, -> { order(name: :asc) }, foreign_key: :creator_id
-  has_many :post_versions
-  has_many :post_votes
-  has_many :comment_votes
-  has_many :forum_post_votes
-  has_many :staff_notes, -> { active.order("staff_notes.id desc") }
-  has_many :user_name_change_requests, -> { order(id: :asc) }
-  has_many :text_versions, -> { order(id: :desc) }, class_name: "UserTextVersion"
-  has_many :artists, foreign_key: "linked_user_id"
-  has_many :blocks, class_name: "UserBlock"
-  has_many :followed_tags, class_name: "TagFollower"
-  has_many :notifications
-  has_many :user_events
+  has_many(:api_keys, dependent: :destroy)
+  has_one(:dmail_filter)
+  has_many(:sent_dmails, ->(user) { owned_by(user) }, class_name: "Dmail", foreign_key: "from_id")
+  has_many(:received_dmails, ->(user) { owned_by(user) }, class_name: "Dmail", foreign_key: "to_id")
+  has_one(:recent_ban, -> { order("bans.id desc") }, class_name: "Ban")
+  has_many(:bans, -> { order("bans.id desc") })
+  has_many(:dmails, -> { order("dmails.id desc") }, foreign_key: "owner_id")
+  has_many(:favorites, -> { order(id: :desc) })
+  has_many(:feedback, class_name: "UserFeedback", dependent: :destroy)
+  has_many(:comments, foreign_key: "creator_id")
+  has_many(:forum_posts, -> { order("forum_posts.created_at, forum_posts.id") }, foreign_key: "creator_id")
+  has_many(:forum_category_visits)
+  has_many(:tickets, foreign_key: "creator_id")
+  has_many(:note_versions, foreign_key: "updater_id")
+  has_many(:posts, foreign_key: "uploader_id")
+  has_many(:post_approvals, dependent: :destroy)
+  has_many(:post_disapprovals, dependent: :destroy)
+  has_many(:post_replacements, foreign_key: :creator_id)
+  has_many(:post_sets, -> { order(name: :asc) }, foreign_key: :creator_id)
+  has_many(:post_versions)
+  has_many(:post_votes)
+  has_many(:comment_votes)
+  has_many(:forum_post_votes)
+  has_many(:staff_notes, -> { active.order("staff_notes.id desc") })
+  has_many(:user_name_change_requests, -> { order(id: :asc) })
+  has_many(:text_versions, -> { order(id: :desc) }, class_name: "UserTextVersion")
+  has_many(:artists, foreign_key: "linked_user_id")
+  has_many(:blocks, class_name: "UserBlock")
+  has_many(:followed_tags, class_name: "TagFollower")
+  has_many(:notifications)
+  has_many(:user_events)
 
-  scope :has_blacklisted_tag, ->(name) { where_regex(:blacklisted_tags, "(^| )[~-]?#{Regexp.escape(name)}( |$)", flags: "ni") }
+  scope(:has_blacklisted_tag, ->(name) { where_regex(:blacklisted_tags, "(^| )[~-]?#{Regexp.escape(name)}( |$)", flags: "ni") })
 
-  belongs_to :avatar, class_name: "Post", optional: true
-  accepts_nested_attributes_for :dmail_filter
+  belongs_to(:avatar, class_name: "Post", optional: true)
+  accepts_nested_attributes_for(:dmail_filter)
 
   module AdminEditMethods
     def can_admin_edit?(user)
@@ -287,7 +287,7 @@ class User < ApplicationRecord
   end
 
   module NameMethods
-    extend ActiveSupport::Concern
+    extend(ActiveSupport::Concern)
 
     module ClassMethods
       def name_to_id(name)
@@ -416,7 +416,7 @@ class User < ApplicationRecord
   end
 
   module AuthenticationMethods
-    extend ActiveSupport::Concern
+    extend(ActiveSupport::Concern)
 
     module ClassMethods
       def authenticate(name, pass)
@@ -439,7 +439,7 @@ class User < ApplicationRecord
   end
 
   module LevelMethods
-    extend ActiveSupport::Concern
+    extend(ActiveSupport::Concern)
 
     Levels.constants.each do |constant|
       next if Levels.const_get(constant) < Levels::MEMBER
@@ -581,7 +581,7 @@ class User < ApplicationRecord
   end
 
   module BlacklistMethods
-    extend ActiveSupport::Concern
+    extend(ActiveSupport::Concern)
 
     class_methods do
       def rewrite_blacklists!(old_name, new_name)
@@ -707,8 +707,8 @@ class User < ApplicationRecord
     end
 
     class Throttle
-      include ActiveModel::Serializers::JSON
-      attr_reader :name, :limiter, :bypass, :newbie_duration, :level
+      include(ActiveModel::Serializers::JSON)
+      attr_reader(:name, :limiter, :bypass, :newbie_duration, :level)
 
       def initialize(name, limiter, bypass, newbie_duration, level)
         @name = name
@@ -743,7 +743,7 @@ class User < ApplicationRecord
       end
     end
 
-    cattr_accessor :throttles, default: []
+    cattr_accessor(:throttles, default: [])
 
     def self.create_user_throttle(name, limiter, bypass, newbie_duration, level)
       throttle = Throttle.new(name, limiter, bypass, newbie_duration, level)
@@ -1108,8 +1108,8 @@ class User < ApplicationRecord
     end
   end
 
-  concerning :SockPuppetMethods do
-    attr_writer :validate_sock_puppets
+  concerning(:SockPuppetMethods) do
+    attr_writer(:validate_sock_puppets)
 
     def validate_sock_puppets
       return if @validate_sock_puppets == false
@@ -1222,24 +1222,24 @@ class User < ApplicationRecord
     end
   end
 
-  include AdminEditMethods
-  include BanMethods
-  include NameMethods
-  include PasswordMethods
-  include AuthenticationMethods
-  include LevelMethods
-  include EmailMethods
-  include BlacklistMethods
-  include ForumMethods
-  include LimitMethods
-  include CountMethods
-  include BlockMethods
-  include LogChanges
-  include FollowerMethods
-  include NotificationMethods
-  include MFAMethods
-  extend SearchMethods
-  extend ThrottleMethods
+  include(AdminEditMethods)
+  include(BanMethods)
+  include(NameMethods)
+  include(PasswordMethods)
+  include(AuthenticationMethods)
+  include(LevelMethods)
+  include(EmailMethods)
+  include(BlacklistMethods)
+  include(ForumMethods)
+  include(LimitMethods)
+  include(CountMethods)
+  include(BlockMethods)
+  include(LogChanges)
+  include(FollowerMethods)
+  include(NotificationMethods)
+  include(MFAMethods)
+  extend(SearchMethods)
+  extend(ThrottleMethods)
 
   def set_per_page
     if per_page.nil?

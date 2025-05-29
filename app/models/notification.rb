@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class Notification < ApplicationRecord
-  belongs_to :user
-  enum :category, {
+  belongs_to(:user)
+  enum(:category, {
     default:             0,
     new_post:            1,
     dmail:               2,
@@ -21,10 +21,10 @@ class Notification < ApplicationRecord
     replacement_approve: 40,
     replacement_reject:  41,
     replacement_promote: 42,
-  }
-  store_accessor :data, %i[post_id tag_name dmail_id dmail_title mention_id mention_type topic_id topic_title record_id record_type post_appeal_id post_replacement_id]
-  store_accessor :data, %i[user_id], prefix: true
-  after_commit :update_unread_count
+  })
+  store_accessor(:data, %i[post_id tag_name dmail_id dmail_title mention_id mention_type topic_id topic_title record_id record_type post_appeal_id post_replacement_id])
+  store_accessor(:data, %i[user_id], prefix: true)
+  after_commit(:update_unread_count)
 
   def h
     Rails.application.routes.url_helpers
@@ -129,7 +129,7 @@ class Notification < ApplicationRecord
     end
   end
 
-  extend SearchMethods
+  extend(SearchMethods)
 
   def self.available_includes
     %i[user]

@@ -1,16 +1,16 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 class UserNameChangeRequestTest < ActiveSupport::TestCase
-  context "in all cases" do
+  context("in all cases") do
     setup do
       @admin = create(:admin_user)
       @requester = create(:user)
       CurrentUser.user = @requester
     end
 
-    context "approving a request" do
+    context("approving a request") do
       setup do
         @change_request = UserNameChangeRequest.create(
           user_id:       @requester.id,
@@ -21,26 +21,26 @@ class UserNameChangeRequestTest < ActiveSupport::TestCase
         CurrentUser.user = @admin
       end
 
-      should "create a dmail" do
+      should("create a dmail") do
         assert_difference(-> { Dmail.count }, 1) do
           @change_request.approve!
         end
       end
 
-      should "change the user's name" do
+      should("change the user's name") do
         @change_request.approve!
         @requester.reload
         assert_equal("abc", @requester.name)
       end
 
-      should "clear the user name cache" do
+      should("clear the user name cache") do
         @change_request.approve!
         assert_equal("abc", Cache.fetch("uin:#{@requester.id}"))
       end
     end
 
-    context "creating a new request" do
-      should "not validate if the desired name already exists" do
+    context("creating a new request") do
+      should("not validate if the desired name already exists") do
         assert_difference(-> { UserNameChangeRequest.count }, 0) do
           req = UserNameChangeRequest.create(
             user_id:       @requester.id,
@@ -52,7 +52,7 @@ class UserNameChangeRequestTest < ActiveSupport::TestCase
         end
       end
 
-      should "not convert the desired name to lower case" do
+      should("not convert the desired name to lower case") do
         uncr = create(:user_name_change_request, user: @requester, original_name: "provence.", desired_name: "Provence")
         as(@admin) { uncr.approve! }
 
@@ -61,7 +61,7 @@ class UserNameChangeRequestTest < ActiveSupport::TestCase
     end
   end
 
-  context "when users switch names" do
+  context("when users switch names") do
     setup do
       # Uppercase usernames are relevant for the test because of normalization
       @u1 = create(:user, name: "Aaa")
@@ -81,7 +81,7 @@ class UserNameChangeRequestTest < ActiveSupport::TestCase
       @u1.reload
     end
 
-    should "update the user cache correcly" do
+    should("update the user cache correcly") do
       assert_equal("Bbb", @u1.name)
       assert_equal("Aaa", @u2.name)
       assert_equal(@u1.id, User.name_to_id(@u1.name))

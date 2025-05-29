@@ -6,7 +6,7 @@
   <h1>Messages</h1>
 <% end %>
 
-<%= render "search" %>
+<%= render("search") %>
 
 <%= table_for(@dmails, class: "striped autofit") do |t| %>
   <% t.column("From") do |dmail| %>
@@ -42,7 +42,7 @@
 
 <%= numbered_paginator(@dmails) %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   Messages

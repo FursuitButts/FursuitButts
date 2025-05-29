@@ -3,11 +3,11 @@
 
 <%= table_for(@news_updates, class: "striped autofit") do |t| %>
   <% t.column("Creator") do |news_update| %>
-    <%= link_to_user news_update.creator %>
+    <%= link_to_user(news_update.creator) %>
     <p><%= compact_time(news_update.updated_at) %></p>
   <% end %>
   <% t.column("Message", th: { class: "col-expand" }) do |news_update| %>
-    <div class="dtext-container"><%= format_text news_update.message %></div>
+    <div class="dtext-container"><%= format_text(news_update.message) %></div>
   <% end %>
   <% t.column(if: policy(NewsUpdate).all?(:update?, :destroy?)) do |news_update| %>
     <%= link_to("Edit", edit_news_update_path(news_update)) %> |
@@ -17,7 +17,7 @@
 
 <%= numbered_paginator(@news_updates) %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   News Updates

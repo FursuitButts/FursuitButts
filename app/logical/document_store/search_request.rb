@@ -2,7 +2,7 @@
 
 module DocumentStore
   class SearchRequest
-    attr_reader :definition
+    attr_reader(:definition)
 
     def initialize(definition, client)
       @definition = definition

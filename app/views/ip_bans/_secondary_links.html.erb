@@ -1,5 +1,5 @@
 <% content_for(:secondary_links) do %>
-  <%= subnav_link_to "Listing", ip_bans_path %>
-  <%= subnav_link_to "New", new_ip_ban_path %>
-  <%= subnav_link_to "Logs", admin_audit_logs_path(search: { action: "ip_ban_create,ip_ban_delete" }) %>
+  <%= subnav_link_to("Listing", ip_bans_path) %>
+  <%= subnav_link_to("New", new_ip_ban_path) %>
+  <%= subnav_link_to("Logs", admin_audit_logs_path(search: { action: "ip_ban_create,ip_ban_delete" })) %>
 <% end %>

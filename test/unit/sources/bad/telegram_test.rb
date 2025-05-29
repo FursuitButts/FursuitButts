@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 module Sources
   module Bad
     class TelegramTest < ActiveSupport::TestCase
-      context "Telegram sources" do
+      context("Telegram sources") do
         setup do
           @post1 = create(:post, source: "https://t.me/hajnalskiart\nhttps://telegram.me/hajnalskiart\nhttps://telegram.dog/hajnalskiart")
           @post2 = create(:post, source: "https://t.me/hajnalskiart/65\nhttps://telegram.me/hajnalskiart/65\nhttps://telegram.dog/hajnalskiart/65")
@@ -15,27 +15,27 @@ module Sources
           @post6 = create(:post, source: "https://t.me/joinchat/ABC123")
         end
 
-        should "be bad if only a public channel link is provided" do
+        should("be bad if only a public channel link is provided") do
           assert_equal(true, @post1.bad_source?)
         end
 
-        should "not be bad if a public message link is provided" do
+        should("not be bad if a public message link is provided") do
           assert_equal(false, @post2.bad_source?)
         end
 
-        should "be bad if a private channel link is provided" do
+        should("be bad if a private channel link is provided") do
           assert_equal(true, @post3.bad_source?)
         end
 
-        should "be bad if only a private message link is provided" do
+        should("be bad if only a private message link is provided") do
           assert_equal(true, @post4.bad_source?)
         end
 
-        should "be bad if only a phone number link is provided" do
+        should("be bad if only a phone number link is provided") do
           assert_equal(true, @post5.bad_source?)
         end
 
-        should "be bad if only a group link is provided" do
+        should("be bad if only a group link is provided") do
           assert_equal(true, @post6.bad_source?)
         end
       end

@@ -3,9 +3,9 @@
 module PostSetPresenters
   module Popular
     class Uploads < Base
-      attr_accessor :post_set, :tag_set_presenter
+      attr_accessor(:post_set, :tag_set_presenter)
 
-      delegate :posts, :date, :min_date, :max_date, to: :post_set
+      delegate(:posts, :date, :min_date, :max_date, to: :post_set)
 
       def initialize(post_set)
         @post_set = post_set

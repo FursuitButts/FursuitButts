@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 class PostSet < ApplicationRecord
-  array_attribute :post_ids, parse: %r{(?:https://femboy\.fan/posts/)?(\d+)}i, cast: :to_i
+  array_attribute(:post_ids, parse: %r{(?:https://femboy\.fan/posts/)?(\d+)}i, cast: :to_i)
 
-  has_many :post_set_maintainers, dependent: :destroy do
+  has_many(:post_set_maintainers, dependent: :destroy) do
     def in_cooldown(user)
       where(creator_id: user.id, status: "cooldown").where("created_at < ?", 24.hours.ago)
     end
@@ -20,29 +20,29 @@ class PostSet < ApplicationRecord
       where(status: "banned")
     end
   end
-  has_many :maintainers, class_name: "User", through: :post_set_maintainers, source: :user
-  belongs_to_creator counter_cache: "set_count"
+  has_many(:maintainers, class_name: "User", through: :post_set_maintainers, source: :user)
+  belongs_to_creator(counter_cache: "set_count")
 
-  before_validation :normalize_shortname
-  validates :name, length: { minimum: 3, maximum: 100, message: "must be between three and one hundred characters long" }
-  validates :name, :shortname, uniqueness: { case_sensitive: false, message: "is already taken" }, if: :if_names_changed?
-  validates :shortname, length: { minimum: 3, maximum: 50, message: "must be between three and fifty characters long" }
-  validates :shortname, format: { with: /\A[\w]+\z/, message: "must only contain numbers, lowercase letters, and underscores" }
-  validates :shortname, format: { with: /\A\d*[a-z_][\w]*\z/, message: "must contain at least one lowercase letter or underscore" }
-  validates :description, length: { maximum: FemboyFans.config.pool_descr_max_size }
-  validate :validate_number_of_posts
-  validate :can_make_public, if: :is_public_changed?
-  validate :set_per_hour_limit, on: :create
-  validate :can_create_new_set_limit, on: :create
+  before_validation(:normalize_shortname)
+  validates(:name, length: { minimum: 3, maximum: 100, message: "must be between three and one hundred characters long" })
+  validates(:name, :shortname, uniqueness: { case_sensitive: false, message: "is already taken" }, if: :if_names_changed?)
+  validates(:shortname, length: { minimum: 3, maximum: 50, message: "must be between three and fifty characters long" })
+  validates(:shortname, format: { with: /\A[\w]+\z/, message: "must only contain numbers, lowercase letters, and underscores" })
+  validates(:shortname, format: { with: /\A\d*[a-z_][\w]*\z/, message: "must contain at least one lowercase letter or underscore" })
+  validates(:description, length: { maximum: FemboyFans.config.pool_descr_max_size })
+  validate(:validate_number_of_posts)
+  validate(:can_make_public, if: :is_public_changed?)
+  validate(:set_per_hour_limit, on: :create)
+  validate(:can_create_new_set_limit, on: :create)
 
-  before_save :update_post_count
-  after_update :send_maintainer_public_dmails
-  after_update :log_update
-  before_destroy :send_maintainer_destroy_dmails
-  after_destroy :log_delete
-  after_save :synchronize, if: :saved_change_to_post_ids?
+  before_save(:update_post_count)
+  after_update(:send_maintainer_public_dmails)
+  after_update(:log_update)
+  before_destroy(:send_maintainer_destroy_dmails)
+  after_destroy(:log_delete)
+  after_save(:synchronize, if: :saved_change_to_post_ids?)
 
-  attr_accessor :skip_sync
+  attr_accessor(:skip_sync)
 
   def self.name_to_id(name)
     if name =~ /\A\d+\z/
@@ -367,11 +367,11 @@ class PostSet < ApplicationRecord
     end
   end
 
-  include ValidationMethods
-  include AccessMethods
-  include PostMethods
-  include LogMethods
-  extend SearchMethods
+  include(ValidationMethods)
+  include(AccessMethods)
+  include(PostMethods)
+  include(LogMethods)
+  extend(SearchMethods)
 
   def self.available_includes
     %i[creator]

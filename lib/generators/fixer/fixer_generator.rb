@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class FixerGenerator < Rails::Generators::NamedBase
-  source_root File.expand_path("templates", __dir__)
-  class_option :elasticsearch, type: :boolean, default: false, aliases: %w[-e --elastic --opensearch --os]
+  source_root(File.expand_path("templates", __dir__))
+  class_option(:elasticsearch, type: :boolean, default: false, aliases: %w[-e --elastic --opensearch --os])
 
   def create_fixer
     elastic = options["elasticsearch"]

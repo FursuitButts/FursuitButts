@@ -1,29 +1,29 @@
 # frozen_string_literal: true
 
 class Dmail < ApplicationRecord
-  normalizes :body, with: ->(body) { body.gsub("\r\n", "\n") }
-  validates :title, :body, presence: { on: :create }
-  validates :title, length: { minimum: 1, maximum: 250 }
-  validates :body, length: { minimum: 1, maximum: FemboyFans.config.dmail_max_size }
-  validate :recipient_accepts_dmails, on: :create
-  validate :user_not_limited, on: :create
-  validate :user_can_send_to, on: :create
-  has_secure_token :key
+  normalizes(:body, with: ->(body) { body.gsub("\r\n", "\n") })
+  validates(:title, :body, presence: { on: :create })
+  validates(:title, length: { minimum: 1, maximum: 250 })
+  validates(:body, length: { minimum: 1, maximum: FemboyFans.config.dmail_max_size })
+  validate(:recipient_accepts_dmails, on: :create)
+  validate(:user_not_limited, on: :create)
+  validate(:user_can_send_to, on: :create)
+  has_secure_token(:key)
 
-  belongs_to :owner, class_name: "User"
-  belongs_to :to, class_name: "User"
-  belongs_to :from, class_name: "User"
-  belongs_to :respond_to, class_name: "User", optional: true
-  has_many :tickets, as: :model
-  has_one :spam_ticket, -> { spam }, class_name: "Ticket", as: :model
+  belongs_to(:owner, class_name: "User")
+  belongs_to(:to, class_name: "User")
+  belongs_to(:from, class_name: "User")
+  belongs_to(:respond_to, class_name: "User", optional: true)
+  has_many(:tickets, as: :model)
+  has_one(:spam_ticket, -> { spam }, class_name: "Ticket", as: :model)
 
-  after_initialize :initialize_attributes, if: :new_record?
-  before_create :auto_report_spam
-  before_create :auto_read_if_filtered
-  after_create :update_recipient
-  after_commit :send_email, on: :create, unless: :no_email_notification
+  after_initialize(:initialize_attributes, if: :new_record?)
+  before_create(:auto_report_spam)
+  before_create(:auto_read_if_filtered)
+  after_create(:update_recipient)
+  after_commit(:send_email, on: :create, unless: :no_email_notification)
 
-  attr_accessor :bypass_limits, :no_email_notification, :original
+  attr_accessor(:bypass_limits, :no_email_notification, :original)
 
   module AddressMethods
     def to_name=(name)
@@ -37,7 +37,7 @@ class Dmail < ApplicationRecord
   end
 
   module FactoryMethods
-    extend ActiveSupport::Concern
+    extend(ActiveSupport::Concern)
 
     module ClassMethods
       def create_split(params)
@@ -165,9 +165,9 @@ class Dmail < ApplicationRecord
     end
   end
 
-  include AddressMethods
-  include FactoryMethods
-  extend SearchMethods
+  include(AddressMethods)
+  include(FactoryMethods)
+  extend(SearchMethods)
 
   def user_not_limited
     return true if bypass_limits == true

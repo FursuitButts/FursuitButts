@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require "net/ftp"
+require("net/ftp")
 
 module StorageManager
   class Ftp < StorageManager::Base
     TEMP_DIR = "/tmp"
-    attr_reader :host, :port, :username, :password
+    attr_reader(:host, :port, :username, :password)
 
     def initialize(host:, port:, username:, password:, **options)
       @host = host

@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 class GitHelper
-  include Singleton
+  include(Singleton)
 
-  attr_accessor :enabled, :upstream_enabled, :git_exists, :repo_exists, :origin, :upstream, :local
+  attr_accessor(:enabled, :upstream_enabled, :git_exists, :repo_exists, :origin, :upstream, :local)
   alias enabled? enabled
   alias upstream_enabled? upstream_enabled
 
@@ -34,7 +34,7 @@ class GitHelper
   end
 
   class Ref
-    attr_accessor :remote, :branch, :url, :exists, :commit, :tag
+    attr_accessor(:remote, :branch, :url, :exists, :commit, :tag)
 
     def initialize(remote, branch, url)
       @remote = remote
@@ -117,7 +117,7 @@ class GitHelper
   end
 
   class Comparison
-    attr_accessor :a, :b
+    attr_accessor(:a, :b)
 
     def initialize(a, b) # rubocop:disable Naming/MethodParameterName
       @a = a

@@ -1,6 +1,6 @@
 <h1>User Text History</h1>
 
-<%= render "search" %>
+<%= render("search") %>
 <% if @text_versions.empty? %>
   <p>Nothing to see here.</p>
 <% else %>
@@ -13,16 +13,16 @@
     <%= table_for(versions) do |t| %>
       <% t.column(th: { width: "3%" }) do |text_version, i| %>
         <% if i < versions.length - 1 %>
-          <%= link_to "diff", diff_moderator_user_text_versions_path(thisversion: text_version.id, otherversion: versions[i + 1].id) %>
+          <%= link_to("diff", diff_moderator_user_text_versions_path(thisversion: text_version.id, otherversion: versions[i + 1].id)) %>
         <% else %>
           diff
         <% end %>
       <% end %>
       <% t.column(th: { width: "2%" }) do |text_version, i| %>
-        <%= radio_button_tag "otherversion", text_version.id, (i == 1), title: "Other Version" %>
+        <%= radio_button_tag("otherversion", text_version.id, (i == 1), title: "Other Version") %>
       <% end %>
       <% t.column(th: { width: "2%" }) do |text_version, i| %>
-        <%= radio_button_tag "thisversion", text_version.id, (i == 0), title: "This Version" %>
+        <%= radio_button_tag("thisversion", text_version.id, (i == 0), title: "This Version") %>
       <% end %>
       <% t.column do |text_version| %>
         <%= link_to("Show", action: :show, id: text_version.id) %>
@@ -47,7 +47,7 @@
   <%= numbered_paginator(@text_versions) %>
 <% end %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 <% content_for(:page_title) do %>
   User Text Versions
 <% end %>

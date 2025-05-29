@@ -3,7 +3,7 @@
 module Sources
   module Bad
     class Telegram < Base
-      attr_reader :has_invite, :has_channel, :has_channel_message, :has_message
+      attr_reader(:has_invite, :has_channel, :has_channel_message, :has_message)
 
       DOMAINS = %w[t.me telegram.me telegram.dog].freeze
       INVITE_REGEX = %r{(?:t|telegram)\.(?:me|dog)/(joinchat/|\+)?([\w-]+)$}

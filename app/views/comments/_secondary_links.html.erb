@@ -1,7 +1,7 @@
 <% content_for(:secondary_links) do %>
-  <li><%= render "comments/quick_search" %></li>
-  <%= subnav_link_to "Listing", comments_path(group_by: "post") %>
-  <%= subnav_link_to "Search", search_comments_path %>
-  <%= subnav_link_to "Help", help_page_path(id: "commenting") %>
+  <li><%= render("comments/quick_search") %></li>
+  <%= subnav_link_to("Listing", comments_path(group_by: "post")) %>
+  <%= subnav_link_to("Search", search_comments_path) %>
+  <%= subnav_link_to("Help", help_page_path(id: "commenting")) %>
 <% end %>
 <%= latest_link(@comments) %>

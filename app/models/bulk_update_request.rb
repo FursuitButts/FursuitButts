@@ -2,25 +2,25 @@
 
 class BulkUpdateRequest < ApplicationRecord
   belongs_to_creator
-  attr_accessor :reason, :skip_forum, :should_validate
+  attr_accessor(:reason, :skip_forum, :should_validate)
 
-  belongs_to :forum_topic, optional: true
-  belongs_to :forum_post, optional: true
-  belongs_to :approver, optional: true, class_name: "User"
+  belongs_to(:forum_topic, optional: true)
+  belongs_to(:forum_post, optional: true)
+  belongs_to(:approver, optional: true, class_name: "User")
 
-  validates :script, presence: true
-  validates :title, presence: { if: ->(rec) { rec.forum_topic_id.blank? } }
-  validates :status, inclusion: { in: %w[pending approved rejected] }
-  validate :script_formatted_correctly
-  validate :forum_topic_id_not_invalid
-  validate :validate_script, on: :create
-  validate :check_validate_script, on: :update
-  validates :reason, length: { minimum: 5, maximum: FemboyFans.config.forum_post_max_size }, on: :create, unless: :skip_forum
-  before_validation :normalize_text
-  after_create :create_forum_topic
+  validates(:script, presence: true)
+  validates(:title, presence: { if: ->(rec) { rec.forum_topic_id.blank? } })
+  validates(:status, inclusion: { in: %w[pending approved rejected] })
+  validate(:script_formatted_correctly)
+  validate(:forum_topic_id_not_invalid)
+  validate(:validate_script, on: :create)
+  validate(:check_validate_script, on: :update)
+  validates(:reason, length: { minimum: 5, maximum: FemboyFans.config.forum_post_max_size }, on: :create, unless: :skip_forum)
+  before_validation(:normalize_text)
+  after_create(:create_forum_topic)
 
-  scope :pending_first, -> { order(Arel.sql("(case status when 'pending' then 0 when 'approved' then 1 else 2 end)")) }
-  scope :pending, -> { where(status: "pending") }
+  scope(:pending_first, -> { order(Arel.sql("(case status when 'pending' then 0 when 'approved' then 1 else 2 end)")) })
+  scope(:pending, -> { where(status: "pending") })
 
   module SearchMethods
     def for_creator(id)
@@ -156,11 +156,11 @@ class BulkUpdateRequest < ApplicationRecord
     end
   end
 
-  extend SearchMethods
-  include ApprovalMethods
-  include ValidationMethods
+  extend(SearchMethods)
+  include(ApprovalMethods)
+  include(ValidationMethods)
 
-  concerning :EmbeddedText do
+  concerning(:EmbeddedText) do
     class_methods do
       def embedded_pattern
         /\[bur:(?<id>\d+)\]/m

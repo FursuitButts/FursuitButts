@@ -1,6 +1,6 @@
 <h1>New IP Ban</h1>
 
-<%= error_messages_for "ip_ban" %>
+<%= error_messages_for("ip_ban") %>
 
 <%= custom_form_for(@ip_ban) do |f| %>
   <%= f.input(:ip_addr, label: "IP Address", as: :string, hint: "Add /24 to ban a subnet. Example: 1.2.3.4/24") %>
@@ -8,7 +8,7 @@
   <%= f.button(:submit, "Submit") %>
 <% end %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   New IP Ban

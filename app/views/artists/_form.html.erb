@@ -6,7 +6,7 @@
   <% else %>
     <p><%= @artist.name %></p>
     <% if @artist.dnp_restricted? %>
-      <p>Name, other names, and group name cannot be edited for artists on the <%= link_to "Avoid Posting", avoid_posting_static_path %> list.</p>
+      <p>Name, other names, and group name cannot be edited for artists on the <%= link_to("Avoid Posting", avoid_posting_static_path) %> list.</p>
     <% end %>
   <% end %>
   <% if can_use_attributes?(@artist, %i[linked_user_id is_locked]) %>

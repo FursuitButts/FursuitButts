@@ -1,9 +1,9 @@
 <% content_for(:secondary_links) do %>
-  <%= subnav_link_to "Listing", post_deletion_reasons_path %>
+  <%= subnav_link_to("Listing", post_deletion_reasons_path) %>
   <%= subnav_link_to_if(policy(PostDeletionReason).create?, "New", new_post_deletion_reason_path) %>
   <% if params[:action] == "index" && policy(PostDeletionReason).reorder? %>
     |
-    <%= subnav_link_to "Edit Order", "#", class: "edit-order-link" %>
-    <%= subnav_link_to "Save", "#", class: "save-order-link", li_options: { style: "display: none;" } %>
+    <%= subnav_link_to("Edit Order", "#", class: "edit-order-link") %>
+    <%= subnav_link_to("Save", "#", class: "save-order-link", li_options: { style: "display: none;" }) %>
   <% end %>
 <% end %>

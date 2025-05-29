@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 class UploadsController < ApplicationController
-  before_action :ensure_uploads_enabled, only: %i[new create]
-  respond_to :html, :json
-  content_security_policy only: [:new] do |p|
+  before_action(:ensure_uploads_enabled, only: %i[new create])
+  respond_to(:html, :json)
+  content_security_policy(only: [:new]) do |p|
     p.img_src(:self, :data, :blob, "*")
     p.media_src(:self, :data, :blob, "*")
   end

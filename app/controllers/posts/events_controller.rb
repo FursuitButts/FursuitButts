@@ -2,7 +2,7 @@
 
 module Posts
   class EventsController < ApplicationController
-    respond_to :html, :json
+    respond_to(:html, :json)
 
     def index
       @events = authorize(PostEvent).html_includes(request, :creator)

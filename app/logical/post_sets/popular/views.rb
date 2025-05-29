@@ -3,7 +3,7 @@
 module PostSets
   module Popular
     class Views < PostSets::Base
-      attr_reader :date, :limit
+      attr_reader(:date, :limit)
 
       def initialize(date, limit: Reports::LIMIT)
         @date = date

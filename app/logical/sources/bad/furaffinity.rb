@@ -3,7 +3,7 @@
 module Sources
   module Bad
     class Furaffinity < Base
-      attr_reader :has_profile, :has_gallery, :has_submission, :has_direct
+      attr_reader(:has_profile, :has_gallery, :has_submission, :has_direct)
 
       DOMAINS = %w[furaffinity.net facdn.net].freeze
       PROFILE_REGEX = %r{furaffinity\.net/user/([\w.~\-\[\]]+)}

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require File.expand_path("../state_checker", __dir__)
+require(File.expand_path("../state_checker", __dir__))
 
 StateChecker.instance.check!
 

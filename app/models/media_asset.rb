@@ -5,43 +5,43 @@ class MediaAsset < ApplicationRecord
   class ExpungedError < StandardError; end
   # method: :scaled, :exact, :none
   Rescale = Struct.new(:width, :height, :method, keyword_init: true)
-  include ChunkedUpload # must be near the top due to callbacks
+  include(ChunkedUpload) # must be near the top due to callbacks
   self.abstract_class = true
 
   belongs_to_creator
-  belongs_to :media_metadata, dependent: :destroy
+  belongs_to(:media_metadata, dependent: :destroy)
 
-  after_initialize :build_media_metadata, unless: -> { association(:media_metadata).loaded? || media_metadata_id.present? }
-  after_create :remove_tempfile, if: :file_now?
-  before_destroy :delete_all_files, if: -> { active? || deleted? } # check statuses to ensure we don't obliterate existing files
-  after_finalize :remove_tempfile, if: :file_later?
-  after_finalize :set_file_attributes
-  after_finalize :check_expunged_duplicates
-  after_finalize :store_file_finalize, unless: -> { expunged? || duplicate? }
-  validates :md5, uniqueness: { conditions: -> { duplicate_relevant } }, if: :active?
-  validates :md5, :file_ext, presence: true, if: :active?
-  validates :is_animated_png, :is_animated_gif, inclusion: { in: [true, false] }, if: :active?
-  validates :file_size, :image_width, :image_height, presence: true, comparison: { greater_than: 0 }, if: :active?
-  validates :duration, presence: true, comparison: { greater_than: 0 }, if: -> { active? && is_video? }
-  validates :checksum, length: { is: 32 }, if: -> { checksum.present? }
-  validates :pixel_hash, presence: true, if: -> { active? && is_image? && !is_animated_png? }
-  validates :checksum, presence: true, if: -> { in_progress? && file.present? }
+  after_initialize(:build_media_metadata, unless: -> { association(:media_metadata).loaded? || media_metadata_id.present? })
+  after_create(:remove_tempfile, if: :file_now?)
+  before_destroy(:delete_all_files, if: -> { active? || deleted? }) # check statuses to ensure we don't obliterate existing files
+  after_finalize(:remove_tempfile, if: :file_later?)
+  after_finalize(:set_file_attributes)
+  after_finalize(:check_expunged_duplicates)
+  after_finalize(:store_file_finalize, unless: -> { expunged? || duplicate? })
+  validates(:md5, uniqueness: { conditions: -> { duplicate_relevant } }, if: :active?)
+  validates(:md5, :file_ext, presence: true, if: :active?)
+  validates(:is_animated_png, :is_animated_gif, inclusion: { in: [true, false] }, if: :active?)
+  validates(:file_size, :image_width, :image_height, presence: true, comparison: { greater_than: 0 }, if: :active?)
+  validates(:duration, presence: true, comparison: { greater_than: 0 }, if: -> { active? && is_video? })
+  validates(:checksum, length: { is: 32 }, if: -> { checksum.present? })
+  validates(:pixel_hash, presence: true, if: -> { active? && is_image? && !is_animated_png? })
+  validates(:checksum, presence: true, if: -> { in_progress? && file.present? })
 
-  scope :in_progress, -> { where(status: %w[pending uploading]) }
-  scope :expired, -> { in_progress.where(created_at: ..4.hours.ago) }
-  scope :duplicate_relevant, -> { active }
-  scope :duplicates_of, ->(md5) { duplicate_relevant.where(md5: md5) }
-  scope :expunged_duplicates_of, ->(md5) { expunged.where(md5: md5) }
-  scope :with_metadata, -> { includes(:media_metadata) }
-  scope :images_only, -> { where(file_ext: ::FileMethods::IMAGE_EXTENSIONS) }
-  scope :videos_only, -> { where(file_ext: ::FileMethods::VIDEO_EXTENSIONS) }
+  scope(:in_progress, -> { where(status: %w[pending uploading]) })
+  scope(:expired, -> { in_progress.where(created_at: ..4.hours.ago) })
+  scope(:duplicate_relevant, -> { active })
+  scope(:duplicates_of, ->(md5) { duplicate_relevant.where(md5: md5) })
+  scope(:expunged_duplicates_of, ->(md5) { expunged.where(md5: md5) })
+  scope(:with_metadata, -> { includes(:media_metadata) })
+  scope(:images_only, -> { where(file_ext: ::FileMethods::IMAGE_EXTENSIONS) })
+  scope(:videos_only, -> { where(file_ext: ::FileMethods::VIDEO_EXTENSIONS) })
 
-  enum :status, %i[pending uploading active deleted cancelled expunged replaced failed duplicate].index_with(&:to_s)
+  enum(:status, %i[pending uploading active deleted cancelled expunged replaced failed duplicate].index_with(&:to_s))
 
   after_initialize { @is_direct = false unless instance_variable_defined?(:@is_direct) }
-  attr_accessor :file, :is_direct, :skip_files
+  attr_accessor(:file, :is_direct, :skip_files)
 
-  class_attribute :deletion_supported, default: false # soft deletion
+  class_attribute(:deletion_supported, default: false) # soft deletion
   alias is_direct? is_direct
 
   def self.prune_expired!
@@ -325,10 +325,10 @@ class MediaAsset < ApplicationRecord
     end
   end
 
-  include StorageMethods
-  include FileMethods
-  include ::FileMethods
-  extend SearchMethods
+  include(StorageMethods)
+  include(FileMethods)
+  include(::FileMethods)
+  extend(SearchMethods)
 
   def visible?(user = CurrentUser.user)
     user.is_staff? || creator_id == user.id

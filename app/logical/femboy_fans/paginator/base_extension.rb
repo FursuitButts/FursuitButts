@@ -3,7 +3,7 @@
 module FemboyFans
   module Paginator
     module BaseExtension
-      attr_reader :current_page, :pagination_mode
+      attr_reader(:current_page, :pagination_mode)
 
       def paginate(page, options = {})
         @paginator_options = options

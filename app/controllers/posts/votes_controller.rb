@@ -2,10 +2,10 @@
 
 module Posts
   class VotesController < ApplicationController
-    respond_to :html, only: %i[index]
-    respond_to :json
-    before_action :ensure_lockdown_disabled
-    skip_before_action :api_check
+    respond_to(:html, only: %i[index])
+    respond_to(:json)
+    before_action(:ensure_lockdown_disabled)
+    skip_before_action(:api_check)
 
     def index
       @post_votes = authorize(PostVote).html_includes(request, :user)

@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 class TagAlias < TagRelationship
-  attr_accessor :skip_forum
+  attr_accessor(:skip_forum)
 
-  after_save :create_mod_action
-  validates :antecedent_name, uniqueness: { conditions: -> { duplicate_relevant } }, unless: :is_deleted?
-  validate :absence_of_transitive_relation, unless: :is_deleted?
+  after_save(:create_mod_action)
+  validates(:antecedent_name, uniqueness: { conditions: -> { duplicate_relevant } }, unless: :is_deleted?)
+  validate(:absence_of_transitive_relation, unless: :is_deleted?)
 
   module ApprovalMethods
     def approve!(approver: CurrentUser.user, update_topic: true)
@@ -57,11 +57,11 @@ class TagAlias < TagRelationship
     end
   end
 
-  include ApprovalMethods
-  include ForumMethods
-  include TransitiveChecks
+  include(ApprovalMethods)
+  include(ForumMethods)
+  include(TransitiveChecks)
 
-  concerning :EmbeddedText do
+  concerning(:EmbeddedText) do
     class_methods do
       def embedded_pattern
         /\[ta:(?<id>\d+)\]/m

@@ -1,4 +1,4 @@
-<%= render "search" %>
+<%= render("search") %>
 
 <%= table_for(@tags) do |t| %>
   <% t.column("Count") do |tag| %>
@@ -28,7 +28,7 @@
 
 <%= numbered_paginator(@tags) %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   Tags

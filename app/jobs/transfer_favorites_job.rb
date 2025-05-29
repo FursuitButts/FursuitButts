@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class TransferFavoritesJob < ApplicationJob
-  queue_as :low
+  queue_as(:low)
 
   def perform(*args)
     @post = Post.find_by(id: args[0])

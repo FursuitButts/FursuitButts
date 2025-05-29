@@ -1,6 +1,6 @@
 <h1>Avoid Posting Versions</h1>
 
-<%= render "search" %>
+<%= render("search") %>
 
 <%= table_for(@avoid_posting_versions, class: "striped") do |t| %>
   <% t.column("Artist", th: { class: "dnp-artist" }, td: { class: "dnp-artist" }) do |avoid_posting_version| %>
@@ -39,7 +39,7 @@
   <% t.column(:status, th: { class: "dnp-status" }, td: { class: "dnp-status" }) %>
   <% t.column("Updater", th: { class: "dnp-creator" }, td: { class: "dnp-creator" }) do |avoid_posting_version| %>
     <%= link_to_user(avoid_posting_version.updater) %>
-    <%= link_to "»", avoid_posting_versions_path(search: { updater_name: avoid_posting_version.updater_name }) %>
+    <%= link_to("»", avoid_posting_versions_path(search: { updater_name: avoid_posting_version.updater_name })) %>
     <p>
       <%= compact_time(avoid_posting_version.updated_at) %>
       <% if policy(avoid_posting_version).can_see_ip_addr? %>
@@ -57,7 +57,7 @@
 
 <%= numbered_paginator(@avoid_posting_versions) %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 <% content_for(:page_title) do %>
   Avoid Posting Versions
 <% end %>

@@ -1,14 +1,14 @@
 <% content_for(:secondary_links) do %>
-  <li><%= render "quick_search" %></li>
+  <li><%= render("quick_search") %></li>
   <% if CurrentUser.user.is_owner? %>
-    <%= subnav_link_to "Index", dmails_path %>
+    <%= subnav_link_to("Index", dmails_path) %>
   <% end %>
-  <%= subnav_link_to "All", all_dmails_path %>
-  <%= subnav_link_to "Received", received_dmails_path %>
-  <%= subnav_link_to "Sent", sent_dmails_path %>
+  <%= subnav_link_to("All", all_dmails_path) %>
+  <%= subnav_link_to("Received", received_dmails_path) %>
+  <%= subnav_link_to("Sent", sent_dmails_path) %>
   <li>|</li>
   <%= subnav_link_to_if(policy(Dmail).create?, "New", new_dmail_path) %>
   <%= subnav_link_to_if(policy(Dmail).mark_all_as_read?, "Mark all as read", mark_all_as_read_dmails_path, method: :put, data: { item: "dmails" }) %></li>
   <li>|</li>
-  <%= subnav_link_to "Help", help_page_path(id: "dmails") %>
+  <%= subnav_link_to("Help", help_page_path(id: "dmails")) %>
 <% end %>

@@ -11,14 +11,14 @@
     <% comments = comments.stickied %>
     <div class="comments-list">
       <% if comments.any? %>
-        <%= render partial: "comments/partials/show/comment", collection: comments, locals: { post: post } %>
+        <%= render(partial: "comments/partials/show/comment", collection: comments, locals: { post: post }) %>
       <% end %>
     </div>
   <% else %>
     <div class="row notices">
       <% if post.comments.hidden(CurrentUser.user).count > 0 || (params[:controller] == "comments" && post.comments.count > Comment::RECENT_COUNT) %>
         <span id="threshold-comments-notice-for-<%= post.id %>">
-          <%= link_to "Show all comments", comments_path(group_by: "comment", search: { post_id: post.id }), 'data-pid': post.id, "class": "show-all-comments-for-post-link" %>
+          <%= link_to("Show all comments", comments_path(group_by: "comment", search: { post_id: post.id }), 'data-pid': post.id, "class": "show-all-comments-for-post-link") %>
         </span>
       <% end %>
     </div>
@@ -29,7 +29,7 @@
         <h2>Before commenting, read the <%= link_to("how to comment guide", help_page_path(id: "commenting")) %>.</h2>
       <% end %>
       <div class="new-comment">
-        <%= render "comments/partials/form_decorated", comment: post.comments.new %>
+        <%= render("comments/partials/form_decorated", comment: post.comments.new) %>
       </div>
     <% elsif CurrentUser.user.is_anonymous? %>
       <h5 id="respond-link"><%= link_to("Login to respond »", new_session_path) %></h5>
@@ -43,7 +43,7 @@
           <p>There are no comments.</p>
         <% end %>
       <% else %>
-        <%= render partial: "comments/partials/show/comment", collection: comments, locals: { post: post } %>
+        <%= render(partial: "comments/partials/show/comment", collection: comments, locals: { post: post }) %>
       <% end %>
     </div>
   <% end %>

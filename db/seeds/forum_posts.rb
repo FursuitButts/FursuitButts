@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require_relative "base"
+require_relative("base")
 
 TOPIC = nil
 
@@ -16,7 +16,7 @@ RANGE = Range.new((EACH * 0.5).to_i, (EACH * 1.5).to_i) # 50% - 150%
 
 ApplicationRecord.transaction do
   topics.find_each.with_index do |topic, i|
-    puts "Creating posts.. #{i + 1}/#{TOPIC_COUNT}"
+    puts("Creating posts.. #{i + 1}/#{TOPIC_COUNT}")
     users.sample(Random.rand(RANGE)).each do |user|
       user.scoped { topic.posts.create!(body: 4.times.map { 4.times.map { Faker::Hacker.unique.say_something_smart }.join("\n") }.join("\n\n")) }
     end

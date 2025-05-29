@@ -2,7 +2,7 @@
 
 module Users
   class FeedbacksController < ApplicationController
-    respond_to :html, :json
+    respond_to(:html, :json)
 
     def index
       @user_feedbacks = authorize(UserFeedback).html_includes(request, :user, :creator)

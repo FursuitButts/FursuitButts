@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 class TagSetPresenterTest < ActiveSupport::TestCase
-  context "TagSetPresenter" do
+  context("TagSetPresenter") do
     setup do
       CurrentUser.user = create(:moderator_user)
       create(:tag, name: "bkub", category: TagCategory.artist)
@@ -13,13 +13,13 @@ class TagSetPresenterTest < ActiveSupport::TestCase
       create(:tag, name: "touhou", category: TagCategory.copyright)
     end
 
-    context "#split_tag_list_text method" do
-      should "list all categories in order" do
+    context("#split_tag_list_text method") do
+      should("list all categories in order") do
         text = TagSetPresenter.new(%w[bkub chen cirno solo touhou]).split_tag_list_text
         assert_equal("bkub \ntouhou \nchen cirno \nsolo", text)
       end
 
-      should "skip empty categories" do
+      should("skip empty categories") do
         text = TagSetPresenter.new(%w[bkub solo]).split_tag_list_text
         assert_equal("bkub \nsolo", text)
       end

@@ -2,7 +2,7 @@
 
 module Users
   class NameChangeRequestsController < ApplicationController
-    respond_to :html, :json
+    respond_to(:html, :json)
 
     def index
       @change_requests = authorize(UserNameChangeRequest).html_includes(request, :user, :approver)

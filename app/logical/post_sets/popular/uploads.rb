@@ -3,7 +3,7 @@
 module PostSets
   module Popular
     class Uploads < PostSets::Base
-      attr_reader :date, :scale, :min_date, :max_date, :limit
+      attr_reader(:date, :scale, :min_date, :max_date, :limit)
 
       def initialize(date, scale, min_date, max_date, limit: nil)
         @date = date

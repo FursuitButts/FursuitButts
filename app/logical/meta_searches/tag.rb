@@ -3,7 +3,7 @@
 module MetaSearches
   class Tag
     MAX_RESULTS = 25
-    attr_reader :search, :tags, :tag_aliases, :tag_implications
+    attr_reader(:search, :tags, :tag_aliases, :tag_implications)
 
     def initialize(search_params)
       @search = search_params[:name] || ""

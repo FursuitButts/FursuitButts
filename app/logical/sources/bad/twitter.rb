@@ -3,7 +3,7 @@
 module Sources
   module Bad
     class Twitter < Base
-      attr_reader :has_profile, :has_submission, :has_direct
+      attr_reader(:has_profile, :has_submission, :has_direct)
 
       DOMAINS = %w[twitter.com twimg.com x.com].freeze
       PROFILE_REGEX = %r{twitter\.com/\w{1,15}$}

@@ -2,10 +2,10 @@
 
 module Forums
   class TopicsController < ApplicationController
-    respond_to :html, :json
-    before_action :load_topic, except: %i[index new create]
-    before_action :ensure_lockdown_disabled, except: %i[index show]
-    skip_before_action :api_check
+    respond_to(:html, :json)
+    before_action(:load_topic, except: %i[index new create])
+    before_action(:ensure_lockdown_disabled, except: %i[index show])
+    skip_before_action(:api_check)
 
     def index
       params[:search] ||= {}

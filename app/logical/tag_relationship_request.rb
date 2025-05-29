@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
 class TagRelationshipRequest
-  include ActiveModel::Validations
+  include(ActiveModel::Validations)
 
-  attr_reader :antecedent_name, :consequent_name, :tag_relationship, :reason, :forum_topic, :forum_topic_id, :skip_forum
+  attr_reader(:antecedent_name, :consequent_name, :tag_relationship, :reason, :forum_topic, :forum_topic_id, :skip_forum)
 
-  validates :reason, length: { minimum: 5 }, unless: :skip_forum
-  validate :validate_tag_relationship
-  validate :validate_forum_topic
+  validates(:reason, length: { minimum: 5 }, unless: :skip_forum)
+  validate(:validate_tag_relationship)
+  validate(:validate_forum_topic)
 
   def initialize(antecedent_name:, consequent_name:, reason: nil, skip_forum: false, forum_topic: nil, forum_topic_id: nil)
     @antecedent_name = antecedent_name&.strip&.tr(" ", "_")

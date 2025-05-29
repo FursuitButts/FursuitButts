@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 class DtextLinksControllerTest < ActionDispatch::IntegrationTest
   setup do
@@ -13,10 +13,10 @@ class DtextLinksControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  context "index action" do
-    should "render" do
-      get dtext_links_path
-      assert_response :success
+  context("index action") do
+    should("render") do
+      get(dtext_links_path)
+      assert_response(:success)
     end
   end
 end

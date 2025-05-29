@@ -14,8 +14,8 @@ class StaffAuditLog < ApplicationRecord
     params
   ].freeze
 
-  store_accessor :values, *VALUES
-  belongs_to :user, class_name: "User"
+  store_accessor(:values, *VALUES)
+  belongs_to(:user, class_name: "User")
 
   def self.log(...)
     Rails.logger.warn("StaffAuditLog: use StaffAuditLog.log! instead of StaffAuditLog.log")
@@ -177,7 +177,7 @@ class StaffAuditLog < ApplicationRecord
     end
   end
 
-  extend SearchMethods
+  extend(SearchMethods)
 
   def self.available_includes
     %i[user]

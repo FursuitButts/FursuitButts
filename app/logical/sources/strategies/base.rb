@@ -16,7 +16,7 @@
 module Sources
   module Strategies
     class Base
-      attr_reader :url, :urls, :parsed_url
+      attr_reader(:url, :urls, :parsed_url)
 
       # * <tt>url</tt> - Should point to a resource suitable for
       #   downloading. This may sometimes point to the binary file.

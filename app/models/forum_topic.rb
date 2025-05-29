@@ -5,31 +5,31 @@ class ForumTopic < ApplicationRecord
 
   belongs_to_creator
   belongs_to_updater
-  belongs_to :category, class_name: "ForumCategory", counter_cache: "topic_count"
-  belongs_to :merge_target, class_name: "ForumTopic", optional: true
-  has_many :posts, -> { order(id: :asc) }, class_name: "ForumPost", foreign_key: "topic_id", dependent: :destroy
-  has_one :original_post, -> { order(id: :asc) }, class_name: "ForumPost", foreign_key: "topic_id", inverse_of: :topic
-  has_one :last_post, -> { order(id: :desc) }, class_name: "ForumPost", foreign_key: "topic_id", inverse_of: :topic
-  has_many :statuses, class_name: "ForumTopicStatus"
-  before_validation :initialize_is_hidden, on: :create
-  validate :category_valid
-  validates :title, :creator_id, presence: true
-  validates_associated :original_post
-  validates :original_post, presence: true, unless: :is_merged?
-  validates :title, length: { minimum: 1, maximum: 250 }
-  validate :category_allows_creation, on: :create
-  validate :validate_not_aibur, if: :will_save_change_to_is_hidden?
-  accepts_nested_attributes_for :original_post
-  after_update :update_original_post, unless: :is_merging
-  after_destroy :log_delete
-  after_commit :log_save, on: %i[create update], unless: :is_merging
+  belongs_to(:category, class_name: "ForumCategory", counter_cache: "topic_count")
+  belongs_to(:merge_target, class_name: "ForumTopic", optional: true)
+  has_many(:posts, -> { order(id: :asc) }, class_name: "ForumPost", foreign_key: "topic_id", dependent: :destroy)
+  has_one(:original_post, -> { order(id: :asc) }, class_name: "ForumPost", foreign_key: "topic_id", inverse_of: :topic)
+  has_one(:last_post, -> { order(id: :desc) }, class_name: "ForumPost", foreign_key: "topic_id", inverse_of: :topic)
+  has_many(:statuses, class_name: "ForumTopicStatus")
+  before_validation(:initialize_is_hidden, on: :create)
+  validate(:category_valid)
+  validates(:title, :creator_id, presence: true)
+  validates_associated(:original_post)
+  validates(:original_post, presence: true, unless: :is_merged?)
+  validates(:title, length: { minimum: 1, maximum: 250 })
+  validate(:category_allows_creation, on: :create)
+  validate(:validate_not_aibur, if: :will_save_change_to_is_hidden?)
+  accepts_nested_attributes_for(:original_post)
+  after_update(:update_original_post, unless: :is_merging)
+  after_destroy(:log_delete)
+  after_commit(:log_save, on: %i[create update], unless: :is_merging)
   after_update(if: :saved_change_to_title?) do
     Cache.delete("topic_name:#{id}")
   end
 
-  attribute :category_id, :integer, default: -> { FemboyFans.config.default_forum_category }
+  attribute(:category_id, :integer, default: -> { FemboyFans.config.default_forum_category })
 
-  attr_accessor :is_merging, :target_topic_id
+  attr_accessor(:is_merging, :target_topic_id)
 
   def validate_not_aibur
     return if CurrentUser.is_moderator? || !original_post&.is_aibur?
@@ -41,7 +41,7 @@ class ForumTopic < ApplicationRecord
   end
 
   module CategoryMethods
-    extend ActiveSupport::Concern
+    extend(ActiveSupport::Concern)
 
     module ClassMethods
       def for_category_id(cid)
@@ -245,13 +245,13 @@ class ForumTopic < ApplicationRecord
     end
   end
 
-  include LogMethods
-  include CategoryMethods
-  include VisitMethods
-  include SubscriptionMethods
-  include MuteMethods
-  include MergeMethods
-  extend SearchMethods
+  include(LogMethods)
+  include(CategoryMethods)
+  include(VisitMethods)
+  include(SubscriptionMethods)
+  include(MuteMethods)
+  include(MergeMethods)
+  extend(SearchMethods)
 
   def editable_by?(user)
     return true if user.is_admin?

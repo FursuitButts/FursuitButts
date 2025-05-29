@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class UserEmailChange
-  attr_reader :user, :password, :new_email
+  attr_reader(:user, :password, :new_email)
 
   def initialize(user, new_email, password)
     @user = user

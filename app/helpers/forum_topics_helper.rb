@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "English"
+require("English")
 module ForumTopicsHelper
   def forum_topic_category_select(object, field, options = {})
     select(object, field, ForumCategory.visible.reverse_mapping, options)

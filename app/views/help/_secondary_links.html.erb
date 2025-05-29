@@ -1,5 +1,5 @@
 <% content_for(:secondary_links) do %>
-  <%= subnav_link_to "Listing", help_pages_path %>
+  <%= subnav_link_to("Listing", help_pages_path) %>
     <%= subnav_link_to_if(policy(HelpPage).create?, "New", new_help_page_path) %>
 
     <% if @help&.id %>
@@ -13,7 +13,7 @@
         <% help_pages = HelpPage.help_index %>
         <li>|</li>
         <% related_array.each do |related| %>
-          <li><%= subnav_link_to HelpPage.pretty_related_title(related, help_pages), help_page_path(id: related) %></li>
+          <li><%= subnav_link_to(HelpPage.pretty_related_title(related, help_pages), help_page_path(id: related)) %></li>
         <% end %>
       <% end %>
   <% end %>

@@ -2,22 +2,22 @@
 
 class UploadMediaAsset < MediaAssetWithVariants
   self.deletion_supported = true
-  has_one :upload
-  has_one :post
-  attr_accessor :is_replacement, :replacement_id
+  has_one(:upload)
+  has_one(:post)
+  attr_accessor(:is_replacement, :replacement_id)
 
   # this is really ugly and it sucks, but it seems to work
-  after_finalize :create_post, if: :file_later?
-  after_finalize :regenerate_image_variants_and_data!, if: :file_later?
-  after_finalize :regenerate_video_variants, if: -> { file_later? && is_video? }
-  after_create :create_post, if: :file_now?
-  after_create -> {
+  after_finalize(:create_post, if: :file_later?)
+  after_finalize(:regenerate_image_variants_and_data!, if: :file_later?)
+  after_finalize(:regenerate_video_variants, if: -> { file_later? && is_video? })
+  after_create(:create_post, if: :file_now?)
+  after_create(-> {
     regenerate_image_variants_and_data!
     save!
-  }, if: :file_now?
-  after_create :regenerate_video_variants, if: -> { file_now? && is_video? }
+  }, if: :file_now?)
+  after_create(:regenerate_video_variants, if: -> { file_now? && is_video? })
 
-  scope :duplicate_relevant, -> { active.joins(:post).where.not("posts.id": nil) }
+  scope(:duplicate_relevant, -> { active.joins(:post).where.not("posts.id": nil) })
 
   def file_later?
     super && !is_replacement
@@ -153,9 +153,9 @@ class UploadMediaAsset < MediaAssetWithVariants
     end
   end
 
-  include StorageMethods
-  include VariantMethods
-  extend SearchMethods
+  include(StorageMethods)
+  include(VariantMethods)
+  extend(SearchMethods)
 
   class Variant < MediaAssetWithVariants::Variant
     def convert_file(original_file, &block)

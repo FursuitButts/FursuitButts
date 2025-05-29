@@ -1,9 +1,9 @@
 <% if ModeratorDashboardPolicy.new(CurrentUser.user, nil).can_search_ip_addr? %>
   <div id="ip-addr-search">
-    <%= render "search_ip_addr" %>
+    <%= render("search_ip_addr") %>
   </div>
 <% end %>
 
 <div id="activity-search">
-  <%= render "search_activity" %>
+  <%= render("search_activity") %>
 </div>

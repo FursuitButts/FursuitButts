@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class UserVotePolicy < ApplicationPolicy
-  attr_reader :presenter
+  attr_reader(:presenter)
 
   def initialize(user, record)
     super

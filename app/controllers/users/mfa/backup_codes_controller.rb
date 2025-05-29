@@ -3,9 +3,9 @@
 module Users
   module MFA
     class BackupCodesController < ApplicationController
-      respond_to :html
-      respond_to :text, only: %i[show]
-      before_action :requires_reauthentication
+      respond_to(:html)
+      respond_to(:text, only: %i[show])
+      before_action(:requires_reauthentication)
 
       def show
         @user = authorize(CurrentUser.user, policy_class: BackupCodePolicy)

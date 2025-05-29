@@ -1,23 +1,23 @@
 # frozen_string_literal: true
 
 class UserFeedback < ApplicationRecord
-  belongs_to :user
+  belongs_to(:user)
   belongs_to_creator
   belongs_to_updater
-  normalizes :body, with: ->(body) { body.gsub("\r\n", "\n") }
-  validates :body, :category, presence: true
-  validates :category, inclusion: { in: %w[positive negative neutral] }
-  validates :body, length: { minimum: 1, maximum: FemboyFans.config.user_feedback_max_size }
-  validate :creator_is_moderator, on: :create
-  validate :user_is_not_creator
-  after_create :log_create
-  after_update :log_update
-  after_destroy :log_destroy
+  normalizes(:body, with: ->(body) { body.gsub("\r\n", "\n") })
+  validates(:body, :category, presence: true)
+  validates(:category, inclusion: { in: %w[positive negative neutral] })
+  validates(:body, length: { minimum: 1, maximum: FemboyFans.config.user_feedback_max_size })
+  validate(:creator_is_moderator, on: :create)
+  validate(:user_is_not_creator)
+  after_create(:log_create)
+  after_update(:log_update)
+  after_destroy(:log_destroy)
 
-  attr_accessor :send_update_notification
+  attr_accessor(:send_update_notification)
 
-  scope :active, -> { where(is_deleted: false) }
-  scope :deleted, -> { where(is_deleted: true) }
+  scope(:active, -> { where(is_deleted: false) })
+  scope(:deleted, -> { where(is_deleted: true) })
 
   module LogMethods
     def log_create
@@ -88,8 +88,8 @@ class UserFeedback < ApplicationRecord
     end
   end
 
-  include LogMethods
-  extend SearchMethods
+  include(LogMethods)
+  extend(SearchMethods)
 
   def user_name
     User.id_to_name(user_id)

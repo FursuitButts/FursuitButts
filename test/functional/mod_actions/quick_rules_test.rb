@@ -1,22 +1,22 @@
 # frozen_string_literal: true
 
-require "test_helper"
-require_relative "helper"
+require("test_helper")
+require_relative("helper")
 
 module ModActions
   class QuickRulesTest < ActiveSupport::TestCase
-    include Helper
-    include Rails.application.routes.url_helpers
+    include(Helper)
+    include(Rails.application.routes.url_helpers)
 
-    context "mod actions for quick rules" do
+    context("mod actions for quick rules") do
       setup do
         @quick = create(:quick_rule)
         @rule = @quick.rule
         set_count!
       end
 
-      context "quick_rule_create" do
-        should "format with reason correctly" do
+      context("quick_rule_create") do
+        should("format with reason correctly") do
           @quick = create(:quick_rule, rule: @rule)
 
           assert_matches(
@@ -28,7 +28,7 @@ module ModActions
           )
         end
 
-        should "format with header correctly" do
+        should("format with header correctly") do
           @quick = create(:quick_rule, rule: @rule, header: "header")
 
           assert_matches(
@@ -41,8 +41,8 @@ module ModActions
         end
       end
 
-      context "quick_rule_delete" do
-        should "format with reason correctly" do
+      context("quick_rule_delete") do
+        should("format with reason correctly") do
           @quick.destroy
 
           assert_matches(
@@ -54,7 +54,7 @@ module ModActions
           )
         end
 
-        should "format with header correctly" do
+        should("format with header correctly") do
           @quick.update_columns(header: "Test")
           @quick.destroy
 
@@ -68,7 +68,7 @@ module ModActions
         end
       end
 
-      should "format quick_rules_reorder correctly" do
+      should("format quick_rules_reorder correctly") do
         QuickRule.log_reorder(2)
 
         assert_matches(
@@ -79,12 +79,12 @@ module ModActions
         )
       end
 
-      context "quick_rule_update" do
+      context("quick_rule_update") do
         setup do
           @original = @quick.dup
         end
 
-        should "format reason changes correctly" do
+        should("format reason changes correctly") do
           @quick.update!(reason: "aaa")
 
           assert_matches(
@@ -101,7 +101,7 @@ module ModActions
           )
         end
 
-        should "format header changes correctly" do
+        should("format header changes correctly") do
           @quick.update!(header: "aaa")
 
           assert_matches(
@@ -118,7 +118,7 @@ module ModActions
           )
         end
 
-        should "format all changes correctly" do
+        should("format all changes correctly") do
           @quick.update!(reason: "aaa", header: "bbb")
 
           assert_matches(

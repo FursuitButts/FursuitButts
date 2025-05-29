@@ -1,18 +1,18 @@
-<%= render "wiki_pages/sidebar" %>
+<%= render("wiki_pages/sidebar") %>
 
 <section id="content">
   <h1>Wiki Page Versions</h1>
 
   <% if params.dig(:search, :wiki_page_id).present? %>
-    <%= render "page_listing" %>
+    <%= render("page_listing") %>
   <% else %>
-    <%= render "global_listing" %>
+    <%= render("global_listing") %>
   <% end %>
 
   <%= numbered_paginator(@wiki_page_versions) %>
 </section>
 
-<%= render "wiki_pages/secondary_links" %>
+<%= render("wiki_pages/secondary_links") %>
 <%= latest_link(@wiki_page_versions) %>
 
 <% content_for(:page_title) do %>

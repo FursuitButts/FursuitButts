@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class TakedownsController < ApplicationController
-  respond_to :html, :json
-  before_action :load_takedown, except: %i[index new create count_matching_posts]
+  respond_to(:html, :json)
+  before_action(:load_takedown, except: %i[index new create count_matching_posts])
 
   def index
     @takedowns = authorize(Takedown).search(search_params(Takedown))

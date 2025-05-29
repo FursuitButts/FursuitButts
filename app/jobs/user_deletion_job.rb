@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class UserDeletionJob < ApplicationJob
-  queue_as :low
+  queue_as(:low)
 
   def perform(*args)
     user = User.find(args[0])

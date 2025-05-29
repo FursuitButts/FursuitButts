@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class NewsUpdatesController < ApplicationController
-  respond_to :html, :json
+  respond_to(:html, :json)
 
   def index
     @news_updates = authorize(NewsUpdate).html_includes(request, :creator)

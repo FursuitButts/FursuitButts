@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class ModActionsController < ApplicationController
-  respond_to :html, :json
+  respond_to(:html, :json)
 
   def index
     # TODO: We need a way to construct urls without needing to load the model, as this results in needing to load many different

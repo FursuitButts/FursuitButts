@@ -37,10 +37,10 @@
   </div>
   <% end %>
   <div class="quick-mod-group">
-    <%= link_to "Delete", delete_post_path(id: post.id), class: "button btn-neutral btn-important" %>
+    <%= link_to("Delete", delete_post_path(id: post.id), class: "button btn-neutral btn-important") %>
     |
     <% (reasons = PostDeletionReason.quick_access).each_with_index.each do |reason, index| %>
-      <%= link_to reason.title, "#", class: "delete-with-reason-link button btn-neutral", data: { prompt: reason.prompt, reason: reason.reason, post_id: post.id } %>
+      <%= link_to(reason.title, "#", class: "delete-with-reason-link button btn-neutral", data: { prompt: reason.prompt, reason: reason.reason, post_id: post.id }) %>
       <% if (index + 1) != reasons.length %>
         &bull;
       <% end %>
@@ -48,7 +48,7 @@
 
   </div>
   <div class="quick-mod-group">
-    <%= link_to "Disapprove", "#", data: { post_id: post.id }, class: "detailed-rejection-link button btn-neutral btn-important" %> |
+    <%= link_to("Disapprove", "#", data: { post_id: post.id }, class: "detailed-rejection-link button btn-neutral btn-important") %> |
     <%= tag.a("Borderline Quality", href: "#", data: { pid: post.id, reason: "borderline_quality" }, class: "disapprove-post-link button btn-neutral") %> &bull;
     <%= tag.a("Borderline Relevancy", href: "#", data: { pid: post.id, reason: "borderline_relevancy" }, class: "disapprove-post-link button btn-neutral") %>
   </div>

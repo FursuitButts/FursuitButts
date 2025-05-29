@@ -1,14 +1,14 @@
-<h1>Text Version #<%= @text_version.version %> for <%= link_to_user @text_version.user %></h1>
-<p><%= compact_time(@text_version.created_at) %> by <%= link_to_user @text_version.updater %><% if policy(UserTextVersion).can_see_ip_addr? %> (<%= link_to_ip @text_version.updater_ip_addr %>)<% end %></p>
+<h1>Text Version #<%= @text_version.version %> for <%= link_to_user(@text_version.user) %></h1>
+<p><%= compact_time(@text_version.created_at) %> by <%= link_to_user(@text_version.updater) %><% if policy(UserTextVersion).can_see_ip_addr? %> (<%= link_to_ip(@text_version.updater_ip_addr) %>)<% end %></p>
 <div class="text-section">
   <div class="box-section styled-dtext">
     <% @text_version.changes_for(CurrentUser).each do |change| %>
-      <%= render "dtext_container", title: UserTextVersion::CHANGE_TYPES[change], text: @text_version.send("#{change}_text"), single: @text_version.is_single?(CurrentUser) %>
+      <%= render("dtext_container", title: UserTextVersion::CHANGE_TYPES[change], text: @text_version.send("#{change}_text"), single: @text_version.is_single?(CurrentUser)) %>
     <% end %>
   </div>
 </div>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 <% content_for(:page_title) do %>
   User Text Version #<%= @text_version.version %> for <%= @text_version.user.name %>
 <% end %>

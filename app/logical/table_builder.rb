@@ -15,7 +15,7 @@
 class TableBuilder
   # Represents a single column in the table.
   class Column
-    attr_reader :attribute, :name, :block, :header_attributes, :body_attributes, :caption
+    attr_reader(:attribute, :name, :block, :header_attributes, :body_attributes, :caption)
 
     # Define a table column.
     #
@@ -73,7 +73,7 @@ class TableBuilder
     end
   end
 
-  attr_reader :columns, :table_attributes, :row_attributes, :items
+  attr_reader(:columns, :table_attributes, :row_attributes, :items)
 
   # Build a table for an array of objects, one object per row.
   #

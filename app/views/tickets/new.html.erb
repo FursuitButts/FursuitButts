@@ -14,7 +14,7 @@
   <% else %>
     <% if @ticket.model %>
       <div class="section">
-        <%= render partial: "tickets/new_types/#{@ticket.model_type.underscore}" %>
+        <%= render(partial: "tickets/new_types/#{@ticket.model_type.underscore}") %>
       </div>
     <% else %>
       <% @found_item = false %>
@@ -37,11 +37,11 @@
       <%= f.input(:reason, as: :dtext, limit: FemboyFans.config.ticket_max_size) %>
 
     </div>
-    <%= submit_tag "Submit" %>
+    <%= submit_tag("Submit") %>
   <% end %>
 <% end %>
 
-<% render partial: "secondary_links" %>
+<% render(partial: "secondary_links") %>
 
 <% content_for(:page_title) do %>
   New Ticket

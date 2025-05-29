@@ -2,7 +2,7 @@
 
 module Posts
   class RecommendationsController < ApplicationController
-    respond_to :json, :html
+    respond_to(:json, :html)
 
     def show
       authorize(:recommender)

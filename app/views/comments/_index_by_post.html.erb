@@ -1,7 +1,7 @@
 <div id="p-index-by-post" class="comments-for-post">
 
   <% if @posts.empty? %>
-    <%= render "posts/blank" %>
+    <%= render("posts/blank") %>
   <% end %>
 
   <% @posts.select(&:visible?).each do |post| %>
@@ -11,7 +11,7 @@
           <%= PostPresenter.preview(post, inline: true, show_deleted: true) %>
         </div>
         <div class="comments-list">
-          <%= render partial: "comments/partials/show/comment", collection: post.comments.visible(CurrentUser.user).recent, locals: { post: post } %>
+          <%= render(partial: "comments/partials/show/comment", collection: post.comments.visible(CurrentUser.user).recent, locals: { post: post }) %>
         </div>
       </div>
     <% end %>

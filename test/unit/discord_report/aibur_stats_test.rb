@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 module DiscordReport
   class AiburStatsTest < ActiveSupport::TestCase
-    test "it works" do
+    test("it works") do
       AiburStats.new.report # Prime cache
       stats = AiburStats.new
       stats.stubs(:webhook_url).returns("https://example.com")

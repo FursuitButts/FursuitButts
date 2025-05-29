@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class UploadMediaAssetVideoVariantsJob < ApplicationJob
-  queue_as :variants
-  sidekiq_options lock: :until_executed, lock_args_method: :lock_args, retry: 3
+  queue_as(:variants)
+  sidekiq_options(lock: :until_executed, lock_args_method: :lock_args, retry: 3)
 
   def self.lock_args(args)
     [args[0]]

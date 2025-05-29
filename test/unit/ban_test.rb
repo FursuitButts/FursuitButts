@@ -1,16 +1,16 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 class BanTest < ActiveSupport::TestCase
-  context "A ban" do
-    context "created by an admin" do
+  context("A ban") do
+    context("created by an admin") do
       setup do
         @banner = create(:admin_user)
         CurrentUser.user = @banner
       end
 
-      should "set the is_banned flag on the user" do
+      should("set the is_banned flag on the user") do
         user = create(:user)
         ban = build(:ban, user: user, banner: @banner)
         ban.save
@@ -18,14 +18,14 @@ class BanTest < ActiveSupport::TestCase
         assert(user.is_banned?)
       end
 
-      should "not be valid against another admin" do
+      should("not be valid against another admin") do
         user = create(:admin_user)
         ban = build(:ban, user: user, banner: @banner)
         ban.save
         assert(ban.errors.any?)
       end
 
-      should "be valid against anyone who is not an admin" do
+      should("be valid against anyone who is not an admin") do
         user = create(:moderator_user)
         ban = create(:ban, user: user, banner: @banner)
         assert(ban.errors.empty?)
@@ -40,13 +40,13 @@ class BanTest < ActiveSupport::TestCase
       end
     end
 
-    context "created by a moderator" do
+    context("created by a moderator") do
       setup do
         @banner = create(:moderator_user)
         CurrentUser.user = @banner
       end
 
-      should "not be valid against an admin or moderator" do
+      should("not be valid against an admin or moderator") do
         user = create(:admin_user)
         ban = build(:ban, user: user, banner: @banner)
         ban.save
@@ -58,7 +58,7 @@ class BanTest < ActiveSupport::TestCase
         assert(ban.errors.any?)
       end
 
-      should "be valid against anyone who is not an admin or a moderator" do
+      should("be valid against anyone who is not an admin or a moderator") do
         user = create(:trusted_user)
         ban = create(:ban, user: user, banner: @banner)
         assert(ban.errors.empty?)
@@ -69,7 +69,7 @@ class BanTest < ActiveSupport::TestCase
       end
     end
 
-    should "initialize the expiration date" do
+    should("initialize the expiration date") do
       user = create(:user)
       admin = create(:admin_user)
       as(admin) do
@@ -78,7 +78,7 @@ class BanTest < ActiveSupport::TestCase
       end
     end
 
-    should "update the user's feedback" do
+    should("update the user's feedback") do
       user = create(:user)
       admin = create(:admin_user)
       assert(user.feedback.empty?)
@@ -90,8 +90,8 @@ class BanTest < ActiveSupport::TestCase
     end
   end
 
-  context "Searching for a ban" do
-    should "find a given ban" do
+  context("Searching for a ban") do
+    should("find a given ban") do
       CurrentUser.user = create(:admin_user)
 
       user = create(:user)
@@ -110,31 +110,31 @@ class BanTest < ActiveSupport::TestCase
       assert_equal(ban.id, bans.first.id)
     end
 
-    context "by user id" do
+    context("by user id") do
       setup do
         @admin = create(:admin_user)
         CurrentUser.user = @admin
         @user = create(:user)
       end
 
-      context "when only expired bans exist" do
+      context("when only expired bans exist") do
         setup do
           @ban = create(:ban, user: @user, banner: @admin, duration: 1)
         end
 
-        should "not return expired bans" do
+        should("not return expired bans") do
           travel_to(2.days.from_now) do
             assert_not(Ban.is_banned?(@user))
           end
         end
       end
 
-      context "when active bans still exist" do
+      context("when active bans still exist") do
         setup do
           @ban = create(:ban, user: @user, banner: @admin, duration: 1)
         end
 
-        should "return active bans" do
+        should("return active bans") do
           assert(Ban.is_banned?(@user))
         end
       end

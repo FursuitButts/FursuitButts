@@ -2,7 +2,7 @@
 
 # not a real policy, used as a replacement policy for inputs to return a specific value for the search/attribute check
 class OverwritePolicy < ApplicationPolicy
-  attr_reader :value
+  attr_reader(:value)
 
   def initialize(value)
     super(nil, nil)

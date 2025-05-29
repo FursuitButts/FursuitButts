@@ -2,7 +2,7 @@
 
 module PostSets
   class Favorites < PostSets::Base
-    attr_reader :page, :limit
+    attr_reader(:page, :limit)
 
     def initialize(user, page, limit:)
       super()

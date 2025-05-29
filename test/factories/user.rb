@@ -2,7 +2,7 @@
 
 FactoryBot.define do
   factory(:user, aliases: %i[creator updater]) do
-    sequence :name do |n|
+    sequence(:name) do |n|
       "user#{n}"
     end
     password { "password" }

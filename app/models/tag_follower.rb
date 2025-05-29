@@ -2,16 +2,16 @@
 
 class TagFollower < ApplicationRecord
   class AliasedTagError < StandardError; end
-  belongs_to :tag
-  belongs_to :user, counter_cache: "followed_tag_count"
-  belongs_to :last_post, class_name: "Post", optional: true
-  validate :validate_user_can_follow_tags, on: :create
-  validate :validate_tag_is_not_aliased, on: :create
-  after_create :set_latest_post, unless: -> { last_post_id.present? }
-  after_commit :update_tag_follower_count, on: %i[create destroy]
-  delegate :name, to: :tag, prefix: true
+  belongs_to(:tag)
+  belongs_to(:user, counter_cache: "followed_tag_count")
+  belongs_to(:last_post, class_name: "Post", optional: true)
+  validate(:validate_user_can_follow_tags, on: :create)
+  validate(:validate_tag_is_not_aliased, on: :create)
+  after_create(:set_latest_post, unless: -> { last_post_id.present? })
+  after_commit(:update_tag_follower_count, on: %i[create destroy])
+  delegate(:name, to: :tag, prefix: true)
 
-  scope :for_user, ->(user_id) { where(user_id: user_id) }
+  scope(:for_user, ->(user_id) { where(user_id: user_id) })
 
   def set_latest_post(exclude: nil)
     post = Post.sql_raw_tag_match(tag_name).order(id: :asc)

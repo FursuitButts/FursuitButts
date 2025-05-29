@@ -2,43 +2,43 @@
 
 class Comment < ApplicationRecord
   RECENT_COUNT = 6
-  include UserWarnable
+  include(UserWarnable)
   simple_versioning
   mentionable
-  belongs_to_creator counter_cache: "comment_count"
+  belongs_to_creator(counter_cache: "comment_count")
   belongs_to_updater
-  normalizes :body, with: ->(body) { body.gsub("\r\n", "\n") }
-  validate :validate_post_exists, on: :create
-  validate :validate_creator_is_not_limited, on: :create
-  validate :post_not_comment_restricted, on: :create
-  validates :body, presence: { message: "has no content" }
-  validates :body, length: { minimum: 1, maximum: FemboyFans.config.comment_max_size }
+  normalizes(:body, with: ->(body) { body.gsub("\r\n", "\n") })
+  validate(:validate_post_exists, on: :create)
+  validate(:validate_creator_is_not_limited, on: :create)
+  validate(:post_not_comment_restricted, on: :create)
+  validates(:body, presence: { message: "has no content" })
+  validates(:body, length: { minimum: 1, maximum: FemboyFans.config.comment_max_size })
 
-  before_create :auto_report_spam
-  after_create :update_last_commented_at_on_create
+  before_create(:auto_report_spam)
+  after_create(:update_last_commented_at_on_create)
   after_update(if: ->(rec) { !rec.saved_change_to_is_hidden? && CurrentUser.id != rec.creator_id }) do |rec|
     ModAction.log!(:comment_update, rec, user_id: rec.creator_id)
   end
-  after_destroy :update_last_commented_at_on_destroy
+  after_destroy(:update_last_commented_at_on_destroy)
   after_destroy do |rec|
     ModAction.log!(:comment_delete, rec, user_id: rec.creator_id, post_id: rec.post_id)
   end
-  after_save :update_last_commented_at_on_destroy, if: ->(rec) { rec.is_hidden? && rec.saved_change_to_is_hidden? }
+  after_save(:update_last_commented_at_on_destroy, if: ->(rec) { rec.is_hidden? && rec.saved_change_to_is_hidden? })
   after_save(if: ->(rec) { rec.saved_change_to_is_hidden? && CurrentUser.id != rec.creator_id }) do |rec|
     action = rec.is_hidden? ? :comment_hide : :comment_unhide
     ModAction.log!(action, rec, user_id: rec.creator_id)
   end
 
-  belongs_to :post, counter_cache: :comment_count
-  belongs_to :warning_user, class_name: "User", optional: true
-  has_many :votes, class_name: "CommentVote", dependent: :destroy
-  has_many :tickets, as: :model
-  has_many :versions, class_name: "EditHistory", as: :versionable, dependent: :destroy
-  has_one :spam_ticket, -> { spam }, class_name: "Ticket", as: :model
+  belongs_to(:post, counter_cache: :comment_count)
+  belongs_to(:warning_user, class_name: "User", optional: true)
+  has_many(:votes, class_name: "CommentVote", dependent: :destroy)
+  has_many(:tickets, as: :model)
+  has_many(:versions, class_name: "EditHistory", as: :versionable, dependent: :destroy)
+  has_one(:spam_ticket, -> { spam }, class_name: "Ticket", as: :model)
 
-  scope :deleted, -> { where(is_hidden: true) }
-  scope :not_deleted, -> { where(is_hidden: false) }
-  scope :stickied, -> { where(is_sticky: true) }
+  scope(:deleted, -> { where(is_hidden: true) })
+  scope(:not_deleted, -> { where(is_hidden: false) })
+  scope(:stickied, -> { where(is_sticky: true) })
 
   module SearchMethods
     def recent
@@ -124,7 +124,7 @@ class Comment < ApplicationRecord
     end
   end
 
-  extend SearchMethods
+  extend(SearchMethods)
 
   def validate_post_exists
     errors.add(:post, "must exist") unless Post.exists?(post_id)

@@ -2,7 +2,7 @@
 
 class TagVersion < ApplicationRecord
   belongs_to_updater
-  belongs_to :tag
+  belongs_to(:tag)
 
   module SearchMethods
     def search(params)
@@ -19,7 +19,7 @@ class TagVersion < ApplicationRecord
     end
   end
 
-  extend SearchMethods
+  extend(SearchMethods)
 
   def previous
     TagVersion.where(tag_id: tag_id, created_at: ...created_at).order("created_at desc").first

@@ -2,8 +2,8 @@
 
 module Posts
   class DisapprovalsController < ApplicationController
-    skip_before_action :api_check
-    respond_to :html, :json
+    skip_before_action(:api_check)
+    respond_to(:html, :json)
 
     def index
       @post_disapprovals = authorize(PostDisapproval).html_includes(request, :user)

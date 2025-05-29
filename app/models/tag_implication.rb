@@ -1,26 +1,26 @@
 # frozen_string_literal: true
 
 class TagImplication < TagRelationship
-  has_many :tag_rel_undos, as: :tag_rel
+  has_many(:tag_rel_undos, as: :tag_rel)
 
-  array_attribute :descendant_names
+  array_attribute(:descendant_names)
 
-  attr_accessor :skip_forum
+  attr_accessor(:skip_forum)
 
-  before_save :update_descendant_names
-  after_destroy :update_descendant_names_for_parents
-  after_save :update_descendant_names_for_parents
-  after_save :create_mod_action, if: :saved_change_to_status?
-  with_options unless: :is_deleted? do
-    validates :antecedent_name, uniqueness: { scope: [:consequent_name], conditions: -> { duplicate_relevant } }
-    validate :absence_of_circular_relation
-    validate :absence_of_transitive_relation
-    validate :antecedent_is_not_aliased
-    validate :consequent_is_not_aliased
+  before_save(:update_descendant_names)
+  after_destroy(:update_descendant_names_for_parents)
+  after_save(:update_descendant_names_for_parents)
+  after_save(:create_mod_action, if: :saved_change_to_status?)
+  with_options(unless: :is_deleted?) do
+    validates(:antecedent_name, uniqueness: { scope: [:consequent_name], conditions: -> { duplicate_relevant } })
+    validate(:absence_of_circular_relation)
+    validate(:absence_of_transitive_relation)
+    validate(:antecedent_is_not_aliased)
+    validate(:consequent_is_not_aliased)
   end
 
   module DescendantMethods
-    extend ActiveSupport::Concern
+    extend(ActiveSupport::Concern)
 
     module ClassMethods
       # assumes names are normalized
@@ -232,12 +232,12 @@ class TagImplication < TagRelationship
     end
   end
 
-  include DescendantMethods
-  include ParentMethods
-  include ValidationMethods
-  include ApprovalMethods
+  include(DescendantMethods)
+  include(ParentMethods)
+  include(ValidationMethods)
+  include(ApprovalMethods)
 
-  concerning :EmbeddedText do
+  concerning(:EmbeddedText) do
     class_methods do
       def embedded_pattern
         /\[ti:(?<id>\d+)\]/m

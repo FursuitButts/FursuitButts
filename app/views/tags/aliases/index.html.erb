@@ -1,12 +1,12 @@
-<%= render "tag_relationships/search", url: tag_aliases_path %>
-<%= render "tag_relationships/listing", tag_relations: @tag_aliases %>
+<%= render("tag_relationships/search", url: tag_aliases_path) %>
+<%= render("tag_relationships/listing", tag_relations: @tag_aliases) %>
 <% if can_use_attribute?(TagAlias, :skip_forum) %>
-  <%= render "tag_relationships/add_form", type: :tag_alias, path: tag_aliases_path %>
+  <%= render("tag_relationships/add_form", type: :tag_alias, path: tag_aliases_path) %>
 <% end %>
 
 <%= numbered_paginator(@tag_aliases) if @tag_aliases.respond_to?(:current_page) %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   Tag Aliases

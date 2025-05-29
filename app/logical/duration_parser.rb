@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "abbrev"
+require("abbrev")
 
 module DurationParser
   def self.parse(string)

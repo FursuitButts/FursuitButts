@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require_relative "base"
+require_relative("base")
 
 users = User.left_joins(:followed_tags).where("tag_followers.user_id": nil, "level": User::Levels::MEMBER).limit(1000).order("users.id asc")
 
@@ -10,7 +10,7 @@ MIN_FOLLOWS = 15
 MAX_FOLLOWS = FemboyFans.config.followed_tag_limit(User.new(level: User::Levels::MEMBER))
 users.each_with_index do |user, i|
   count = rand(MIN_FOLLOWS..MAX_FOLLOWS)
-  puts "Creating #{count} follows for #{user.name} (#{i + 1}/#{total})"
+  puts("Creating #{count} follows for #{user.name} (#{i + 1}/#{total})")
   documents = []
   CurrentUser.scoped(user) do
     Tag.where("post_count > 0").order("RANDOM()").limit(count).each do |tag|

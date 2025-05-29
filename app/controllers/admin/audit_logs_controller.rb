@@ -2,7 +2,7 @@
 
 module Admin
   class AuditLogsController < ApplicationController
-    respond_to :html, :json
+    respond_to(:html, :json)
 
     def index
       @audit_logs = authorize(StaffAuditLog).html_includes(request, :user)

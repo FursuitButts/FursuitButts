@@ -7,7 +7,7 @@
 <%= form_tag(post_path(@post), style: "clear: both;", class: "simple_form", method: :delete) do %>
   <div class="input">
     <label for="reason">Reason</label>
-    <%= text_field_tag "reason", @reason %>
+    <%= text_field_tag("reason", @reason) %>
   </div>
 
   <% if @post.parent_id %>
@@ -15,24 +15,24 @@
       <%= PostPresenter.preview(@post.parent, show_deleted: true, no_blacklist: true) %>
       <div class="input">
         <label for="move_favorites">
-          <%= check_box_tag "move_favorites", true, @reason.starts_with?("Inferior") %>
+          <%= check_box_tag("move_favorites", true, @reason.starts_with?("Inferior")) %>
           Move favorites to parent?
         </label>
         <label for="copy_tags">
-          <%= check_box_tag "copy_tags", false, false %>
+          <%= check_box_tag("copy_tags", false, false) %>
           Merge tags into parent?
         </label>
         <label for="copy_sources">
-          <%= check_box_tag "copy_sources", false, false %>
+          <%= check_box_tag("copy_sources", false, false) %>
           Merge sources into parent?
         </label>
       </div>
     </div>
   <% end %>
 
-  <%= submit_tag "Delete" %>
-  <%= submit_tag "Cancel" %>
-  <%= button_tag "Clear", type: "button", id: "delreason-clear" %>
+  <%= submit_tag("Delete") %>
+  <%= submit_tag("Cancel") %>
+  <%= button_tag("Clear", type: "button", id: "delreason-clear") %>
 <% end %>
 
 <div id="delreason-prebuilt" class="simple_form">

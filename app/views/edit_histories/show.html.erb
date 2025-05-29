@@ -1,5 +1,5 @@
 <% if @edit_histories.empty? %>
-  <h1>Edits for <%= h(@edit_class) %> #<%=(params[@id_param]) %></h1>
+  <h1>Edits for <%= h(@edit_class) %> #<%=params[@id_param] %></h1>
 <% else %>
   <%= @original.html_title(self) %>
 <% end %>
@@ -25,7 +25,7 @@
         <% if policy(edit).can_see_ip_addr? %>
           (<%= link_to_ip(edit.ip_addr) %>)
         <% end %>
-        <p><%= link_to time_ago_in_words_tagged(edit.created_at, compact: true), url_for(anchor: "edit-#{edit.id}") %></p>
+        <p><%= link_to(time_ago_in_words_tagged(edit.created_at, compact: true), url_for(anchor: "edit-#{edit.id}")) %></p>
       <% end %>
       <% t.column("Body", th: { width: "50%" }) do |edit| %>
         <% previous = edit.previous_contentful_edit(@edit_histories) %>
@@ -51,10 +51,10 @@
       <% end %>
     <% end %>
 
-    <%= submit_tag "Diff", name: nil, disabled: @edit_histories.length == 1 %>
+    <%= submit_tag("Diff", name: nil, disabled: @edit_histories.length == 1) %>
   <% end %>
 
-  <%= render "secondary_links" %>
+  <%= render("secondary_links") %>
 </div>
 
 <%= numbered_paginator(@edit_histories) %>

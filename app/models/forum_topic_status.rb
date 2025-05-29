@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class ForumTopicStatus < ApplicationRecord
-  belongs_to :forum_topic
-  belongs_to :user
+  belongs_to(:forum_topic)
+  belongs_to(:user)
 
   def self.prune_subscriptions!
     where("subscription = TRUE AND subscription_last_read_at < ?", 3.months.ago).delete_all

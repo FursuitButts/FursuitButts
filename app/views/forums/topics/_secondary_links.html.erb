@@ -1,9 +1,9 @@
 <% content_for(:secondary_links) do %>
   <li>
     <% if params[:controller] == "forums/topics" %>
-      <%= render "forums/topics/quick_search" %>
+      <%= render("forums/topics/quick_search") %>
     <% else %>
-      <%= render "forums/posts/quick_search" %>
+      <%= render("forums/posts/quick_search") %>
     <% end %>
   </li>
   <% if @category.present? %>

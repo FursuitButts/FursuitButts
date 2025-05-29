@@ -2,9 +2,9 @@
 
 module PostSetPresenters
   class Post < Base
-    attr_accessor :post_set
+    attr_accessor(:post_set)
 
-    delegate :posts, to: :post_set
+    delegate(:posts, to: :post_set)
 
     def initialize(post_set)
       @post_set = post_set

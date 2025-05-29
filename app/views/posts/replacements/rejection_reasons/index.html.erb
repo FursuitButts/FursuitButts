@@ -19,14 +19,14 @@
     <%# the latter should never happen, but if it did, this loop would tear down the site %>
     <% if (last_order + 1) != reason.order && last_order != reason.order %>
       <% while (last_order + 1) != reason.order %>
-        <%= render partial: "spacing" %>
+        <%= render(partial: "spacing") %>
         <% last_order += 1 %>
       <% end %>
     <% end %>
     <% last_order = reason.order %>
     <tr id="post-replacement-rejection-reason-<%= reason.id %>" data-id="<%= reason.id %>">
-      <td><%= link_to_user reason.creator %></td>
-      <td><%= compact_time reason.updated_at %></td>
+      <td><%= link_to_user(reason.creator) %></td>
+      <td><%= compact_time(reason.updated_at) %></td>
       <td><%= reason.reason %></td>
       <% if policy(reason).all?(:update?, :destroy?, :reorder?) %>
         <td>
@@ -43,13 +43,13 @@
 </table>
 
 
-<%= render partial: "secondary_links" %>
+<%= render(partial: "secondary_links") %>
 
 <% content_for(:page_title) do %>
   Post Replacement Rejection Reasons
 <% end %>
 
-<%= javascript_tag nonce: true do -%>
+<%= javascript_tag(nonce: true) do -%>
   const spacing = $(`<%= render(partial: "spacing") %>`);
   Danbooru.PostReplacementRejectionReasons.init(spacing);
 <% end %>

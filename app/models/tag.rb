@@ -1,26 +1,26 @@
 # frozen_string_literal: true
 
 class Tag < ApplicationRecord
-  has_one :wiki_page, foreign_key: "title", primary_key: "name"
-  has_one :artist, foreign_key: "name", primary_key: "name"
-  has_one :antecedent_alias, -> { active }, class_name: "TagAlias", foreign_key: "antecedent_name", primary_key: "name"
-  has_many :consequent_aliases, -> { active }, class_name: "TagAlias", foreign_key: "consequent_name", primary_key: "name"
-  has_many :antecedent_implications, -> { active }, class_name: "TagImplication", foreign_key: "antecedent_name", primary_key: "name"
-  has_many :consequent_implications, -> { active }, class_name: "TagImplication", foreign_key: "consequent_name", primary_key: "name"
-  has_many :versions, class_name: "TagVersion"
-  has_many :followers, class_name: "TagFollower"
+  has_one(:wiki_page, foreign_key: "title", primary_key: "name")
+  has_one(:artist, foreign_key: "name", primary_key: "name")
+  has_one(:antecedent_alias, -> { active }, class_name: "TagAlias", foreign_key: "antecedent_name", primary_key: "name")
+  has_many(:consequent_aliases, -> { active }, class_name: "TagAlias", foreign_key: "consequent_name", primary_key: "name")
+  has_many(:antecedent_implications, -> { active }, class_name: "TagImplication", foreign_key: "antecedent_name", primary_key: "name")
+  has_many(:consequent_implications, -> { active }, class_name: "TagImplication", foreign_key: "consequent_name", primary_key: "name")
+  has_many(:versions, class_name: "TagVersion")
+  has_many(:followers, class_name: "TagFollower")
 
-  validates :name, uniqueness: true, tag_name: true, on: :create
-  validates :name, length: { minimum: 1, maximum: 100 }
-  validates :category, inclusion: { in: TagCategory.ids }
-  validate :user_can_create_tag?, on: :create
-  validate :user_can_change_category?, if: :category_changed?
+  validates(:name, uniqueness: true, tag_name: true, on: :create)
+  validates(:name, length: { minimum: 1, maximum: 100 })
+  validates(:category, inclusion: { in: TagCategory.ids })
+  validate(:user_can_create_tag?, on: :create)
+  validate(:user_can_change_category?, if: :category_changed?)
 
-  before_save :update_category, if: :category_changed?
-  after_create :create_version
-  after_update :create_version, if: ->(rec) { rec.saved_change_to_category? || rec.saved_change_to_is_locked? }
+  before_save(:update_category, if: :category_changed?)
+  after_create(:create_version)
+  after_update(:create_version, if: ->(rec) { rec.saved_change_to_category? || rec.saved_change_to_is_locked? })
 
-  attr_accessor :reason
+  attr_accessor(:reason)
 
   TagCategory.categories.each do |category|
     scope(category.name, -> { where(category: category.id) })
@@ -30,10 +30,10 @@ class Tag < ApplicationRecord
     end
   end
 
-  scope :invalid, -> { where(category: TagCategory::INVALID) }
+  scope(:invalid, -> { where(category: TagCategory::INVALID) })
 
   module CountMethods
-    extend ActiveSupport::Concern
+    extend(ActiveSupport::Concern)
 
     module ClassMethods
       def increment_post_counts(tag_names)
@@ -409,12 +409,12 @@ class Tag < ApplicationRecord
     true
   end
 
-  include CountMethods
-  include CategoryMethods
-  include RelationMethods
-  include FollowerMethods
-  extend NameMethods
-  extend SearchMethods
+  include(CountMethods)
+  include(CategoryMethods)
+  include(RelationMethods)
+  include(FollowerMethods)
+  extend(NameMethods)
+  extend(SearchMethods)
 
   def serializable_hash(*)
     super.merge(related_tags: related_tag_array.map { |r| { tag: r[0], count: r[1].to_i } })

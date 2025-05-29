@@ -1,23 +1,23 @@
 # frozen_string_literal: true
 
 class Takedown < ApplicationRecord
-  belongs_to_creator optional: true
-  belongs_to :approver, class_name: "User", optional: true
-  before_validation :initialize_fields, on: :create
-  before_validation :normalize_post_ids
-  before_validation :strip_fields
-  validates :email, format: { with: /\A([\s*A-Z0-9._%+-]+@[\s*A-Z0-9.-]+\.\s*[A-Z\s*]{2,15}\s*)\z/i, on: :create }
-  validates :email, length: { maximum: 250 }, presence: true
-  validates :reason, length: { maximum: 5_000 }, presence: true
-  validates :instructions, length: { maximum: 5_000 }
-  validates :notes, length: { maximum: 5_000 }
-  validate :can_create_takedown, on: :create
-  validate :valid_posts_or_instructions, on: :create
-  validate :validate_number_of_posts
-  validate :validate_post_ids
-  after_validation :normalize_deleted_post_ids
-  before_save :update_post_count
-  after_destroy :log_delete
+  belongs_to_creator(optional: true)
+  belongs_to(:approver, class_name: "User", optional: true)
+  before_validation(:initialize_fields, on: :create)
+  before_validation(:normalize_post_ids)
+  before_validation(:strip_fields)
+  validates(:email, format: { with: /\A([\s*A-Z0-9._%+-]+@[\s*A-Z0-9.-]+\.\s*[A-Z\s*]{2,15}\s*)\z/i, on: :create })
+  validates(:email, length: { maximum: 250 }, presence: true)
+  validates(:reason, length: { maximum: 5_000 }, presence: true)
+  validates(:instructions, length: { maximum: 5_000 })
+  validates(:notes, length: { maximum: 5_000 })
+  validate(:can_create_takedown, on: :create)
+  validate(:valid_posts_or_instructions, on: :create)
+  validate(:validate_number_of_posts)
+  validate(:validate_post_ids)
+  after_validation(:normalize_deleted_post_ids)
+  before_save(:update_post_count)
+  after_destroy(:log_delete)
 
   def initialize_fields
     self.status = "pending"
@@ -274,14 +274,14 @@ class Takedown < ApplicationRecord
     end
   end
 
-  include PostMethods
-  include ValidationMethods
-  include StatusMethods
-  include ModifyPostMethods
-  include ProcessMethods
-  include AccessMethods
-  include LogMethods
-  extend SearchMethods
+  include(PostMethods)
+  include(ValidationMethods)
+  include(StatusMethods)
+  include(ModifyPostMethods)
+  include(ProcessMethods)
+  include(AccessMethods)
+  include(LogMethods)
+  extend(SearchMethods)
 
   def self.available_includes
     %i[approver]

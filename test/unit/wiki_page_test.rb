@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 class WikiPageTest < ActiveSupport::TestCase
-  context "A wiki page" do
-    context "that is protected" do
-      should "not be editable by a member" do
+  context("A wiki page") do
+    context("that is protected") do
+      should("not be editable by a member") do
         CurrentUser.user = create(:moderator_user)
         @wiki_page = create(:wiki_page, protection_level: User::Levels::JANITOR)
         CurrentUser.user = create(:user)
@@ -13,7 +13,7 @@ class WikiPageTest < ActiveSupport::TestCase
         assert_equal(["Is protected and cannot be updated"], @wiki_page.errors.full_messages)
       end
 
-      should "be editable by a moderator" do
+      should("be editable by a moderator") do
         CurrentUser.user = create(:moderator_user)
         @wiki_page = create(:wiki_page, protection_level: User::Levels::JANITOR)
         CurrentUser.user = create(:moderator_user)
@@ -22,37 +22,37 @@ class WikiPageTest < ActiveSupport::TestCase
       end
     end
 
-    context "updated by a moderator" do
+    context("updated by a moderator") do
       setup do
         @user = create(:moderator_user)
         CurrentUser.user = @user
         @wiki_page = create(:wiki_page)
       end
 
-      should "allow the protection_level attribute to be updated" do
+      should("allow the protection_level attribute to be updated") do
         @wiki_page.update(protection_level: User::Levels::JANITOR)
         @wiki_page.reload
         assert_equal(User::Levels::JANITOR, @wiki_page.protection_level)
       end
     end
 
-    context "updated by a regular user" do
+    context("updated by a regular user") do
       setup do
         @user = create(:user)
         CurrentUser.user = @user
         @wiki_page = create(:wiki_page, title: "HOT POTATO")
       end
 
-      should "normalize its title" do
+      should("normalize its title") do
         assert_equal("hot_potato", @wiki_page.title)
       end
 
-      should "search by title" do
+      should("search by title") do
         assert_equal("hot_potato", WikiPage.titled("hot potato").title)
         assert_nil(WikiPage.titled(nil))
       end
 
-      should "create versions" do
+      should("create versions") do
         assert_difference("WikiPageVersion.count") do
           @wiki_page = create(:wiki_page, title: "xxx")
         end
@@ -62,7 +62,7 @@ class WikiPageTest < ActiveSupport::TestCase
         end
       end
 
-      should "revert to a prior version" do
+      should("revert to a prior version") do
         @wiki_page.update(title: "yyy")
         version = WikiPageVersion.first
         @wiki_page.revert_to!(version)
@@ -70,7 +70,7 @@ class WikiPageTest < ActiveSupport::TestCase
         assert_equal("hot_potato", @wiki_page.title)
       end
 
-      should "differentiate between updater and creator" do
+      should("differentiate between updater and creator") do
         another_user = create(:user)
         as(another_user) do
           @wiki_page.title = "yyy"
@@ -80,7 +80,7 @@ class WikiPageTest < ActiveSupport::TestCase
         assert_not_equal(@wiki_page.creator_id, version.updater_id)
       end
 
-      should "update its dtext links" do
+      should("update its dtext links") do
         @wiki_page.update!(body: "[[long hair]]")
         assert_equal(1, @wiki_page.dtext_links.size)
         assert_equal("wiki_link", @wiki_page.dtext_links.first.link_type)
@@ -96,7 +96,7 @@ class WikiPageTest < ActiveSupport::TestCase
       end
     end
 
-    context "for a help page" do
+    context("for a help page") do
       setup do
         @janitor = create(:janitor_user)
         @admin = create(:admin_user)
@@ -106,7 +106,7 @@ class WikiPageTest < ActiveSupport::TestCase
         end
       end
 
-      should "not allow the title to be changed by janitors" do
+      should("not allow the title to be changed by janitors") do
         as(@janitor) do
           @title = @wiki.title
           @wiki.update(title: "new_title")
@@ -116,7 +116,7 @@ class WikiPageTest < ActiveSupport::TestCase
         end
       end
 
-      should "allow the title to be changed by admins" do
+      should("allow the title to be changed by admins") do
         as(@admin) do
           @wiki.update(title: "new_title")
           assert_equal([], @wiki.errors.full_messages)
@@ -125,7 +125,7 @@ class WikiPageTest < ActiveSupport::TestCase
         end
       end
 
-      should "not allow deleting the wiki page" do
+      should("not allow deleting the wiki page") do
         as(@admin) do
           @wiki.destroy
           assert_equal(["Wiki page is used by a help page"], @wiki.errors.full_messages)

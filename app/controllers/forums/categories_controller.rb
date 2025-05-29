@@ -2,8 +2,8 @@
 
 module Forums
   class CategoriesController < ApplicationController
-    before_action :load_forum_category, only: %i[show edit update destroy move_all_topics mark_as_read]
-    respond_to :html, :json
+    before_action(:load_forum_category, only: %i[show edit update destroy move_all_topics mark_as_read])
+    respond_to(:html, :json)
 
     def index
       @forum_categories = authorize(ForumCategory).visible

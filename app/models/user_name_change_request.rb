@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
 class UserNameChangeRequest < ApplicationRecord
-  after_initialize :initialize_attributes, if: :new_record?
-  validates :original_name, :desired_name, presence: true
-  validates :status, inclusion: { in: %w[pending approved rejected] }
-  validates :change_reason, length: { maximum: 250 }
-  validate :not_limited, on: :create
-  validates :desired_name, user_name: true
-  belongs_to :user
-  belongs_to :approver, class_name: "User", optional: true
-  attr_accessor :skip_limited_validation
+  after_initialize(:initialize_attributes, if: :new_record?)
+  validates(:original_name, :desired_name, presence: true)
+  validates(:status, inclusion: { in: %w[pending approved rejected] })
+  validates(:change_reason, length: { maximum: 250 })
+  validate(:not_limited, on: :create)
+  validates(:desired_name, user_name: true)
+  belongs_to(:user)
+  belongs_to(:approver, class_name: "User", optional: true)
+  attr_accessor(:skip_limited_validation)
 
   def initialize_attributes
     self.user_id ||= CurrentUser.user.id

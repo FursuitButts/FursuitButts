@@ -6,8 +6,8 @@
   <%= f.input(:score_cutoff, label: "Similarity", default: 60) %>
 <% end %>
 
-<%= render "posts/partials/common/inline_blacklist" %>
-<%= render "posts/iqdb/matches" %>
+<%= render("posts/partials/common/inline_blacklist") %>
+<%= render("posts/iqdb/matches") %>
 
 <% content_for(:page_title) do %>
   Similar Images Search

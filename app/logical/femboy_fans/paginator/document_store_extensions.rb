@@ -3,7 +3,7 @@
 module FemboyFans
   module Paginator
     module DocumentStoreExtensions
-      include BaseExtension
+      include(BaseExtension)
 
       def paginate(page, options)
         super(page, options)

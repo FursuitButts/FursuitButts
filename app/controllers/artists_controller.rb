@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class ArtistsController < ApplicationController
-  before_action :load_artist, only: %i[edit update destroy revert]
-  respond_to :html, :json
+  before_action(:load_artist, only: %i[edit update destroy revert])
+  respond_to(:html, :json)
 
   def index
     if params[:name].present?

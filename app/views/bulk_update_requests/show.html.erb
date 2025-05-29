@@ -1,8 +1,8 @@
 <h1>Bulk Update Request: <%= @bulk_update_request.title %></h1>
 
 <ul>
-  <%= render "tag_change_requests/reference", tag_change_request: @bulk_update_request %>
-  <li><strong>Creator</strong> <%= link_to_user @bulk_update_request.creator %></li>
+  <%= render("tag_change_requests/reference", tag_change_request: @bulk_update_request) %>
+  <li><strong>Creator</strong> <%= link_to_user(@bulk_update_request.creator) %></li>
   <li><strong>Date</strong> <%= @bulk_update_request.created_at %></li>
   <li><strong>Status</strong>: <%= @bulk_update_request.status %></li>
   <li><strong title="How many posts will be affected">Estimate</strong>: <%= @bulk_update_request.estimate_update_count %></li>
@@ -22,12 +22,12 @@
     </ul>
   <% end %>
 
-  <%= render "bur_edit_links", bur: @bulk_update_request %>
+  <%= render("bur_edit_links", bur: @bulk_update_request) %>
 </div>
 
- <%= render "tag_change_requests/votes", tag_change_request: @bulk_update_request %>
+ <%= render("tag_change_requests/votes", tag_change_request: @bulk_update_request) %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   Bulk Update Request

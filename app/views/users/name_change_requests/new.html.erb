@@ -9,7 +9,7 @@
 
 <p>You can request a name change once per week.</p>
 
-<%= error_messages_for "change_request" %>
+<%= error_messages_for("change_request") %>
 
 <%= custom_form_for(@change_request) do |f| %>
   <%= f.input(:desired_name) %>
@@ -17,7 +17,7 @@
   <%= f.submit("Submit") %>
 <% end %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   Username Change Request

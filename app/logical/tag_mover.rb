@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class TagMover
-  attr_reader :old_tag, :new_tag, :user, :tcr, :undos
+  attr_reader(:old_tag, :new_tag, :user, :tcr, :undos)
 
   def initialize(old_name, new_name, user: User.system, tcr: nil)
     @old_tag = Tag.find_or_create_by_name(old_name, user: user)

@@ -2,7 +2,7 @@
 
 module Users
   class EventsController < ApplicationController
-    respond_to :html, :json
+    respond_to(:html, :json)
 
     def index
       @user_events = authorize(UserEvent).html_includes(request, :user)

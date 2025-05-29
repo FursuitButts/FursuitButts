@@ -2,7 +2,7 @@
 
 module Security
   class DashboardController < ApplicationController
-    respond_to :html
+    respond_to(:html)
 
     def index
       authorize(%i[security dashboard])

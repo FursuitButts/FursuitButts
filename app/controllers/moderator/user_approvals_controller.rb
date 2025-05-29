@@ -2,7 +2,7 @@
 
 module Moderator
   class UserApprovalsController < ApplicationController
-    respond_to :html, :json
+    respond_to(:html, :json)
 
     def index
       @user_approvals = authorize(UserApproval).html_includes(request, :user, :updater)

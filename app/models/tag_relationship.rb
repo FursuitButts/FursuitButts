@@ -6,31 +6,31 @@ class TagRelationship < ApplicationRecord
   SUPPORT_HARD_CODED = true
 
   belongs_to_creator
-  belongs_to :approver, class_name: "User", optional: true
-  belongs_to :forum_post, optional: true
-  belongs_to :forum_topic, optional: true
-  belongs_to :antecedent_tag, class_name: "Tag", foreign_key: "antecedent_name", primary_key: "name", default: -> { Tag.find_or_create_by_name(antecedent_name) }
-  belongs_to :consequent_tag, class_name: "Tag", foreign_key: "consequent_name", primary_key: "name", default: -> { Tag.find_or_create_by_name(consequent_name) }
+  belongs_to(:approver, class_name: "User", optional: true)
+  belongs_to(:forum_post, optional: true)
+  belongs_to(:forum_topic, optional: true)
+  belongs_to(:antecedent_tag, class_name: "Tag", foreign_key: "antecedent_name", primary_key: "name", default: -> { Tag.find_or_create_by_name(antecedent_name) })
+  belongs_to(:consequent_tag, class_name: "Tag", foreign_key: "consequent_name", primary_key: "name", default: -> { Tag.find_or_create_by_name(consequent_name) })
 
-  scope :active, -> { approved }
-  scope :approved, -> { where(status: %w[active processing queued]) }
-  scope :deleted, -> { where(status: "deleted") }
-  scope :not_deleted, -> { where.not(status: "deleted") }
-  scope :pending, -> { where(status: "pending") }
-  scope :retired, -> { where(status: "retired") }
-  scope :duplicate_relevant, -> { where(status: %w[active processing queued pending]) }
+  scope(:active, -> { approved })
+  scope(:approved, -> { where(status: %w[active processing queued]) })
+  scope(:deleted, -> { where(status: "deleted") })
+  scope(:not_deleted, -> { where.not(status: "deleted") })
+  scope(:pending, -> { where(status: "pending") })
+  scope(:retired, -> { where(status: "retired") })
+  scope(:duplicate_relevant, -> { where(status: %w[active processing queued pending]) })
 
-  before_validation :initialize_creator, on: :create # TODO: see if we need this
-  before_validation :normalize_names
-  validates :status, format: { with: /\A(active|deleted|pending|processing|queued|retired|error: .*)\Z/ }
-  validates :creator_id, :antecedent_name, :consequent_name, presence: true
-  validates :creator, presence: { message: "must exist" }, if: -> { creator_id.present? }
-  validates :approver, presence: { message: "must exist" }, if: -> { approver_id.present? }
-  validates :forum_topic, presence: { message: "must exist" }, if: -> { forum_topic_id.present? }
-  validate :validate_creator_is_not_limited, on: :create
-  validates :antecedent_name, tag_name: { disable_ascii_check: true }, if: :antecedent_name_changed?
-  validates :consequent_name, tag_name: true, if: :consequent_name_changed?
-  validate :antecedent_and_consequent_are_different
+  before_validation(:initialize_creator, on: :create) # TODO: see if we need this
+  before_validation(:normalize_names)
+  validates(:status, format: { with: /\A(active|deleted|pending|processing|queued|retired|error: .*)\Z/ })
+  validates(:creator_id, :antecedent_name, :consequent_name, presence: true)
+  validates(:creator, presence: { message: "must exist" }, if: -> { creator_id.present? })
+  validates(:approver, presence: { message: "must exist" }, if: -> { approver_id.present? })
+  validates(:forum_topic, presence: { message: "must exist" }, if: -> { forum_topic_id.present? })
+  validate(:validate_creator_is_not_limited, on: :create)
+  validates(:antecedent_name, tag_name: { disable_ascii_check: true }, if: :antecedent_name_changed?)
+  validates(:consequent_name, tag_name: true, if: :consequent_name_changed?)
+  validate(:antecedent_and_consequent_are_different)
 
   def initialize_creator
     self.creator_id = CurrentUser.user.id
@@ -213,7 +213,7 @@ class TagRelationship < ApplicationRecord
     end
   end
 
-  concerning :EmbeddedText do
+  concerning(:EmbeddedText) do
     class_methods do
       def embedded_pattern
         raise(NotImplementedError)
@@ -249,8 +249,8 @@ class TagRelationship < ApplicationRecord
     end
   end
 
-  extend SearchMethods
-  include MessageMethods
+  extend(SearchMethods)
+  include(MessageMethods)
 
   def self.available_includes
     %i[antecedent_tag approver consequent_tag creator forum_post forum_topic]

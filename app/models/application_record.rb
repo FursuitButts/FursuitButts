@@ -3,11 +3,11 @@
 class ApplicationRecord < ActiveRecord::Base
   self.abstract_class = true
 
-  after_create -> { DiscordNotification.new(self, :create).execute! }
-  after_update -> { DiscordNotification.new(self, :update).execute! }
-  after_destroy -> { DiscordNotification.new(self, :destroy).execute! }
+  after_create(-> { DiscordNotification.new(self, :create).execute! })
+  after_update(-> { DiscordNotification.new(self, :update).execute! })
+  after_destroy(-> { DiscordNotification.new(self, :destroy).execute! })
 
-  concerning :SearchMethods do
+  concerning(:SearchMethods) do
     class_methods do
       def paginate(page, options = {})
         extending(FemboyFans::Paginator::ActiveRecordExtension).paginate(page, options)
@@ -191,7 +191,7 @@ class ApplicationRecord < ActiveRecord::Base
   end
 
   module ApiMethods
-    extend ActiveSupport::Concern
+    extend(ActiveSupport::Concern)
 
     module ClassMethods
       def available_includes
@@ -285,7 +285,7 @@ class ApplicationRecord < ActiveRecord::Base
     end
   end
 
-  concerning :ActiveRecordExtensions do
+  concerning(:ActiveRecordExtensions) do
     class_methods do
       def without_timeout
         connection.execute("SET STATEMENT_TIMEOUT = 0") unless Rails.env.test?
@@ -306,7 +306,7 @@ class ApplicationRecord < ActiveRecord::Base
     end
   end
 
-  concerning :SimpleVersioningMethods do
+  concerning(:SimpleVersioningMethods) do
     class_methods do
       def simple_versioning(options = {})
         cattr_accessor(:versioning_body_column, :versioning_ip_column, :versioning_user_column, :versioning_subject_column, :versioning_is_hidden_column, :versioning_is_sticky_column)
@@ -394,7 +394,7 @@ class ApplicationRecord < ActiveRecord::Base
     end
   end
 
-  concerning :MentionableMethods do
+  concerning(:MentionableMethods) do
     class_methods do
       def mentionable(options = {})
         cattr_accessor(:mentionable_body_column, :mentionable_notified_mentions_column, :mentionable_creator_column)
@@ -446,7 +446,7 @@ class ApplicationRecord < ActiveRecord::Base
     end
   end
 
-  concerning :UserMethods do
+  concerning(:UserMethods) do
     class_methods do
       def belongs_to_creator(options = {})
         class_eval do
@@ -484,7 +484,7 @@ class ApplicationRecord < ActiveRecord::Base
     end
   end
 
-  concerning :AttributeMethods do
+  concerning(:AttributeMethods) do
     class_methods do
       # Defines `<attribute>_string`, `<attribute>_string=`, and `<attribute>=`
       # methods for converting an array attribute to or from a string.
@@ -515,7 +515,7 @@ class ApplicationRecord < ActiveRecord::Base
     end
   end
 
-  concerning :PrivilegeMethods do
+  concerning(:PrivilegeMethods) do
     class_methods do
       def visible(_user)
         all
@@ -539,10 +539,10 @@ class ApplicationRecord < ActiveRecord::Base
     @warnings ||= ActiveModel::Errors.new(self)
   end
 
-  include HasDtextLinks
-  include ApiMethods
-  include ConditionalIncludes
-  include HasMediaAsset
+  include(HasDtextLinks)
+  include(ApiMethods)
+  include(ConditionalIncludes)
+  include(HasMediaAsset)
 
   def self.override_route_key(value)
     define_singleton_method(:model_name) do

@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-require "test_helper"
-require_relative "helper"
+require("test_helper")
+require_relative("helper")
 
 module Sources
   class NullTest < ActiveSupport::TestCase
-    extend Sources::Helper
+    extend(Sources::Helper)
 
-    context "A source from an unknown site" do
+    context("A source from an unknown site") do
       alternate_should_work(
         "http://oremuhax.x0.com/yoro1603.jpg",
         Sources::Alternates::Null,
@@ -15,7 +15,7 @@ module Sources
       )
     end
 
-    context "A source from imgur" do
+    context("A source from imgur") do
       alternate_should_work(
         "http://imgur.com/gallery/qFKojyz",
         Sources::Alternates::Null,

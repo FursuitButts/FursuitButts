@@ -1,5 +1,5 @@
 <% content_for(:secondary_links) do %>
-  <%= subnav_link_to "Listing", tag_versions_path %>
-  <%= subnav_link_to "Tags", tags_path %>
+  <%= subnav_link_to("Listing", tag_versions_path) %>
+  <%= subnav_link_to("Tags", tags_path) %>
 <% end %>
 <%= latest_link(@tag_versions) %>

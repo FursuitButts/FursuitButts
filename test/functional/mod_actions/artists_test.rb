@@ -1,20 +1,20 @@
 # frozen_string_literal: true
 
-require "test_helper"
-require_relative "helper"
+require("test_helper")
+require_relative("helper")
 
 module ModActions
   class ArtistsTest < ActiveSupport::TestCase
-    include Helper
-    include Rails.application.routes.url_helpers
+    include(Helper)
+    include(Rails.application.routes.url_helpers)
 
-    context "mod actions for artists" do
+    context("mod actions for artists") do
       setup do
         @artist = create(:artist)
         set_count!
       end
 
-      should "parse artist_lock correctly" do
+      should("parse artist_lock correctly") do
         @artist.update!(is_locked: true)
 
         assert_matches(
@@ -24,7 +24,7 @@ module ModActions
         )
       end
 
-      should "parse artist_rename correctly" do
+      should("parse artist_rename correctly") do
         @original = @artist.dup
         @artist.update!(name: "xxx")
 
@@ -39,7 +39,7 @@ module ModActions
         )
       end
 
-      should "parse artist_unlock correctly" do
+      should("parse artist_unlock correctly") do
         @artist.update_columns(is_locked: true)
         @artist.update!(is_locked: false)
 
@@ -50,7 +50,7 @@ module ModActions
         )
       end
 
-      should "parse artist_user_link correctly" do
+      should("parse artist_user_link correctly") do
         @artist.update!(linked_user_id: @user.id)
 
         assert_matches(
@@ -61,7 +61,7 @@ module ModActions
         )
       end
 
-      should "parse artist_user_unlink correctly" do
+      should("parse artist_user_unlink correctly") do
         @artist.update_columns(linked_user_id: @user.id)
         @artist.update!(linked_user_id: nil)
 

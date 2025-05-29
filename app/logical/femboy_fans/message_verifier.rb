@@ -2,7 +2,7 @@
 
 module FemboyFans
   class MessageVerifier
-    attr_reader :purpose, :secret, :verifier
+    attr_reader(:purpose, :secret, :verifier)
 
     def initialize(purpose)
       @purpose = purpose

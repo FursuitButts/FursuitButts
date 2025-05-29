@@ -1,69 +1,69 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 module Moderator
   class DashboardsControllerTest < ActionDispatch::IntegrationTest
-    context "The moderator dashboards controller" do
+    context("The moderator dashboards controller") do
       setup do
         @user = create(:trusted_user, created_at: 1.month.ago)
         @admin = create(:admin_user)
       end
 
-      context "show action" do
-        context "for mod actions" do
+      context("show action") do
+        context("for mod actions") do
           setup do
             as(@admin) do
               @mod_action = create(:mod_action)
             end
           end
 
-          should "render" do
-            get_auth moderator_dashboard_path, @admin
-            assert_response :success
+          should("render") do
+            get_auth(moderator_dashboard_path, @admin)
+            assert_response(:success)
           end
         end
 
-        context "for user feedbacks" do
+        context("for user feedbacks") do
           setup do
             as(@admin) do
               @feedback = create(:user_feedback)
             end
           end
 
-          should "render" do
-            get_auth moderator_dashboard_path, @admin
-            assert_response :success
+          should("render") do
+            get_auth(moderator_dashboard_path, @admin)
+            assert_response(:success)
           end
         end
 
-        context "for wiki pages" do
+        context("for wiki pages") do
           setup do
             as(@user) do
               @wiki_page = create(:wiki_page)
             end
           end
 
-          should "render" do
-            get_auth moderator_dashboard_path, @admin
-            assert_response :success
+          should("render") do
+            get_auth(moderator_dashboard_path, @admin)
+            assert_response(:success)
           end
         end
 
-        context "for tags and uploads" do
+        context("for tags and uploads") do
           setup do
             as(@user) do
               @post = create(:post)
             end
           end
 
-          should "render" do
-            get_auth moderator_dashboard_path, @admin
-            assert_response :success
+          should("render") do
+            get_auth(moderator_dashboard_path, @admin)
+            assert_response(:success)
           end
         end
 
-        context "for notes" do
+        context("for notes") do
           setup do
             as(@user) do
               @post = create(:post)
@@ -71,13 +71,13 @@ module Moderator
             end
           end
 
-          should "render" do
-            get_auth moderator_dashboard_path, @admin
-            assert_response :success
+          should("render") do
+            get_auth(moderator_dashboard_path, @admin)
+            assert_response(:success)
           end
         end
 
-        context "for comments" do
+        context("for comments") do
           setup do
             @users = (0..5).map { create(:user) }
 
@@ -92,26 +92,26 @@ module Moderator
             end
           end
 
-          should "render" do
-            get_auth moderator_dashboard_path, @admin
-            assert_response :success
+          should("render") do
+            get_auth(moderator_dashboard_path, @admin)
+            assert_response(:success)
           end
         end
 
-        context "for artists" do
+        context("for artists") do
           setup do
             as(@user) do
               @artist = create(:artist)
             end
           end
 
-          should "render" do
-            get_auth moderator_dashboard_path, @admin
-            assert_response :success
+          should("render") do
+            get_auth(moderator_dashboard_path, @admin)
+            assert_response(:success)
           end
         end
 
-        context "for flags" do
+        context("for flags") do
           setup do
             as(@user) do
               @post = create(:post)
@@ -119,14 +119,14 @@ module Moderator
             end
           end
 
-          should "render" do
-            get_auth moderator_dashboard_path, @admin
-            assert_response :success
+          should("render") do
+            get_auth(moderator_dashboard_path, @admin)
+            assert_response(:success)
           end
         end
 
-        should "restrict access" do
-          assert_access(User::Levels::MODERATOR) { |user| get_auth moderator_dashboard_path, user }
+        should("restrict access") do
+          assert_access(User::Levels::MODERATOR) { |user| get_auth(moderator_dashboard_path, user) }
         end
       end
     end

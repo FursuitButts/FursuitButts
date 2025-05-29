@@ -4,7 +4,7 @@ class SessionLoader
   class AuthenticationFailure < StandardError; end
 
   class BannedError < AuthenticationFailure
-    attr_reader :ban
+    attr_reader(:ban)
 
     def initialize(ban)
       if ban.blank? || ban.expires_at.blank?
@@ -16,7 +16,7 @@ class SessionLoader
     end
   end
 
-  attr_reader :session, :cookies, :request, :params
+  attr_reader(:session, :cookies, :request, :params)
 
   def initialize(request)
     @request = request

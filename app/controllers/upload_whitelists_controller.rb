@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class UploadWhitelistsController < ApplicationController
-  respond_to :html, :json, :js
-  before_action :load_whitelist, only: %i[edit update destroy]
+  respond_to(:html, :json, :js)
+  before_action(:load_whitelist, only: %i[edit update destroy])
 
   def index
     @whitelists = authorize(UploadWhitelist).search(search_params(UploadWhitelist))

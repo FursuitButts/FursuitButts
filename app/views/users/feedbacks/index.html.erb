@@ -1,6 +1,6 @@
 <h1>User Feedback</h1>
 
-<%= render "search" %>
+<%= render("search") %>
 
 <%= table_for(@user_feedbacks) do |t| %>
   <% t.column("User", width: "12%") do |feedback| %>
@@ -40,7 +40,7 @@
 
 <%= numbered_paginator(@user_feedbacks) %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   Feedback

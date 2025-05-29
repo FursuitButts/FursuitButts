@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 
 class PostFlagTest < ActiveSupport::TestCase
-  context "In all cases" do
+  context("In all cases") do
     setup do
       travel_to(2.weeks.ago) do
         @bob = create(:user)
@@ -14,7 +14,7 @@ class PostFlagTest < ActiveSupport::TestCase
       end
     end
 
-    should "respect the throttle limit" do
+    should("respect the throttle limit") do
       as(@bob) do
         FemboyFans.config.stubs(:disable_throttles?).returns(false)
         FemboyFans.config.stubs(:post_flag_limit).returns(0)
@@ -26,7 +26,7 @@ class PostFlagTest < ActiveSupport::TestCase
       end
     end
 
-    should "not be able to flag a deleted post" do
+    should("not be able to flag a deleted post") do
       as(@alice) do
         @post.update(is_deleted: true)
       end
@@ -39,7 +39,7 @@ class PostFlagTest < ActiveSupport::TestCase
       assert_match(/Post is deleted/, error.message)
     end
 
-    should "not be able to flag a post in the cooldown period" do
+    should("not be able to flag a post in the cooldown period") do
       @mod = create(:moderator_user)
 
       @users = create_list(:user, 2, created_at: 2.weeks.ago)
@@ -69,7 +69,7 @@ class PostFlagTest < ActiveSupport::TestCase
       end
     end
 
-    should "initialize its creator" do
+    should("initialize its creator") do
       @post_flag = as(@alice) do
         create(:post_flag, post: @post)
       end
@@ -77,12 +77,12 @@ class PostFlagTest < ActiveSupport::TestCase
       assert_equal(IPAddr.new("127.0.0.1"), @post_flag.creator_ip_addr)
     end
 
-    context "a user with no_flag=true" do
+    context("a user with no_flag=true") do
       setup do
         @bob = create(:user, no_flagging: true, created_at: 2.weeks.ago)
       end
 
-      should "not be able to flag" do
+      should("not be able to flag") do
         error = assert_raises(ActiveRecord::RecordInvalid) do
           as(@bob) { create(:post_flag, post: @post) }
         end

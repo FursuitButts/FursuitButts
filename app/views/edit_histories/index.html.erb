@@ -1,12 +1,12 @@
 <h1>Recent Edits</h1>
 
-<%= render "search" %>
+<%= render("search") %>
 
 <%= table_for(@edit_histories) do |t| %>
   <% t.column("Editor") do |edit| %>
-    <%= link_to_user edit.user %>
+    <%= link_to_user(edit.user) %>
     <% if policy(edit).can_see_ip_addr? %>
-      (<%= link_to_ip edit.ip_addr %>)
+      (<%= link_to_ip(edit.ip_addr) %>)
     <% end %>
     <p><%= compact_time(edit.updated_at) %></p>
   <% end %>
@@ -31,7 +31,7 @@
 
 <%= numbered_paginator(@edit_histories) %>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   Edit Histories

@@ -2,8 +2,8 @@
 
 module DocumentStore
   class ClassMethodProxy
-    delegate_missing_to :@target
-    attr_accessor :index, :index_name
+    delegate_missing_to(:@target)
+    attr_accessor(:index, :index_name)
 
     def initialize(target)
       @target = target

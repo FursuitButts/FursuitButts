@@ -20,14 +20,14 @@
     <div class="comment-info">
       <div class="comment-info-left">
       <span class="comment-said">
-        <%= link_to_user comment.creator %> said <%= link_to time_ago_in_words_tagged(comment.created_at), post_path(id: comment.post_id, anchor: "comment-#{comment.id}") %>
+        <%= link_to_user(comment.creator) %> said <%= link_to(time_ago_in_words_tagged(comment.created_at), post_path(id: comment.post_id, anchor: "comment-#{comment.id}")) %>
       </span>
         <%= comment_edited_notice(comment) %>
       </div>
 
       <div class="comment-info-right">
         <% if policy(comment).can_see_ip_addr? %>
-          <li><%= link_to_ip comment.creator_ip_addr %></li>
+          <li><%= link_to_ip(comment.creator_ip_addr) %></li>
         <% end %>
         <% if comment.is_spam? %>
           <% if policy(comment).can_see_ip_addr? %>
@@ -58,12 +58,12 @@
 
     <div class="comment-body dtext-container">
       <%= format_text(comment.body, allow_color: CurrentUser.id == comment.creator_id || (CurrentUser.is_anonymous? || !CurrentUser.disable_colors?)) %>
-      <%= render "application/warned_notice", record: comment %>
+      <%= render("application/warned_notice", record: comment) %>
     </div>
 
     <% if policy(comment).update? %>
     <div class="comment-edit">
-      <%= render "comments/partials/form", comment: comment %>
+      <%= render("comments/partials/form", comment: comment) %>
     </div>
     <% end %>
 
@@ -98,7 +98,7 @@
 
       <% unless comment.is_sticky && TicketPolicy.new(CurrentUser.user, comment).create? %>
         <li>
-          <%= link_to model_new_ticket_path(model: comment), class: "comment-report-link" do %>
+          <%= link_to(model_new_ticket_path(model: comment), class: "comment-report-link") do %>
             <%= tag.i(class: "far fa-flag fa-flip-horizontal") %> Report
           <% end %>
         </li>
@@ -107,7 +107,7 @@
 
     <% if policy(comment).warning? %>
       <div class="comment-mark">
-        <%= render "user_warnable/buttons", model: comment %>
+        <%= render("user_warnable/buttons", model: comment) %>
       </div>
     <% end %>
 

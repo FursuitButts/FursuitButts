@@ -2,11 +2,11 @@
 
 module WikiPages
   class MergesController < ApplicationController
-    respond_to :html, :json
+    respond_to(:html, :json)
 
-    rescue_from WikiPage::MergeError, with: ->(err) { render_expected_error(422, err.message) }
+    rescue_from(WikiPage::MergeError, with: ->(err) { render_expected_error(422, err.message) })
 
-    wrap_parameters :wiki_page
+    wrap_parameters(:wiki_page)
 
     def show
       @wiki_page = authorize(WikiPage.find(params[:id]), :merge?)

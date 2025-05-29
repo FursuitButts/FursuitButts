@@ -1,10 +1,10 @@
-<%= render "sidebar" %>
+<%= render("sidebar") %>
 
 <section id="content">
   <h1>Edit Wiki</h1>
 
   <% if @wiki_page.visible? %>
-    <%= render "form" %>
+    <%= render("form") %>
   <% else %>
     <p>The artist requested removal of this page.</p>
   <% end %>
@@ -14,7 +14,7 @@
   <div class="clearfix"></div>
 </section>
 
-<%= render "secondary_links" %>
+<%= render("secondary_links") %>
 
 <% content_for(:page_title) do %>
   Edit Wiki Page - <%= @wiki_page.title %>

@@ -7,33 +7,33 @@ class PostReplacement < ApplicationRecord
   HIGHLIGHTED_TAGS = %w[better_version_at_source avoid_posting conditional_dnp].freeze
   has_media_asset(:post_replacement_media_asset)
 
-  belongs_to :post
+  belongs_to(:post)
   belongs_to_creator
-  belongs_to :approver, class_name: "User", optional: true
-  belongs_to :rejector, class_name: "User", optional: true
-  belongs_to :uploader_on_approve, class_name: "User", foreign_key: :uploader_id_on_approve, optional: true
-  attr_accessor :file, :direct_url, :tags, :is_backup, :as_pending
+  belongs_to(:approver, class_name: "User", optional: true)
+  belongs_to(:rejector, class_name: "User", optional: true)
+  belongs_to(:uploader_on_approve, class_name: "User", foreign_key: :uploader_id_on_approve, optional: true)
+  attr_accessor(:file, :direct_url, :tags, :is_backup, :as_pending)
 
-  validate :user_is_not_limited, on: :create
-  validate :post_is_valid, on: :create
-  validate :set_file_name, on: :create, if: :is_direct?
-  validate :direct_url_is_whitelisted, on: :create
-  validates :reason, length: { minimum: 5, maximum: 150 }, presence: true, on: :create
-  validates :rejection_reason, length: { maximum: 150 }, if: :rejected?
-  validate :validate_media_asset_status, on: :create
+  validate(:user_is_not_limited, on: :create)
+  validate(:post_is_valid, on: :create)
+  validate(:set_file_name, on: :create, if: :is_direct?)
+  validate(:direct_url_is_whitelisted, on: :create)
+  validates(:reason, length: { minimum: 5, maximum: 150 }, presence: true, on: :create)
+  validates(:rejection_reason, length: { maximum: 150 }, if: :rejected?)
+  validate(:validate_media_asset_status, on: :create)
 
-  after_create -> { post.update_index }
-  before_destroy :log_destroy
-  after_destroy -> { post.update_index }
-  after_commit :delete_files, on: :destroy
+  after_create(-> { post.update_index })
+  before_destroy(:log_destroy)
+  after_destroy(-> { post.update_index })
+  after_commit(:delete_files, on: :destroy)
 
-  scope :for_user, ->(id) { where(creator_id: id.to_i) }
-  scope :for_uploader_on_approve, ->(id) { where(uploader_id_on_approve: id.to_i) }
-  scope :penalized, -> { where(penalize_uploader_on_approve: true) }
-  scope :not_penalized, -> { where(penalize_uploader_on_approve: false) }
+  scope(:for_user, ->(id) { where(creator_id: id.to_i) })
+  scope(:for_uploader_on_approve, ->(id) { where(uploader_id_on_approve: id.to_i) })
+  scope(:penalized, -> { where(penalize_uploader_on_approve: true) })
+  scope(:not_penalized, -> { where(penalize_uploader_on_approve: false) })
 
-  enum :status, %w[uploading pending original rejected approved promoted].index_with(&:to_s)
-  delegate :storage_id, to: :media_asset
+  enum(:status, %w[uploading pending original rejected approved promoted].index_with(&:to_s))
+  delegate(:storage_id, to: :media_asset)
 
   def delete_files
     media_asset&.expunge!
@@ -362,12 +362,12 @@ class PostReplacement < ApplicationRecord
     as_pending.to_s.truthy?
   end
 
-  include StorageMethods
-  include FileMethods
-  include ProcessingMethods
-  include PromotionMethods
-  include PostMethods
-  extend SearchMethods
+  include(StorageMethods)
+  include(FileMethods)
+  include(ProcessingMethods)
+  include(PromotionMethods)
+  include(PostMethods)
+  extend(SearchMethods)
 
   def file_url
     if post.deleteblocked?

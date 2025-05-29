@@ -5,7 +5,7 @@ class UserRevert
   THRESHOLD = 1_000
   class TooManyChangesError < RuntimeError; end
 
-  attr_reader :user_id
+  attr_reader(:user_id)
 
   def initialize(user_id)
     @user_id = user_id

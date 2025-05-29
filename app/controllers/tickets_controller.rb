@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class TicketsController < ApplicationController
-  respond_to :html, :json, except: %i[create new]
+  respond_to(:html, :json, except: %i[create new])
 
   def index
     @tickets = authorize(Ticket).html_includes(request, :creator, :accused, :claimant, :model)

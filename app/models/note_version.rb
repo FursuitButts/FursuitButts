@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 class NoteVersion < ApplicationRecord
-  belongs_to_updater counter_cache: "note_update_count"
-  belongs_to :note
-  scope :for_user, ->(user_id) { where("updater_id = ?", user_id) }
+  belongs_to_updater(counter_cache: "note_update_count")
+  belongs_to(:note)
+  scope(:for_user, ->(user_id) { where("updater_id = ?", user_id) })
 
   def self.search(params)
     q = super

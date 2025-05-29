@@ -3,7 +3,7 @@
   <%= tag.source(src: post.file_url_ext_for(CurrentUser.user, "mp4"), type: "video/mp4") %>
 <% end %>
 
-<%= javascript_tag nonce: true do -%>
+<%= javascript_tag(nonce: true) do -%>
   (function () {
     var videoEl = document.getElementById('image');
     var savedVolume = parseFloat(localStorage.getItem('video_volume') || '1.0');

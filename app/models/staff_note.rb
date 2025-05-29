@@ -3,13 +3,13 @@
 class StaffNote < ApplicationRecord
   belongs_to_creator
   belongs_to_updater
-  belongs_to :user
+  belongs_to(:user)
 
-  validates :body, length: { maximum: 10_000 }
-  after_create :log_create
-  after_update :log_update
+  validates(:body, length: { maximum: 10_000 })
+  after_create(:log_create)
+  after_update(:log_update)
 
-  scope :active, -> { where(is_deleted: false) }
+  scope(:active, -> { where(is_deleted: false) })
 
   module LogMethods
     def log_create
@@ -58,8 +58,8 @@ class StaffNote < ApplicationRecord
     end
   end
 
-  include LogMethods
-  extend SearchMethods
+  include(LogMethods)
+  extend(SearchMethods)
 
   def self.available_includes
     %i[creator updater user]

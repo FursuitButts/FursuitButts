@@ -1,13 +1,13 @@
 <div class="stats-section">
   <div class="profile-avatar">
-    <%= user_avatar @user %>
+    <%= user_avatar(@user) %>
   </div>
   <div class="profile-stats">
-    <h1><%= link_to_user @user %></h1>
+    <h1><%= link_to_user(@user) %></h1>
     <div class="user-statistics">
       <div class="column">
         <span>Join Date</span>
-        <span><%= compact_time @user.created_at %></span>
+        <span><%= compact_time(@user.created_at) %></span>
 
         <span>Level</span>
         <span>
@@ -55,7 +55,7 @@
           <%= presenter.comment_count(self) %> on <%= presenter.commented_posts_count(self) %> <%= "post".pluralize(presenter.commented_on_posts_count) %>
           <%= link_to_enclosed("mentions", comments_path(group_by: :comment, search: { body_matches: user.name })) %>
           <%= link_to_enclosed_if(CommentVotePolicy.new(CurrentUser.user, user).index?, "#{user.comment_vote_count} votes", action: "index", controller: "comments/votes", search: { user_name: user.name }) %>
-          <%= link_to_enclosed_if(policy(EditHistory).index?, "edits", comments_edits_path(search: { versionable_type: "Comment", user_id: user.id })) %>
+          <%= link_to_enclosed_if(policy(EditHistory).index?, "edits", edit_histories_path(search: { versionable_type: "Comment", user_id: user.id })) %>
         </span>
 
         <% if CurrentUser.user.id == user.id || CurrentUser.user.is_janitor? %>

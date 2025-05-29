@@ -1,23 +1,23 @@
 # frozen_string_literal: true
 
 class Ban < ApplicationRecord
-  attr_accessor :is_permaban
+  attr_accessor(:is_permaban)
 
-  before_validation :initialize_banner_id, on: :create
-  before_validation :initialize_permaban, on: %i[update create]
-  before_create :create_feedback
-  after_create :update_user_on_create
-  after_create :log_create
-  after_update :log_update
-  after_destroy :log_delete
-  belongs_to :user
-  belongs_to :banner, class_name: "User"
-  validate :user_is_inferior
-  validates :reason, :duration, presence: true
-  validates :reason, length: { minimum: 1, maximum: FemboyFans.config.user_feedback_max_size }
+  before_validation(:initialize_banner_id, on: :create)
+  before_validation(:initialize_permaban, on: %i[update create])
+  before_create(:create_feedback)
+  after_create(:update_user_on_create)
+  after_create(:log_create)
+  after_update(:log_update)
+  after_destroy(:log_delete)
+  belongs_to(:user)
+  belongs_to(:banner, class_name: "User")
+  validate(:user_is_inferior)
+  validates(:reason, :duration, presence: true)
+  validates(:reason, length: { minimum: 1, maximum: FemboyFans.config.user_feedback_max_size })
 
-  scope :unexpired, -> { where("bans.expires_at > ? OR bans.expires_at IS NULL", Time.now) }
-  scope :expired, -> { where.not(bans: { expires_at: nil }).where("bans.expires_at <= ?", Time.now) }
+  scope(:unexpired, -> { where("bans.expires_at > ? OR bans.expires_at IS NULL", Time.now) })
+  scope(:expired, -> { where.not(bans: { expires_at: nil }).where("bans.expires_at <= ?", Time.now) })
 
   def self.is_banned?(user)
     exists?(["user_id = ? AND (expires_at > ? OR expires_at IS NULL)", user.id, Time.now])
@@ -99,7 +99,7 @@ class Ban < ApplicationRecord
     @duration = dur if dur != 0
   end
 
-  attr_reader :duration
+  attr_reader(:duration)
 
   def humanized_duration
     return "permanent" if expires_at.nil?
@@ -152,7 +152,7 @@ class Ban < ApplicationRecord
     end
   end
 
-  include LogMethods
+  include(LogMethods)
 
   def self.available_includes
     %i[banner user]

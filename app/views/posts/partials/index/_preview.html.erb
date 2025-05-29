@@ -1,7 +1,7 @@
 <%# locals: (post:, views: :daily, article_attrs: {}, link_target:, link_params: {}, tooltip: "", cropped_url:, preview_url:, alt_text: "", has_cropped: false, pool: nil, width: 0, height: 0, similarity: nil, size: nil, file_ext: nil, stats: false) -%>
 
 <%= tag.article(**article_attrs) do -%>
-  <%= link_to polymorphic_path(link_target, link_params) do -%>
+  <%= link_to(polymorphic_path(link_target, link_params)) do -%>
     <%= tag.picture do -%>
       <%= tag.source(media: "(max-width: 800px)", srcset: cropped_url) -%>
       <%= tag.source(media: "(min-width: 800px)", srcset: preview_url) -%>
@@ -16,7 +16,7 @@
   <% end -%>
   <% if pool -%>
     <p class="desc">
-      <%= link_to pool.pretty_name.truncate(80), pool %>
+      <%= link_to(pool.pretty_name.truncate(80), pool) %>
     </p>
   <% end -%>
   <% if similarity -%>

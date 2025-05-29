@@ -5,7 +5,7 @@ class DiscordNotification
   YELLOW = 0xFFA500
   RED = 0xFF0000
 
-  attr_accessor :record, :action
+  attr_accessor(:record, :action)
 
   def initialize(record, action)
     @record = record

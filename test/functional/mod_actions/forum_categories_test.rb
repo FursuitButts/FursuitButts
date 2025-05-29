@@ -1,26 +1,26 @@
 # frozen_string_literal: true
 
-require "test_helper"
-require_relative "helper"
+require("test_helper")
+require_relative("helper")
 
 module ModActions
   class ForumCategoriesTest < ActiveSupport::TestCase
-    include Helper
-    include Rails.application.routes.url_helpers
+    include(Helper)
+    include(Rails.application.routes.url_helpers)
 
-    context "mod actions for forum categories" do
+    context("mod actions for forum categories") do
       setup do
         @category = create(:forum_category, can_view: User::Levels::TRUSTED)
         @trusted = create(:trusted_user)
         set_count!
       end
 
-      context "forum_category_create" do
+      context("forum_category_create") do
         setup do
           @category = create(:forum_category, can_view: User::Levels::TRUSTED)
         end
 
-        should "format correctly for users that can see the category" do
+        should("format correctly for users that can see the category") do
           as(@trusted) do
             assert_matches(
               actions:             %w[forum_category_create],
@@ -38,7 +38,7 @@ module ModActions
           end
         end
 
-        should "format correctly for users that cannot see the category" do
+        should("format correctly for users that cannot see the category") do
           as(@user) do
             assert_matches(
               actions: %w[forum_category_create],
@@ -50,8 +50,8 @@ module ModActions
         end
       end
 
-      context "forum_category_delete" do
-        should "format correctly for users that can see the category" do
+      context("forum_category_delete") do
+        should("format correctly for users that can see the category") do
           @category.destroy
 
           as(@trusted) do
@@ -67,7 +67,7 @@ module ModActions
           end
         end
 
-        should "format correctly for users that cannot see the category" do
+        should("format correctly for users that cannot see the category") do
           @category.destroy
 
           as(@user) do
@@ -81,14 +81,14 @@ module ModActions
         end
       end
 
-      context "forum_category_topics_move" do
+      context("forum_category_topics_move") do
         setup do
           @topic = create(:forum_topic, category: @category)
           @category2 = create(:forum_category, can_view: User::Levels::TRUSTED)
           set_count!
         end
 
-        should "format correctly for users that can see the category" do
+        should("format correctly for users that can see the category") do
           with_inline_jobs { @category.move_all_topics(@category2, user: @admin) }
 
           as(@trusted) do
@@ -107,7 +107,7 @@ module ModActions
           end
         end
 
-        should "format correctly for users that cannot see the category" do
+        should("format correctly for users that cannot see the category") do
           with_inline_jobs { @category.move_all_topics(@category2, user: @admin) }
 
           as(@user) do
@@ -123,13 +123,13 @@ module ModActions
         end
       end
 
-      context "forum_category_update" do
+      context("forum_category_update") do
         setup do
           @original = @category.dup
         end
 
-        context "with no changes" do
-          should "format correctly for users that can see the category" do
+        context("with no changes") do
+          should("format correctly for users that can see the category") do
             @category.save
 
             as(@trusted) do
@@ -148,7 +148,7 @@ module ModActions
             end
           end
 
-          should "format correctly for users that cannot see the category" do
+          should("format correctly for users that cannot see the category") do
             @category.save
 
             as(@user) do
@@ -162,8 +162,8 @@ module ModActions
           end
         end
 
-        context "with name change" do
-          should "format correctly for users that can see the category" do
+        context("with name change") do
+          should("format correctly for users that can see the category") do
             @category.update!(name: "xxx")
 
             as(@trusted) do
@@ -185,7 +185,7 @@ module ModActions
             end
           end
 
-          should "format correctly for users that cannot see the category" do
+          should("format correctly for users that cannot see the category") do
             @category.update!(name: "xxx")
 
             as(@user) do
@@ -199,8 +199,8 @@ module ModActions
           end
         end
 
-        context "with can_view change" do
-          should "format correctly for users that can see the category" do
+        context("with can_view change") do
+          should("format correctly for users that can see the category") do
             @category.update!(can_view: User::Levels::ADMIN)
 
             as(@admin) do
@@ -222,7 +222,7 @@ module ModActions
             end
           end
 
-          should "format correctly for users that cannot see the category" do
+          should("format correctly for users that cannot see the category") do
             @category.update!(can_view: User::Levels::ADMIN)
 
             as(@user) do
@@ -236,8 +236,8 @@ module ModActions
           end
         end
 
-        context "with can_create change" do
-          should "format correctly for users that can see the category" do
+        context("with can_create change") do
+          should("format correctly for users that can see the category") do
             @category.update!(can_create: User::Levels::ADMIN)
 
             as(@admin) do
@@ -259,7 +259,7 @@ module ModActions
             end
           end
 
-          should "format correctly for users that cannot see the category" do
+          should("format correctly for users that cannot see the category") do
             @category.update!(can_create: User::Levels::ADMIN)
 
             as(@user) do
@@ -273,8 +273,8 @@ module ModActions
           end
         end
 
-        context "with all changes" do
-          should "format correctly for users that can see the category" do
+        context("with all changes") do
+          should("format correctly for users that can see the category") do
             @category.update!(name: "xxx", can_view: User::Levels::ADMIN, can_create: User::Levels::ADMIN)
 
             as(@admin) do
@@ -298,7 +298,7 @@ module ModActions
             end
           end
 
-          should "format correctly for users that cannot see the category" do
+          should("format correctly for users that cannot see the category") do
             @category.update!(name: "xxx", can_view: User::Levels::ADMIN, can_create: User::Levels::ADMIN)
 
             as(@user) do

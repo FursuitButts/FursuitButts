@@ -3,38 +3,38 @@
 class Artist < ApplicationRecord
   class RevertError < StandardError; end
 
-  attr_accessor :url_string_changed
+  attr_accessor(:url_string_changed)
 
-  array_attribute :other_names
+  array_attribute(:other_names)
 
   belongs_to_creator
-  before_validation :normalize_name, unless: :destroyed?
-  before_validation :normalize_other_names, unless: :destroyed?
-  before_validation :validate_protected_properties_not_changed, if: :dnp_restricted?
-  validate :validate_user_can_edit
-  validate :wiki_page_not_locked
-  validate :user_not_limited
-  validates :name, tag_name: true, uniqueness: true, if: :name_changed?
-  validates :name, length: { maximum: 100 }
-  before_destroy :log_destroy
-  after_save :log_changes
-  after_save :create_version
-  after_save :categorize_tag
-  after_save :update_wiki
-  after_save :propagate_locked, if: :should_propagate_locked
-  after_save :clear_url_string_changed
-  after_save :update_posts_index, if: :saved_change_to_linked_user_id?
+  before_validation(:normalize_name, unless: :destroyed?)
+  before_validation(:normalize_other_names, unless: :destroyed?)
+  before_validation(:validate_protected_properties_not_changed, if: :dnp_restricted?)
+  validate(:validate_user_can_edit)
+  validate(:wiki_page_not_locked)
+  validate(:user_not_limited)
+  validates(:name, tag_name: true, uniqueness: true, if: :name_changed?)
+  validates(:name, length: { maximum: 100 })
+  before_destroy(:log_destroy)
+  after_save(:log_changes)
+  after_save(:create_version)
+  after_save(:categorize_tag)
+  after_save(:update_wiki)
+  after_save(:propagate_locked, if: :should_propagate_locked)
+  after_save(:clear_url_string_changed)
+  after_save(:update_posts_index, if: :saved_change_to_linked_user_id?)
 
-  has_many :urls, class_name: "ArtistUrl", autosave: true, dependent: :destroy
-  has_many :versions, -> { order("artist_versions.id ASC") }, class_name: "ArtistVersion", dependent: :destroy
-  has_one :wiki_page, foreign_key: "title", primary_key: "name"
-  has_one :tag_alias, foreign_key: "antecedent_name", primary_key: "name"
-  has_one :tag, foreign_key: "name", primary_key: "name"
-  has_one :avoid_posting, -> { active }
-  has_one :inactive_dnp, -> { deleted }, class_name: "AvoidPosting"
-  belongs_to :linked_user, class_name: "User", optional: true
-  attribute :notes, :string
-  delegate :post_count, to: :tag
+  has_many(:urls, class_name: "ArtistUrl", autosave: true, dependent: :destroy)
+  has_many(:versions, -> { order("artist_versions.id ASC") }, class_name: "ArtistVersion", dependent: :destroy)
+  has_one(:wiki_page, foreign_key: "title", primary_key: "name")
+  has_one(:tag_alias, foreign_key: "antecedent_name", primary_key: "name")
+  has_one(:tag, foreign_key: "name", primary_key: "name")
+  has_one(:avoid_posting, -> { active })
+  has_one(:inactive_dnp, -> { deleted }, class_name: "AvoidPosting")
+  belongs_to(:linked_user, class_name: "User", optional: true)
+  attribute(:notes, :string)
+  delegate(:post_count, to: :tag)
 
   # FIXME: This is a hack on top of the hack below for setting url_string to ensure name is set first for validations
   def assign_attributes(new_attributes)
@@ -60,7 +60,7 @@ class Artist < ApplicationRecord
   end
 
   module UrlMethods
-    extend ActiveSupport::Concern
+    extend(ActiveSupport::Concern)
 
     MAX_URLS_PER_ARTIST = 25
     module ClassMethods
@@ -265,7 +265,7 @@ class Artist < ApplicationRecord
   end
 
   module NameMethods
-    extend ActiveSupport::Concern
+    extend(ActiveSupport::Concern)
 
     MAX_OTHER_NAMES_PER_ARTIST = 25
     module ClassMethods
@@ -322,7 +322,7 @@ class Artist < ApplicationRecord
   end
 
   module NoteMethods
-    extend ActiveSupport::Concern
+    extend(ActiveSupport::Concern)
 
     def notes
       @notes || wiki_page.try(:body)
@@ -519,15 +519,15 @@ class Artist < ApplicationRecord
     end
   end
 
-  include AvoidPostingMethods
+  include(AvoidPostingMethods)
 
-  include UrlMethods
-  include NameMethods
-  include VersionMethods
-  include NoteMethods
-  include TagMethods
-  include LockMethods
-  extend SearchMethods
+  include(UrlMethods)
+  include(NameMethods)
+  include(VersionMethods)
+  include(NoteMethods)
+  include(TagMethods)
+  include(LockMethods)
+  extend(SearchMethods)
 
   # due to technical limitations (foreign keys), artists with any
   # dnp entry (active or inactive) cannot be deleted

@@ -3,7 +3,7 @@
 module Sources
   module Alternates
     class Base
-      attr_reader :url, :gallery_url, :submission_url, :direct_url, :additional_urls, :parsed_url
+      attr_reader(:url, :gallery_url, :submission_url, :direct_url, :additional_urls, :parsed_url)
 
       SECURE_DOMAINS = %w[weasyl.com imgur.com].freeze
 

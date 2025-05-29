@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class CreateExpungedTicketJob < ApplicationJob
-  queue_as :default
+  queue_as(:default)
 
   def perform(klass, id, duplicate_ids)
     CurrentUser.as_system do

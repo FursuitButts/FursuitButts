@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 class WikiPageVersion < ApplicationRecord
-  belongs_to :wiki_page
-  belongs_to_updater counter_cache: "wiki_update_count"
-  belongs_to :artist, optional: true
-  delegate :visible?, to: :wiki_page
+  belongs_to(:wiki_page)
+  belongs_to_updater(counter_cache: "wiki_update_count")
+  belongs_to(:artist, optional: true)
+  delegate(:visible?, to: :wiki_page)
 
   module SearchMethods
     def for_user(user_id)
@@ -32,7 +32,7 @@ class WikiPageVersion < ApplicationRecord
     end
   end
 
-  extend SearchMethods
+  extend(SearchMethods)
 
   def pretty_title
     title.tr("_", " ")
