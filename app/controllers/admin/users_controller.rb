@@ -17,7 +17,6 @@ module Admin
         ORDER BY u1.id DESC, u2.last_logged_in_at DESC;
       SQL
       @alts = @alts.group_by { |i| i["u1id"] }.transform_values { |v| v.pluck("u2id") }
-      @alts = { 3 => [3, 2], 2 => [3, 2], 9 => [9] }
       user_ids = @alts.flatten(2).uniq
       @users = User.where(id: user_ids).index_by(&:id)
       @alts = FemboyFans::Paginator::PaginatedArray.new(@alts.to_a, { pagination_mode: :numbered, records_per_page: 250, total_count: 9_999_999_999, current_page: params[:page].to_i, max_numbered_pages: 9999 })

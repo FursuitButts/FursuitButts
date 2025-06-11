@@ -32,14 +32,14 @@ class PopularController < ApplicationController
   def searches
     @date, @scale, @min_date, @max_date = parse_date(params, scales: %w[day])
     @ranking = Reports.get_post_searches_rank(@date).first(limit)
-    @tags = Tag.find_by_name_list(@ranking.pluck("tag"))
+    @tags = Tag.find_by_name_list(@ranking.map(&:first))
     @nav = NavLinks.new(@date, "searches_popular_index_path", "top_searches_popular_index_path")
     respond_with(@ranking, &format_json(@ranking))
   end
 
   def top_searches
     @ranking = Reports.get_top_post_searches.first(limit)
-    @tags = Tag.find_by_name_list(@ranking.pluck("tag"))
+    @tags = Tag.find_by_name_list(@ranking.map(&:first))
     @stats = Reports.get_stats
     respond_with(@ranking, &format_json(@ranking))
   end

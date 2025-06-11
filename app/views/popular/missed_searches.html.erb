@@ -1,6 +1,6 @@
 <h1>Missed Searches: <%= date_range_description(@date, @scale, @min_date, @max_date) %></h1>
 <p id="total">
-  Total Missed Searches: <%= ActiveSupport::NumberHelper.number_to_delimited(@ranking.sum(&:second)) %>
+  Total Missed Searches: <%= ActiveSupport::NumberHelper.number_to_delimited(@ranking.sum { |r| r["count"] }) %>
 </p>
 
 <%= @nav.build(self) %>
