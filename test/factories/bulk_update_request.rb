@@ -3,7 +3,7 @@
 FactoryBot.define do
   factory(:bulk_update_request) do
     title { "xxx" }
-    script { "create alias aaa -> bbb" }
+    script { "alias aaa -> bbb" }
     reason { "xxxxx" }
   end
 end

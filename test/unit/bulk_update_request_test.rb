@@ -18,11 +18,11 @@ class BulkUpdateRequestTest < ActiveSupport::TestCase
         create(:post, tag_string: "ddd")
         create(:post, tag_string: "eee")
 
-        @script = "create alias aaa -> 000\n" \
-                  "create implication bbb -> 111\n" \
-                  "remove alias ccc -> 222\n" \
-                  "remove implication ddd -> 333\n" \
-                  "mass update eee -> 444\n"
+        @script = "alias aaa -> 000\n" \
+                  "imply bbb -> 111\n" \
+                  "unalias ccc -> 222\n" \
+                  "unimply ddd -> 333\n" \
+                  "update eee -> 444\n"
       end
 
       subject { BulkUpdateRequest.new(script: @script) }
@@ -35,9 +35,9 @@ class BulkUpdateRequestTest < ActiveSupport::TestCase
     context("on approval") do
       setup do
         @script = '
-          create alias foo -> bar
-          create implication bar -> baz
-          mass update aaa -> bbb
+          alias foo -> bar
+          imply bar -> baz
+          update aaa -> bbb
         '
 
         @bur = create(:bulk_update_request, script: @script)
@@ -101,14 +101,14 @@ class BulkUpdateRequestTest < ActiveSupport::TestCase
     context("that has an invalid alias") do
       setup do
         @alias1 = create(:tag_alias)
-        @req = build(:bulk_update_request, script: "create alias bbb -> aaa")
+        @req = build(:bulk_update_request, script: "alias bbb -> aaa")
       end
 
       should("not validate") do
         assert_difference("TagAlias.count", 0) do
           @req.save
         end
-        assert_equal(["Error: A tag alias for aaa already exists (create alias bbb -> aaa)"], @req.errors.full_messages)
+        assert_equal(["Script is invalid: Error: A tag alias for aaa already exists"], @req.errors.full_messages)
       end
     end
 
@@ -119,7 +119,7 @@ class BulkUpdateRequestTest < ActiveSupport::TestCase
         bur = build(:bulk_update_request, script: "imply a -> c")
         bur.save
 
-        assert_equal(["Error: a already implies c through another implication (create implication a -> c)"], bur.errors.full_messages)
+        assert_equal(["Script is invalid: Error: a already implies c through another implication"], bur.errors.full_messages)
       end
     end
 
@@ -138,7 +138,7 @@ class BulkUpdateRequestTest < ActiveSupport::TestCase
 
       should("not validate") do
         skip("doesn't work")
-        assert_equal(["Error: a already implies c through another implication (create implication a -> c)"], @bur.errors.full_messages)
+        assert_equal(["Error: a already implies c through another implication (imply a -> c)"], @bur.errors.full_messages)
       end
     end
 
@@ -146,7 +146,7 @@ class BulkUpdateRequestTest < ActiveSupport::TestCase
       should("work") do
         tag = Tag.find_or_create_by_name("tagme")
         bur = create(:bulk_update_request, script: "category tagme -> meta")
-        bur.approve!(@admin)
+        with_inline_jobs { bur.approve!(@admin) }
 
         assert_equal(TagCategory.meta, tag.reload.category)
       end
@@ -154,13 +154,14 @@ class BulkUpdateRequestTest < ActiveSupport::TestCase
 
     context("with an associated forum topic") do
       setup do
+        create(:tag, name: "aaa")
         @topic = create(:forum_topic, title: "[bulk] hoge")
         @post = create(:forum_post, topic_id: @topic.id)
-        @req = create(:bulk_update_request, script: "create alias AAA -> BBB", forum_topic_id: @topic.id, forum_post_id: @post.id, title: "[bulk] hoge")
+        @req = create(:bulk_update_request, script: "alias AAA -> BBB", forum_topic_id: @topic.id, forum_post_id: @post.id, title: "[bulk] hoge")
       end
 
       should("gracefully handle validation errors during approval") do
-        @req.stubs(:update).raises(BulkUpdateRequestImporter::Error.new("blah"))
+        @req.stubs(:update).raises(BulkUpdateRequestProcessor::Error.new("blah"))
         assert_difference("ForumPost.count", 1) do
           @req.approve!(@admin)
         end
@@ -170,7 +171,7 @@ class BulkUpdateRequestTest < ActiveSupport::TestCase
       end
 
       should("leave the BUR pending if there is an unexpected error during approval") do
-        @req.forum_updater.stubs(:update).raises(RuntimeError.new("blah"))
+        @req.stubs(:update).raises(RuntimeError.new("blah"))
         assert_raises(RuntimeError) { @req.approve!(@admin) }
 
         assert_equal("pending", @req.reload.status)
@@ -182,7 +183,7 @@ class BulkUpdateRequestTest < ActiveSupport::TestCase
 
       should("update the topic when processed") do
         assert_difference("ForumPost.count") do
-          @req.approve!(@admin)
+          with_inline_jobs { @req.approve!(@admin) }
         end
 
         @topic.reload
@@ -216,9 +217,9 @@ class BulkUpdateRequestTest < ActiveSupport::TestCase
 
     context("when searching") do
       setup do
-        @bur1 = create(:bulk_update_request, title: "foo", script: "create alias aaa -> bbb", creator_id: @admin.id)
-        @bur2 = create(:bulk_update_request, title: "bar", script: "create implication bbb -> ccc", creator_id: @admin.id)
-        @bur1.approve!(@admin)
+        @bur1 = create(:bulk_update_request, title: "foo", script: "alias aaa -> bbb", creator_id: @admin.id)
+        @bur2 = create(:bulk_update_request, title: "bar", script: "imply bbb -> ccc", creator_id: @admin.id)
+        with_inline_jobs { @bur1.approve!(@admin) }
       end
 
       should("work") do

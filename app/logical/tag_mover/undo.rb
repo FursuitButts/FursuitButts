@@ -2,12 +2,12 @@
 
 class TagMover
   class Undo
-    attr_reader(:undo_data, :user, :tcr, :applied)
+    attr_reader(:undo_data, :user, :request, :applied)
 
-    def initialize(undo_data, user: User.system, tcr: nil)
+    def initialize(undo_data, user: User.system, request: nil)
       @undos = undo_data.map { |undo| [undo.first.to_sym, undo.second.transform_keys(&:to_sym)] }
       @user = user
-      @tcr = tcr
+      @request = request
       @applied = []
     end
 
@@ -55,13 +55,13 @@ class TagMover
       tag = Tag.find_by(id: id)
       return false unless tag && tag.category == new
       tag.update(category: new)
-      case tcr
+      case request
       when TagAlias
-        reason = "undo: alias ##{tcr.id} (#{tcr.antecedent_name} -> #{tcr.consequent_name})"
+        reason = "undo: alias ##{request.id} (#{request.antecedent_name} -> #{request.consequent_name})"
       when TagImplication
-        reason = "undo: implication ##{tcr.id} (#{tcr.antecedent_name} -> #{tcr.consequent_name})"
+        reason = "undo: implication ##{request.id} (#{request.antecedent_name} -> #{request.consequent_name})"
       when BulkUpdateRequest
-        reason = "undo: bulk update request ##{tcr.id} (#{tcr.antecedent_name} -> #{tcr.consequent_name})"
+        reason = "undo: bulk update request ##{request.id} (#{request.antecedent_name} -> #{request.consequent_name})"
       else
         reason = "undo tag move"
       end

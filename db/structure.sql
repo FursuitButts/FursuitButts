@@ -2139,6 +2139,44 @@ CREATE TABLE public.schema_migrations (
 
 
 --
+-- Name: security_logs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.security_logs (
+    id bigint NOT NULL,
+    user_id bigint,
+    name character varying NOT NULL,
+    method character varying NOT NULL,
+    path character varying NOT NULL,
+    query jsonb DEFAULT '{}'::jsonb NOT NULL,
+    body character varying,
+    content_type character varying,
+    ip_addr inet NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: security_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.security_logs_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: security_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.security_logs_id_seq OWNED BY public.security_logs.id;
+
+
+--
 -- Name: staff_audit_logs; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -2369,7 +2407,8 @@ CREATE TABLE public.tag_versions (
     is_locked boolean NOT NULL,
     tag_id integer NOT NULL,
     updater_id integer NOT NULL,
-    reason character varying DEFAULT ''::character varying NOT NULL
+    reason character varying DEFAULT ''::character varying NOT NULL,
+    is_deprecated boolean NOT NULL
 );
 
 
@@ -2406,7 +2445,8 @@ CREATE TABLE public.tags (
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
     is_locked boolean DEFAULT false NOT NULL,
-    follower_count integer DEFAULT 0 NOT NULL
+    follower_count integer DEFAULT 0 NOT NULL,
+    is_deprecated boolean DEFAULT false NOT NULL
 );
 
 
@@ -3467,6 +3507,13 @@ ALTER TABLE ONLY public.rules ALTER COLUMN id SET DEFAULT nextval('public.rules_
 
 
 --
+-- Name: security_logs id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.security_logs ALTER COLUMN id SET DEFAULT nextval('public.security_logs_id_seq'::regclass);
+
+
+--
 -- Name: staff_audit_logs id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -4074,6 +4121,14 @@ ALTER TABLE ONLY public.rules
 
 ALTER TABLE ONLY public.schema_migrations
     ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
+
+
+--
+-- Name: security_logs security_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.security_logs
+    ADD CONSTRAINT security_logs_pkey PRIMARY KEY (id);
 
 
 --
@@ -5467,6 +5522,13 @@ CREATE INDEX index_rules_on_updater_id ON public.rules USING btree (updater_id);
 
 
 --
+-- Name: index_security_logs_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_security_logs_on_user_id ON public.security_logs USING btree (user_id);
+
+
+--
 -- Name: index_staff_audit_logs_on_user_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -6713,6 +6775,14 @@ ALTER TABLE ONLY public.post_replacement_rejection_reasons
 
 
 --
+-- Name: security_logs fk_rails_9745539bd4; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.security_logs
+    ADD CONSTRAINT fk_rails_9745539bd4 FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
 -- Name: mascots fk_rails_9901e810fa; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -7183,6 +7253,8 @@ ALTER TABLE ONLY public.mascot_media_assets
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20250616092017'),
+('20250602092107'),
 ('20250526212423'),
 ('20250426152444'),
 ('20250421070836'),

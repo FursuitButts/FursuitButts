@@ -85,3 +85,5 @@ gem("recursive-open-struct", "~> 2.0")
 gem("csv", "~> 3.3")
 
 gem("abbrev", "~> 0.1.2")
+
+gem("concurrent-ruby", "~> 1.3")

@@ -80,6 +80,20 @@ class TagQuery
     quote_delimited + tagstr.split.uniq
   end
 
+  def self.has_any_metatag?(tags)
+    return false if tags.blank?
+
+    tags = scan(tags) if tags.is_a?(String)
+    tags.any? { |tag| tag.include?(":") && METATAGS.include?(tag.split(":", 2).first) }
+  end
+
+  def self.is_simple_tag?(tags)
+    return false if tags.blank?
+
+    tags = scan(tags) if tags.is_a?(String)
+    tags.one? && !has_any_metatag?(tags)
+  end
+
   def self.has_metatag?(tags, *)
     fetch_metatag(tags, *).present?
   end

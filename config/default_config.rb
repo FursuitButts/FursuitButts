@@ -1022,6 +1022,10 @@ module FemboyFans
     def alias_category_change_cutoff
       10_000
     end
+
+    def max_concurrency
+      Concurrent.available_processor_count.to_i.clamp(1..)
+    end
   end
 
   class EnvironmentConfiguration

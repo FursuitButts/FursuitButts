@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
 class TagMover
-  attr_reader(:old_tag, :new_tag, :user, :tcr, :undos)
+  attr_reader(:old_tag, :new_tag, :user, :request, :undos)
 
-  def initialize(old_name, new_name, user: User.system, tcr: nil)
-    @old_tag = Tag.find_or_create_by_name(old_name, user: user)
-    @new_tag = Tag.find_or_create_by_name(new_name, user: user)
+  def initialize(old_name, new_name, user: User.system, request: nil, create_tags: true)
+    @old_tag = create_tags ? Tag.find_or_create_by_name(old_name, user: user) : (Tag.find_by_normalized_name(old_name) || Tag.new(name: Tag.normalize_name(old_name)))
+    @new_tag = create_tags ? Tag.find_or_create_by_name(new_name, user: user) : (Tag.find_by_normalized_name(new_name) || Tag.new(name: Tag.normalize_name(new_name)))
     @user = user
-    @tcr = tcr
+    @request = request
     @undos = []
   end
 
@@ -29,13 +29,15 @@ class TagMover
   def update_tag_category!
     tag, category = tag_category_update
     if tag.present? && category.present?
-      case tcr
+      case request
       when TagAlias
-        reason = "alias ##{tcr.id} (#{old_tag.name} -> #{new_tag.name})"
+        reason = "alias ##{request.id} (#{old_tag.name} -> #{new_tag.name})"
       when TagImplication
-        reason = "implication ##{tcr.id} (#{old_tag.name} -> #{new_tag.name})"
+        reason = "implication ##{request.id} (#{old_tag.name} -> #{new_tag.name})"
       when BulkUpdateRequest
-        reason = "bulk update request ##{tcr.id} (#{old_tag.name} -> #{new_tag.name})"
+        reason = "bulk update request ##{request.id} (#{old_tag.name} -> #{new_tag.name})"
+      when BulkUpdateRequestCommands::Rename
+        reason = "rename (#{old_tag.name} -> #{new_tag.name})"
       else
         reason = "tag move (#{old_tag.name} -> #{new_tag.name})"
       end
@@ -120,7 +122,8 @@ class TagMover
           post_ids << post.id
           post.with_lock do
             post.automated_edit = true
-            post.tag_string += " "
+            post.remove_tag(old_tag.name)
+            post.add_tag(new_tag.name)
             post.save!
           end
         end

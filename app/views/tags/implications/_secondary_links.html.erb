@@ -5,7 +5,7 @@
   <%= subnav_link_to("Request implication", new_tag_implication_path) %>
   <%= subnav_link_to("Request bulk update", new_bulk_update_request_path) %>
   <%= subnav_link_to("Help", help_page_path(id: "tag_implications")) %>
-  <% if policy(BulkUpdateRequestImporter).create? %>
+  <% if policy(BulkUpdateRequestImport).create? %>
     |
     <%= subnav_link_to("Import", new_admin_bulk_update_request_import_path) %>
   <% end %>

@@ -162,10 +162,10 @@ class TagImplication < TagRelationship
       TagImplicationJob.perform_later(id, update_topic)
     end
 
-    def reject!(update_topic: true)
+    def reject!(rejector: CurrentUser.user, update_topic: true)
       update(status: "deleted")
       invalidate_cached_descendants
-      forum_updater.update(reject_message(CurrentUser.user), "REJECTED") if update_topic
+      forum_updater.update(reject_message(rejector), "REJECTED") if update_topic
     end
 
     def create_mod_action

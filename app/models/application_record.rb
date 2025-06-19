@@ -535,6 +535,28 @@ class ApplicationRecord < ActiveRecord::Base
     end
   end
 
+  concerning(:ConcurrencyMethods) do
+    class_methods do
+      def parallel_find_each(**options, &block)
+        # XXX We may deadlock if a transaction is open; do a non-parallel each.
+        return find_each(&block) if connection.transaction_open?
+
+        user = CurrentUser.user
+        ip_addr = CurrentUser.ip_addr
+
+        find_in_batches(error_on_ignore: true, **options) do |batch|
+          batch.parallel_each do |record|
+            # XXX The current user isn't inherited from the parent thread because the current user is a thread-local
+            # variable. Hence, we have to set it explicitly in the child thread.
+            CurrentUser.scoped(user, ip_addr) do
+              yield(record)
+            end
+          end
+        end
+      end
+    end
+  end
+
   def warnings
     @warnings ||= ActiveModel::Errors.new(self)
   end

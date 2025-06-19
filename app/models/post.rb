@@ -1320,10 +1320,10 @@ class Post < ApplicationRecord
   end
 
   module CountMethods
-    def fast_count(tags = "", enable_safe_mode: CurrentUser.safe_mode?)
+    def fast_count(tags = "", enable_safe_mode: CurrentUser.safe_mode?, include_deleted: nil)
       tags = tags.to_s
       tags += " rating:s" if enable_safe_mode
-      tags += " -status:deleted" unless TagQuery.has_metatag?(tags, "status", "-status")
+      tags += " -status:deleted" if include_deleted != true && (include_deleted == false || !TagQuery.has_metatag?(tags, "status", "-status"))
       tags = TagQuery.normalize(tags)
 
       cache_key = "pfc:#{tags}"

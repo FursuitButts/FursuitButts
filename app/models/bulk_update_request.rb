@@ -3,6 +3,7 @@
 class BulkUpdateRequest < ApplicationRecord
   belongs_to_creator
   attr_accessor(:reason, :skip_forum, :should_validate)
+  attr_writer(:context)
 
   belongs_to(:forum_topic, optional: true)
   belongs_to(:forum_post, optional: true)
@@ -10,7 +11,7 @@ class BulkUpdateRequest < ApplicationRecord
 
   validates(:script, presence: true)
   validates(:title, presence: { if: ->(rec) { rec.forum_topic_id.blank? } })
-  validates(:status, inclusion: { in: %w[pending approved rejected] })
+  validates(:status, format: { with: /\A(approved|rejected|pending|processing|queued|error: .*)\Z/ })
   validate(:script_formatted_correctly)
   validate(:forum_topic_id_not_invalid)
   validate(:validate_script, on: :create)
@@ -19,7 +20,7 @@ class BulkUpdateRequest < ApplicationRecord
   before_validation(:normalize_text)
   after_create(:create_forum_topic)
 
-  scope(:pending_first, -> { order(Arel.sql("(case status when 'pending' then 0 when 'approved' then 1 else 2 end)")) })
+  scope(:pending_first, -> { order(Arel.sql("array_position(array['queued', 'processing', 'pending', 'approved', 'rejected'], status::text) NULLS FIRST")) })
   scope(:pending, -> { where(status: "pending") })
 
   module SearchMethods
@@ -83,20 +84,32 @@ class BulkUpdateRequest < ApplicationRecord
       )
     end
 
-    def approve!(approver)
-      transaction do
-        CurrentUser.scoped(approver) do
-          BulkUpdateRequestImporter.new(script, forum_topic_id, creator_id, creator_ip_addr).process!
-          update(status: "approved", approver: CurrentUser.user)
-          forum_updater.update("The #{bulk_update_request_link} (forum ##{forum_post&.id}) has been approved by @#{approver.name}.", "APPROVED")
-        end
+    def approve!(approver, update_topic: true)
+      CurrentUser.scoped(approver) do
+        update(status: "queued", approver: approver)
+        ProcessBulkUpdateRequestJob.perform_later(self, approver, update_topic)
+        # forum_updater.update("The #{bulk_update_request_link} (forum ##{forum_post&.id}) has been approved by @#{approver.name}.", "APPROVED")
       end
-    rescue BulkUpdateRequestImporter::Error => e
+    rescue BulkUpdateRequestProcessor::Error, BulkUpdateRequestCommands::ProcessingError => e
       self.approver = approver
       CurrentUser.scoped(approver) do
-        forum_updater.update("The #{bulk_update_request_link} (forum ##{forum_post&.id}) has failed: #{e}", "FAILED")
+        forum_updater.update("The #{bulk_update_request_link} (forum ##{forum_post&.id}) has failed: #{e}", "FAILED") if update_topic
       end
       errors.add(:base, e.to_s)
+    end
+
+    def process!(approver, update_topic: true)
+      CurrentUser.scoped(approver) do
+        update(status: "processing", approver: approver)
+        processor.process!(approver)
+        forum_updater.update("The #{bulk_update_request_link} (forum ##{forum_post&.id}) has been approved by @#{approver.name}.", "APPROVED") if update_topic
+        update(status: "approved", approver: approver)
+      end
+    rescue BulkUpdateRequestProcessor::Error, BulkUpdateRequestCommands::ProcessingError => e
+      CurrentUser.scoped(approver) do
+        forum_updater.update("The #{bulk_update_request_link} (forum ##{forum_post&.id}) has failed: #{e}", "FAILED") if update_topic
+        update_columns(status: "error: #{e}")
+      end
     end
 
     def create_forum_topic
@@ -126,7 +139,7 @@ class BulkUpdateRequest < ApplicationRecord
 
   module ValidationMethods
     def script_formatted_correctly
-      BulkUpdateRequestImporter.tokenize(script)
+      BulkUpdateRequestCommands.tokenize(script)
       true
     rescue StandardError => e
       errors.add(:base, e.message)
@@ -144,15 +157,18 @@ class BulkUpdateRequest < ApplicationRecord
     end
 
     def validate_script
-      errors, new_script = BulkUpdateRequestImporter.new(script, forum_topic_id).validate!(CurrentUser.user)
-      unless errors.empty?
-        errors.each { |err| self.errors.add(:base, err) }
+      processor = self.processor
+      processor.validate
+      if processor.errors.any?
+        self.script = processor.script_with_errors
+        errors.merge!(processor.errors)
+      else
+        self.script = processor.script_with_comments
       end
-      self.script = new_script
 
-      errors.empty?
-    rescue BulkUpdateRequestImporter::Error => e
-      self.errors.add(:script, e)
+      processor.errors.empty?
+    rescue BulkUpdateRequestProcessor::Error => e
+      errors.add(:script, e)
     end
   end
 
@@ -201,9 +217,15 @@ class BulkUpdateRequest < ApplicationRecord
     status == "rejected"
   end
 
-  def estimate_update_count
-    BulkUpdateRequestImporter.new(script, nil).estimate_update_count
+  def context
+    @context ||= :create
   end
+
+  def processor(context = self.context)
+    BulkUpdateRequestProcessor.new(script, forum_topic_id, context: context, creator: creator, ip_addr: creator_ip_addr)
+  end
+
+  delegate(:estimate_update_count, to: :processor)
 
   def self.available_includes
     %i[approver creator forum_post forum_topic]

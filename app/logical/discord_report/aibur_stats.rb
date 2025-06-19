@@ -54,7 +54,7 @@ module DiscordReport
 
     def bur_details
       BulkUpdateRequest.pending.find_each.each_with_object({ aliases: 0, implications: 0, others: 0 }) do |bur, result|
-        BulkUpdateRequestImporter.tokenize(bur.script).map(&:first).each do |type|
+        BulkUpdateRequestCommands.tokenize(bur.script).map(&:first).each do |type|
           case type
           when :create_alias
             result[:aliases] += 1

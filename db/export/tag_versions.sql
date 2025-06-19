@@ -3,6 +3,7 @@ SELECT tag_versions.id,
        tag_versions.updated_at,
        tag_versions.category,
        tag_versions.is_locked,
+       tag_versions.is_deprecated,
        tag_versions.tag_id,
        tag_versions.updater_id,
        tag_versions.reason

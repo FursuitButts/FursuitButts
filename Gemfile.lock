@@ -111,7 +111,7 @@ GEM
     click_house (2.1.2)
       activesupport
       faraday (>= 1.7, < 3)
-    concurrent-ruby (1.2.3)
+    concurrent-ruby (1.3.5)
     connection_pool (2.4.1)
     crack (1.0.0)
       bigdecimal
@@ -420,6 +420,7 @@ DEPENDENCIES
   bootsnap
   bullet
   click_house (~> 2.1)
+  concurrent-ruby (~> 1.3)
   csv (~> 3.3)
   dalli
   debug

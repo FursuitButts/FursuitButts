@@ -15,23 +15,23 @@ module ModActions
 
         assert_matches(
           actions:    %w[mass_update],
-          text:       "Mass updated [[aaa]] -> [[bbb]]",
+          text:       "Mass updated {{aaa}} -> {{bbb}}",
           subject:    nil,
           antecedent: "aaa",
           consequent: "bbb",
         )
       end
 
-      should("format nuke_tag correctly") do
+      should("format nuke correctly") do
         create(:post, tag_string: "aaa bbb")
         @bur = create(:bulk_update_request, skip_forum: true, script: "nuke aaa")
         with_inline_jobs { @bur.approve!(@admin) }
 
         assert_matches(
-          actions:  %w[nuke_tag],
-          text:     "Nuked tag [[aaa]]",
-          subject:  Tag.find_by!(name: "aaa"),
-          tag_name: "aaa",
+          actions: %w[nuke],
+          text:    "Nuked {{aaa}}",
+          subject: nil,
+          query:   "aaa",
         )
       end
     end

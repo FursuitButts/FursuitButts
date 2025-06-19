@@ -19,6 +19,7 @@ class TagRelationship < ApplicationRecord
   scope(:pending, -> { where(status: "pending") })
   scope(:retired, -> { where(status: "retired") })
   scope(:duplicate_relevant, -> { where(status: %w[active processing queued pending]) })
+  scope(:errored, -> { where_ilike(:status, "error: *") })
 
   before_validation(:initialize_creator, on: :create) # TODO: see if we need this
   before_validation(:normalize_names)
@@ -234,7 +235,7 @@ class TagRelationship < ApplicationRecord
   end
 
   def estimate_update_count
-    Post.fast_count(antecedent_name)
+    Post.fast_count(antecedent_name, enable_safe_mode: false, include_deleted: true)
   end
 
   def update_posts

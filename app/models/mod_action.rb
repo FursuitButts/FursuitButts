@@ -18,6 +18,7 @@ class ModAction < ApplicationRecord
     header old_header
     description old_description
     antecedent consequent
+    query
     alias_desc
     implication_desc
     is_public
@@ -328,12 +329,12 @@ class ModAction < ApplicationRecord
 
     ### Bulk Update Request ###
     mass_update:                                {
-      text: ->(mod, _user) { "Mass updated [[#{mod.antecedent}]] -> [[#{mod.consequent}]]" },
+      text: ->(mod, _user) { "Mass updated {{#{mod.antecedent}}} -> {{#{mod.consequent}}}" },
       json: %i[antecedent consequent],
     },
-    nuke_tag:                                   {
-      text: ->(mod, _user) { "Nuked tag [[#{mod.tag_name}]]" },
-      json: %i[tag_name],
+    nuke:                                       {
+      text: ->(mod, _user) { "Nuked {{#{mod.query}}}" },
+      json: %i[query],
     },
 
     ### Pools ###

@@ -23,12 +23,12 @@ class BulkUpdateRequestsControllerTest < ActionDispatch::IntegrationTest
     context("create action") do
       should("work") do
         assert_difference("BulkUpdateRequest.count", 1) do
-          post_auth(bulk_update_requests_path, @user, params: { bulk_update_request: { script: "create alias aaa -> bbb", title: "xxx", reason: "xxxxx" } })
+          post_auth(bulk_update_requests_path, @user, params: { bulk_update_request: { script: "alias aaa -> bbb", title: "xxx", reason: "xxxxx" } })
         end
       end
 
       should("restrict access") do
-        assert_access(User::Levels::MEMBER, success_response: :redirect) { |user| post_auth(bulk_update_requests_path, user, params: { bulk_update_request: { script: "create alias aaa -> bbb", title: "xxx", reason: "xxxxx" } }) }
+        assert_access(User::Levels::MEMBER, success_response: :redirect) { |user| post_auth(bulk_update_requests_path, user, params: { bulk_update_request: { script: "alias aaa -> bbb", title: "xxx", reason: "xxxxx" } }) }
       end
     end
 
@@ -40,13 +40,14 @@ class BulkUpdateRequestsControllerTest < ActionDispatch::IntegrationTest
       end
 
       should("work") do
-        put_auth(bulk_update_request_path(@bulk_update_request.id), @user, params: { bulk_update_request: { script: "create alias zzz -> 222" } })
+        create(:tag, name: "zzz")
+        put_auth(bulk_update_request_path(@bulk_update_request.id), @user, params: { bulk_update_request: { script: "alias zzz -> 222" } })
         @bulk_update_request.reload
         assert_equal("alias zzz -> 222", @bulk_update_request.script)
       end
 
       should("restrict access") do
-        assert_access(User::Levels::ADMIN, success_response: :redirect) { |user| put_auth(bulk_update_request_path(@bulk_update_request), user, params: { bulk_update_request: { script: "create alias xxx -> 333" } }) }
+        assert_access(User::Levels::ADMIN, success_response: :redirect) { |user| put_auth(bulk_update_request_path(@bulk_update_request), user, params: { bulk_update_request: { script: "alias xxx -> 333" } }) }
       end
     end
 
@@ -127,6 +128,9 @@ class BulkUpdateRequestsControllerTest < ActionDispatch::IntegrationTest
         should("succeed") do
           post_auth(approve_bulk_update_request_path(@bulk_update_request), @admin, params: { format: :json })
           assert_response(:success)
+          @bulk_update_request.reload
+          assert_equal("queued", @bulk_update_request.status)
+          perform_enqueued_jobs(only: ProcessBulkUpdateRequestJob)
           @bulk_update_request.reload
           assert_equal("approved", @bulk_update_request.status)
         end

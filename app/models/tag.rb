@@ -148,10 +148,11 @@ class Tag < ApplicationRecord
     end
 
     def create_version
-      TagVersion.create(tag_id:    id,
-                        category:  category.to_i,
-                        is_locked: is_locked?,
-                        reason:    reason || "")
+      TagVersion.create(tag_id:        id,
+                        category:      category.to_i,
+                        is_locked:     is_locked?,
+                        is_deprecated: is_deprecated?,
+                        reason:        reason || "")
     end
 
     TagCategory.categories.map(&:name).each do |category|

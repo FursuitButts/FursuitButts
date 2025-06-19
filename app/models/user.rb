@@ -1363,12 +1363,12 @@ class User < ApplicationRecord
     self.upload_notifications = upload_notifications.compact_blank.uniq
   end
 
-  def use(&)
+  def use(ip_addr = nil, &)
     if block_given?
-      CurrentUser.scoped(self, last_ip_addr || "127.0.0.1", &)
+      CurrentUser.scoped(self, ip_addr || last_ip_addr || "127.0.0.1", &)
     else
       CurrentUser.user = self
-      CurrentUser.ip_addr = last_ip_addr || "127.0.0.1"
+      CurrentUser.ip_addr = ip_addr || last_ip_addr || "127.0.0.1"
     end
   end
   alias set_user use

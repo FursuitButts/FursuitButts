@@ -55,6 +55,8 @@ class TagAlias < TagRelationship
     def has_transitives
       @has_transitives ||= !list_transitives.empty?
     end
+
+    alias has_transitives? has_transitives
   end
 
   include(ApprovalMethods)
@@ -186,11 +188,11 @@ class TagAlias < TagRelationship
   end
 
   def tag_mover(user = CurrentUser.user)
-    TagMover.new(antecedent_name, consequent_name, user: user, tcr: self)
+    TagMover.new(antecedent_name, consequent_name, user: user, request: self)
   end
 
   def tag_mover_undo(user = CurrentUser.user)
-    TagMover::Undo.new(undo_data, user: user, tcr: self)
+    TagMover::Undo.new(undo_data, user: user, request: self)
   end
 
   def absence_of_transitive_relation

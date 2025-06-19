@@ -101,6 +101,10 @@ class ActiveSupport::TestCase # rubocop:disable Style/ClassAndModuleChildren
     request.stubs(:delete).with(:last_authenticated_at).returns(nil)
     request
   end
+
+  def random
+    SecureRandom.hex(6)
+  end
 end
 
 class ActionDispatch::IntegrationTest # rubocop:disable Style/ClassAndModuleChildren
@@ -200,6 +204,17 @@ module ActionView
     # Stub webpacker method so these tests don't compile assets
     def asset_pack_path(name, **_options)
       name
+    end
+  end
+end
+
+# XXX Testing modules should not have a say in if we can or cannot use assert_equal with nil
+# https://github.com/minitest/minitest/issues/666
+# TODO: look into refactoring out minitest?
+module Minitest
+  module Assertions
+    def assert_equal(exp, act, msg = nil)
+      assert(exp == act, message(msg, E) { diff(exp, act) })
     end
   end
 end

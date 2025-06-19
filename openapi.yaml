@@ -61,7 +61,7 @@ x-constants:
     - mascot_delete
     - mascot_update
     - mass_update
-    - nuke_tag
+    - nuke
     - pool_delete
     - set_change_visibility
     - set_delete
@@ -1426,10 +1426,10 @@ components:
           type: number
           description: |
             Valid for: `post_deletion_reasons_reorder`, `post_replacement_rejection_reasons_reorder`, `rules_reorder`, `rule_categories_reorder`, `quick_rules_reorder`
-        tag_name:
+        query:
           type: string
           description: |
-            Valid for: `nuke_tag`
+            Valid for: `nuke`
         change_desc:
           type: string
           description: |
