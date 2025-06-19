@@ -181,11 +181,13 @@ class ApplicationController < ActionController::Base
   end
 
   def set_current_user
+    CurrentUser.request = request
     SessionLoader.new(request).load
     session.send(:load!) unless session.send(:loaded?)
   end
 
   def reset_current_user
+    CurrentUser.request = nil
     CurrentUser.user = nil
     CurrentUser.ip_addr = nil
     CurrentUser.safe_mode = FemboyFans.config.safe_mode?

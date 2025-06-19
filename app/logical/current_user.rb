@@ -1,62 +1,18 @@
 # frozen_string_literal: true
 
-class CurrentUser
-  def self.scoped(user, ip_addr = "127.0.0.1")
-    old_user = self.user
-    old_ip_addr = self.ip_addr
+class CurrentUser < ActiveSupport::CurrentAttributes
+  attribute(:user, :ip_addr, :request)
+  attribute(:safe_mode, default: -> { FemboyFans.config.safe_mode? })
 
-    self.user = user
-    self.ip_addr = ip_addr
+  alias safe_mode? safe_mode
+  delegate(:id, to: :user, allow_nil: true)
+  delegate_missing_to(:user)
 
-    begin
-      yield
-    ensure
-      self.user = old_user
-      self.ip_addr = old_ip_addr
-    end
+  def self.scoped(user, ip_addr = "127.0.0.1", &)
+    set(user: user, ip_addr: ip_addr, &)
   end
 
   def self.as_system(&)
     scoped(::User.system, &)
-  end
-
-  def self.user=(user)
-    RequestStore[:current_user] = user
-  end
-
-  def self.ip_addr=(ip_addr)
-    RequestStore[:current_ip_addr] = ip_addr
-  end
-
-  def self.user
-    RequestStore[:current_user]
-  end
-
-  def self.ip_addr
-    RequestStore[:current_ip_addr]
-  end
-
-  def self.id
-    if user.nil?
-      nil
-    else
-      user.id
-    end
-  end
-
-  def self.name
-    user.name
-  end
-
-  def self.safe_mode?
-    RequestStore[:safe_mode]
-  end
-
-  def self.safe_mode=(safe_mode)
-    RequestStore[:safe_mode] = safe_mode
-  end
-
-  def self.method_missing(method, *, &)
-    user.__send__(method, *, &)
   end
 end
