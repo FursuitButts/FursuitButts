@@ -1,1 +1,4 @@
 * text=auto eol=lf
+db/structure.sql linguist-generated=true
+openapi.yml linguist-documentation=true
+lib/dtext_rb/ext/dtext/dtext.cpp linguist-generated=true
