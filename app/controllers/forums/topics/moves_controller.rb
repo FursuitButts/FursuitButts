@@ -9,7 +9,7 @@ module Forums
 
       def show
         @forum_topic = authorize(ForumTopic.find(params[:id]), :move?)
-        @categories = ForumCategory.visible.select { |cat| cat.can_create_within?(CurrentUser.user) && cat.can_create_within?(@forum_topic.creator) }
+        @categories = ForumCategory.visible(CurrentUser.user).select { |cat| cat.can_create_within?(CurrentUser.user) && cat.can_create_within?(@forum_topic.creator) }
         respond_with(@forum_topic)
       end
 

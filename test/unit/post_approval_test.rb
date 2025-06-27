@@ -6,14 +6,10 @@ class PostApprovalTest < ActiveSupport::TestCase
   context("a pending post") do
     setup do
       @user = create(:user)
-      CurrentUser.user = @user
 
-      @post = create(:post, uploader_id: @user.id, tag_string: "touhou", is_pending: true)
+      @post = create(:post, uploader: @user, tag_string: "touhou", is_pending: true)
 
-      @approver = create(:user)
-      @approver.can_approve_posts = true
-      @approver.save
-      CurrentUser.user = @approver
+      @approver = create(:user, can_approve_posts: true)
     end
 
     should("allow approval") do
@@ -29,7 +25,7 @@ class PostApprovalTest < ActiveSupport::TestCase
 
       should("create a postapproval record when approved by someone else") do
         assert_difference("PostApproval.count") do
-          @post.approve!(create(:janitor_user))
+          @post.approve!(@approver)
         end
       end
     end
@@ -37,7 +33,7 @@ class PostApprovalTest < ActiveSupport::TestCase
     context("#search method") do
       should("work") do
         @post.approve!(@approver)
-        @approvals = PostApproval.search(user_name: @approver.name, post_tags_match: "touhou", post_id: @post.id.to_s)
+        @approvals = PostApproval.search_current(user_name: @approver.name, post_tags_match: "touhou", post_id: @post.id.to_s)
 
         assert_equal([@post.id], @approvals.map(&:post_id))
       end

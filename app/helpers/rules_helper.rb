@@ -4,7 +4,7 @@ module RulesHelper
   OPTIONS = { allow_color: true, disable_mentions: true, max_thumbs: 0 }.freeze
 
   def managable?
-    CurrentUser.is_admin? && request.format.html?
+    CurrentUser.user.is_admin? && request.format.html?
   end
 
   def format_rules_toc(categories)
@@ -44,7 +44,7 @@ module RulesHelper
 
   def format_category(category)
     link = " [sup](\"edit\":#{edit_rule_category_path(category)})[/sup] [sup](delete_rule_category_#{category.id}_link)[/sup]"
-    "h2. #{category.order} #{category.name}#{managable? ? link : ''}\n\n#{format_category_rules(category)}\n\n"
+    "h2. #{category.order} #{category.name}#{link if managable?}\n\n#{format_category_rules(category)}\n\n"
   end
 
   def format_category_rules(category)
@@ -55,6 +55,6 @@ module RulesHelper
 
   def format_rule(rule)
     link = "[sup](\"edit\":#{edit_rule_path(rule)})[/sup] [sup](delete_rule_#{rule.id}_link)[/sup]"
-    "[quote]h3. #{rule.category.order}.#{rule.order} #{rule.name} [##{rule.anchor}]#{managable? ? link : ''}\n\n#{rule.description}[/quote]"
+    "[quote]h3. #{rule.category.order}.#{rule.order} #{rule.name} [##{rule.anchor}]#{link if managable?}\n\n#{rule.description}[/quote]"
   end
 end

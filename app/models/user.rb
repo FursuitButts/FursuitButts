@@ -200,8 +200,9 @@ class User < ApplicationRecord
   after_update(:log_update, if: :is_admin_edit)
   after_save(:update_cache)
   after_update(if: ->(rec) { rec.saved_change_to_profile_about? || rec.saved_change_to_profile_artinfo? || rec.saved_change_to_blacklisted_tags? }) do |rec|
-    UserTextVersion.create_version(rec)
+    UserTextVersion.create_version(rec, updater || self)
   end
+  resolvable(:updater)
 
   has_many(:api_keys, dependent: :destroy)
   has_one(:dmail_filter)
@@ -250,8 +251,8 @@ class User < ApplicationRecord
       user.is_admin?
     end
 
-    def admin_edit(promoter, options)
-      UserAdminEdit.new(self, promoter, options)
+    def admin_edit(promoter, ip_addr, options)
+      UserAdminEdit.new(self, promoter, ip_addr, options)
     end
 
     def admin_edit!(...)
@@ -261,23 +262,25 @@ class User < ApplicationRecord
 
   module BanMethods
     def validate_ip_addr_is_not_banned
-      if IpBan.is_banned?(CurrentUser.ip_addr)
+      if IpBan.is_banned?(CurrentUser.ip_addr) # rubocop:disable Local/CurrentUserOutsideOfRequests
         errors.add(:base, "IP address is banned")
         false
       end
     end
 
-    def ban!
+    def ban!(user)
       return false if is_banned?
       self.level = Levels::BANNED
-      ModAction.log!(:user_ban, self, user_id: id)
+      self.updater = user
+      ModAction.log!(user, :user_ban, self, user_id: id)
       save(validate: false)
     end
 
-    def unban!(ack: false)
+    def unban!(user, ack: false)
       return false unless is_banned?
       self.level = Levels::MEMBER
-      ModAction.log!(:user_unban, self, user_id: id) unless ack
+      self.updater = user
+      ModAction.log!(user, :user_unban, self, user_id: id) unless ack
       save(validate: false)
     end
 
@@ -451,15 +454,21 @@ class User < ApplicationRecord
 
     module ClassMethods
       def anonymous
-        FemboyFans.config.anonymous_user
+        @anonymous ||= wrap_user(FemboyFans.config.anonymous_user)
       end
 
       def system
-        FemboyFans.config.system_user
+        @system ||= wrap_user(FemboyFans.config.system_user)
       end
 
       def owner
-        User.find_by!(level: Levels::OWNER)
+        @owner ||= wrap_user(User.find_by!(level: Levels::OWNER))
+      end
+
+      private
+
+      def wrap_user(user)
+        UserResolvable.new(user, "127.0.0.1")
       end
     end
 
@@ -856,7 +865,7 @@ class User < ApplicationRecord
 
     def hourly_upload_limit
       @hourly_upload_limit ||= begin
-        post_count = posts.where("created_at >= ?", 1.hour.ago).count
+        post_count = posts.where(created_at: 1.hour.ago..).count
         replacement_count = can_approve_posts? ? 0 : post_replacements.where("created_at >= ? and status != ?", 1.hour.ago, "original").count
         FemboyFans.config.hourly_upload_limit - post_count - replacement_count
       end
@@ -1003,7 +1012,7 @@ class User < ApplicationRecord
           forum_post_count:                 ForumPost.for_user(id).count,
           comment_count:                    Comment.for_creator(id).count,
           pool_update_count:                PoolVersion.for_user(id).count,
-          set_count:                        PostSet.owned(self).count,
+          set_count:                        PostSet.owned_by(self).count,
           artist_update_count:              ArtistVersion.for_user(id).count,
           own_post_replaced_count:          PostReplacement.for_uploader_on_approve(id).count,
           own_post_replaced_penalize_count: PostReplacement.penalized.for_uploader_on_approve(id).count,
@@ -1030,7 +1039,7 @@ class User < ApplicationRecord
       end
     end
 
-    def search(params)
+    def search(params, user)
       q = super
 
       q = q.attribute_matches(:level, params[:level])
@@ -1052,11 +1061,11 @@ class User < ApplicationRecord
       end
 
       if params[:min_level].present?
-        q = q.where("level >= ?", params[:min_level].to_i)
+        q = q.where(level: params[:min_level].to_i..)
       end
 
       if params[:max_level].present?
-        q = q.where("level <= ?", params[:max_level].to_i)
+        q = q.where(level: ..params[:max_level].to_i)
       end
 
       bitprefs_length = Preferences.constants.length
@@ -1114,7 +1123,7 @@ class User < ApplicationRecord
     def validate_sock_puppets
       return if @validate_sock_puppets == false
 
-      if User.where(last_ip_addr: CurrentUser.ip_addr).exists?(["created_at > ?", 1.day.ago])
+      if User.where(last_ip_addr: CurrentUser.ip_addr).exists?(["created_at > ?", 1.day.ago]) # rubocop:disable Local/CurrentUserOutsideOfRequests
         errors.add(:last_ip_addr, "was used recently for another account and cannot be reused for another day")
       end
     end
@@ -1151,29 +1160,29 @@ class User < ApplicationRecord
   end
 
   module LogChanges
-    def log_name_change
-      ModAction.log!(:user_name_change, self, user_id: id)
+    def log_name_change(user)
+      ModAction.log!(user, :user_name_change, self, user_id: id)
     end
 
     def log_update
       if saved_change_to_profile_about? || saved_change_to_profile_artinfo?
-        ModAction.log!(:user_text_change, self, user_id: id)
+        ModAction.log!(updater, :user_text_change, self, user_id: id)
       end
 
       if saved_change_to_blacklisted_tags
-        ModAction.log!(:user_blacklist_change, self, user_id: id)
+        ModAction.log!(updater, :user_blacklist_change, self, user_id: id)
       end
 
       if saved_change_to_base_upload_limit?
-        ModAction.log!(:user_upload_limit_change, self, old_upload_limit: base_upload_limit_before_last_save, upload_limit: base_upload_limit, user_id: id)
+        ModAction.log!(updater, :user_upload_limit_change, self, old_upload_limit: base_upload_limit_before_last_save, upload_limit: base_upload_limit, user_id: id)
       end
 
       if saved_change_to_title?
-        StaffAuditLog.log!(:user_title_change, CurrentUser.user, target_id: id, title: title)
+        StaffAuditLog.log!(updater, :user_title_change, target_id: id, title: title)
       end
 
       if force_name_change_was != force_name_change && force_name_change?
-        StaffAuditLog.log!(:force_name_change, CurrentUser.user, target_id: id)
+        StaffAuditLog.log!(updater, :force_name_change, target_id: id)
       end
 
       if bit_prefs != bit_prefs_before_last_save
@@ -1189,12 +1198,12 @@ class User < ApplicationRecord
         end
 
         if added.any? || removed.any?
-          ModAction.log!(:user_flags_change, self, user_id: id, added: added, removed: removed)
+          ModAction.log!(updater, :user_flags_change, self, user_id: id, added: added, removed: removed)
         end
       end
 
       if level != level_before_last_save
-        ModAction.log!(:user_level_change, self, user_id: id, level: level_string, old_level: level_string_was)
+        ModAction.log!(updater, :user_level_change, self, user_id: id, level: level_string, old_level: level_string_was)
       end
 
       log_name_change if name != name_before_last_save
@@ -1259,15 +1268,15 @@ class User < ApplicationRecord
     unread_dmail_count > 0
   end
 
-  def hide_favorites?
-    return false if CurrentUser.is_moderator?
+  def hide_favorites?(user)
+    return false if user.is_moderator?
     return true if is_banned?
-    enable_privacy_mode? && CurrentUser.user.id != id
+    enable_privacy_mode? && user.id != id
   end
 
-  def hide_followed_tags?
-    return false if CurrentUser.is_moderator?
-    enable_privacy_mode? && CurrentUser.user.id != id
+  def hide_followed_tags?(user)
+    return false if user.is_moderator?
+    enable_privacy_mode? && user.id != id
   end
 
   def compact_uploader?
@@ -1363,6 +1372,7 @@ class User < ApplicationRecord
     self.upload_notifications = upload_notifications.compact_blank.uniq
   end
 
+  # rubocop:disable Local/CurrentUserOutsideOfRequests -- TODO
   def use(ip_addr = nil, &)
     if block_given?
       CurrentUser.scoped(self, ip_addr || last_ip_addr || "127.0.0.1", &)
@@ -1374,6 +1384,36 @@ class User < ApplicationRecord
   alias set_user use
   alias scoped use
   alias as use
+  # rubocop:enable Local/CurrentUserOutsideOfRequests
+
+  def resolvable(ip_addr = nil)
+    UserResolvable.new(self, ip_addr || last_ip_addr || "127.0.0.1")
+  end
+
+  def resolve
+    self
+  end
+
+  def is?(user_or_id)
+    id == u2id(user_or_id)
+  end
+
+  def safe_mode?
+    FemboyFans.config.safe_mode? || enable_safe_mode?
+  end
+
+  def ==(other)
+    return super if other.is_a?(User)
+    other.is_a?(UserResolvable) && super(other.user)
+  end
+
+  def ===(other)
+    other == UserLike || super
+  end
+
+  def is_a?(other)
+    other == UserLike || super
+  end
 
   def self.available_includes
     %i[artists bans feedback]

@@ -34,9 +34,7 @@ class BulkUpdateRequestsControllerTest < ActionDispatch::IntegrationTest
 
     context("update action") do
       setup do
-        as(@user) do
-          @bulk_update_request = create(:bulk_update_request)
-        end
+        @bulk_update_request = create(:bulk_update_request, creator: @user)
       end
 
       should("work") do
@@ -53,9 +51,7 @@ class BulkUpdateRequestsControllerTest < ActionDispatch::IntegrationTest
 
     context("index action") do
       setup do
-        as(@user) do
-          @bulk_update_request = create(:bulk_update_request)
-        end
+        @bulk_update_request = create(:bulk_update_request, creator: @user)
       end
 
       should("render") do
@@ -70,9 +66,7 @@ class BulkUpdateRequestsControllerTest < ActionDispatch::IntegrationTest
 
     context("destroy action") do
       setup do
-        as(@user) do
-          @bulk_update_request = create(:bulk_update_request)
-        end
+        @bulk_update_request = create(:bulk_update_request, creator: @user)
       end
 
       context("for the creator") do
@@ -104,15 +98,13 @@ class BulkUpdateRequestsControllerTest < ActionDispatch::IntegrationTest
       end
 
       should("restrict access") do
-        assert_access(User::Levels::ADMIN, success_response: :redirect) { |user| delete_auth(bulk_update_request_path(as(@user) { create(:bulk_update_request, skip_forum: true) }), user) }
+        assert_access(User::Levels::ADMIN, success_response: :redirect) { |user| delete_auth(bulk_update_request_path(create(:bulk_update_request, skip_forum: true)), user) }
       end
     end
 
     context("approve action") do
       setup do
-        as(@user) do
-          @bulk_update_request = create(:bulk_update_request)
-        end
+        @bulk_update_request = create(:bulk_update_request, creator: @user)
       end
 
       context("for a member") do
@@ -146,7 +138,7 @@ class BulkUpdateRequestsControllerTest < ActionDispatch::IntegrationTest
       end
 
       should("restrict access") do
-        assert_access(User::Levels::ADMIN, success_response: :redirect) { |user| post_auth(approve_bulk_update_request_path(as(@user) { create(:bulk_update_request, skip_forum: true) }), user) }
+        assert_access(User::Levels::ADMIN, success_response: :redirect) { |user| post_auth(approve_bulk_update_request_path(create(:bulk_update_request, skip_forum: true)), user) }
       end
     end
   end

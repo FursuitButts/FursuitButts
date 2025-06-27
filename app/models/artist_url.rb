@@ -31,7 +31,7 @@ class ArtistUrl < ApplicationRecord
     end
   end
 
-  def self.search(params)
+  def self.search(params, user)
     q = super
 
     q = q.attribute_matches(:artist_id, params[:artist_id])
@@ -44,7 +44,7 @@ class ArtistUrl < ApplicationRecord
     end
 
     # Legacy param?
-    q = q.artist_matches(params[:artist])
+    q = q.artist_matches(params[:artist], user)
     q = q.url_matches(params[:url_matches])
     q = q.normalized_url_matches(params[:normalized_url_matches])
 
@@ -59,9 +59,9 @@ class ArtistUrl < ApplicationRecord
     q
   end
 
-  def self.artist_matches(params = {})
+  def self.artist_matches(params, user)
     return all if params.blank?
-    where(artist_id: Artist.search(params).reorder(nil))
+    where(artist_id: Artist.search(params, user).reorder(nil))
   end
 
   def self.url_attribute_matches(attr, url)

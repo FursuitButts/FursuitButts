@@ -11,8 +11,8 @@
     <p><%= compact_time(asset.created_at) %></p>
   <% end %>
   <% t.column("File") do |asset| %>
-    <% if asset.visible?(CurrentUser.user) && asset.md5.present? && asset.file_url.present? %>
-      <%= link_to_if(asset.file_visible?, "show", asset.file_url) %>
+    <% if asset.visible?(CurrentUser.user) && asset.md5.present? && asset.file_url(user: CurrentUser.user).present? %>
+      <%= link_to_if(asset.file_visible?(CurrentUser.user), "show", asset.file_url(user: CurrentUser.user)) %>
       <% if asset.duplicate? && (url = asset.link_to_duplicate) %>
         <%= link_to("»", url) %>
       <% end %>
@@ -56,7 +56,7 @@
           <% total = asset.variants.without(asset.original).count %>
           <% names = asset.variants_data.uniq { |v| [v["type"], v["ext"]] }.pluck("type") %>
           <% asset.variants.without(asset.original).each_with_index do |variant, index| %>
-            <%= link_to_if(asset.file_visible?, names.count(variant.type.to_s) <= 1 ? variant.type : "#{variant.type} (#{variant.ext})", variant.file_url) %><% if index < total - 1 %>, <% end %>
+            <%= link_to_if(asset.file_visible?(CurrentUser.user), names.count(variant.type.to_s) <= 1 ? variant.type : "#{variant.type} (#{variant.ext})", variant.file_url) %><% if index < total - 1 %>, <% end %>
           <% end %>
         </li>
         <li>Variants Size: <%= number_to_human_size(asset.variants_data.pluck("size").sum) %></li>

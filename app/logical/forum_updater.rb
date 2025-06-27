@@ -13,28 +13,26 @@ class ForumUpdater
   def update(message, title_tag = nil)
     return if forum_topic.nil?
 
-    CurrentUser.as_system do
-      create_response(message)
-      update_title(title_tag) if title_tag
+    create_response(message)
+    update_title(title_tag) if title_tag
 
-      if forum_post
-        update_post(message)
-      end
+    if forum_post
+      update_post(message)
     end
   end
 
   def create_response(body)
-    forum_topic.posts.create(body: body, bypass_limits: true)
+    forum_topic.posts.create(body: body, bypass_limits: true, creator: User.system)
   end
 
   def update_title(title_tag)
     if forum_topic.title == expected_title
-      forum_topic.update(title: "[#{title_tag}] #{forum_topic.title}")
+      forum_topic.update(title: "[#{title_tag}] #{forum_topic.title}", updater: User.system)
     end
   end
 
   def update_post(body)
     return if @skip_update
-    forum_post.update(body: "#{forum_post.body}\n\nEDIT: #{body}")
+    forum_post.update(body: "#{forum_post.body}\n\nEDIT: #{body}", updater: User.system)
   end
 end

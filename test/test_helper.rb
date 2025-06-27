@@ -6,6 +6,7 @@ require_relative("../config/environment")
 require("rails/test_help")
 
 require("factory_bot_rails")
+
 require("mocha/minitest")
 require("shoulda-context")
 require("shoulda-matchers")
@@ -67,7 +68,6 @@ class ActiveSupport::TestCase # rubocop:disable Style/ClassAndModuleChildren
     FemboyFans.config.stubs(:storage_manager).returns(storage_manager)
     FemboyFans.config.stubs(:backup_storage_manager).returns(StorageManager::Null.new)
     FemboyFans.config.stubs(:enable_email_verification?).returns(false)
-    CurrentUser.ip_addr = "127.0.0.1"
   end
 
   teardown do
@@ -75,10 +75,6 @@ class ActiveSupport::TestCase # rubocop:disable Style/ClassAndModuleChildren
     FileUtils.rm_rf(storage_root)
     Cache.clear
     RequestStore.clear!
-  end
-
-  def as(user, ip_addr = "127.0.0.1", &)
-    CurrentUser.scoped(user, ip_addr, &)
   end
 
   def with_inline_jobs(&)
@@ -91,14 +87,19 @@ class ActiveSupport::TestCase # rubocop:disable Style/ClassAndModuleChildren
     Post.document_store.refresh_index!
   end
 
-  def mock_request(remote_ip: "127.0.0.1", user_agent: "Firefox", session_id: "1234")
+  def mock_request(remote_ip: "127.0.0.1", host: "localhost", user_agent: "Firefox", session_id: "1234", parameters: {})
+    cookie_jar = mock
+    cookie_jar.stubs(:encrypted).returns({})
     request = mock
+    request.stubs(:host).returns(host)
     request.stubs(:remote_ip).returns(remote_ip)
     request.stubs(:user_agent).returns(user_agent)
+    request.stubs(:authorization).returns(nil)
     request.stubs(:session).returns(session_id: session_id)
-    request.stubs(:parameters).returns({})
+    request.stubs(:parameters).returns(parameters)
     request.stubs(:delete).with(:user_id).returns(nil)
     request.stubs(:delete).with(:last_authenticated_at).returns(nil)
+    request.stubs(:cookie_jar).returns(cookie_jar)
     request
   end
 
@@ -156,7 +157,7 @@ class ActionDispatch::IntegrationTest # rubocop:disable Style/ClassAndModuleChil
     success.each do |level|
       user = createuser.call(level)
       ApplicationRecord.transaction do
-        as(user) { yield(user) }
+        yield(user)
         assert_response(success_response, "Success: #{User::Levels.id_to_name(level)} (expected: #{success_response}, actual: #{@response.status})")
         raise(ActiveRecord::Rollback)
       end
@@ -165,7 +166,7 @@ class ActionDispatch::IntegrationTest # rubocop:disable Style/ClassAndModuleChil
     fail.each do |level|
       user = createuser.call(level)
       ApplicationRecord.transaction do
-        as(user) { yield(user) }
+        yield(user)
         assert_response(fail_response, "Fail: #{User::Levels.id_to_name(level)} (expected: #{fail_response}, actual: #{@response.status})")
         raise(ActiveRecord::Rollback)
       end
@@ -174,7 +175,7 @@ class ActionDispatch::IntegrationTest # rubocop:disable Style/ClassAndModuleChil
     User::Levels::ANONYMOUS.tap do |level|
       user = createuser.call(level)
       ApplicationRecord.transaction do
-        as(user) { yield(user) }
+        yield(user)
         anon = anonymous_response || (fail_response == :forbidden ? :redirect : fail_response)
         anonmin = minlevel.is_a?(Integer) ? minlevel > User::Levels::ANONYMOUS : minlevel.exclude?(User::Levels::ANONYMOUS)
         if anonmin || anonymous_response.present?
@@ -190,8 +191,8 @@ class ActionDispatch::IntegrationTest # rubocop:disable Style/ClassAndModuleChil
       user = createuser.call(level)
       ApplicationRecord.transaction do
         admin = create(:admin_user)
-        as(admin) { create(:ban, user: user, reason: "test") }
-        as(user) { yield(user) }
+        create(:ban, user: user, reason: "test", creator: admin)
+        yield(user)
         assert_response(:forbidden, "Fail: #{User::Levels.id_to_name(level)} (expected: forbidden, actual: #{@response.status})")
         raise(ActiveRecord::Rollback)
       end

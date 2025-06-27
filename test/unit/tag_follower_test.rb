@@ -6,7 +6,6 @@ class TagFollowerTest < ActiveSupport::TestCase
   context("tag followers") do
     setup do
       @user = create(:user)
-      CurrentUser.user = @user
       @tag = create(:tag)
       @tag2 = create(:tag)
     end
@@ -86,7 +85,7 @@ class TagFollowerTest < ActiveSupport::TestCase
       assert_equal(1, @tag.reload.follower_count)
       assert_equal(0, @tag2.reload.follower_count)
       @ta = create(:tag_alias, antecedent_name: @tag.name, consequent_name: @tag2.name)
-      with_inline_jobs { @ta.approve! }
+      with_inline_jobs { @ta.approve!(@user) }
       @follower.reload
       assert_equal(@tag2.id, @follower.tag_id)
       assert_equal(0, @tag.reload.follower_count)
@@ -95,7 +94,7 @@ class TagFollowerTest < ActiveSupport::TestCase
 
     should("prevent following aliased tags") do
       @ta = create(:tag_alias, antecedent_name: @tag.name, consequent_name: @tag2.name)
-      with_inline_jobs { @ta.approve! }
+      with_inline_jobs { @ta.approve!(@user) }
       assert_raises(TagFollower::AliasedTagError) { @tag.follow!(@user) }
     end
   end

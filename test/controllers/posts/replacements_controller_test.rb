@@ -8,11 +8,9 @@ module Posts
       setup do
         @user = create(:janitor_user, created_at: 2.weeks.ago)
         @admin = create(:admin_user)
-        as(@user) do
-          @upload = create(:jpg_upload, uploader: @user)
-          @post = @upload.post
-          @replacement = create(:png_replacement, creator: @user, post: @post)
-        end
+        @upload = create(:jpg_upload, uploader: @user)
+        @post = @upload.post
+        @replacement = create(:png_replacement, creator: @user, post: @post)
       end
 
       context("create action") do
@@ -36,7 +34,7 @@ module Posts
 
         should("work with direct url") do
           file = fixture_file_upload("alpha.png")
-          as(create(:admin_user)) { create(:upload_whitelist, pattern: "http://example.com/*") }
+          create(:upload_whitelist, pattern: "http://example.com/*")
           CloudflareService.stubs(:ips).returns([])
           stub_request(:get, "http://example.com/alpha.png").to_return(status: 200, body: file.read, headers: { "Content-Type" => "image/png" })
           params = {
@@ -102,12 +100,10 @@ module Posts
         context("with a previously destroyed post") do
           setup do
             @admin = create(:admin_user)
-            as(@admin) do
-              @replacement.destroy
-              @upload2 = create(:apng_upload, uploader: @user)
-              @post2 = @upload2.post
-              @post2.expunge!
-            end
+            @replacement.destroy_with(@admin)
+            @upload2 = create(:apng_upload, uploader: @user)
+            @post2 = @upload2.post
+            @post2.expunge!(@admin)
           end
 
           should("fail and create ticket") do
@@ -153,9 +149,9 @@ module Posts
 
           @replacement.reload
           @post.reload
-          assert_equal(@replacement.status, "rejected")
-          assert_equal(@replacement.rejector_id, janitor.id)
-          assert_not_equal(@post.md5, @replacement.md5)
+          assert_equal("rejected", @replacement.status)
+          assert_equal(janitor.id, @replacement.rejector_id)
+          assert_not_equal(@replacement.md5, @post.md5)
           assert_equal(true, @replacement.creator.notifications.replacement_reject.exists?)
         end
 
@@ -164,10 +160,10 @@ module Posts
           assert_redirected_to(post_path(@post))
           @replacement.reload
           @post.reload
-          assert_equal(@replacement.status, "rejected")
-          assert_equal(@replacement.rejector_id, @user.id)
-          assert_equal(@replacement.rejection_reason, "test")
-          assert_not_equal(@post.md5, @replacement.md5)
+          assert_equal("rejected", @replacement.status)
+          assert_equal(@user.id, @replacement.rejector_id)
+          assert_equal("test", @replacement.rejection_reason)
+          assert_not_equal(@replacement.md5, @post.md5)
         end
 
         should("restrict access") do
@@ -203,12 +199,10 @@ module Posts
 
         should("restrict access") do
           @janitor = create(:janitor_user)
-          as(@janitor) { [Post, Upload, UploadMediaAsset, PostReplacementMediaAsset, PostReplacement].each(&:destroy_all) }
+          [Upload, PostReplacement, PostReplacementMediaAsset, PostVersion, Post, UploadMediaAsset].each(&:delete_all)
           assert_access([User::Levels::JANITOR, User::Levels::ADMIN, User::Levels::OWNER], anonymous_response: :forbidden) do |user|
-            replacement = as(@janitor) do
-              @upload = create(:jpg_upload, uploader: @janitor, uploader_ip_addr: "127.0.0.1")
-              create(:png_replacement, post: @upload.post)
-            end
+            upload = create(:jpg_upload, uploader: @janitor)
+            replacement = create(:png_replacement, post: upload.post, creator: @janitor)
             put_auth(approve_post_replacement_path(replacement), user, params: { format: :json })
           end
         end
@@ -221,19 +215,17 @@ module Posts
           assert_redirected_to(post_path(last_post))
           @replacement.reload
           @post.reload
-          assert_equal(@replacement.md5, last_post.md5)
-          assert_equal(@replacement.status, "promoted")
+          assert_equal(last_post.md5, @replacement.md5)
+          assert_equal("promoted", @replacement.status)
           assert_equal(true, @replacement.creator.notifications.replacement_promote.exists?)
         end
 
         should("restrict access") do
           @janitor = create(:janitor_user)
-          as(@janitor) { [Post, Upload, UploadMediaAsset, PostReplacementMediaAsset, PostReplacement].each(&:destroy_all) }
+          [Upload, PostReplacement, PostReplacementMediaAsset, PostVersion, Post, UploadMediaAsset].each(&:delete_all)
           assert_access([User::Levels::JANITOR, User::Levels::ADMIN, User::Levels::OWNER], success_response: :redirect) do |user|
-            replacement = as(@janitor) do
-              @upload = create(:jpg_upload, uploader: @janitor, uploader_ip_addr: "127.0.0.1")
-              create(:png_replacement, post: @upload.post)
-            end
+            upload = create(:jpg_upload, uploader: @janitor, uploader_ip_addr: "127.0.0.1")
+            replacement = create(:png_replacement, post: upload.post)
             post_auth(promote_post_replacement_path(replacement), user)
           end
         end
@@ -251,7 +243,7 @@ module Posts
         end
 
         should("restrict access") do
-          as(create(:admin_user)) { @replacement.approve!(penalize_current_uploader: true) }
+          @replacement.approve!(create(:admin_user), penalize_current_uploader: true)
           assert_access([User::Levels::JANITOR, User::Levels::ADMIN, User::Levels::OWNER], anonymous_response: :forbidden) { |user| put_auth(toggle_penalize_post_replacement_path(@replacement), user, params: { format: :json }) }
         end
       end

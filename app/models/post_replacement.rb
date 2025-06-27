@@ -8,10 +8,12 @@ class PostReplacement < ApplicationRecord
   has_media_asset(:post_replacement_media_asset)
 
   belongs_to(:post)
-  belongs_to_creator
-  belongs_to(:approver, class_name: "User", optional: true)
-  belongs_to(:rejector, class_name: "User", optional: true)
-  belongs_to(:uploader_on_approve, class_name: "User", foreign_key: :uploader_id_on_approve, optional: true)
+  belongs_to_user(:creator, ip: true, clones: :updater)
+  resolvable(:updater)
+  resolvable(:destroyer)
+  belongs_to_user(:approver, optional: true)
+  belongs_to_user(:rejector, optional: true)
+  belongs_to_user(:uploader_on_approve, foreign_key: :uploader_id_on_approve, optional: true)
   attr_accessor(:file, :direct_url, :tags, :is_backup, :as_pending)
 
   validate(:user_is_not_limited, on: :create)
@@ -27,8 +29,8 @@ class PostReplacement < ApplicationRecord
   after_destroy(-> { post.update_index })
   after_commit(:delete_files, on: :destroy)
 
-  scope(:for_user, ->(id) { where(creator_id: id.to_i) })
-  scope(:for_uploader_on_approve, ->(id) { where(uploader_id_on_approve: id.to_i) })
+  scope(:for_user, ->(user) { where(creator_id: u2id(user)) })
+  scope(:for_uploader_on_approve, ->(user) { where(uploader_id_on_approve: u2id(user)) })
   scope(:penalized, -> { where(penalize_uploader_on_approve: true) })
   scope(:not_penalized, -> { where(penalize_uploader_on_approve: false) })
 
@@ -36,7 +38,7 @@ class PostReplacement < ApplicationRecord
   delegate(:storage_id, to: :media_asset)
 
   def delete_files
-    media_asset&.expunge!
+    media_asset&.expunge!(destroyer)
   end
 
   def validate_media_asset_status
@@ -57,7 +59,7 @@ class PostReplacement < ApplicationRecord
 
   def direct_url_is_whitelisted
     return true if direct_url_parsed.blank?
-    valid, reason = UploadWhitelist.is_whitelisted?(direct_url_parsed)
+    valid, reason = UploadWhitelist.is_whitelisted?(direct_url_parsed, creator)
     unless valid
       errors.add(:source, "is not whitelisted: #{reason}")
       return false
@@ -101,7 +103,7 @@ class PostReplacement < ApplicationRecord
   end
 
   def log_destroy
-    PostEvent.add!(post_id, CurrentUser.user, :replacement_deleted, post_replacement_id: id, md5: md5, storage_id: storage_id)
+    PostEvent.add!(post_id, destroyer, :replacement_deleted, post_replacement_id: id, md5: md5, storage_id: storage_id)
   end
 
   module StorageMethods
@@ -129,12 +131,12 @@ class PostReplacement < ApplicationRecord
       media_asset.find_variant!("thumb").file_path
     end
 
-    def replacement_file_url
-      media_asset.file_url
+    def replacement_file_url(user)
+      media_asset.file_url(user: user)
     end
 
-    def replacement_thumb_url
-      media_asset.find_variant!("thumb").file_url
+    def replacement_thumb_url(user)
+      media_asset.find_variant!("thumb").file_url(user: user)
     end
   end
 
@@ -145,22 +147,18 @@ class PostReplacement < ApplicationRecord
       if existing.any?
         existing.each do |asset|
           raise(ProcessingError, "UploadMediaAsset with md5=#{md5} and status=active already exists (id=#{asset.id}, post_id=#{asset.post.id})") if asset.post.present?
+          asset.updater = creator
           asset.destroy # if the upload media asset has no post, it should be abandoned and not attached to anything
         end
       end
       Upload.create(new_upload_params(replace: replace))
     end
 
-    # approving
-    def update_post_media_asset
-      media_asset.open_file { |file| post.media_asset.replace_file(file, md5) }
-    end
-
     def create_backup_replacement
       backup = nil
       begin
         post.media_asset.open_file do |file|
-          backup = post.replacements.new(checksum: post.md5, creator_id: post.uploader_id, creator_ip_addr: post.uploader_ip_addr, status: "original", file_name: "#{post.md5}.#{post.file_ext}", source: post.source, reason: "Original File", is_backup: true)
+          backup = post.replacements.new(checksum: post.md5, creator: post.uploader.resolvable(post.uploader_ip_addr), status: "original", file_name: "#{post.md5}.#{post.file_ext}", source: post.source, reason: "Original File", is_backup: true)
           backup.media_asset.backup_post_id = post.id
           backup.media_asset.append_all!(file, save: false)
           backup.save!
@@ -173,7 +171,7 @@ class PostReplacement < ApplicationRecord
       backup
     end
 
-    def approve!(penalize_current_uploader:)
+    def approve!(approver, penalize_current_uploader:)
       unless %w[pending original rejected].include?(status)
         errors.add(:status, "must be pending, original, or rejected to approve")
         return
@@ -190,16 +188,15 @@ class PostReplacement < ApplicationRecord
           post.remove_tag(tag)
         end
 
-        previous_uploader = post.uploader_id
+        previous_uploader = post.uploader
         previous_md5 = post.md5
 
         previous_media_asset = post.media_asset
 
         post.thumbnail_frame = nil
         post.source = "#{source}\n" + post.source
-        post.uploader_id = creator_id
-        post.uploader_ip_addr = creator_ip_addr
-        post.approver_id = CurrentUser.id
+        post.uploader = creator.resolvable(creator_ip_addr)
+        post.approver = approver
         post.save!
 
         self.previous_details = {
@@ -209,9 +206,10 @@ class PostReplacement < ApplicationRecord
           ext:    post.file_ext,
           md5:    post.md5,
         }
-        self.approver_id = CurrentUser.id
+        self.approver = approver
+        self.updater = approver
         self.status = "approved"
-        self.uploader_id_on_approve = previous_uploader
+        self.uploader_on_approve = previous_uploader
         self.penalize_uploader_on_approve = penalize_current_uploader.to_s.truthy?
         save!
 
@@ -222,51 +220,51 @@ class PostReplacement < ApplicationRecord
         post.update_column(:upload_media_asset_id, upload.upload_media_asset_id)
         post.reload_media_asset
         # update_all is used to avoid needing to load the user
-        User.where(id: previous_uploader).update_all("own_post_replaced_count = own_post_replaced_count + 1")
+        User.where(id: previous_uploader.id).update_all("own_post_replaced_count = own_post_replaced_count + 1")
         if penalize_current_uploader
-          User.where(id: previous_uploader).update_all("own_post_replaced_penalize_count = own_post_replaced_penalize_count + 1")
+          User.where(id: previous_uploader.id).update_all("own_post_replaced_penalize_count = own_post_replaced_penalize_count + 1")
         end
 
         x_scale = post.media_asset.image_width.to_f / previous_media_asset.image_width.to_f
         y_scale = post.media_asset.image_height.to_f / previous_media_asset.image_height.to_f
 
         post.notes.each do |note|
-          note.rescale!(x_scale, y_scale) # save! is called within each, and each loads the post
+          note.rescale!(x_scale, y_scale, approver) # save! is called within each, and each loads the post
         end
 
         if post.md5 != previous_md5
           previous_media_asset.delete_all_files
-          previous_media_asset.replaced!
+          previous_media_asset.update(status: "replaced", updater: approver)
         end
 
-        PostEvent.add!(post.id, CurrentUser.user, :replacement_accepted, post_replacement_id: id, old_md5: previous_md5, new_md5: md5)
+        PostEvent.add!(post.id, approver, :replacement_accepted, post_replacement_id: id, old_md5: previous_md5, new_md5: md5)
       end
-      creator.notify_for_upload(self, :replacement_approve) if creator_id != CurrentUser.id
+      creator.notify_for_upload(self, :replacement_approve) if creator_id != approver.id
       post.update_index
     end
 
-    def toggle_penalize!
+    def toggle_penalize!(user)
       unless approved?
         errors.add(:status, "must be approved to penalize")
         return
       end
 
       if penalize_uploader_on_approve
-        User.where(id: uploader_on_approve).update_all("own_post_replaced_penalize_count = own_post_replaced_penalize_count - 1")
+        User.where(id: uploader_id_on_approve).update_all("own_post_replaced_penalize_count = own_post_replaced_penalize_count - 1")
       else
-        User.where(id: uploader_on_approve).update_all("own_post_replaced_penalize_count = own_post_replaced_penalize_count + 1")
+        User.where(id: uploader_id_on_approve).update_all("own_post_replaced_penalize_count = own_post_replaced_penalize_count + 1")
       end
-      update_attribute(:penalize_uploader_on_approve, !penalize_uploader_on_approve)
+      update(penalize_uploader_on_approve: !penalize_uploader_on_approve, updater: user)
     end
 
-    def promote!
+    def promote!(promoter)
       unless pending?
         errors.add(:status, "must be pending to promote")
         return
       end
 
       upload = transaction do
-        upload = CurrentUser.scoped(creator, creator_ip_addr) { create_upload }
+        upload = create_upload
         if upload.blank?
           raise(ProcessingError, "Failed to create upload")
         elsif upload.errors.any?
@@ -281,17 +279,17 @@ class PostReplacement < ApplicationRecord
           raise(ProcessingError, "Failed to create post: #{upload.post.errors.full_messages.join(', ')}")
         end
 
-        update_columns(status: "promoted")
-        PostEvent.add!(upload.post.id, CurrentUser.user, :replacement_promoted, source_post_id: post_id, post_replacement_id: id)
+        update(status: "promoted", updater: promoter)
+        PostEvent.add!(upload.post.id, promoter, :replacement_promoted, source_post_id: post_id, post_replacement_id: id)
 
-        creator.notify_for_upload(self, :replacement_promote) if creator_id != CurrentUser.id
+        creator.notify_for_upload(self, :replacement_promote) if creator_id != promoter.id
         upload
       end
       upload.post.update_index
       upload
     end
 
-    def reject!(user = CurrentUser.user, reason = "")
+    def reject!(user, reason = "")
       unless pending?
         errors.add(:status, "must be pending to reject")
         return
@@ -300,7 +298,7 @@ class PostReplacement < ApplicationRecord
       PostEvent.add!(post.id, user, :replacement_rejected, post_replacement_id: id)
       update(status: "rejected", rejector: user, rejection_reason: reason)
       User.where(id: creator_id).update_all("post_replacement_rejected_count = post_replacement_rejected_count + 1")
-      creator.notify_for_upload(self, :replacement_reject) if creator_id != CurrentUser.id
+      creator.notify_for_upload(self, :replacement_reject) if creator_id != user.id
       post.update_index
     end
   end
@@ -308,23 +306,22 @@ class PostReplacement < ApplicationRecord
   module PromotionMethods
     def new_upload_params(replace: false)
       {
-        uploader_id:      creator_id,
-        uploader_ip_addr: creator_ip_addr,
-        file:             media_asset.get_file,
-        tag_string:       post.tag_string,
-        rating:           post.rating,
-        source:           "#{source}\n" + post.source,
-        parent_id:        post.id,
-        description:      post.description,
-        locked_tags:      post.locked_tags,
-        is_replacement:   replace,
-        replacement_id:   id,
+        uploader:       creator.resolvable(creator_ip_addr),
+        file:           media_asset.get_file,
+        tag_string:     post.tag_string,
+        rating:         post.rating,
+        source:         "#{source}\n" + post.source,
+        parent_id:      post.id,
+        description:    post.description,
+        locked_tags:    post.locked_tags,
+        is_replacement: replace,
+        replacement_id: id,
       }
     end
   end
 
   module SearchMethods
-    def search(params)
+    def search(params, user)
       q = super
 
       q = q.joins(:post_replacement_media_asset).where("post_replacement_media_assets.file_ext": params[:file_ext]) if params[:file_ext]
@@ -346,12 +343,6 @@ class PostReplacement < ApplicationRecord
     def default_order
       order(Arel.sql("CASE post_replacements.status WHEN 'pending' THEN 0 WHEN 'original' THEN 2 ELSE 1 END ASC, id DESC"))
     end
-
-    def visible(user)
-      return not_rejected if user.is_anonymous?
-      return all if user.is_staff?
-      where(creator_id: user.id).or(not_rejected)
-    end
   end
 
   def original_file_visible_to?(user)
@@ -369,14 +360,14 @@ class PostReplacement < ApplicationRecord
   include(PostMethods)
   extend(SearchMethods)
 
-  def file_url
-    if post.deleteblocked?
+  def file_url(user)
+    if post.deleteblocked?(user)
       nil
-    elsif post.visible?
-      if original_file_visible_to?(CurrentUser)
-        replacement_file_url
+    elsif post.visible?(user)
+      if original_file_visible_to?(user)
+        replacement_file_url(user)
       else
-        replacement_thumb_url
+        replacement_thumb_url(user)
       end
     end
   end

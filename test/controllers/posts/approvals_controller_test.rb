@@ -23,9 +23,7 @@ module Posts
       context("create action") do
         setup do
           @admin = create(:admin_user)
-          as(@admin) do
-            @post = create(:post, is_pending: true)
-          end
+          @post = create(:post, is_pending: true)
         end
 
         should("work") do
@@ -44,10 +42,8 @@ module Posts
       context("destroy action") do
         setup do
           @admin = create(:admin_user)
-          as(@admin) do
-            @post = create(:post, is_pending: true)
-            @post.approve!
-          end
+          @post = create(:post, is_pending: true)
+          @post.approve!(@admin)
         end
 
         should("work") do
@@ -66,7 +62,7 @@ module Posts
         should("restrict access") do
           assert_access([User::Levels::JANITOR, User::Levels::ADMIN, User::Levels::OWNER], anonymous_response: :forbidden) do |user|
             post = create(:post, is_pending: true)
-            post.approve!
+            post.approve!(user)
             delete_auth(post_approval_path(post), user, params: { format: :json })
           end
         end

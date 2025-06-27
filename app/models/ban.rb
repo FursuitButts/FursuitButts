@@ -3,27 +3,29 @@
 class Ban < ApplicationRecord
   attr_accessor(:is_permaban)
 
-  before_validation(:initialize_banner_id, on: :create)
   before_validation(:initialize_permaban, on: %i[update create])
   before_create(:create_feedback)
   after_create(:update_user_on_create)
   after_create(:log_create)
   after_update(:log_update)
   after_destroy(:log_delete)
-  belongs_to(:user)
-  belongs_to(:banner, class_name: "User")
+  belongs_to_user(:user)
+  belongs_to_user(:banner, ip: true, clones: :updater, aliases: :creator) # TODO: convert to creator
+  resolvable(:updater)
+  resolvable(:destroyer)
   validate(:user_is_inferior)
   validates(:reason, :duration, presence: true)
   validates(:reason, length: { minimum: 1, maximum: FemboyFans.config.user_feedback_max_size })
 
   scope(:unexpired, -> { where("bans.expires_at > ? OR bans.expires_at IS NULL", Time.now) })
-  scope(:expired, -> { where.not(bans: { expires_at: nil }).where("bans.expires_at <= ?", Time.now) })
+  scope(:expired, -> { where.not(bans: { expires_at: nil }).where(bans: { expires_at: ..Time.now }) })
+  scope(:for_user, ->(user) { where(user_id: u2id(user)) })
 
   def self.is_banned?(user)
-    exists?(["user_id = ? AND (expires_at > ? OR expires_at IS NULL)", user.id, Time.now])
+    unexpired.for_user(user).exists?
   end
 
-  def self.search(params)
+  def self.search(params, user)
     q = super
 
     q = q.where_user(:banner_id, :banner, params)
@@ -42,10 +44,6 @@ class Ban < ApplicationRecord
     end
 
     q
-  end
-
-  def initialize_banner_id
-    self.banner_id = CurrentUser.id if banner_id.blank?
   end
 
   def initialize_permaban
@@ -74,7 +72,7 @@ class Ban < ApplicationRecord
   end
 
   def update_user_on_create
-    user.ban!
+    user.ban!(banner)
   end
 
   def user_name
@@ -127,19 +125,19 @@ class Ban < ApplicationRecord
 
   def create_feedback
     time = expires_at.nil? ? "permanently" : "for #{humanized_duration}"
-    user.feedback.create!(category: "negative", body: "Banned #{time}: #{reason}")
+    user.feedback.create!(category: "negative", body: "Banned #{time}: #{reason}", creator: banner)
   end
 
   module LogMethods
     def log_create
-      ModAction.log!(:ban_create, self,
+      ModAction.log!(creator, :ban_create, self,
                      duration: duration,
                      reason:   reason,
                      user_id:  user_id)
     end
 
     def log_update
-      ModAction.log!(:ban_update, self,
+      ModAction.log!(updater, :ban_update, self,
                      user_id:        user_id,
                      expires_at:     expires_at&.iso8601,
                      old_expires_at: expires_at_before_last_save&.iso8601,
@@ -148,7 +146,7 @@ class Ban < ApplicationRecord
     end
 
     def log_delete
-      ModAction.log!(:ban_delete, self, user_id: user_id)
+      ModAction.log!(destroyer, :ban_delete, self, user_id: user_id)
     end
   end
 

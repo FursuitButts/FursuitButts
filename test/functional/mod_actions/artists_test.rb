@@ -15,7 +15,7 @@ module ModActions
       end
 
       should("parse artist_lock correctly") do
-        @artist.update!(is_locked: true)
+        @artist.update_with!(@admin, is_locked: true)
 
         assert_matches(
           actions: %w[artist_lock],
@@ -26,7 +26,7 @@ module ModActions
 
       should("parse artist_rename correctly") do
         @original = @artist.dup
-        @artist.update!(name: "xxx")
+        @artist.update_with!(@admin, name: "xxx")
 
         assert_matches(
           actions:  %w[artist_rename],
@@ -41,7 +41,7 @@ module ModActions
 
       should("parse artist_unlock correctly") do
         @artist.update_columns(is_locked: true)
-        @artist.update!(is_locked: false)
+        @artist.update_with!(@admin, is_locked: false)
 
         assert_matches(
           actions: %w[artist_unlock],
@@ -51,7 +51,7 @@ module ModActions
       end
 
       should("parse artist_user_link correctly") do
-        @artist.update!(linked_user_id: @user.id)
+        @artist.update_with!(@admin, linked_user_id: @user.id)
 
         assert_matches(
           actions: %w[artist_user_link],
@@ -63,7 +63,7 @@ module ModActions
 
       should("parse artist_user_unlink correctly") do
         @artist.update_columns(linked_user_id: @user.id)
-        @artist.update!(linked_user_id: nil)
+        @artist.update_with!(@admin, linked_user_id: nil)
 
         assert_matches(
           actions: %w[artist_user_unlink],

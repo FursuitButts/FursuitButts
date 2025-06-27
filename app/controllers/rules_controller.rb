@@ -14,7 +14,7 @@ class RulesController < ApplicationController
   end
 
   def new
-    @rule = authorize(Rule.new(permitted_attributes(Rule)))
+    @rule = authorize(Rule.new_with_current(:creator, permitted_attributes(Rule)))
   end
 
   def edit
@@ -22,7 +22,7 @@ class RulesController < ApplicationController
   end
 
   def create
-    @rule = authorize(Rule.new(permitted_attributes(Rule)))
+    @rule = authorize(Rule.new_with_current(:creator, permitted_attributes(Rule)))
     @rule.save
     notice(@rule.errors.any? ? @rule.errors.full_messages.join(";") : "Rule created")
     respond_with(@rule, location: rules_path)
@@ -30,14 +30,14 @@ class RulesController < ApplicationController
 
   def update
     @rule = authorize(Rule.find(params[:id]))
-    @rule.update(permitted_attributes(@rule))
+    @rule.update_with_current(:updater, permitted_attributes(@rule))
     notice(@rule.errors.any? ? @rule.errors.full_messages.join(";") : "Rule updated")
     respond_with(@rule, location: rules_path)
   end
 
   def destroy
     @rule = authorize(Rule.find(params[:id]))
-    @rule.destroy
+    @rule.destroy_with_current(:destroyer)
     notice("Rule deleted")
     respond_with(@rule, location: rules_path)
   end
@@ -64,12 +64,12 @@ class RulesController < ApplicationController
         rules.each do |rule|
           errors << { id: rule.id, name: rule.name, message: rule.errors.full_messages.join("; ") } if !rule.valid? && rule.errors.any?
         end
-        render(json: { success: false, errors: errors }, status: 422)
+        render(json: { success: false, errors: errors }, status: :unprocessable_entity)
         raise(ActiveRecord::Rollback)
       else
-        Rule.log_reorder(changes) if changes != 0
+        Rule.log_reorder(changes, CurrentUser.user) if changes != 0
         respond_to do |format|
-          format.json { head(204) }
+          format.json { head(:no_content) }
           format.js do
             render(json: { html: render_to_string(partial: "rules/sort", locals: { categories: RuleCategory.order(:order) }) })
           end

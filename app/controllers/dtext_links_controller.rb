@@ -5,7 +5,7 @@ class DtextLinksController < ApplicationController
 
   def index
     @dtext_links = authorize(DtextLink).html_includes(request, :model)
-                                       .search(search_params(DtextLink))
+                                       .search_current(search_params(DtextLink))
                                        .paginate(params[:page], limit: params[:limit])
     respond_with(@dtext_links)
   end

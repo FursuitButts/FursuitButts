@@ -2,17 +2,17 @@
 
 module PostSets
   class Favorites < PostSets::Base
-    attr_reader(:page, :limit)
+    attr_reader(:user, :page, :limit)
 
-    def initialize(user, page, limit:)
-      super()
+    def initialize(user, page, limit:, current_user:)
+      super(current_user)
       @user = user
       @page = page
       @limit = limit
     end
 
     def public_tag_string
-      "fav:#{@user.name}"
+      "fav:#{user.name}"
     end
 
     def current_page
@@ -20,8 +20,8 @@ module PostSets
     end
 
     def favorites
-      @post_count ||= ::Post.tag_match("fav:#{@user.name} status:any").count_only
-      @favorites ||= ::Favorite.for_user(@user.id).includes(:post).order(created_at: :desc).paginate_posts(page, total_count: @post_count, limit: @limit)
+      @post_count ||= ::Post.tag_match("fav:#{user.name} status:any", current_user).count_only
+      @favorites ||= ::Favorite.for_user(@user.id).includes(:post).order(created_at: :desc).paginate_posts(page, total_count: @post_count, limit: limit, user: current_user)
     end
 
     def posts

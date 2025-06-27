@@ -13,7 +13,7 @@ class UserAdminEditTest < ActiveSupport::TestCase
     context("level") do
       should("allow owner to promote to admin") do
         assert_difference("ModAction.count", 1) do
-          edit = UserAdminEdit.new(@user, @owner, { level: User::Levels::ADMIN })
+          edit = UserAdminEdit.new(@user, @owner, "127.0.0.1", { level: User::Levels::ADMIN })
           edit.apply
           assert(edit.valid?)
         end
@@ -23,7 +23,7 @@ class UserAdminEditTest < ActiveSupport::TestCase
 
       should("not allow admin to promote to admin") do
         assert_no_difference("ModAction.count") do
-          edit = UserAdminEdit.new(@user, @admin, { level: User::Levels::ADMIN })
+          edit = UserAdminEdit.new(@user, @admin, "127.0.0.1", { level: User::Levels::ADMIN })
           edit.apply
           assert(edit.invalid?)
         end
@@ -32,7 +32,7 @@ class UserAdminEditTest < ActiveSupport::TestCase
 
       should("allow admin to promote to moderator") do
         assert_difference("ModAction.count", 1) do
-          edit = UserAdminEdit.new(@user, @admin, { level: User::Levels::MODERATOR })
+          edit = UserAdminEdit.new(@user, @admin, "127.0.0.1", { level: User::Levels::MODERATOR })
           edit.apply
           assert(edit.valid?)
         end
@@ -43,13 +43,13 @@ class UserAdminEditTest < ActiveSupport::TestCase
 
     context("email") do
       should("allow owner") do
-        UserAdminEdit.new(@user, @owner, { email: "test@femboy.fan" }).apply!
+        UserAdminEdit.new(@user, @owner, "127.0.0.1", { email: "test@femboy.fan" }).apply!
         assert_equal("test@femboy.fan", @user.reload.email)
       end
 
       should("not allow admin") do
         old_email = @user.email
-        UserAdminEdit.new(@user, @admin, { email: "test@femboy.fan" }).apply!
+        UserAdminEdit.new(@user, @admin, "127.0.0.1", { email: "test@femboy.fan" }).apply!
         assert_equal(old_email, @user.reload.email)
       end
     end
@@ -57,7 +57,7 @@ class UserAdminEditTest < ActiveSupport::TestCase
     context("name") do
       should("work") do
         assert_difference(%w[ModAction.count UserNameChangeRequest.count], 1) do
-          edit = UserAdminEdit.new(@user, @admin, { name: "xaxaxa" })
+          edit = UserAdminEdit.new(@user, @admin, "127.0.0.1", { name: "xaxaxa" })
           edit.apply
           assert(edit.valid?)
         end
@@ -68,33 +68,33 @@ class UserAdminEditTest < ActiveSupport::TestCase
 
     context("title") do
       should("allow owner") do
-        UserAdminEdit.new(@user, @owner, { title: "Test" }).apply!
+        UserAdminEdit.new(@user, @owner, "127.0.0.1", { title: "Test" }).apply!
         assert_equal("Test", @user.reload.title)
       end
 
       should("not allow admin") do
-        UserAdminEdit.new(@user, @admin, { title: "Test" }).apply!
+        UserAdminEdit.new(@user, @admin, "127.0.0.1", { title: "Test" }).apply!
         assert_nil(@user.reload.title)
       end
     end
 
     context("profile_about") do
       should("work") do
-        UserAdminEdit.new(@user, @admin, { profile_about: "test" }).apply!
+        UserAdminEdit.new(@user, @admin, "127.0.0.1", { profile_about: "test" }).apply!
         assert_equal("test", @user.reload.profile_about)
       end
     end
 
     context("profile_artinfo") do
       should("work") do
-        UserAdminEdit.new(@user, @admin, { profile_artinfo: "test" }).apply!
+        UserAdminEdit.new(@user, @admin, "127.0.0.1", { profile_artinfo: "test" }).apply!
         assert_equal("test", @user.reload.profile_artinfo)
       end
     end
 
     context("base_upload_limit") do
       should("work") do
-        UserAdminEdit.new(@user, @admin, { base_upload_limit: 20 }).apply!
+        UserAdminEdit.new(@user, @admin, "127.0.0.1", { base_upload_limit: 20 }).apply!
         assert_equal(20, @user.reload.base_upload_limit)
       end
     end
@@ -103,12 +103,12 @@ class UserAdminEditTest < ActiveSupport::TestCase
       %i[email_verified can_manage_aibur].each do |pref|
         context(pref) do
           should("allow owner") do
-            UserAdminEdit.new(@user, @owner, { pref => true }).apply!
+            UserAdminEdit.new(@user, @owner, "127.0.0.1", pref => true).apply!
             assert_equal(true, @user.reload.send(pref))
           end
 
           should("not allow admin") do
-            UserAdminEdit.new(@user, @admin, { pref => true }).apply!
+            UserAdminEdit.new(@user, @admin, "127.0.0.1", pref => true).apply!
             assert_equal(false, @user.reload.send(pref))
           end
         end
@@ -117,7 +117,7 @@ class UserAdminEditTest < ActiveSupport::TestCase
       %i[enable_privacy_mode unrestricted_uploads can_approve_posts no_flagging no_replacements no_aibur_voting force_name_change].each do |pref|
         context(pref) do
           should("work") do
-            UserAdminEdit.new(@user, @admin, { pref => true }).apply!
+            UserAdminEdit.new(@user, @admin, "127.0.0.1", pref => true).apply!
             assert_equal(true, @user.reload.send(pref))
           end
         end

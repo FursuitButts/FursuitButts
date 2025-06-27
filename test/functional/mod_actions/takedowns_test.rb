@@ -15,7 +15,7 @@ module ModActions
       end
 
       should("format takedown_process correctly") do
-        with_inline_jobs { @takedown.process!(CurrentUser.user, "Artist requested removal") }
+        with_inline_jobs { @takedown.process!(@admin, "Artist requested removal") }
 
         assert_matches(
           actions: %w[takedown_process],
@@ -25,7 +25,7 @@ module ModActions
       end
 
       should("format takedown-delete") do
-        @takedown.destroy
+        @takedown.destroy_with(@admin)
 
         assert_matches(
           actions: %w[takedown_delete],

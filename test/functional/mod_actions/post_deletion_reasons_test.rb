@@ -10,12 +10,12 @@ module ModActions
 
     context("mod actions for post deletion reasons") do
       setup do
-        @reason = create(:post_deletion_reason)
+        @reason = create(:post_deletion_reason, creator: @admin)
         set_count!
       end
 
       should("format post_deletion_reason_create correctly") do
-        @reason = create(:post_deletion_reason)
+        @reason = create(:post_deletion_reason, creator: @admin)
 
         assert_matches(
           actions: %w[post_deletion_reason_create],
@@ -26,7 +26,7 @@ module ModActions
       end
 
       should("format post_deletion_reason_delete correctly") do
-        @reason.destroy
+        @reason.destroy_with(@admin)
 
         assert_matches(
           actions: %w[post_deletion_reason_delete],
@@ -38,7 +38,7 @@ module ModActions
       end
 
       should("format post_deletion_reasons_reorder correctly") do
-        PostDeletionReason.log_reorder(2)
+        PostDeletionReason.log_reorder(2, @admin)
 
         assert_matches(
           actions: %w[post_deletion_reasons_reorder],
@@ -70,7 +70,7 @@ module ModActions
         end
 
         should("format reason changes correctly") do
-          @reason.update!(reason: "xxx")
+          @reason.update_with!(@admin, reason: "xxx")
 
           assert_matches(
             actions:    %w[post_deletion_reason_update],
@@ -89,7 +89,7 @@ module ModActions
         end
 
         should("format prompt changes correctly") do
-          @reason.update!(prompt: "xxx")
+          @reason.update_with!(@admin, prompt: "xxx")
 
           assert_matches(
             actions:    %w[post_deletion_reason_update],
@@ -108,7 +108,7 @@ module ModActions
         end
 
         should("format title changes correctly") do
-          @reason.update!(title: "xxx")
+          @reason.update_with!(@admin, title: "xxx")
 
           assert_matches(
             actions:    %w[post_deletion_reason_update],
@@ -127,7 +127,7 @@ module ModActions
         end
 
         should("format all changes correctly") do
-          @reason.update!(reason: "xxx", prompt: "yyy", title: "zzz")
+          @reason.update_with!(@admin, reason: "xxx", prompt: "yyy", title: "zzz")
           assert_matches(
             actions:    %w[post_deletion_reason_update],
             text:       <<~TEXT.strip,

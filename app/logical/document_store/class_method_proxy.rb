@@ -39,8 +39,6 @@ module DocumentStore
       client.delete_by_query(index: index_name, q: query, body: body)
     end
 
-    def client
-      DocumentStore.client
-    end
+    delegate(:client, to: :DocumentStore)
   end
 end

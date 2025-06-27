@@ -9,32 +9,24 @@ class PostFlagTest < ActiveSupport::TestCase
         @bob = create(:user)
         @alice = create(:trusted_user)
       end
-      as(@alice) do
-        @post = create(:post, tag_string: "aaa", uploader: @alice)
-      end
+      @post = create(:post, tag_string: "aaa", uploader: @alice)
     end
 
     should("respect the throttle limit") do
-      as(@bob) do
-        FemboyFans.config.stubs(:disable_throttles?).returns(false)
-        FemboyFans.config.stubs(:post_flag_limit).returns(0)
+      FemboyFans.config.stubs(:disable_throttles?).returns(false)
+      FemboyFans.config.stubs(:post_flag_limit).returns(0)
 
-        error = assert_raises(ActiveRecord::RecordInvalid) do
-          @post_flag = create(:post_flag, post: @post)
-        end
-        assert_match(/You have reached the hourly limit for this action/, error.message)
+      error = assert_raises(ActiveRecord::RecordInvalid) do
+        @post_flag = create(:post_flag, post: @post, creator: @bob)
       end
+      assert_match(/You have reached the hourly limit for this action/, error.message)
     end
 
     should("not be able to flag a deleted post") do
-      as(@alice) do
-        @post.update(is_deleted: true)
-      end
+      @post.update_with(@alice, is_deleted: true)
 
       error = assert_raises(ActiveRecord::RecordInvalid) do
-        as(@bob) do
-          @post_flag = create(:post_flag, post: @post)
-        end
+        @post_flag = create(:post_flag, post: @post)
       end
       assert_match(/Post is deleted/, error.message)
     end
@@ -43,36 +35,24 @@ class PostFlagTest < ActiveSupport::TestCase
       @mod = create(:moderator_user)
 
       @users = create_list(:user, 2, created_at: 2.weeks.ago)
-
-      as(@users.first) do
-        @flag1 = create(:post_flag, post: @post)
-      end
-
-      as(@mod) do
-        @post.approve!
-      end
+      @flag1 = create(:post_flag, post: @post, creator: @users.first)
+      @post.approve!(@mod)
 
       travel_to(PostFlag::COOLDOWN_PERIOD.from_now - 1.minute) do
-        as(@users.second) do
-          error = assert_raises(ActiveRecord::RecordInvalid) do
-            @flag2 = create(:post_flag, post: @post)
-          end
-          assert_match(/cannot be flagged more than once/, error.message)
+        error = assert_raises(ActiveRecord::RecordInvalid) do
+          @flag2 = create(:post_flag, post: @post, creator: @users.second)
         end
+        assert_match(/cannot be flagged more than once/, error.message)
       end
 
       travel_to(PostFlag::COOLDOWN_PERIOD.from_now + 1.minute) do
-        as(@users.second) do
-          @flag3 = create(:post_flag, post: @post)
-        end
+        @flag3 = create(:post_flag, post: @post, creator: @users.second)
         assert(@flag3.errors.empty?)
       end
     end
 
     should("initialize its creator") do
-      @post_flag = as(@alice) do
-        create(:post_flag, post: @post)
-      end
+      @post_flag = create(:post_flag, post: @post, creator: @alice)
       assert_equal(@alice.id, @post_flag.creator_id)
       assert_equal(IPAddr.new("127.0.0.1"), @post_flag.creator_ip_addr)
     end
@@ -84,7 +64,7 @@ class PostFlagTest < ActiveSupport::TestCase
 
       should("not be able to flag") do
         error = assert_raises(ActiveRecord::RecordInvalid) do
-          as(@bob) { create(:post_flag, post: @post) }
+          create(:post_flag, post: @post, creator: @bob)
         end
         assert_match(/You cannot flag posts/, error.message)
       end

@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 
 class Takedown < ApplicationRecord
-  belongs_to_creator(optional: true)
-  belongs_to(:approver, class_name: "User", optional: true)
+  belongs_to_user(:creator, ip: true, clones: :updater, optional: true)
+  belongs_to_user(:updater, ip: true, optional: true)
+  belongs_to_user(:approver, optional: true)
+  resolvable(:destroyer)
   before_validation(:initialize_fields, on: :create)
   before_validation(:normalize_post_ids)
   before_validation(:strip_fields)
@@ -92,24 +94,26 @@ class Takedown < ApplicationRecord
   end
 
   module ModifyPostMethods
-    def add_posts_by_ids!(ids)
+    def add_posts_by_ids!(ids, user)
       added_ids = []
       with_lock do
         self.post_ids = (post_array + matching_post_ids(ids)).uniq.join(" ")
+        self.updater = user
         added_ids = post_array - post_array_was
         save!
       end
       added_ids
     end
 
-    def add_posts_by_tags!(tag_string)
+    def add_posts_by_tags!(tag_string, user)
       new_ids = Post.tag_match_system("#{tag_string} -status:deleted").limit(1000).pluck(:id)
-      add_posts_by_ids!(new_ids.join(" "))
+      add_posts_by_ids!(new_ids.join(" "), user)
     end
 
-    def remove_posts_by_ids!(ids)
+    def remove_posts_by_ids!(ids, user)
       with_lock do
         self.post_ids = (post_array - matching_post_ids(ids)).uniq.join(" ")
+        self.updater = user
         save!
       end
     end
@@ -195,12 +199,12 @@ class Takedown < ApplicationRecord
     end
 
     def process!(approver, del_reason)
-      TakedownJob.perform_later(id, approver.id, del_reason)
+      TakedownJob.perform_later(id, approver, del_reason)
     end
   end
 
   module SearchMethods
-    def search(params)
+    def search(params, user)
       q = super
 
       if params[:source].present?
@@ -270,7 +274,7 @@ class Takedown < ApplicationRecord
 
   module LogMethods
     def log_delete
-      ModAction.log!(:takedown_delete, self)
+      ModAction.log!(destroyer, :takedown_delete, self)
     end
   end
 

@@ -22,7 +22,7 @@ module PostsHelper
     if source =~ %r{\Ahttps?://}i
       source_link = decorated_link_to(source.sub(%r{\Ahttps?://(?:www\.)?}i, ""), source, target: "_blank", rel: "nofollow noreferrer noopener")
 
-      if CurrentUser.is_janitor?
+      if CurrentUser.user.is_janitor?
         source_link += " ".html_safe + link_to("»", posts_path(tags: "source:#{source.sub(%r{[^/]*$}, '')}"), rel: "nofollow")
       end
 
@@ -59,7 +59,7 @@ module PostsHelper
     html = +""
 
     html += "Children: "
-    text = children_post_set.children.count == 1 ? "1 child" : "#{children_post_set.children.count} children"
+    text = children_post_set.children.one? ? "1 child" : "#{children_post_set.children.count} children"
     html += link_to(text, posts_path(tags: "parent:#{post.id}"))
 
     html += " (#{link_to('learn more', help_page_path(id: 'post_relationships'))}) "
@@ -205,10 +205,10 @@ module PostsHelper
     render(partial: "posts/partials/common/report_js", locals: { sig: sig, url: "/searches" })
   end
 
-  def post_ribbons(post)
+  def post_ribbons(post, user = CurrentUser.user)
     tag.div(class: "ribbons") do # rubocop:disable Metrics/BlockLength
       [if post.parent_id.present?
-         if post.has_visible_children?
+         if post.has_visible_children?(user)
            tag.div(class: "ribbon left has-parent has-children", title: "Has Parent\nHas Children") do
              tag.span
            end
@@ -217,7 +217,7 @@ module PostsHelper
              tag.span
            end
          end
-       elsif post.has_visible_children?
+       elsif post.has_visible_children?(user)
          tag.div(class: "ribbon left has-children", title: "Has Children") do
            tag.span
          end
@@ -240,16 +240,16 @@ module PostsHelper
     end
   end
 
-  def post_vote_buttons(post)
+  def post_vote_buttons(post, user = CurrentUser.user)
     tag.div(id: "vote-buttons") do
-      tag.button("", class: "button vote-button vote score-neutral", disabled: post.is_vote_locked?, data: { action: "up" }) do
-        tag.span(class: "post-vote-up-#{post.id} score-#{post.is_voted_up? ? 'positive' : 'neutral'}")
+      tag.button("", class: "button vote-button vote score-neutral", disabled: post.is_vote_locked?(user), data: { action: "up" }) do
+        tag.span(class: "post-vote-up-#{post.id} score-#{post.is_voted_up?(user) ? 'positive' : 'neutral'}")
       end +
-        tag.button("", class: "button vote-button vote score-neutral", disabled: post.is_vote_locked?, data: { action: "down" }) do
-          tag.span(class: "post-vote-down-#{post.id} score-#{post.is_voted_down? ? 'negative' : 'neutral'}")
+        tag.button("", class: "button vote-button vote score-neutral", disabled: post.is_vote_locked?(user), data: { action: "down" }) do
+          tag.span(class: "post-vote-down-#{post.id} score-#{post.is_voted_down?(user) ? 'negative' : 'neutral'}")
         end +
-        tag.button("", class: "button vote-button fav score-neutral", data: { action: "fav", state: post.is_favorited? }) do
-          tag.span(class: "post-favorite-#{post.id} score-neutral#{post.is_favorited? ? ' is-favorited' : ''}")
+        tag.button("", class: "button vote-button fav score-neutral", data: { action: "fav", state: post.is_favorited?(user) }) do
+          tag.span(class: "post-favorite-#{post.id} score-neutral#{' is-favorited' if post.is_favorited?(user)}")
         end
     end
   end

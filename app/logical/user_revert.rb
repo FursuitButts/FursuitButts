@@ -5,10 +5,11 @@ class UserRevert
   THRESHOLD = 1_000
   class TooManyChangesError < RuntimeError; end
 
-  attr_reader(:user_id)
+  attr_reader(:user_id, :current_user)
 
-  def initialize(user_id)
+  def initialize(user_id, current_user)
     @user_id = user_id
+    @current_user = current_user
   end
 
   def process
@@ -24,7 +25,7 @@ class UserRevert
 
   def revert_post_changes
     PostVersion.where(updater_id: user_id).find_each do |version|
-      version.undo! if version.undoable?
+      version.undo!(current_user) if version.undoable?
     end
   end
 

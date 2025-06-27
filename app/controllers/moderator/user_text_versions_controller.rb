@@ -6,15 +6,16 @@ module Moderator
 
     def index
       @text_versions = authorize(UserTextVersion).html_includes(request, :user, :updater)
-                                                 .search(search_params(UserTextVersion))
+                                                 .search_current(search_params(UserTextVersion))
                                                  .paginate(params[:page], limit: params[:limit] || 20)
       respond_with(@text_versions)
     end
 
     def for_user
       @user = authorize(User.find(params[:user_id]), policy_class: UserTextVersionPolicy)
-      @text_versions = @user.text_versions.html_includes(request, :user, :updater)
-                            .search(search_params(UserTextVersion))
+      @text_versions = @user.text_versions
+                            .html_includes(request, :user, :updater)
+                            .search_current(search_params(UserTextVersion))
                             .paginate(params[:page], limit: params[:limit] || 20)
       render(:index)
     end

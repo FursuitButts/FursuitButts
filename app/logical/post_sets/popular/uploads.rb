@@ -5,12 +5,13 @@ module PostSets
     class Uploads < PostSets::Base
       attr_reader(:date, :scale, :min_date, :max_date, :limit)
 
-      def initialize(date, scale, min_date, max_date, limit: nil)
+      def initialize(date, scale, min_date, max_date, current_user:, limit: nil)
+        super(current_user)
         @date = date
         @scale = scale
         @min_date = min_date
         @max_date = max_date
-        @limit = limit || CurrentUser.per_page
+        @limit = limit || current_user.per_page
       end
 
       def posts

@@ -7,7 +7,8 @@ class PostFlag < ApplicationRecord
   COOLDOWN_PERIOD = 1.day
   MAPPED_REASONS = FemboyFans.config.flag_reasons.to_h { |i| [i[:name], i[:reason]] }
 
-  belongs_to_creator(class_name: "User", counter_cache: "post_flag_count")
+  belongs_to_user(:creator, ip: true, clones: :updater, counter_cache: "post_flag_count")
+  resolvable(:updater)
   belongs_to(:post)
   validate(:validate_creator_is_not_limited, on: :create)
   validate(:validate_post)
@@ -20,40 +21,29 @@ class PostFlag < ApplicationRecord
 
   scope(:by_users, -> { where.not(creator: User.system) })
   scope(:by_system, -> { where(creator: User.system) })
-  scope(:in_cooldown, -> { by_users.where("created_at >= ?", COOLDOWN_PERIOD.ago) })
+  scope(:in_cooldown, -> { by_users.where(created_at: COOLDOWN_PERIOD.ago..) })
   scope(:pending, -> { by_users.where(is_resolved: false) })
+  scope(:resolved, -> { where(is_resolved: true) })
+  scope(:unresolved, -> { where(is_resolved: false) })
+  scope(:deletion, -> { where(is_deletion: true) })
+  scope(:flag, -> { where(is_deletion: false) })
+  scope(:for_creator, ->(user) { where(creator_id: u2id(user)) })
 
   attr_accessor(:parent_id, :reason_name, :force_flag)
 
   module SearchMethods
-    def post_tags_match(query)
-      where(post_id: Post.tag_match_sql(query))
+    def post_tags_match(query, user)
+      where(post_id: Post.tag_match_sql(query, user))
     end
 
-    def resolved
-      where("is_resolved = ?", true)
-    end
-
-    def unresolved
-      where("is_resolved = ?", false)
-    end
-
-    def deletion
-      where(is_deletion: true)
-    end
-
-    def for_creator(user_id)
-      where("creator_id = ?", user_id)
-    end
-
-    def search(params)
+    def search(params, user)
       q = super
 
       q = q.attribute_matches(:reason, params[:reason_matches])
       q = q.attribute_matches(:is_resolved, params[:is_resolved])
 
       q = q.where_user(:creator_id, :creator, params) do |condition, user_ids|
-        condition.where.not(creator_id: user_ids.reject { |user_id| CurrentUser.can_view_flagger?(user_id) })
+        condition.where.not(creator_id: user_ids.reject { |user_id| user.can_view_flagger?(user_id) })
       end
 
       if params[:post_id].present?
@@ -61,7 +51,7 @@ class PostFlag < ApplicationRecord
       end
 
       if params[:post_tags_match].present?
-        q = q.post_tags_match(params[:post_tags_match])
+        q = q.post_tags_match(params[:post_tags_match], user)
       end
 
       if params[:ip_addr].present?
@@ -70,9 +60,9 @@ class PostFlag < ApplicationRecord
 
       case params[:type]
       when "flag"
-        q = q.where(is_deletion: false)
+        q = q.flag
       when "deletion"
-        q = q.where(is_deletion: true)
+        q = q.deletion
       end
 
       q.apply_basic_order(params)
@@ -132,7 +122,7 @@ class PostFlag < ApplicationRecord
       end
       errors.add(:parent_id, "cannot be set to the post being flagged") if parent_post.id == post.id
     when "uploading_guidelines"
-      errors.add(:reason, "cannot be used") unless post.flaggable_for_guidelines?(CurrentUser.user)
+      errors.add(:reason, "cannot be used") unless post.flaggable_for_guidelines?(creator)
     else
       errors.add(:reason, "is not one of the available choices") unless MAPPED_REASONS.key?(reason_name)
     end
@@ -161,8 +151,8 @@ class PostFlag < ApplicationRecord
     end
   end
 
-  def resolve!
-    update_column(:is_resolved, true)
+  def resolve!(user)
+    update(is_resolved: true, updater: user)
   end
 
   def parent_post
@@ -175,7 +165,7 @@ class PostFlag < ApplicationRecord
 
   def create_post_event
     # Deletions also create flags, but they create a deletion event instead
-    PostEvent.add!(post.id, CurrentUser.user, :flag_created, reason: reason, post_flag_id: id) unless is_deletion
+    PostEvent.add!(post.id, creator, :flag_created, reason: reason, post_flag_id: id) unless is_deletion
   end
 
   def self.available_includes

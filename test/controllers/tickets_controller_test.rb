@@ -6,12 +6,12 @@ class TicketsControllerTest < ActionDispatch::IntegrationTest
   def assert_ticket_create_permissions(users, model:, **params)
     users.each do |user, allow_create|
       if allow_create
-        assert_difference(-> { Ticket.count }) do
+        assert_difference("Ticket.count") do
           post_auth(tickets_path, user, params: { ticket: { **params, model_id: model.id, model_type: model.class.name, reason: "test" } })
           assert_response(:redirect)
         end
       else
-        assert_no_difference(-> { Ticket.count }) do
+        assert_no_difference("Ticket.count") do
           post_auth(tickets_path, user, params: { ticket: { **params, model_id: @content.id, model_type: model.class.name, reason: "test" } })
           assert_response(:forbidden)
         end
@@ -30,29 +30,27 @@ class TicketsControllerTest < ActionDispatch::IntegrationTest
 
     context("update action") do
       setup do
-        as(@bad_actor) do
-          @ticket = create(:ticket, creator: @reporter, model: create(:comment))
-        end
+        @ticket = create(:ticket, creator: @reporter, model: create(:comment))
       end
 
       should("send a new dmail if the status is changed") do
-        assert_difference(-> { Dmail.count }, 2) do
+        assert_difference("Dmail.count", 2) do
           put_auth(ticket_path(@ticket), @admin, params: { ticket: { status: "approved", response: "abc" } })
         end
       end
 
       should("send a new dmail if the response is changed") do
-        assert_no_difference(-> { Dmail.count }) do
+        assert_no_difference("Dmail.count") do
           put_auth(ticket_path(@ticket), @admin, params: { ticket: { response: "abc" } })
         end
 
-        assert_difference(-> { Dmail.count }, 2) do
+        assert_difference("Dmail.count", 2) do
           put_auth(ticket_path(@ticket), @admin, params: { ticket: { response: "def", send_update_dmail: true } })
         end
       end
 
       should("reject empty responses") do
-        assert_no_changes(-> { @ticket.reload.status }) do
+        assert_no_changes("@ticket.reload.status") do
           put_auth(ticket_path(@ticket), @admin, params: { ticket: { status: "approved", response: "" } })
         end
       end
@@ -64,9 +62,7 @@ class TicketsControllerTest < ActionDispatch::IntegrationTest
 
     context("for an artist ticket") do
       setup do
-        as(@bad_actor) do
-          @content = create(:artist, creator: @bad_actor)
-        end
+        @content = create(:artist, creator: @bad_actor)
       end
 
       should("allow reporting artists") do
@@ -88,9 +84,7 @@ class TicketsControllerTest < ActionDispatch::IntegrationTest
 
     context("for a comment ticket") do
       setup do
-        as(@bad_actor) do
-          @content = create(:comment, creator: @bad_actor)
-        end
+        @content = create(:comment, creator: @bad_actor)
       end
 
       should("restrict reporting") do
@@ -110,9 +104,7 @@ class TicketsControllerTest < ActionDispatch::IntegrationTest
 
     context("for a dmail ticket") do
       setup do
-        as(@bad_actor) do
-          @content = create(:dmail, from: @bad_actor, to: @reporter, owner: @reporter)
-        end
+        @content = create(:dmail, from: @bad_actor, to: @reporter, owner: @reporter)
       end
 
       should("disallow reporting dmails you did not recieve") do
@@ -136,9 +128,7 @@ class TicketsControllerTest < ActionDispatch::IntegrationTest
 
     context("for a forum ticket") do
       setup do
-        as(@bad_actor) do
-          @content = create(:forum_topic, creator: @bad_actor).original_post
-        end
+        @content = create(:forum_topic, creator: @bad_actor).original_post
       end
 
       should("restrict reporting") do
@@ -160,9 +150,7 @@ class TicketsControllerTest < ActionDispatch::IntegrationTest
 
     context("for a pool ticket") do
       setup do
-        as(@bad_actor) do
-          @content = create(:pool, creator: @bad_actor)
-        end
+        @content = create(:pool, creator: @bad_actor)
       end
 
       should("allow reporting pools") do
@@ -184,9 +172,7 @@ class TicketsControllerTest < ActionDispatch::IntegrationTest
 
     context("for a post ticket") do
       setup do
-        as(@bad_actor) do
-          @content = create(:post, uploader: @bad_actor)
-        end
+        @content = create(:post, uploader: @bad_actor)
       end
 
       should("allow reports") do
@@ -202,9 +188,7 @@ class TicketsControllerTest < ActionDispatch::IntegrationTest
 
     context("for a post set ticket") do
       setup do
-        as(@bad_actor) do
-          @content = create(:post_set, is_public: true, creator: @bad_actor)
-        end
+        @content = create(:post_set, is_public: true, creator: @bad_actor)
       end
 
       should("disallow reporting sets you can't see") do
@@ -224,9 +208,7 @@ class TicketsControllerTest < ActionDispatch::IntegrationTest
 
     context("for a tag ticket") do
       setup do
-        as(@bad_actor) do
-          @content = create(:tag)
-        end
+        @content = create(:tag, creator: @bad_actor)
       end
 
       should("allow reporting tags") do
@@ -248,7 +230,7 @@ class TicketsControllerTest < ActionDispatch::IntegrationTest
 
     context("for a user ticket") do
       setup do
-        @content = create(:user)
+        @content = create(:user, resolvable: false)
       end
 
       should("allow reporting users") do
@@ -295,9 +277,7 @@ class TicketsControllerTest < ActionDispatch::IntegrationTest
 
     context("for a wiki page ticket") do
       setup do
-        as(@bad_actor) do
-          @content = create(:wiki_page, creator: @bad_actor)
-        end
+        @content = create(:wiki_page, creator: @bad_actor)
       end
 
       should("allow reporting wiki pages") do

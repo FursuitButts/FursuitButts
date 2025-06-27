@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
 class Notification < ApplicationRecord
-  belongs_to(:user)
+  belongs_to_user(:user)
+  resolvable(:updater)
+  resolvable(:destroyer)
   enum(:category, {
     default:             0,
     new_post:            1,
@@ -25,6 +27,10 @@ class Notification < ApplicationRecord
   store_accessor(:data, %i[post_id tag_name dmail_id dmail_title mention_id mention_type topic_id topic_title record_id record_type post_appeal_id post_replacement_id])
   store_accessor(:data, %i[user_id], prefix: true)
   after_commit(:update_unread_count)
+
+  scope(:read, -> { where(is_read: true) })
+  scope(:unread, -> { where(is_read: false) })
+  scope(:for_user, ->(user) { where(user_id: u2id(user)) })
 
   def h
     Rails.application.routes.url_helpers
@@ -90,34 +96,22 @@ class Notification < ApplicationRecord
     user.update!(unread_notification_count: user.notifications.unread.count)
   end
 
-  def mark_as_read!
-    update_column(:is_read, true)
+  def mark_as_read!(user)
+    update(is_read: true, updater: user)
     update_unread_count
 
     if dmail_id.present?
-      Dmail.find_by(id: dmail_id, is_read: false).try(:mark_as_read!)
+      Dmail.find_by(id: dmail_id, is_read: false).try(:mark_as_read!, user)
     end
   end
 
-  def mark_as_unread!
-    update_column(:is_read, false)
+  def mark_as_unread!(user)
+    update(is_read: false, updater: user)
     update_unread_count
   end
 
   module SearchMethods
-    def unread
-      where(is_read: false)
-    end
-
-    def read
-      where(is_read: true)
-    end
-
-    def for_user(user_id)
-      where(user_id: user_id)
-    end
-
-    def search(params)
+    def search(params, user)
       q = super
       q = q.attribute_matches(:category, Notification.categories.fetch(params[:category], params[:category]).to_s) if params[:category].present?
       if params[:order].present?
@@ -135,7 +129,7 @@ class Notification < ApplicationRecord
     %i[user]
   end
 
-  def visible?(user = CurrentUser.user)
+  def visible?(user)
     user.id == user_id
   end
 end

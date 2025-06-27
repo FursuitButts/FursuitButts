@@ -7,12 +7,12 @@ module StorageManager
     TEMP_DIR = "/tmp"
     attr_reader(:host, :port, :username, :password)
 
-    def initialize(host:, port:, username:, password:, **options)
+    def initialize(host:, port:, username:, password:, **)
       @host = host
       @port = port
       @username = username
       @password = password
-      super(**options)
+      super(**)
     end
 
     def open_ftp

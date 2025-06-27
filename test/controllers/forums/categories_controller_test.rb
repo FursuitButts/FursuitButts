@@ -8,10 +8,8 @@ module Forums
       setup do
         @user = create(:user)
         @admin = create(:admin_user)
-        as(@admin) do
-          @category = ForumCategory.find_by(id: FemboyFans.config.alias_implication_forum_category) || create(:forum_category)
-          @category2 = create(:forum_category, can_view: User::Levels::ADMIN, can_create: User::Levels::ADMIN)
-        end
+        @category = ForumCategory.find_by(id: FemboyFans.config.alias_implication_forum_category) || create(:forum_category)
+        @category2 = create(:forum_category, can_view: User::Levels::ADMIN, can_create: User::Levels::ADMIN)
       end
 
       context("show action") do
@@ -101,16 +99,14 @@ module Forums
           end
 
           should("restrict access") do
-            @categories = as(@admin) { create_list(:forum_category, User::Levels.constants.length) }
+            @categories = create_list(:forum_category, User::Levels.constants.length)
             assert_access(User::Levels::ADMIN, success_response: :redirect) { |user| delete_auth(forum_category_path(@categories.shift), user) }
           end
         end
 
         context("with topics") do
           setup do
-            as(@admin) do
-              @topic = create(:forum_topic, category: @category)
-            end
+            @topic = create(:forum_topic, category: @category)
           end
 
           should("fail") do
@@ -125,11 +121,9 @@ module Forums
 
       context("move_all_topics action") do
         setup do
-          as(@admin) do
-            @category3 = create(:forum_category)
-            @category4 = create(:forum_category)
-            @topic = create(:forum_topic, category: @category3)
-          end
+          @category3 = create(:forum_category)
+          @category4 = create(:forum_category)
+          @topic = create(:forum_topic, category: @category3)
         end
 
         should("work") do

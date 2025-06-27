@@ -5,6 +5,9 @@ class TagImplication < TagRelationship
 
   array_attribute(:descendant_names)
 
+  belongs_to_user(:creator, ip: true, clones: :updater)
+  belongs_to_user(:updater, ip: true)
+  belongs_to_user(:approver, optional: true)
   attr_accessor(:skip_forum)
 
   before_save(:update_descendant_names)
@@ -120,18 +123,17 @@ class TagImplication < TagRelationship
   end
 
   module ApprovalMethods
-    def process!(update_topic: true)
+    def process!(user, update_topic: true)
       tries = 0
 
       begin
-        CurrentUser.scoped(approver) do
-          update!(status: "processing")
-          CurrentUser.as_system { update_posts }
-          update(status: "active")
-          update_descendant_names_for_parents
-          forum_updater.update(approval_message(approver), "APPROVED") if update_topic
-        end
+        update!(status: "processing", updater: user)
+        update_posts
+        update!(status: "active", updater: user)
+        update_descendant_names_for_parents
+        forum_updater.update(approval_message(user), "APPROVED") if update_topic
       rescue Exception => e
+        Rails.logger.error("[TI] #{e.message}\n#{e.backtrace}")
         if tries < 5 && !Rails.env.test?
           tries += 1
           sleep(2**tries)
@@ -139,7 +141,7 @@ class TagImplication < TagRelationship
         end
 
         forum_updater.update(failure_message(e), "FAILED") if update_topic
-        update_columns(status: "error: #{e}")
+        update_columns(status: "error: #{e}", updater_id: user.id, updater_ip_addr: user.ip_addr)
       end
     end
 
@@ -155,15 +157,15 @@ class TagImplication < TagRelationship
       end
     end
 
-    def approve!(approver: CurrentUser.user, update_topic: true)
-      update(status: "queued", approver_id: approver.id)
+    def approve!(approver, update_topic: true)
+      update(status: "queued", approver: approver)
       create_undo_information
       invalidate_cached_descendants
-      TagImplicationJob.perform_later(id, update_topic)
+      TagImplicationJob.perform_later(id, update_topic, approver)
     end
 
-    def reject!(rejector: CurrentUser.user, update_topic: true)
-      update(status: "deleted")
+    def reject!(rejector, update_topic: true)
+      update(status: "deleted", updater: rejector)
       invalidate_cached_descendants
       forum_updater.update(reject_message(rejector), "REJECTED") if update_topic
     end
@@ -172,7 +174,7 @@ class TagImplication < TagRelationship
       implication = %("tag implication ##{id}":[#{Rails.application.routes.url_helpers.tag_implication_path(self)}]: [[#{antecedent_name}]] -> [[#{consequent_name}]])
 
       if previously_new_record?
-        ModAction.log!(:tag_implication_create, self, implication_desc: implication)
+        ModAction.log!(creator, :tag_implication_create, self, implication_desc: implication)
       else
         # format the changes hash more nicely.
         change_desc = saved_changes.except(:updated_at).map do |attribute, values|
@@ -185,7 +187,7 @@ class TagImplication < TagRelationship
           end
         end.join(", ")
 
-        ModAction.log!(:tag_implication_update, self, implication_desc: implication, change_desc: change_desc)
+        ModAction.log!(updater, :tag_implication_update, self, implication_desc: implication, change_desc: change_desc)
       end
     end
 
@@ -198,24 +200,23 @@ class TagImplication < TagRelationship
       )
     end
 
-    def process_undo!(update_topic: true)
+    def process_undo!(user = User.system, update_topic: true)
       unless valid?
         raise(errors.full_messages.join("; "))
       end
 
-      CurrentUser.scoped(approver) do
-        update(status: "retired")
-        CurrentUser.as_system { update_posts_undo }
-        forum_updater.update(retirement_message, "RETIRED") if update_topic
-      end
+      update(status: "retired", updater: user)
+      update_posts_undo(user)
+      forum_updater.update(retirement_message, "RETIRED") if update_topic
       tag_rel_undos.update_all(applied: true)
     end
 
-    def update_posts_undo
+    def update_posts_undo(user = User.system)
       Post.without_timeout do
         tag_rel_undos.where(applied: false).find_each do |tu|
           Post.where(id: tu.undo_data.keys).find_each do |post|
             post.automated_edit = true
+            post.updater = user
             if TagQuery.scan(tu.undo_data[post.id]).include?(consequent_name)
               Rails.logger.info("[TIU] Skipping post that already contains target tag.")
               next

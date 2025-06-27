@@ -3,7 +3,7 @@
 <% vote_counts = votes.group_by(&:score).transform_values(&:count).values_at(1, 0, -1).map(&:to_i) %>
 
 <ul class="forum-post-votes-overview forum-post-votes" id="forum-post-vote-overview-for-<%= forum_post.id %>">
-  <% if params[:controller] != "forums/posts" || votes.count > 0 %>
+  <% if params[:controller] != "forums/posts" || votes.any? %>
     <% { "fa-thumbs-up vote-score-up" => vote_counts[0], "fa-face-meh vote-score-meh" => vote_counts[1], "fa-thumbs-down vote-score-down" => vote_counts[2] }.each do |icon, count| %>
       <%= count %>
       <%= tag.i(class: "fa-regular #{icon}") %>

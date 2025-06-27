@@ -5,13 +5,13 @@ class UploadWhitelistsController < ApplicationController
   before_action(:load_whitelist, only: %i[edit update destroy])
 
   def index
-    @whitelists = authorize(UploadWhitelist).search(search_params(UploadWhitelist))
+    @whitelists = authorize(UploadWhitelist).search_current(search_params(UploadWhitelist))
                                             .paginate(params[:page], limit: params[:limit])
     respond_with(@whitelists)
   end
 
   def new
-    @whitelist = authorize(UploadWhitelist.new)
+    @whitelist = authorize(UploadWhitelist.new_with_current(:creator))
   end
 
   def edit
@@ -20,21 +20,21 @@ class UploadWhitelistsController < ApplicationController
   end
 
   def create
-    @whitelist = authorize(UploadWhitelist.new(permitted_attributes(UploadWhitelist)))
+    @whitelist = authorize(UploadWhitelist.new_with_current(:creator, permitted_attributes(UploadWhitelist)))
     @whitelist.save
     respond_with(@whitelist, location: upload_whitelists_path)
   end
 
   def update
     authorize(@whitelist)
-    @whitelist.update(permitted_attributes(@whitelist))
+    @whitelist.update_with_current(:updater, permitted_attributes(@whitelist))
     notice(@whitelist.valid? ? "Entry updated" : @whitelist.errors.full_messages.join("; "))
     redirect_to(upload_whitelists_path)
   end
 
   def destroy
     authorize(@whitelist)
-    @whitelist.destroy
+    @whitelist.destroy_with_current(:destroyer)
     respond_with(@whitelist)
   end
 
@@ -42,7 +42,7 @@ class UploadWhitelistsController < ApplicationController
     authorize(UploadWhitelist)
     begin
       url_parsed = Addressable::URI.heuristic_parse(params[:url])
-      allowed, reason = UploadWhitelist.is_whitelisted?(url_parsed)
+      allowed, reason = UploadWhitelist.is_whitelisted?(url_parsed, CurrentUser.user)
       @whitelist = {
         url:        params[:url],
         domain:     url_parsed.domain,

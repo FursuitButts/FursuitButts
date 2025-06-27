@@ -2,7 +2,7 @@
 
 class EditHistory < ApplicationRecord
   belongs_to(:versionable, polymorphic: true)
-  belongs_to(:user)
+  belongs_to_user(:updater, ip: true)
 
   VERSIONABLE_TYPES = %w[ForumPost Comment].freeze
 
@@ -10,6 +10,13 @@ class EditHistory < ApplicationRecord
 
   VALUES = %i[old_topic_id old_topic_title new_topic_id new_topic_title].freeze
   store_accessor(:extra_data, *VALUES)
+
+  scope(:edit_type, ->(type) { where(edit_type: type) })
+  scope(:hidden, -> { edit_type("hide") })
+  scope(:marked, -> { edit_type(%w[mark_warning mark_record mark_ban]) })
+  scope(:edited, -> { edit_type("edit") })
+  scope(:merged, -> { edit_type("merge") })
+  scope(:unmerged, -> { edit_type("unmerge") })
 
   EDIT_MAP = {
     hide:            "Hidden",
@@ -109,35 +116,15 @@ class EditHistory < ApplicationRecord
   end
 
   def previous
-    EditHistory.where(versionable_id: versionable_id, versionable_type: versionable_type).where("version < ?", version).order(version: :desc).first
+    EditHistory.where(versionable_id: versionable_id, versionable_type: versionable_type).where(version: ...version).order(version: :desc).first
   end
 
   module SearchMethods
-    def hidden
-      where(edit_type: "hide")
-    end
-
-    def marked
-      where(edit_type: %w[mark_warning mark_record mark_ban])
-    end
-
-    def edited
-      where(edit_type: "edit")
-    end
-
     def original
-      where(edit_type: "original", version: 1).first
+      edit_type("original").and(where(version: 1)).first
     end
 
-    def merged
-      where(edit_type: "merge")
-    end
-
-    def unmerged
-      where(edit_type: "unmerge")
-    end
-
-    def search(params)
+    def search(params, user)
       q = super
 
       if params[:versionable_type].present?
@@ -170,7 +157,7 @@ class EditHistory < ApplicationRecord
     %i[user versionable]
   end
 
-  def visible?(user = CurrentUser.user)
+  def visible?(user)
     user.is_moderator?
   end
 

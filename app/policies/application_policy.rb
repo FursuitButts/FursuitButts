@@ -109,9 +109,8 @@ class ApplicationPolicy
   end
 
   def can_use_attribute?(attr, action = nil)
-    attr = [attr] unless attr.is_a?(Array)
     permitted = action.nil? || !respond_to?("permitted_attributes_for_#{action}") ? permitted_attributes : send("permitted_attributes_for_#{action}")
-    (permitted & attr) == attr
+    Array(attr).all? { |a| permitted.include?(a) }
   end
 
   alias can_use_attributes? can_use_attribute?
@@ -121,13 +120,13 @@ class ApplicationPolicy
   end
 
   def can_search_attribute?(attr)
-    attr = [attr] unless attr.is_a?(Array)
-    (permitted_search_params & attr) == attr
+    permitted = permitted_search_params
+    Array(attr).all? { |a| permitted.include?(a) }
   end
 
   alias can_search_attributes? can_search_attribute?
 
-  def visible_for_search(relation, _attribute = nil)
+  def visible_for_search(relation)
     relation
   end
 

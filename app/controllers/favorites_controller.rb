@@ -14,9 +14,9 @@ class FavoritesController < ApplicationController
       @user = User.find(user_id)
       authorize(@user, policy_class: FavoritePolicy)
 
-      raise(User::PrivacyModeError) if @user.hide_favorites?
+      raise(User::PrivacyModeError) if @user.hide_favorites?(CurrentUser.user)
 
-      @favorite_set = PostSets::Favorites.new(@user, params[:page], limit: params[:limit])
+      @favorite_set = PostSets::Favorites.new(@user, params[:page], limit: params[:limit], current_user: CurrentUser.user)
       @favorite_set.load_view_counts! # force load view counts all at once
       respond_with(@favorite_set.posts) do |fmt|
         fmt.json do
@@ -30,7 +30,7 @@ class FavoritesController < ApplicationController
     @post = authorize(Post.find(params[:post_id]), policy_class: FavoritePolicy)
     fav = FavoriteManager.add!(user: CurrentUser.user, post: @post)
     if params[:upvote].to_s.truthy?
-      VoteManager::Posts.vote!(user: CurrentUser.user, post: @post, score: 1)
+      VoteManager::Posts.vote!(user: CurrentUser.user, ip_addr: CurrentUser.ip_addr, post: @post, score: 1)
       fav.reload
     end
     notice("You have favorited this post")
@@ -64,6 +64,6 @@ class FavoritesController < ApplicationController
   end
 
   def ensure_lockdown_disabled
-    access_denied if Security::Lockdown.favorites_disabled? && !CurrentUser.is_staff?
+    access_denied if Security::Lockdown.favorites_disabled? && !CurrentUser.user.is_staff?
   end
 end

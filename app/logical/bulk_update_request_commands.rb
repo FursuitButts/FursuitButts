@@ -23,16 +23,16 @@ module BulkUpdateRequestCommands
     all.find { |cmd| cmd.command == command } || Invalid
   end
 
-  def parse_line(line)
+  def parse_line(line, user)
     line = line.gsub(/[[:space:]]+/, " ").strip
     cmd = all.find { |c| c.matches?(line) }
     cmd = Invalid if cmd.blank?
-    cmd.new(*cmd.tokenize(line))
+    cmd.new(user, *cmd.tokenize(line))
   end
 
   # noinspection RubyUnnecessaryReturnValue
-  def parse(text)
-    commands = text.split(/\r?\n/).map { |line| parse_line(line) }
+  def parse(text, user)
+    commands = text.split(/\r?\n/).map { |line| parse_line(line, user) }
     commands = remove_excessive_commands(commands, MAX_EMPTY_LINES, EmptyLine.command, get: :command, merge: nil, consecutive: false, tokenized: false)
     commands = remove_excessive_commands(commands, MAX_COMMENTS, Comment.command, get: :command, merge: :merge_comment!, consecutive: false, tokenized: false)
     commands = remove_excessive_commands(commands, MAX_CONSECUTIVE_EMPTY_LINES, EmptyLine.command, get: :command, merge: nil, consecutive: true, tokenized: false)
@@ -91,8 +91,8 @@ module BulkUpdateRequestCommands
           if merge && prev
             index = result.index(prev)
             if tokenized
-              a = find_by_command(command).new(*prev[1..])
-              b = find_by_command(command).new(*token[1..])
+              a = find_by_command(command).new(User.system, *prev[1..])
+              b = find_by_command(command).new(User.system, *token[1..])
               c = a.public_send(merge, b)
               result[index] = [command, *c.tokenized]
             else

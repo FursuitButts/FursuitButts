@@ -53,7 +53,7 @@
   <h2>Update</h2>
   <div class='box-section'>
     <table style="margin-bottom:0px;">
-      <% if @takedown.status == "pending" || @takedown.status == "inactive" %>
+      <% if %w[pending inactive].include?(@takedown.status) %>
         <tr>
           <td><label for="status">Status</label></td>
           <td><%= select_tag("takedown[status]", options_for_select([%w[Pending pending], %w[Inactive inactive]], @takedown.status)) %>

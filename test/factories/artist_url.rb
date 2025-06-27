@@ -2,7 +2,7 @@
 
 FactoryBot.define do
   factory(:artist_url) do
-    artist
+    association(:artist)
     sequence(:url) { |n| "artist_domain_#{n}.com" }
   end
 end

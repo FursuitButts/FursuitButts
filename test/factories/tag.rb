@@ -2,6 +2,7 @@
 
 FactoryBot.define do
   factory(:tag) do
+    association(:creator, factory: :user)
     sequence(:name) { |n| "tag_name_#{n}" }
     post_count { 0 }
     category { TagCategory.general }

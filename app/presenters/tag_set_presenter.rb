@@ -151,16 +151,16 @@ class TagSetPresenter < Presenter
     if count >= 10_000
       post_count = "#{count / 1_000}k"
     elsif count >= 1_000
-      post_count = format("%.1fk", (count / 1_000.0))
+      post_count = format("%.1fk", count / 1_000.0)
     else
       post_count = count
     end
 
     is_underused_tag = count <= 1 && category == TagCategory.general
-    klass = "color-muted post-count#{is_underused_tag ? ' low-post-count' : ''}"
+    klass = "color-muted post-count#{' low-post-count' if is_underused_tag}"
     title = "New general tag detected. Check the spelling or populate it now."
 
-    html += %(<span data-count='#{count}' class="#{klass}"#{is_underused_tag ? " title='#{title}'" : ''}>#{post_count}</span>)
+    html += %(<span data-count='#{count}' class="#{klass}"#{" title='#{title}'" if is_underused_tag}>#{post_count}</span>)
     html += %(</span>)
 
     html += %(<div class="tag-actions" data-tag="#{tag.name}">)

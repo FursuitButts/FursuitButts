@@ -18,13 +18,13 @@ module BulkUpdateRequestCommands
     end
 
     def implication_is_valid
-      tag_implication = TagImplication.new(status: "pending", antecedent_name: antecedent_name, consequent_name: consequent_name)
+      tag_implication = TagImplication.new(status: "pending", antecedent_name: antecedent_name, consequent_name: consequent_name, creator: User.system)
       return if tag_implication.valid?
       errors.add(:base, "Error: #{tag_implication.errors.full_messages.join('; ')}")
     end
 
     def estimate_update_count
-      TagImplication.new(antecedent_name: antecedent_name, consequent_name: consequent_name).estimate_update_count
+      TagImplication.new(antecedent_name: antecedent_name, consequent_name: consequent_name, creator: User.system).estimate_update_count
     end
 
     def tags
@@ -51,15 +51,14 @@ module BulkUpdateRequestCommands
           ti.status = "pending"
           ti.antecedent_name = antecedent_name
           ti.consequent_name = consequent_name
-          ti.creator_id = processor.creator.id
-          ti.creator_ip_addr = processor.creator_ip_addr
+          ti.creator = processor.creator.resolvable(processor.creator_ip_addr)
         end
         unless tag_implication.valid?
           raise(ProcessingError, "Error: #{tag_implication.errors.full_messages.join('; ')} (create implication #{antecedent_name} -> #{consequent_name})")
         end
       end
 
-      tag_implication.approve!(approver: approver, update_topic: false)
+      tag_implication.approve!(approver, update_topic: false)
     end
   end
 end

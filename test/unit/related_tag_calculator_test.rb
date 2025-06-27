@@ -4,8 +4,7 @@ require("test_helper")
 
 class RelatedTagCalculatorTest < ActiveSupport::TestCase
   setup do
-    user = create(:user)
-    CurrentUser.user = user
+    @user = create(:user)
     reset_post_index
   end
 
@@ -15,7 +14,7 @@ class RelatedTagCalculatorTest < ActiveSupport::TestCase
         create(:post, tag_string: "aaa bbb ccc ddd")
         create(:post, tag_string: "aaa bbb ccc")
         create(:post, tag_string: "aaa bbb")
-        @posts = Post.tag_match("aaa").records
+        @posts = Post.tag_match("aaa", @user).records
       end
 
       should("calculate the related tags") do

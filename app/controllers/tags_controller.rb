@@ -5,7 +5,7 @@ class TagsController < ApplicationController
   respond_to(:html, :json)
 
   def index
-    @tags = authorize(Tag).search(search_params(Tag))
+    @tags = authorize(Tag).search_current(search_params(Tag))
                           .paginate(params[:page], limit: params[:limit])
     respond_with(@tags)
   end
@@ -30,17 +30,19 @@ class TagsController < ApplicationController
   def followed
     authorize(Tag)
     @user = User.find(params[:user_id] || CurrentUser.user.id)
-    raise(User::PrivacyModeError) if @user.hide_followed_tags?
+    raise(User::PrivacyModeError) if @user.hide_followed_tags?(CurrentUser.user)
 
-    @tags = @user.followed_tags.search(search_params(Tag)).paginate(params[:page], limit: params[:limit])
+    @tags = @user.followed_tags
+                 .search_current(search_params(Tag))
+                 .paginate(params[:page], limit: params[:limit])
     respond_with(@tags.map(&:tag))
   end
 
   def followers
     @tag = authorize(Tag.find(params[:id]))
     query = User.joins(:followed_tags)
-    unless CurrentUser.is_moderator?
-      query = query.where("bit_prefs & :value != :value", { value: User.flag_value_for("enable_privacy_mode") }).or(query.where(tag_followers: { user_id: CurrentUser.id }))
+    unless CurrentUser.user.is_moderator?
+      query = query.where("bit_prefs & :value != :value", { value: User.flag_value_for("enable_privacy_mode") }).or(query.where(tag_followers: { user_id: CurrentUser.user.id }))
     end
     query = query.where(tag_followers: { tag_id: @tag.id })
     query = query.order("users.name asc")
@@ -60,7 +62,7 @@ class TagsController < ApplicationController
 
   def update
     authorize(@tag)
-    @tag.update(permitted_attributes(@tag))
+    @tag.update_with_current(:updater, permitted_attributes(@tag))
     respond_with(@tag)
   end
 
@@ -76,7 +78,7 @@ class TagsController < ApplicationController
   end
 
   def follow
-    @follower = authorize(@tag).follow!
+    @follower = authorize(@tag).follow!(CurrentUser.user)
     respond_with(@follower) do |format|
       format.html { redirect_back(fallback_location: tag_path(@tag), notice: "#{@tag.name} added to followed tags") }
     end
@@ -88,7 +90,7 @@ class TagsController < ApplicationController
   end
 
   def unfollow
-    @follower = authorize(@tag).unfollow!
+    @follower = authorize(@tag).unfollow!(CurrentUser.user)
     respond_with(@follower) do |format|
       format.html { redirect_back(fallback_location: tag_path(@tag), notice: "#{@tag.name} removed from followed tags") }
     end

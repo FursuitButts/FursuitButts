@@ -43,6 +43,12 @@ class UserVotePolicy < ApplicationPolicy
     super + %i[user_name]
   end
 
+  def visible_for_search(relation)
+    q = super
+    return q if user.is_moderator?
+    q.for_user(user)
+  end
+
   protected
 
   def model

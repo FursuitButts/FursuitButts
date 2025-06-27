@@ -26,7 +26,7 @@
           <%= format_text(tag_change_message(forum_post), allow_color: true) %>
         <% end %>
 
-        <%= format_text(parse_embedded_tag_request_text(forum_post.body), allow_color: CurrentUser.id == forum_post.creator_id || (CurrentUser.is_anonymous? || !CurrentUser.disable_colors?)) %>
+        <%= format_text(parse_embedded_tag_request_text(forum_post.body), allow_color: CurrentUser.user.id == forum_post.creator_id || (CurrentUser.user.is_anonymous? || !CurrentUser.disable_colors?)) %>
       </div>
       <%= render("application/update_notice", record: forum_post) %>
       <%= render("application/warned_notice", record: forum_post) %>

@@ -55,9 +55,7 @@ module Tags
 
       context("edit action") do
         setup do
-          as(@admin) do
-            @tag_implication = create(:tag_implication, antecedent_name: "aaa", consequent_name: "bbb", status: "pending")
-          end
+          @tag_implication = create(:tag_implication, antecedent_name: "aaa", consequent_name: "bbb", status: "pending", creator: @admin)
         end
 
         should("render") do
@@ -72,9 +70,7 @@ module Tags
 
       context("update action") do
         setup do
-          as(@admin) do
-            @tag_implication = create(:tag_implication, antecedent_name: "aaa", consequent_name: "bbb")
-          end
+          @tag_implication = create(:tag_implication, antecedent_name: "aaa", consequent_name: "bbb", creator: @admin)
         end
 
         context("for a pending implication") do
@@ -115,9 +111,7 @@ module Tags
 
       context("index action") do
         setup do
-          as(@admin) do
-            @tag_implication = create(:tag_implication, antecedent_name: "aaa", consequent_name: "bbb")
-          end
+          @tag_implication = create(:tag_implication, antecedent_name: "aaa", consequent_name: "bbb", creator: @admin)
         end
 
         should("list all tag implications") do
@@ -137,9 +131,7 @@ module Tags
 
       context("approve action") do
         setup do
-          as(@admin) do
-            @tag_implication = create(:tag_implication, antecedent_name: "aaa", consequent_name: "bbb", status: "pending")
-          end
+          @tag_implication = create(:tag_implication, antecedent_name: "aaa", consequent_name: "bbb", status: "pending", creator: @admin)
         end
 
         should("approve the implication") do
@@ -159,15 +151,13 @@ module Tags
         end
 
         should("restrict access") do
-          assert_access(User::Levels::ADMIN, success_response: :redirect) { |user| put_auth(approve_tag_implication_path(as(@admin) { create(:tag_implication, antecedent_name: SecureRandom.hex(6), consequent_name: SecureRandom.hex(6), status: "pending") }), user) }
+          assert_access(User::Levels::ADMIN, success_response: :redirect) { |user| put_auth(approve_tag_implication_path(create(:tag_implication, antecedent_name: SecureRandom.hex(6), consequent_name: SecureRandom.hex(6), status: "pending", creator: @admin)), user) }
         end
       end
 
       context("destroy action") do
         setup do
-          as(@admin) do
-            @tag_implication = create(:tag_implication)
-          end
+          @tag_implication = create(:tag_implication, creator: @admin)
         end
 
         should("mark the implication as deleted") do
@@ -178,7 +168,7 @@ module Tags
         end
 
         should("restrict access") do
-          assert_access(User::Levels::ADMIN, success_response: :redirect) { |user| delete_auth(tag_implication_path(as(@admin) { create(:tag_implication, antecedent_name: SecureRandom.hex(6), consequent_name: SecureRandom.hex(6), status: "pending") }), user) }
+          assert_access(User::Levels::ADMIN, success_response: :redirect) { |user| delete_auth(tag_implication_path(create(:tag_implication, antecedent_name: SecureRandom.hex(6), consequent_name: SecureRandom.hex(6), status: "pending", creator: @admin)), user) }
         end
       end
     end

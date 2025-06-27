@@ -32,7 +32,7 @@ module BulkUpdateRequestCommands
 
     def estimate_update_count
       return 0 unless valid?
-      Post.fast_count(antecedent_name, enable_safe_mode: false, include_deleted: true)
+      Post.system_count(antecedent_name, enable_safe_mode: false, include_deleted: true)
     end
 
     def category_changes

@@ -8,4 +8,10 @@ class MaintenanceTest < ActiveSupport::TestCase
       assert_nothing_raised { Maintenance.daily }
     end
   end
+
+  context("hourly maintenance") do
+    should("work") do
+      assert_nothing_raised { Maintenance.hourly }
+    end
+  end
 end

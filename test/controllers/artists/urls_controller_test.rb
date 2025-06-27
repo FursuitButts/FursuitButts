@@ -13,9 +13,7 @@ module Artists
 
         should("render for a complex search") do
           @user = create(:user)
-          as(@user) do
-            @artist = create(:artist, name: "bkub", url_string: "-http://bkub.com")
-          end
+          @artist = create(:artist, name: "bkub", url_string: "-http://bkub.com", creator: @user)
 
           get(artist_urls_path(search: {
             artist_name: "bkub",

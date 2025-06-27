@@ -43,9 +43,7 @@ module Tags
 
       context("edit action") do
         setup do
-          as(@admin) do
-            @tag_alias = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", status: "pending")
-          end
+          @tag_alias = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", status: "pending", creator: @admin)
         end
 
         should("render") do
@@ -60,9 +58,7 @@ module Tags
 
       context("update action") do
         setup do
-          as(@admin) do
-            @tag_alias = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb")
-          end
+          @tag_alias = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", creator: @admin)
         end
 
         context("for a pending alias") do
@@ -103,9 +99,7 @@ module Tags
 
       context("index action") do
         setup do
-          as(@admin) do
-            @tag_alias = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb")
-          end
+          @tag_alias = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", creator: @admin)
         end
 
         should("list all tag alias") do
@@ -125,9 +119,7 @@ module Tags
 
       context("approve action") do
         setup do
-          as(@admin) do
-            @tag_alias = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", status: "pending")
-          end
+          @tag_alias = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", status: "pending", creator: @admin)
         end
 
         should("approve the alias") do
@@ -147,15 +139,13 @@ module Tags
         end
 
         should("restrict access") do
-          assert_access(User::Levels::ADMIN, success_response: :redirect) { |user| put_auth(approve_tag_alias_path(as(@admin) { create(:tag_alias, antecedent_name: SecureRandom.hex(6), consequent_name: SecureRandom.hex(6), status: "pending") }), user) }
+          assert_access(User::Levels::ADMIN, success_response: :redirect) { |user| put_auth(approve_tag_alias_path(create(:tag_alias, antecedent_name: SecureRandom.hex(6), consequent_name: SecureRandom.hex(6), status: "pending", creator: @admin)), user) }
         end
       end
 
       context("destroy action") do
         setup do
-          as(@admin) do
-            @tag_alias = create(:tag_alias)
-          end
+          @tag_alias = create(:tag_alias, creator: @admin)
         end
 
         should("mark the alias as deleted") do
@@ -166,7 +156,7 @@ module Tags
         end
 
         should("restrict access") do
-          assert_access(User::Levels::ADMIN, success_response: :redirect) { |user| delete_auth(tag_alias_path(as(@admin) { create(:tag_alias, antecedent_name: SecureRandom.hex(6), consequent_name: SecureRandom.hex(6), status: "pending") }), user) }
+          assert_access(User::Levels::ADMIN, success_response: :redirect) { |user| delete_auth(tag_alias_path(create(:tag_alias, antecedent_name: SecureRandom.hex(6), consequent_name: SecureRandom.hex(6), status: "pending", creator: @admin)), user) }
         end
       end
     end

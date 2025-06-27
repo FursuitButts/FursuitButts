@@ -9,13 +9,10 @@ module Forums
         setup do
           @user = create(:trusted_user, created_at: 1.month.ago)
           @admin = create(:admin_user)
-          CurrentUser.user = @admin
-          as(@user) do
-            @topic = create(:forum_topic)
-            @ogpost = @topic.original_post
-            @post = create(:forum_post, topic: @topic)
-            @target = create(:forum_topic)
-          end
+          @topic = create(:forum_topic, creator: @user)
+          @ogpost = @topic.original_post
+          @post = create(:forum_post, topic: @topic, creator: @user)
+          @target = create(:forum_topic, creator: @user)
         end
 
         context("show action") do
@@ -34,14 +31,18 @@ module Forums
               post_auth(merge_forum_topic_path(@topic), @admin, params: { forum_topic: { target_topic_id: @target.id } })
               assert_redirected_to(forum_topic_path(@target))
             end
-            assert_equal(true, @topic.reload.is_hidden?)
+
+            @topic.reload
+            @ogpost.reload
+            @post.reload
+            assert_equal(true, @topic.is_hidden?)
             assert_equal(0, @topic.posts.count)
             assert_equal(3, @target.posts.count)
-            assert_equal(@target.id, @ogpost.reload.topic_id)
-            assert_equal(@target.id, @post.reload.topic_id)
-            assert_equal(@topic.id, @ogpost.reload.original_topic_id)
-            assert_equal(@topic.id, @post.reload.original_topic_id)
-            assert_equal(@target.id, @topic.reload.merge_target_id)
+            assert_equal(@target.id, @ogpost.topic_id)
+            assert_equal(@target.id, @post.topic_id)
+            assert_equal(@topic.id, @ogpost.original_topic_id)
+            assert_equal(@topic.id, @post.original_topic_id)
+            assert_equal(@target.id, @topic.merge_target_id)
             assert_equal({ "old_topic_id" => @topic.id, "old_topic_title" => @topic.title, "new_topic_id" => @target.id, "new_topic_title" => @target.title }, EditHistory.last.extra_data)
             assert_equal("forum_topic_merge", ModAction.last.action)
           end
@@ -54,7 +55,7 @@ module Forums
 
         context("undo action") do
           setup do
-            @topic.merge_into!(@target)
+            @topic.merge_into!(@target, @admin)
           end
 
           should("render") do
@@ -63,14 +64,14 @@ module Forums
 
           should("restrict access") do
             @topics = create_list(:forum_topic, User::Levels.constants.length)
-            @topics.each { |t| t.merge_into!(@target) }
+            @topics.each { |t| t.merge_into!(@target, @admin) }
             assert_access(User::Levels::MODERATOR) { |user| get_auth(undo_merge_forum_topic_path(@topics.shift), user) }
           end
         end
 
         context("destroy action") do
           setup do
-            @topic.merge_into!(@target)
+            @topic.merge_into!(@target, @admin)
           end
 
           should("work") do
@@ -78,26 +79,30 @@ module Forums
               delete_auth(merge_forum_topic_path(@topic), @admin)
               assert_redirected_to(forum_topic_path(@topic))
             end
+
+            @topic.reload
+            @ogpost.reload
+            @post.reload
             assert_equal(2, @topic.posts.count)
             assert_equal(1, @target.posts.count)
-            assert_equal(@topic.id, @ogpost.reload.topic_id)
-            assert_equal(@topic.id, @post.reload.topic_id)
-            assert_nil(@ogpost.reload.original_topic_id)
-            assert_nil(@post.reload.original_topic_id)
-            assert_nil(@topic.reload.merge_target_id)
+            assert_equal(@topic.id, @ogpost.topic_id)
+            assert_equal(@topic.id, @post.topic_id)
+            assert_nil(@ogpost.original_topic_id)
+            assert_nil(@post.original_topic_id)
+            assert_nil(@topic.merge_target_id)
             assert_equal({ "old_topic_id" => @target.id, "old_topic_title" => @target.title, "new_topic_id" => @topic.id, "new_topic_title" => @topic.title }, EditHistory.last.extra_data)
             assert_equal("forum_topic_unmerge", ModAction.last.action)
           end
 
           should("fail gracefully if the target topic no longer exists") do
-            @target.destroy!
+            @target.destroy_with!(@admin)
             delete_auth(merge_forum_topic_path(@topic), @admin)
-            assert_response(422)
+            assert_response(:unprocessable_entity)
           end
 
           should("restrict access") do
             @topics = create_list(:forum_topic, User::Levels.constants.length)
-            @topics.each { |t| t.merge_into!(@target) }
+            @topics.each { |t| t.merge_into!(@target, @admin) }
             assert_access(User::Levels::MODERATOR, success_response: :redirect) { |user| delete_auth(merge_forum_topic_path(@topics.shift), user) }
           end
         end

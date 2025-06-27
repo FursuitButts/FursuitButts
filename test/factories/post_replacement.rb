@@ -2,8 +2,7 @@
 
 FactoryBot.define do
   factory(:post_replacement) do
-    creator { create(:user, created_at: 2.weeks.ago) }
-    creator_ip_addr { "127.0.0.1" }
+    creator { association(:user, created_at: 2.weeks.ago) }
     sequence(:reason) { |n| "post_replacement_reason#{n}" }
     post_replacement_media_asset { build(:random_post_replacement_media_asset, creator: creator, creator_ip_addr: creator_ip_addr) }
 

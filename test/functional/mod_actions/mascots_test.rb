@@ -15,9 +15,9 @@ module ModActions
       end
 
       should("parse mascot_create correctly") do
-        @mascot.destroy # duplicate md5 error otherwise
+        @mascot.destroy_with(@admin) # duplicate md5 error otherwise
         set_count!
-        @mascot = create(:mascot)
+        @mascot = create(:mascot, creator: @admin)
 
         assert_matches(
           actions: %w[mascot_create],
@@ -27,7 +27,7 @@ module ModActions
       end
 
       should("parse mascot_delete correctly") do
-        @mascot.destroy
+        @mascot.destroy_with(@admin)
 
         assert_matches(
           actions: %w[mascot_delete],
@@ -38,7 +38,7 @@ module ModActions
 
       should("parse mascot_update correctly") do
         @original = @mascot.dup
-        @mascot.update!(display_name: "xxx")
+        @mascot.update_with!(@admin, display_name: "xxx")
 
         assert_matches(
           actions: %w[mascot_update],

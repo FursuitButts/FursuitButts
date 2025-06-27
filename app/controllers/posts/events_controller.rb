@@ -6,7 +6,7 @@ module Posts
 
     def index
       @events = authorize(PostEvent).html_includes(request, :creator)
-                                    .search(search_params(PostEvent))
+                                    .search_current(search_params(PostEvent))
                                     .paginate(params[:page], limit: params[:limit])
       respond_with(@events)
     end

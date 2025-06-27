@@ -5,12 +5,10 @@ class TagRelationship < ApplicationRecord
 
   SUPPORT_HARD_CODED = true
 
-  belongs_to_creator
-  belongs_to(:approver, class_name: "User", optional: true)
   belongs_to(:forum_post, optional: true)
   belongs_to(:forum_topic, optional: true)
-  belongs_to(:antecedent_tag, class_name: "Tag", foreign_key: "antecedent_name", primary_key: "name", default: -> { Tag.find_or_create_by_name(antecedent_name) })
-  belongs_to(:consequent_tag, class_name: "Tag", foreign_key: "consequent_name", primary_key: "name", default: -> { Tag.find_or_create_by_name(consequent_name) })
+  belongs_to(:antecedent_tag, class_name: "Tag", foreign_key: "antecedent_name", primary_key: "name", default: -> { Tag.find_or_create_by_name(antecedent_name, user: creator) })
+  belongs_to(:consequent_tag, class_name: "Tag", foreign_key: "consequent_name", primary_key: "name", default: -> { Tag.find_or_create_by_name(consequent_name, user: creator) })
 
   scope(:active, -> { approved })
   scope(:approved, -> { where(status: %w[active processing queued]) })
@@ -21,7 +19,6 @@ class TagRelationship < ApplicationRecord
   scope(:duplicate_relevant, -> { where(status: %w[active processing queued pending]) })
   scope(:errored, -> { where_ilike(:status, "error: *") })
 
-  before_validation(:initialize_creator, on: :create) # TODO: see if we need this
   before_validation(:normalize_names)
   validates(:status, format: { with: /\A(active|deleted|pending|processing|queued|retired|error: .*)\Z/ })
   validates(:creator_id, :antecedent_name, :consequent_name, presence: true)
@@ -32,11 +29,6 @@ class TagRelationship < ApplicationRecord
   validates(:antecedent_name, tag_name: { disable_ascii_check: true }, if: :antecedent_name_changed?)
   validates(:consequent_name, tag_name: true, if: :consequent_name_changed?)
   validate(:antecedent_and_consequent_are_different)
-
-  def initialize_creator
-    self.creator_id = CurrentUser.user.id
-    self.creator_ip_addr = CurrentUser.ip_addr
-  end
 
   def normalize_names
     self.antecedent_name = antecedent_name.downcase.tr(" ", "_")
@@ -131,7 +123,7 @@ class TagRelationship < ApplicationRecord
       pending_first
     end
 
-    def search(params)
+    def search(params, user)
       q = super
 
       if params[:name_matches].present?
@@ -235,14 +227,15 @@ class TagRelationship < ApplicationRecord
   end
 
   def estimate_update_count
-    Post.fast_count(antecedent_name, enable_safe_mode: false, include_deleted: true)
+    Post.system_count(antecedent_name, enable_safe_mode: false, include_deleted: true)
   end
 
-  def update_posts
+  def update_posts(user = User.system)
     Post.without_timeout do
       Post.sql_raw_tag_match(antecedent_name).find_each do |post|
         post.with_lock do
           post.automated_edit = true
+          post.updater = user
           post.tag_string += " "
           post.save!
         end

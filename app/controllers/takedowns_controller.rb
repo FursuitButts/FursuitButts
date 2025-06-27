@@ -5,7 +5,7 @@ class TakedownsController < ApplicationController
   before_action(:load_takedown, except: %i[index new create count_matching_posts])
 
   def index
-    @takedowns = authorize(Takedown).search(search_params(Takedown))
+    @takedowns = authorize(Takedown).search_current(search_params(Takedown))
                                     .paginate(params[:page], limit: params[:limit])
     respond_with(@takedowns)
   end
@@ -17,7 +17,7 @@ class TakedownsController < ApplicationController
   end
 
   def new
-    @takedown = authorize(Takedown.new(permitted_attributes(Takedown)))
+    @takedown = authorize(Takedown.new_with_current(:creator, permitted_attributes(Takedown)))
     respond_with(@takedown)
   end
 
@@ -26,10 +26,10 @@ class TakedownsController < ApplicationController
   end
 
   def create
-    @takedown = authorize(Takedown.new(permitted_attributes(Takedown)))
+    @takedown = authorize(Takedown.new_with_current(:creator, permitted_attributes(Takedown)))
     @takedown.save
-    flash[:notice] = @takedown.errors.count > 0 ? @takedown.errors.full_messages.join(". ") : "Takedown created"
-    if @takedown.errors.count > 0
+    flash[:notice] = @takedown.errors.any? ? @takedown.errors.full_messages.join(". ") : "Takedown created"
+    if @takedown.errors.any?
       respond_with(@takedown)
     else
       redirect_to(takedown_path(id: @takedown.id, code: @takedown.vericode))
@@ -42,6 +42,7 @@ class TakedownsController < ApplicationController
     @takedown.notes = params[:takedown][:notes]
     @takedown.reason_hidden = params[:takedown][:reason_hidden]
     @takedown.apply_posts(params[:takedown_posts])
+    @takedown.updater = CurrentUser.user
     @takedown.save
     if @takedown.valid?
       flash[:notice] = "Takedown request updated"
@@ -53,12 +54,12 @@ class TakedownsController < ApplicationController
   end
 
   def destroy
-    authorize(@takedown).destroy
+    authorize(@takedown).destroy_with_current(:destroyer)
     respond_with(@takedown)
   end
 
   def add_by_ids
-    added = authorize(@takedown).add_posts_by_ids!(params[:post_ids])
+    added = authorize(@takedown).add_posts_by_ids!(params[:post_ids], CurrentUser.user)
     respond_with(@takedown) do |fmt|
       fmt.json do
         render(json: { added_count: added.size, added_post_ids: added })
@@ -67,7 +68,7 @@ class TakedownsController < ApplicationController
   end
 
   def add_by_tags
-    added = authorize(@takedown).add_posts_by_tags!(params[:post_tags])
+    added = authorize(@takedown).add_posts_by_tags!(params[:post_tags], CurrentUser.user)
     respond_with(@takedown) do |fmt|
       fmt.json do
         render(json: { added_count: added.size, added_post_ids: added })
@@ -82,7 +83,7 @@ class TakedownsController < ApplicationController
   end
 
   def remove_by_ids
-    authorize(@takedown).remove_posts_by_ids!(params[:post_ids])
+    authorize(@takedown).remove_posts_by_ids!(params[:post_ids], CurrentUser.user)
   end
 
   private

@@ -4,13 +4,14 @@ class MascotsController < ApplicationController
   respond_to(:html, :json)
 
   def index
-    @mascots = authorize(Mascot).with_assets.search(search_params(Mascot))
+    @mascots = authorize(Mascot).with_assets
+                                .search_current(search_params(Mascot))
                                 .paginate(params[:page], limit: params[:limit])
     respond_with(@mascots)
   end
 
   def new
-    @mascot = authorize(Mascot.new(permitted_attributes(Mascot)))
+    @mascot = authorize(Mascot.new_with_current(:creator, permitted_attributes(Mascot)))
   end
 
   def edit
@@ -18,20 +19,20 @@ class MascotsController < ApplicationController
   end
 
   def create
-    @mascot = authorize(Mascot.new(permitted_attributes(Mascot)))
+    @mascot = authorize(Mascot.new_with_current(:creator, permitted_attributes(Mascot)))
     @mascot.save
     respond_with(@mascot, location: mascots_path)
   end
 
   def update
     @mascot = authorize(Mascot.find(params[:id]))
-    @mascot.update(permitted_attributes(@mascot))
+    @mascot.update_with_current(:updater, permitted_attributes(@mascot))
     respond_with(@mascot, location: mascots_path)
   end
 
   def destroy
     @mascot = authorize(Mascot.find(params[:id]))
-    @mascot.destroy
+    @mascot.destroy_with_current(:destroyer)
     respond_with(@mascot)
   end
 end

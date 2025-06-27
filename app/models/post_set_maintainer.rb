@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class PostSetMaintainer < ApplicationRecord
-  belongs_to(:user)
+  belongs_to_user(:user)
   belongs_to(:post_set)
 
   validate(:ensure_not_set_owner, on: :create)
@@ -156,7 +156,7 @@ class PostSetMaintainer < ApplicationRecord
     %i[post_set user]
   end
 
-  def visible?(user = CurrentUser.user)
+  def visible?(user)
     user.id == user_id
   end
 end

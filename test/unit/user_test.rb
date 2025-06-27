@@ -8,16 +8,13 @@ class UserTest < ActiveSupport::TestCase
       # stubbed to true in test_helper.rb
       FemboyFans.config.stubs(:disable_throttles?).returns(false)
       @user = create(:user)
-      CurrentUser.user = @user
     end
 
     should("not validate if the originating ip address is banned") do
       assert_raises(ActiveRecord::RecordInvalid) do
-        as(create(:user)) do
-          create(:ip_ban, ip_addr: "1.2.3.4")
-        end
+        create(:ip_ban, ip_addr: "1.2.3.4")
 
-        as(User.anonymous, "1.2.3.4") do
+        CurrentUser.scoped(User.anonymous, "1.2.3.4") do # rubocop:disable Local/CurrentUserOutsideOfRequests
           create(:user, last_ip_addr: "1.2.3.4")
         end
       end
@@ -31,7 +28,7 @@ class UserTest < ActiveSupport::TestCase
 
       create_list(:post, @user.base_upload_limit - 1, uploader: @user, is_pending: true)
 
-      @user = User.find(@user.id)
+      @user = User.find(@user.id).resolvable
       assert_equal(1, @user.upload_limit)
       assert_equal(true, @user.can_upload_with_reason)
       create(:post, uploader: @user, is_pending: true)
@@ -47,17 +44,13 @@ class UserTest < ActiveSupport::TestCase
       @user.update_column(:created_at, 1.year.ago)
       user2 = create(:user, created_at: 1.year.ago)
 
-      comments = as(user2) do
-        create_list(:comment, FemboyFans.config.comment_vote_limit)
-      end
-      comments.each { |c| VoteManager::Comments.vote!(comment: c, user: @user, score: -1) }
+      comments = create_list(:comment, FemboyFans.config.comment_vote_limit, creator: user2)
+      comments.each { |c| VoteManager::Comments.vote!(comment: c, user: @user, score: -1, ip_addr: "127.0.0.1") }
       assert_equal(@user.can_comment_vote_with_reason, :REJ_LIMITED)
 
-      comment = as(user2) do
-        create(:comment)
-      end
+      comment = create(:comment, creator: user2)
       assert_raises(ActiveRecord::RecordInvalid) do
-        VoteManager::Comments.vote!(comment: comment, user: @user, score: -1)
+        VoteManager::Comments.vote!(comment: comment, user: @user, score: -1, ip_addr: "127.0.0.1")
       end
 
       CommentVote.update_all("created_at = '1990-01-01'")
@@ -72,19 +65,19 @@ class UserTest < ActiveSupport::TestCase
       @user.update_column(:level, User::Levels::MEMBER)
       @user.update_column(:created_at, 1.year.ago)
       assert(@user.can_comment_with_reason)
-      create_list(:comment, FemboyFans.config.member_comment_limit)
-      assert_equal(@user.can_comment_with_reason, :REJ_LIMITED)
+      create_list(:comment, FemboyFans.config.member_comment_limit, creator: @user)
+      assert_equal(:REJ_LIMITED, @user.can_comment_with_reason)
     end
 
     should("limit forum post/topics") do
-      assert_equal(@user.can_forum_post_with_reason, :REJ_NEWBIE)
+      assert_equal(:REJ_NEWBIE, @user.can_forum_post_with_reason)
       @user.update_column(:created_at, 1.year.ago)
-      topic = create(:forum_topic)
+      topic = create(:forum_topic, creator: @user)
       # Creating a topic automatically creates a post
       (FemboyFans.config.member_comment_limit - 1).times do
-        create(:forum_post, topic_id: topic.id)
+        create(:forum_post, topic_id: topic.id, creator: @user)
       end
-      assert_equal(@user.can_forum_post_with_reason, :REJ_LIMITED)
+      assert_equal(:REJ_LIMITED, @user.can_forum_post_with_reason)
     end
 
     should("verify") do
@@ -245,7 +238,7 @@ class UserTest < ActiveSupport::TestCase
       end
 
       should("not validate") do
-        as(nil, "127.0.0.2") do
+        CurrentUser.scoped(User.anonymous, "127.0.0.2") do # rubocop:disable Local/CurrentUserOutsideOfRequests
           @user = build(:user)
           @user.save
           assert_equal(["Last ip addr was used recently for another account and cannot be reused for another day"], @user.errors.full_messages)
@@ -255,16 +248,14 @@ class UserTest < ActiveSupport::TestCase
 
     context("that might have a banned email") do
       setup do
-        @blacklist = EmailBlacklist.create(domain: ".xyz", reason: "what", creator_id: @user.id)
+        @blacklist = create(:email_blacklist, domain: ".xyz", reason: "what")
       end
 
       should("not validate") do
-        as(nil, "127.0.0.2") do
-          @user = build(:user)
-          @user.email = "what@mine.xyz"
-          @user.save
-          assert_equal(["Email address may not be used"], @user.errors.full_messages)
-        end
+        @user = build(:user)
+        @user.email = "what@mine.xyz"
+        @user.save
+        assert_equal(["Email address may not be used"], @user.errors.full_messages)
       end
     end
 
@@ -274,9 +265,9 @@ class UserTest < ActiveSupport::TestCase
         user2 = create(:user, name: "foobar")
         user3 = create(:user, name: "bar123baz")
 
-        assert_equal([user2.id, user1.id], User.search(name_matches: "foo*").map(&:id))
-        assert_equal([user2.id], User.search(name_matches: "foo*bar").map(&:id))
-        assert_equal([user3.id], User.search(name_matches: "bar*baz").map(&:id))
+        assert_equal([user2.id, user1.id], User.search_current(name_matches: "foo*").map(&:id))
+        assert_equal([user2.id], User.search_current(name_matches: "foo*bar").map(&:id))
+        assert_equal([user3.id], User.search_current(name_matches: "bar*baz").map(&:id))
       end
     end
 

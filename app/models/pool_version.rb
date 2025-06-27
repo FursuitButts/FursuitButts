@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class PoolVersion < ApplicationRecord
-  belongs_to_updater(counter_cache: "pool_update_count")
+  belongs_to_user(:updater, ip: true, counter_cache: "pool_update_count")
   belongs_to(:pool)
   before_validation(:fill_version, on: :create)
   before_validation(:fill_changes, on: :create)
@@ -15,7 +15,7 @@ class PoolVersion < ApplicationRecord
       where("updater_id = ?", user_id)
     end
 
-    def search(params)
+    def search(params, user)
       q = super
 
       q = q.where_user(:updater_id, :updater, params)
@@ -34,12 +34,12 @@ class PoolVersion < ApplicationRecord
 
   extend(SearchMethods)
 
-  def self.queue(pool, updater, updater_ip_addr)
+  def self.queue(pool, updater)
     create({
       pool_id:         pool.id,
       post_ids:        pool.post_ids,
       updater_id:      updater.id,
-      updater_ip_addr: updater_ip_addr,
+      updater_ip_addr: updater.ip_addr,
       description:     pool.description,
       name:            pool.name,
       is_active:       pool.is_active?,
@@ -63,8 +63,8 @@ class PoolVersion < ApplicationRecord
       self.removed_post_ids = []
     end
 
-    self.description_changed = previous.nil? ? true : description != previous.description
-    self.name_changed = previous.nil? ? true : name != previous.name
+    self.description_changed = previous.nil? || description != previous.description
+    self.name_changed = previous.nil? || name != previous.name
   end
 
   def previous

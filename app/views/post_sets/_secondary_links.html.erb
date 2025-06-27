@@ -3,7 +3,7 @@
   <%= subnav_link_to("New", new_post_set_path) %>
   <%= subnav_link_to("Help", help_page_path(id: "sets")) %>
   <% if CurrentUser.user.is_member? %>
-    <%= subnav_link_to("Mine", post_sets_path(search: { creator_id: CurrentUser.id })) %>
+    <%= subnav_link_to("Mine", post_sets_path(search: { creator_id: CurrentUser.user.id })) %>
     <%= subnav_link_to("Invites", post_set_maintainers_path) %>
   <% end %>
   <% if @post_set&.id %>

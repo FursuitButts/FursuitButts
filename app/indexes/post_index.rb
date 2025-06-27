@@ -12,7 +12,7 @@ module PostIndex
           options[key] = value
         end
       end
-      super(**options)
+      super
     end
 
     def parse_pg_array(str)
@@ -117,8 +117,8 @@ module PostIndex
       batch_size = options[:batch_size] || 1000
 
       relation = all
-      relation = relation.where("id >= ?", options[:from]) if options[:from]
-      relation = relation.where("id <= ?", options[:to])   if options[:to]
+      relation = relation.where(id: (options[:from])..) if options[:from]
+      relation = relation.where(id: ..(options[:to]))   if options[:to]
       relation = relation.where(options[:query])           if options[:query]
 
       # PG returns {array,results,like,this}, so we need to parse it
@@ -246,8 +246,8 @@ module PostIndex
       batch_size = options[:batch_size] || 10_000
 
       relation = all
-      relation = relation.where("id >= ?", options[:from]) if options[:from]
-      relation = relation.where("id <= ?", options[:to])   if options[:to]
+      relation = relation.where(id: (options[:from])..) if options[:from]
+      relation = relation.where(id: ..(options[:to]))   if options[:to]
       relation = relation.where(options[:query])           if options[:query]
 
       relation.find_in_batches(batch_size: batch_size) do |batch|

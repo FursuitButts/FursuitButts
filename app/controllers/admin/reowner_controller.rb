@@ -21,17 +21,18 @@ module Admin
       end
 
       moved_post_ids = []
-      Post.tag_match("user:!#{@old_user.id} #{query}").limit(300).each do |p|
+      Post.tag_match_current("user:!#{@old_user.id} #{query}").limit(300).each do |p|
         moved_post_ids << p.id
         p.do_not_version_changes = true
-        p.update({ uploader_id: @new_user.id })
+        p.updater = CurrentUser.user
+        p.update(uploader_id: @new_user.id)
         p.versions.where(updater_id: @old_user.id).find_each do |pv|
           pv.update_column(:updater_id, @new_user.id)
           pv.update_index
         end
       end
 
-      StaffAuditLog.log!(:post_owner_reassign, CurrentUser.user, new_user_id: @new_user.id, old_user_id: @old_user.id, query: query, post_ids: moved_post_ids)
+      StaffAuditLog.log!(CurrentUser.user, :post_owner_reassign, new_user_id: @new_user.id, old_user_id: @old_user.id, query: query, post_ids: moved_post_ids)
       flash[:notice] = "Post ownership reassigned"
       redirect_back(fallback_location: new_admin_reowner_path)
     end

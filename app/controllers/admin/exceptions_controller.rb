@@ -3,7 +3,7 @@
 module Admin
   class ExceptionsController < ApplicationController
     def index
-      @exception_logs = authorize(ExceptionLog).search(search_params(ExceptionLog))
+      @exception_logs = authorize(ExceptionLog).search_current(search_params(ExceptionLog))
                                                .paginate(params[:page], limit: 100)
     end
 

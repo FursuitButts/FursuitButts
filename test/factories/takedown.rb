@@ -2,7 +2,7 @@
 
 FactoryBot.define do
   factory(:takedown) do
-    creator_ip_addr { "127.0.0.1" }
+    association(:creator, factory: :user)
     email { "takedown@example.com" }
     source { "example.com" }
     reason { "foo" }

@@ -31,7 +31,7 @@ module BulkUpdateRequestCommands
       ensure_valid!
       tag_alias = TagAlias.active.find_by(antecedent_name: antecedent_name, consequent_name: consequent_name)
       raise(ProcessingError, "Alias #{antecedent_name} -> #{consequent_name} not found") if tag_alias.nil?
-      approver.scoped { tag_alias.reject!(update_topic: false) }
+      tag_alias.reject!(approver, update_topic: false)
     end
   end
 end

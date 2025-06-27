@@ -15,7 +15,7 @@
     <% else %>
       <%= link_to_user(dmail.from) %>
       <% if policy(dmail).can_see_ip_addr? %>
-        (<%= link_to_ip(dmail.creator_ip_addr) %>)
+        (<%= link_to_ip(dmail.from_ip_addr) %>)
       <% end %>
       <p><%= compact_time(dmail.created_at) %></p>
     <% end %>

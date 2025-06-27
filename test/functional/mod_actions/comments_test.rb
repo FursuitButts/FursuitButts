@@ -10,14 +10,12 @@ module ModActions
 
     context("mod actions for comments") do
       setup do
-        as(@user) do
-          @comment = create(:comment)
-        end
+        @comment = create(:comment, creator: @user)
         set_count!
       end
 
       should("format comment_delete correctly") do
-        @comment.destroy
+        @comment.destroy_with(@admin)
 
         assert_matches(
           actions: %w[comment_delete],
@@ -29,7 +27,7 @@ module ModActions
       end
 
       should("format comment_hide correctly") do
-        @comment.hide!
+        @comment.hide!(@admin)
 
         assert_matches(
           actions: %w[comment_hide],
@@ -41,7 +39,7 @@ module ModActions
 
       should("format comment_unhide correctly") do
         @comment.update_columns(is_hidden: true)
-        @comment.unhide!
+        @comment.unhide!(@admin)
 
         assert_matches(
           actions: %w[comment_unhide],
@@ -53,7 +51,7 @@ module ModActions
 
       should("format comment_update correctly") do
         @original = @comment.dup
-        @comment.update!(body: "xxx")
+        @comment.update_with!(@admin, body: "xxx")
 
         assert_matches(
           actions: %w[comment_update],

@@ -8,17 +8,13 @@ class UserRevertTest < ActiveSupport::TestCase
       @creator = create(:user)
       @user = create(:user)
 
-      as(@creator) do
-        @parent = create(:post)
-        @post = create(:post, tag_string: "aaa bbb ccc invalid_source", rating: "q", source: "xyz")
-      end
+      @parent = create(:post, uploader: @creator)
+      @post = create(:post, tag_string: "aaa bbb ccc invalid_source", rating: "q", source: "xyz", uploader: @creator)
 
-      as(@user) do
-        @post.update(tag_string: "bbb ccc xxx invalid_source", source: "", rating: "e")
-      end
+      @post.update_with(@user, tag_string: "bbb ccc xxx invalid_source", source: "", rating: "e")
     end
 
-    subject { UserRevert.new(@user.id) }
+    subject { UserRevert.new(@user.id, @user) }
 
     should("have the correct data") do
       assert_equal("bbb ccc xxx", @post.tag_string)
@@ -28,9 +24,7 @@ class UserRevertTest < ActiveSupport::TestCase
 
     context("when processed") do
       should("revert the user's changes") do
-        as(@user) do
-          subject.process
-        end
+        subject.process
         @post.reload
 
         assert_equal("aaa bbb ccc invalid_source", @post.tag_string)
@@ -40,13 +34,11 @@ class UserRevertTest < ActiveSupport::TestCase
 
       context("when the user has an upload") do
         setup do
-          as(@user) { create(:post, uploader: @user) }
+          create(:post, uploader: @user)
         end
 
         should("not raise") do
-          as(@user) do
-            assert_nothing_raised { subject.process }
-          end
+          assert_nothing_raised { subject.process }
         end
       end
     end

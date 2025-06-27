@@ -3,11 +3,11 @@
 module Users
   class PasswordResetsController < ApplicationController
     def new
-      @nonce = UserPasswordResetNonce.new
+      @nonce = UserPasswordResetNonce.new_with_current(:user)
     end
 
     def edit
-      @nonce = UserPasswordResetNonce.where("user_id = ? AND key = ?", params[:uid], params[:key]).first
+      @nonce = UserPasswordResetNonce.find_by(user_id: params[:uid], key: params[:key])
     end
 
     def create
@@ -20,7 +20,7 @@ module Users
     end
 
     def update
-      @nonce = UserPasswordResetNonce.where("user_id = ? AND key = ?", params[:uid], params[:key]).first
+      @nonce = UserPasswordResetNonce.find_by(user_id: params[:uid], key: params[:key])
 
       if @nonce
         if @nonce.expired?

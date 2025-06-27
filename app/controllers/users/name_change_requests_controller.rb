@@ -6,7 +6,7 @@ module Users
 
     def index
       @change_requests = authorize(UserNameChangeRequest).html_includes(request, :user, :approver)
-                                                         .search(search_params(UserNameChangeRequest))
+                                                         .search_current(search_params(UserNameChangeRequest))
                                                          .paginate(params[:page], limit: params[:limit])
       respond_with(@change_requests)
     end
@@ -17,12 +17,12 @@ module Users
     end
 
     def new
-      @change_request = authorize(UserNameChangeRequest.new(permitted_attributes(UserNameChangeRequest)))
+      @change_request = authorize(UserNameChangeRequest.new_with_current(:user, permitted_attributes(UserNameChangeRequest)))
       respond_with(@change_request)
     end
 
     def create
-      @change_request = authorize(UserNameChangeRequest.new(permitted_attributes(UserNameChangeRequest)))
+      @change_request = authorize(UserNameChangeRequest.new_with_current(:user, permitted_attributes(UserNameChangeRequest)))
       @change_request.save
 
       if @change_request.valid?

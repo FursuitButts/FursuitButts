@@ -11,8 +11,8 @@
     <p><%= compact_time(asset.created_at) %></p>
   <% end %>
   <% t.column("File") do |asset| %>
-    <% if asset.visible?(CurrentUser.user) && asset.md5.present? && asset.file_url.present? %>
-      <%= link_to_if(asset.file_visible?, "show", asset.file_url) %>
+    <% if asset.visible?(CurrentUser.user) && asset.md5.present? && asset.file_url(user: CurrentUser.user).present? %>
+      <%= link_to_if(asset.file_visible?(CurrentUser.user), "show", asset.file_url(user: CurrentUser.user)) %>
       <% if asset.duplicate? && (url = asset.link_to_duplicate) %>
         <%= link_to("»", url) %>
       <% end %>

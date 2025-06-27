@@ -6,7 +6,7 @@ class CommentTest < ActiveSupport::TestCase
   context("A comment") do
     setup do
       @user = create(:user)
-      CurrentUser.user = @user
+      @mod = create(:moderator_user)
     end
 
     context("created by a limited user") do
@@ -15,7 +15,7 @@ class CommentTest < ActiveSupport::TestCase
       end
 
       should("fail creation") do
-        comment = build(:comment, post: create(:post))
+        comment = build(:comment, creator: @user)
         comment.save
         assert_equal(["Creator can not yet perform this action. Account is too new"], comment.errors.full_messages)
       end
@@ -30,7 +30,7 @@ class CommentTest < ActiveSupport::TestCase
         setup do
           @post = create(:post)
           @comment = create(:comment, post_id: @post.id)
-          @comment.destroy
+          @comment.destroy_with(@mod)
           @post.reload
         end
 
@@ -40,8 +40,7 @@ class CommentTest < ActiveSupport::TestCase
       end
 
       should("be created") do
-        post = create(:post)
-        comment = build(:comment, post: post)
+        comment = build(:comment)
         comment.save
         assert(comment.errors.empty?, comment.errors.full_messages.join(", "))
       end
@@ -94,11 +93,9 @@ class CommentTest < ActiveSupport::TestCase
         post = create(:post)
         c1 = create(:comment, post: post)
 
-        as(user2) do
-          VoteManager::Comments.vote!(user: user2, comment: c1, score: -1)
-          c1.reload
-          assert_not_equal(user2.id, c1.updater_id)
-        end
+        VoteManager::Comments.vote!(user: user2, ip_addr: "127.0.0.1", comment: c1, score: -1)
+        c1.reload
+        assert_not_equal(user2.id, c1.updater_id)
       end
 
       should("not allow duplicate votes") do
@@ -108,58 +105,54 @@ class CommentTest < ActiveSupport::TestCase
         c1 = create(:comment, post: post)
         c2 = create(:comment, post: post)
 
-        as(user2) do
-          assert_nothing_raised { VoteManager::Comments.vote!(user: user2, comment: c1, score: -1) }
-          assert_equal(:need_unvote, VoteManager::Comments.vote!(user: user2, comment: c1, score: -1)[1])
-          assert_equal(1, CommentVote.count)
-          assert_equal(-1, CommentVote.last.score)
+        assert_nothing_raised { VoteManager::Comments.vote!(user: user2, ip_addr: "127.0.0.1", comment: c1, score: -1) }
+        assert_equal(:need_unvote, VoteManager::Comments.vote!(user: user2, ip_addr: "127.0.0.1", comment: c1, score: -1)[1])
+        assert_equal(1, CommentVote.count)
+        assert_equal(-1, CommentVote.last.score)
 
-          assert_nothing_raised { VoteManager::Comments.vote!(user: user2, comment: c2, score: -1) }
-          assert_equal(2, CommentVote.count)
-        end
+        assert_nothing_raised { VoteManager::Comments.vote!(user: user2, ip_addr: "127.0.0.1", comment: c2, score: -1) }
+        assert_equal(2, CommentVote.count)
       end
 
       should("not allow upvotes by the creator") do
         user = create(:user)
         post = create(:post)
-        c1 = create(:comment, post: post)
+        c1 = create(:comment, post: post, creator: user)
 
-        exception = assert_raises(ActiveRecord::RecordInvalid) { VoteManager::Comments.vote!(user: user, comment: c1, score: 1) }
+        exception = assert_raises(ActiveRecord::RecordInvalid) { VoteManager::Comments.vote!(user: user, ip_addr: "127.0.0.1", comment: c1, score: 1) }
         assert_equal("Validation failed: You cannot vote on your own comments", exception.message)
       end
 
       should("not allow downvotes by the creator") do
         user = create(:user)
         post = create(:post)
-        c1 = create(:comment, post: post)
+        c1 = create(:comment, post: post, creator: user)
 
-        exception = assert_raises(ActiveRecord::RecordInvalid) { VoteManager::Comments.vote!(user: user, comment: c1, score: -1) }
+        exception = assert_raises(ActiveRecord::RecordInvalid) { VoteManager::Comments.vote!(user: user, ip_addr: "127.0.0.1", comment: c1, score: -1) }
         assert_equal("Validation failed: You cannot vote on your own comments", exception.message)
       end
 
       should("not allow votes on sticky comments") do
         user = create(:user)
         post = create(:post)
-        c1 = create(:comment, post: post, is_sticky: true)
+        c1 = create(:comment, post: post, is_sticky: true, creator: user)
 
-        exception = assert_raises(ActiveRecord::RecordInvalid) { VoteManager::Comments.vote!(user: user, comment: c1, score: -1) }
+        exception = assert_raises(ActiveRecord::RecordInvalid) { VoteManager::Comments.vote!(user: user, ip_addr: "127.0.0.1", comment: c1, score: -1) }
         assert_match(/You cannot vote on sticky comments/, exception.message)
       end
 
       should("allow undoing of votes") do
-        create(:user)
+        user = create(:user)
         user2 = create(:user)
         post = create(:post)
-        comment = create(:comment, post: post)
-        as(user2) do
-          VoteManager::Comments.vote!(user: user2, comment: comment, score: 1)
-          comment.reload
-          assert_equal(1, comment.score)
-          VoteManager::Comments.unvote!(user: user2, comment: comment)
-          comment.reload
-          assert_equal(0, comment.score)
-          assert_nothing_raised { VoteManager::Comments.vote!(user: user2, comment: comment, score: -1) }
-        end
+        comment = create(:comment, post: post, creator: user)
+        VoteManager::Comments.vote!(user: user2, ip_addr: "127.0.0.1", comment: comment, score: 1)
+        comment.reload
+        assert_equal(1, comment.score)
+        VoteManager::Comments.unvote!(user: user2, comment: comment)
+        comment.reload
+        assert_equal(0, comment.score)
+        assert_nothing_raised { VoteManager::Comments.vote!(user: user2, ip_addr: "127.0.0.1", comment: comment, score: -1) }
       end
 
       should("be searchable") do
@@ -167,7 +160,7 @@ class CommentTest < ActiveSupport::TestCase
         c2 = create(:comment, body: "aaa ddd")
         create(:comment, body: "eee")
 
-        matches = Comment.search(body_matches: "aaa")
+        matches = Comment.search_current(body_matches: "aaa")
         assert_equal(2, matches.count)
         assert_equal(c2.id, matches.all[0].id)
         assert_equal(c1.id, matches.all[1].id)
@@ -175,7 +168,7 @@ class CommentTest < ActiveSupport::TestCase
 
       should("default to id_desc order when searched with no options specified") do
         comms = create_list(:comment, 3)
-        matches = Comment.search({})
+        matches = Comment.search_current({})
 
         assert_equal([comms[2].id, comms[1].id, comms[0].id], matches.map(&:id))
       end
@@ -184,18 +177,16 @@ class CommentTest < ActiveSupport::TestCase
         setup do
           @post = create(:post)
           @comment = create(:comment, post_id: @post.id)
-          @mod = create(:moderator_user)
-          CurrentUser.user = @mod
         end
 
         should("create a mod action") do
           assert_difference("ModAction.count") do
-            @comment.update(body: "nope")
+            @comment.update_with(@mod, body: "nope")
           end
         end
 
         should("credit the moderator as the updater") do
-          @comment.update(body: "test")
+          @comment.update_with(@mod, body: "test")
           assert_equal(@mod.id, @comment.updater_id)
         end
       end
@@ -203,18 +194,16 @@ class CommentTest < ActiveSupport::TestCase
       context("that is hidden by a moderator") do
         setup do
           @comment = create(:comment)
-          @mod = create(:moderator_user)
-          CurrentUser.user = @mod
         end
 
         should("create a mod action") do
-          assert_difference(-> { ModAction.count }, 1) do
-            @comment.update(is_hidden: true)
+          assert_difference("ModAction.count", 1) do
+            @comment.update_with(@mod, is_hidden: true)
           end
         end
 
         should("credit the moderator as the updater") do
-          @comment.update(is_hidden: true)
+          @comment.update_with(@mod, is_hidden: true)
           assert_equal(@mod.id, @comment.updater_id)
         end
       end
@@ -222,18 +211,16 @@ class CommentTest < ActiveSupport::TestCase
       context("that is stickied by a moderator") do
         setup do
           @comment = create(:comment)
-          @mod = create(:moderator_user)
-          CurrentUser.user = @mod
         end
 
         should("create a mod action") do
-          assert_difference(-> { ModAction.count }, 1) do
-            @comment.update(is_sticky: true)
+          assert_difference("ModAction.count", 1) do
+            @comment.update_with(@mod, is_sticky: true)
           end
         end
 
         should("credit the moderator as the updater") do
-          @comment.update(is_sticky: true)
+          @comment.update_with(@mod, is_sticky: true)
           assert_equal(@mod.id, @comment.updater_id)
         end
       end
@@ -244,8 +231,8 @@ class CommentTest < ActiveSupport::TestCase
         end
 
         should("create a mod action") do
-          assert_difference(-> { ModAction.count }, 1) do
-            @comment.destroy
+          assert_difference("ModAction.count", 1) do
+            @comment.destroy_with(@mod)
           end
         end
       end
@@ -315,7 +302,7 @@ class CommentTest < ActiveSupport::TestCase
     context("when modified") do
       setup do
         @post = create(:post)
-        @comment = create(:comment, post_id: @post.id)
+        @comment = create(:comment, post_id: @post.id, creator: @user)
         original_body = @comment.body
         @comment.class_eval do
           after_save do
@@ -336,15 +323,14 @@ class CommentTest < ActiveSupport::TestCase
           throw("history is nil (#{comment.id}:#{edit_type}:#{user}:#{comment.creator_id})") if history.nil?
           assert_equal(comment.body_history[history.version - 1], history.body, "history body did not match")
           assert_equal(edit_type, history.edit_type, "history edit_type did not match")
-          assert_equal(user, history.user_id, "history user_id did not match")
+          assert_equal(user, history.updater_id, "history updater_id did not match")
         end
       end
 
       should("create edit histories when body is changed") do
-        @mod = create(:moderator_user)
         assert_difference("EditHistory.count", 3) do
-          @comment.update(body: "test")
-          as(@mod) { @comment.update(body: "test2") }
+          @comment.update_with(@user, body: "test")
+          @comment.update_with(@mod, body: "test2")
 
           original, edit, edit2 = EditHistory.where(versionable_id: @comment.id).order(version: :asc)
           verify_history(original, @comment, "original", @user.id)
@@ -354,10 +340,9 @@ class CommentTest < ActiveSupport::TestCase
       end
 
       should("create edit histories when hidden is changed") do
-        @mod = create(:moderator_user)
         assert_difference("EditHistory.count", 3) do
-          @comment.hide!
-          as(@mod) { @comment.unhide! }
+          @comment.hide!(@user)
+          @comment.unhide!(@mod)
 
           original, hide, unhide = EditHistory.where(versionable_id: @comment.id).order(version: :asc)
           verify_history(original, @comment, "original")
@@ -367,11 +352,10 @@ class CommentTest < ActiveSupport::TestCase
       end
 
       should("create edit histories when sticky is changed") do
-        @mod = create(:moderator_user)
         assert_difference("EditHistory.count", 3) do
-          as(@mod) { @comment.update(is_sticky: true) }
+          @comment.update_with(@mod, is_sticky: true)
 
-          as(@mod) { @comment.update(is_sticky: false) }
+          @comment.update_with(@mod, is_sticky: false)
           original, stick, unstick = EditHistory.where(versionable_id: @comment.id).order(version: :asc)
           verify_history(original, @comment, "original")
           verify_history(stick, @comment, "stick", @mod.id)
@@ -380,25 +364,22 @@ class CommentTest < ActiveSupport::TestCase
       end
 
       should("create edit histories when warning is changed") do
-        @mod = create(:moderator_user)
         assert_difference("EditHistory.count", 7) do
-          as(@mod) do
-            @comment.user_warned!("warning", @mod)
-            @comment.remove_user_warning!
-            @comment.user_warned!("record", @mod)
-            @comment.remove_user_warning!
-            @comment.user_warned!("ban", @mod)
-            @comment.remove_user_warning!
+          @comment.user_warned!("warning", @mod)
+          @comment.remove_user_warning!(@mod)
+          @comment.user_warned!("record", @mod)
+          @comment.remove_user_warning!(@mod)
+          @comment.user_warned!("ban", @mod)
+          @comment.remove_user_warning!(@mod)
 
-            original, warn, unmark1, record, unmark2, ban, unmark3 = EditHistory.where(versionable_id: @comment.id).order(version: :asc)
-            verify_history(original, @comment, "original")
-            verify_history(warn, @comment, "mark_warning", @mod.id)
-            verify_history(unmark1, @comment, "unmark", @mod.id)
-            verify_history(record, @comment, "mark_record", @mod.id)
-            verify_history(unmark2, @comment, "unmark", @mod.id)
-            verify_history(ban, @comment, "mark_ban", @mod.id)
-            verify_history(unmark3, @comment, "unmark", @mod.id)
-          end
+          original, warn, unmark1, record, unmark2, ban, unmark3 = EditHistory.where(versionable_id: @comment.id).order(version: :asc)
+          verify_history(original, @comment, "original")
+          verify_history(warn, @comment, "mark_warning", @mod.id)
+          verify_history(unmark1, @comment, "unmark", @mod.id)
+          verify_history(record, @comment, "mark_record", @mod.id)
+          verify_history(unmark2, @comment, "unmark", @mod.id)
+          verify_history(ban, @comment, "mark_ban", @mod.id)
+          verify_history(unmark3, @comment, "unmark", @mod.id)
         end
       end
     end

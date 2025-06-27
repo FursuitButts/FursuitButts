@@ -10,14 +10,14 @@ module ModActions
 
     context("mod actions for quick rules") do
       setup do
-        @quick = create(:quick_rule)
+        @quick = create(:quick_rule, creator: @admin)
         @rule = @quick.rule
         set_count!
       end
 
       context("quick_rule_create") do
         should("format with reason correctly") do
-          @quick = create(:quick_rule, rule: @rule)
+          @quick = create(:quick_rule, rule: @rule, creator: @admin)
 
           assert_matches(
             actions: %w[quick_rule_create],
@@ -29,7 +29,7 @@ module ModActions
         end
 
         should("format with header correctly") do
-          @quick = create(:quick_rule, rule: @rule, header: "header")
+          @quick = create(:quick_rule, rule: @rule, header: "header", creator: @admin)
 
           assert_matches(
             actions: %w[quick_rule_create],
@@ -43,7 +43,7 @@ module ModActions
 
       context("quick_rule_delete") do
         should("format with reason correctly") do
-          @quick.destroy
+          @quick.destroy_with(@admin)
 
           assert_matches(
             actions: %w[quick_rule_delete],
@@ -56,7 +56,7 @@ module ModActions
 
         should("format with header correctly") do
           @quick.update_columns(header: "Test")
-          @quick.destroy
+          @quick.destroy_with(@admin)
 
           assert_matches(
             actions: %w[quick_rule_delete],
@@ -69,7 +69,7 @@ module ModActions
       end
 
       should("format quick_rules_reorder correctly") do
-        QuickRule.log_reorder(2)
+        QuickRule.log_reorder(2, @admin)
 
         assert_matches(
           actions: %w[quick_rules_reorder],
@@ -85,7 +85,7 @@ module ModActions
         end
 
         should("format reason changes correctly") do
-          @quick.update!(reason: "aaa")
+          @quick.update_with!(@admin, reason: "aaa")
 
           assert_matches(
             actions:    %w[quick_rule_update],
@@ -102,7 +102,7 @@ module ModActions
         end
 
         should("format header changes correctly") do
-          @quick.update!(header: "aaa")
+          @quick.update_with!(@admin, header: "aaa")
 
           assert_matches(
             actions:    %w[quick_rule_update],
@@ -119,7 +119,7 @@ module ModActions
         end
 
         should("format all changes correctly") do
-          @quick.update!(reason: "aaa", header: "bbb")
+          @quick.update_with!(@admin, reason: "aaa", header: "bbb")
 
           assert_matches(
             actions:    %w[quick_rule_update],

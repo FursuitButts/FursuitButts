@@ -7,11 +7,9 @@ class ArtistsControllerTest < ActionDispatch::IntegrationTest
     setup do
       @admin = create(:admin_user)
       @user = create(:janitor_user)
-      as(@user) do
-        @artist = create(:artist, notes: "message")
-        @masao = create(:artist, name: "masao", url_string: "http://www.pixiv.net/member.php?id=32777")
-        @artgerm = create(:artist, name: "artgerm", url_string: "http://artgerm.deviantart.com/")
-      end
+      @artist = create(:artist, notes: "message")
+      @masao = create(:artist, name: "masao", url_string: "http://www.pixiv.net/member.php?id=32777")
+      @artgerm = create(:artist, name: "artgerm", url_string: "http://artgerm.deviantart.com/")
     end
 
     context("new action") do
@@ -130,9 +128,7 @@ class ArtistsControllerTest < ActionDispatch::IntegrationTest
 
     context("with an artist that has notes") do
       setup do
-        as(@admin) do
-          @artist = create(:artist, name: "aaa", notes: "testing", url_string: "http://example.com")
-        end
+        @artist = create(:artist, name: "aaa", notes: "testing", url_string: "http://example.com")
         @wiki_page = @artist.wiki_page
         @another_user = create(:user)
       end
@@ -154,9 +150,7 @@ class ArtistsControllerTest < ActionDispatch::IntegrationTest
         old_updater_id = @wiki_page.updater_id
 
         travel_to(1.minute.from_now) do
-          as(@another_user) do
-            @artist.update(notes: "testing")
-          end
+          @artist.update_with(@another_user, notes: "testing")
         end
 
         @artist.reload
@@ -215,17 +209,13 @@ class ArtistsControllerTest < ActionDispatch::IntegrationTest
 
     context("revert action") do
       should("work") do
-        as(@user) do
-          @artist.update(name: "xyz")
-          @artist.update(name: "abc")
-        end
+        @artist.update_with(@user, name: "xyz")
+        @artist.update_with(@user, name: "abc")
         put_auth(revert_artist_path(@artist), @user, params: { version_id: @artist.versions.first.id })
       end
 
       should("not allow reverting to a previous version of another artist") do
-        as(@user) do
-          @artist2 = create(:artist)
-        end
+        @artist2 = create(:artist)
         put_auth(artist_path(@artist), @user, params: { version_id: @artist2.versions.first.id })
         @artist.reload
         assert_not_equal(@artist.name, @artist2.name)
@@ -239,8 +229,7 @@ class ArtistsControllerTest < ActionDispatch::IntegrationTest
 
     context("with a dnp entry") do
       setup do
-        @owner_user      = create(:owner_user)
-        CurrentUser.user = @owner_user
+        @owner_user = create(:owner_user)
         @avoid_posting = create(:avoid_posting, artist: @artist)
       end
 
@@ -252,7 +241,7 @@ class ArtistsControllerTest < ActionDispatch::IntegrationTest
 
       # technical restriction
       should("not allow destroying even if the dnp is inactive") do
-        @avoid_posting.update(is_active: false)
+        @avoid_posting.update_columns(is_active: false)
         assert_no_difference("Artist.count") do
           delete_auth(artist_path(@artist), @owner_user)
         end

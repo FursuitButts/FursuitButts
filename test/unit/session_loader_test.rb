@@ -5,15 +5,7 @@ require("test_helper")
 class SessionLoaderTest < ActiveSupport::TestCase
   context("SessionLoader") do
     setup do
-      @request = mock
-      @request.stubs(:host).returns("localhost")
-      @request.stubs(:remote_ip).returns("127.0.0.1")
-      @request.stubs(:authorization).returns(nil)
-      cookie_jar = mock
-      cookie_jar.stubs(:encrypted).returns({})
-      @request.stubs(:cookie_jar).returns(cookie_jar)
-      @request.stubs(:parameters).returns({})
-      @request.stubs(:session).returns({})
+      @request = mock_request
     end
 
     context(".safe_mode?") do
@@ -21,14 +13,14 @@ class SessionLoaderTest < ActiveSupport::TestCase
         FemboyFans.config.stubs(:safe_mode?).returns(true)
         SessionLoader.new(@request).load
 
-        assert_equal(true, CurrentUser.safe_mode?)
+        assert_equal(true, CurrentUser.safe_mode?) # rubocop:disable Local/CurrentUserOutsideOfRequests
       end
 
       should("return false if the config has safe mode disabled") do
         FemboyFans.config.stubs(:safe_mode?).returns(false)
         SessionLoader.new(@request).load
 
-        assert_equal(false, CurrentUser.safe_mode?)
+        assert_equal(false, CurrentUser.safe_mode?) # rubocop:disable Local/CurrentUserOutsideOfRequests
       end
 
       should("return true if the user has enabled the safe mode account setting") do
@@ -36,7 +28,7 @@ class SessionLoaderTest < ActiveSupport::TestCase
         @request.stubs(:session).returns(user_id: @user.id, ph: @user.password_token)
         SessionLoader.new(@request).load
 
-        assert_equal(true, CurrentUser.safe_mode?)
+        assert_equal(true, CurrentUser.safe_mode?) # rubocop:disable Local/CurrentUserOutsideOfRequests
       end
     end
   end

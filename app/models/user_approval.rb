@@ -2,16 +2,16 @@
 
 class UserApproval < ApplicationRecord
   class ValidationError < StandardError; end
-  belongs_to_updater(optional: true)
-  belongs_to(:user)
-  enum(status: {
+  belongs_to_user(:user)
+  belongs_to_user(:updater, ip: true, optional: true)
+  enum(:status, {
     pending:  "pending",
     approved: "approved",
     rejected: "rejected",
   })
 
   module SearchMethods
-    def search(params)
+    def search(params, user)
       q = super
 
       q = q.where_user(:user_id, :user, params)
@@ -33,26 +33,26 @@ class UserApproval < ApplicationRecord
       (user.is_restricted? && status != "approved") || (user.level == User::Levels::MEMBER && status == "approved")
     end
 
-    def approve!
+    def approve!(user)
       errors.add(:user, "is not approvable") unless is_approvable?
       return if errors.any?
 
-      update(status: "approved")
+      update(status: "approved", updater: user)
       user.update(level: User::Levels::MEMBER)
-      text = WikiPage.safe_wiki(FemboyFans.config.user_approved_wiki_page).body.gsub("%USER_NAME%", CurrentUser.name).gsub("%USER_ID%", CurrentUser.id.to_s)
+      text = WikiPage.safe_wiki(FemboyFans.config.user_approved_wiki_page).body.gsub("%USER_NAME%", updater_name).gsub("%USER_ID%", updater_id.to_s)
       Dmail.create_automated(to: user, title: "Your account has been approved", body: text)
-      ModAction.log!(:user_approve, self, user_id: user.id)
+      ModAction.log!(updater, :user_approve, self, user_id: user_id)
     end
 
-    def reject!
+    def reject!(user)
       errors.add(:user, "is not rejectable") unless is_rejectable?
       return if errors.any?
 
-      update(status: "rejected")
+      update(status: "rejected", updater: user)
       user.update(level: User::Levels::REJECTED)
-      text = WikiPage.safe_wiki(FemboyFans.config.user_rejected_wiki_page).body.gsub("%USER_NAME%", CurrentUser.name).gsub("%USER_ID%", CurrentUser.id.to_s)
+      text = WikiPage.safe_wiki(FemboyFans.config.user_rejected_wiki_page).body.gsub("%USER_NAME%", updater_name).gsub("%USER_ID%", updater_id.to_s)
       Dmail.create_automated(to: user, title: "Your account has been rejected", body: text)
-      ModAction.log!(:user_reject, self, user_id: user.id)
+      ModAction.log!(updater, :user_reject, self, user_id: user_id)
     end
   end
 

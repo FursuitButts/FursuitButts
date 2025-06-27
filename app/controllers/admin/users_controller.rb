@@ -6,7 +6,7 @@ module Admin
 
     def alt_list
       authorize(%i[admin user])
-      offset = params[:page].to_i || 1
+      offset = params[:page].to_i
       offset -= 1
       offset = offset.clamp(0, 9999)
       offset *= 250
@@ -31,7 +31,7 @@ module Admin
     def update
       @user = authorize([:admin, User.find(params[:id])])
       raise(User::PrivilegeError) unless @user.can_admin_edit?(CurrentUser.user)
-      edit = @user.admin_edit(CurrentUser.user, permitted_attributes([:admin, @user]))
+      edit = @user.admin_edit(CurrentUser.user, CurrentUser.ip_addr, permitted_attributes([:admin, @user]))
       edit.apply
       notice(@user.errors.any? ? "Update failed" : "User updated")
       respond_with(@user)

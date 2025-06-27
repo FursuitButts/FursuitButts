@@ -17,33 +17,32 @@ class ArtistTest < ActiveSupport::TestCase
 
   context("An artist") do
     setup do
-      user = create(:user, created_at: 1.month.ago)
-      CurrentUser.user = user
+      @user = create(:user, created_at: 1.month.ago)
     end
 
     should("parse inactive urls") do
-      @artist = Artist.create(name: "blah", url_string: "-http://monet.com")
+      @artist = create(:artist, name: "blah", url_string: "-http://monet.com")
       assert_equal(["-http://monet.com"], @artist.urls.map(&:to_s))
       assert_not(@artist.urls[0].is_active?)
     end
 
     should("not allow duplicate active+inactive urls") do
-      @artist = Artist.create(name: "blah", url_string: "-http://monet.com\nhttp://monet.com")
+      @artist = create(:artist, name: "blah", url_string: "-http://monet.com\nhttp://monet.com")
       assert_equal(1, @artist.urls.count)
       assert_equal(["-http://monet.com"], @artist.urls.map(&:to_s))
       assert_not(@artist.urls[0].is_active?)
     end
 
     should("allow deactivating a url") do
-      @artist = Artist.create(name: "blah", url_string: "http://monet.com")
-      @artist.update(url_string: "-http://monet.com")
+      @artist = create(:artist, name: "blah", url_string: "http://monet.com")
+      @artist.update_with(@user, url_string: "-http://monet.com")
       assert_equal(1, @artist.urls.count)
       assert_not(@artist.urls[0].is_active?)
     end
 
     should("allow activating a url") do
-      @artist = Artist.create(name: "blah", url_string: "-http://monet.com")
-      @artist.update(url_string: "http://monet.com")
+      @artist = create(:artist, name: "blah", url_string: "-http://monet.com")
+      @artist.update_with(@user, url_string: "http://monet.com")
       assert_equal(1, @artist.urls.count)
       assert(@artist.urls[0].is_active?)
     end
@@ -184,29 +183,29 @@ class ArtistTest < ActiveSupport::TestCase
     should("search on its name should return results") do
       create(:artist, name: "artist")
 
-      assert_not_nil(Artist.search(name: "artist").first)
-      assert_not_nil(Artist.search(any_name_matches: "artist").first)
-      assert_not_nil(Artist.search(any_name_matches: "*art*").first)
+      assert_not_nil(Artist.search({ name: "artist" }, @user).first)
+      assert_not_nil(Artist.search({ any_name_matches: "artist" }, @user).first)
+      assert_not_nil(Artist.search({ any_name_matches: "*art*" }, @user).first)
     end
 
     should("search on other names should return matches") do
       create(:artist, name: "artist", other_names_string: "aaa ccc_ddd")
 
-      assert_nil(Artist.search(any_other_name_like: "*artist*").first)
-      assert_not_nil(Artist.search(any_other_name_like: "*aaa*").first)
-      assert_not_nil(Artist.search(any_other_name_like: "*ccc_ddd*").first)
-      assert_not_nil(Artist.search(name: "artist").first)
-      assert_not_nil(Artist.search(any_name_matches: "aaa").first)
-      assert_not_nil(Artist.search(any_name_matches: "*a*").first)
+      assert_nil(Artist.search({ any_other_name_like: "*artist*" }, @user).first)
+      assert_not_nil(Artist.search({ any_other_name_like: "*aaa*" }, @user).first)
+      assert_not_nil(Artist.search({ any_other_name_like: "*ccc_ddd*" }, @user).first)
+      assert_not_nil(Artist.search({ name: "artist" }, @user).first)
+      assert_not_nil(Artist.search({ any_name_matches: "aaa" }, @user).first)
+      assert_not_nil(Artist.search({ any_name_matches: "*a*" }, @user).first)
     end
 
     should("search on url and return matches") do
       bkub = create(:artist, name: "bkub", url_string: "http://bkub.com")
 
-      assert_equal([bkub.id], Artist.search(url_matches: "bkub").map(&:id))
-      assert_equal([bkub.id], Artist.search(url_matches: "*bkub*").map(&:id))
-      assert_equal([], Artist.search(url_matches: "*rifyu*").map(&:id))
-      assert_equal([bkub.id], Artist.search(url_matches: "http://bkub.com/test.jpg").map(&:id))
+      assert_equal([bkub.id], Artist.search({ url_matches: "bkub" }, @user).map(&:id))
+      assert_equal([bkub.id], Artist.search({ url_matches: "*bkub*" }, @user).map(&:id))
+      assert_equal([], Artist.search({ url_matches: "*rifyu*" }, @user).map(&:id))
+      assert_equal([bkub.id], Artist.search({ url_matches: "http://bkub.com/test.jpg" }, @user).map(&:id))
     end
 
     should("search on has_tag and return matches") do
@@ -214,8 +213,8 @@ class ArtistTest < ActiveSupport::TestCase
       bkub = create(:artist, name: "bkub")
       none = create(:artist, name: "none")
 
-      assert_equal(bkub.id, Artist.search(has_tag: "true").first.id)
-      assert_equal(none.id, Artist.search(has_tag: "false").first.id)
+      assert_equal(bkub.id, Artist.search({ has_tag: "true" }, @user).first.id)
+      assert_equal(none.id, Artist.search({ has_tag: "false" }, @user).first.id)
     end
 
     should("revert to prior versions") do
@@ -233,13 +232,12 @@ class ArtistTest < ActiveSupport::TestCase
 
       first_version = ArtistVersion.first
       assert_equal(%w[yyy], first_version.other_names)
-      artist.revert_to!(first_version)
+      artist.revert_to!(first_version, @user)
       artist.reload
       assert_equal(%w[yyy], artist.other_names)
     end
 
     should("update the category of the tag when created") do
-      CurrentUser.user = create(:janitor_user)
       tag = create(:tag, name: "abc")
       create(:artist, name: "abc")
       tag.reload
@@ -294,27 +292,26 @@ class ArtistTest < ActiveSupport::TestCase
       end
 
       should("log the correct data when renamed") do
-        @artist.update(name: "new_name")
+        @artist.update_with(@user, name: "new_name")
         assert_equal({ "new_name" => "new_name", "old_name" => "test" }, ModAction.last.values)
       end
 
       should("log the correct data when linked/unlinked") do
         user = create(:user)
 
-        @artist.update(linked_user: user)
+        @artist.update_with(@user, linked_user: user)
         mod_action = ModAction.last
         assert_equal("artist_user_link", mod_action.action)
         assert_equal({ "user_id" => user.id }, mod_action.values)
 
-        @artist.update(linked_user: nil)
+        @artist.update_with(@user, linked_user: nil)
         mod_action = ModAction.last
         assert_equal("artist_user_unlink", mod_action.action)
         assert_equal({ "user_id" => user.id }, mod_action.values)
       end
 
       should("fail if the user is limited") do
-        @artist.url_string = "https://femboy.fan"
-        as(create(:user)) { @artist.save }
+        @artist.update_with(@user, url_string: "https://femboy.fan")
 
         @artist.reload
         assert_equal("https://femboy.fan", @artist.url_string)
@@ -322,9 +319,8 @@ class ArtistTest < ActiveSupport::TestCase
         FemboyFans.config.stubs(:disable_throttles?).returns(false)
         FemboyFans.config.stubs(:artist_edit_limit).returns(0)
 
-        @artist.url_string = ""
         assert_no_difference(-> { ArtistVersion.count }) do
-          as(create(:user)) { @artist.save }
+          @artist.update_with(@user, url_string: "")
         end
 
         @artist.reload
@@ -332,17 +328,15 @@ class ArtistTest < ActiveSupport::TestCase
       end
 
       should("not change urls when locked") do
-        @artist.url_string = "https://femboy.fan"
-        as(create(:user)) { @artist.save }
+        @artist.update_with(@user, url_string: "https://femboy.fan")
 
         @artist.reload
         assert_equal("https://femboy.fan", @artist.url_string)
 
         @artist.update_column(:is_locked, true)
 
-        @artist.url_string = "https://sfw.femboy.fan"
         assert_no_difference(-> { ArtistVersion.count }) do
-          as(create(:user)) { @artist.save }
+          @artist.update_with(@user, url_string: "https://sfw.femboy.fan")
         end
 
         @artist.reload
@@ -350,16 +344,14 @@ class ArtistTest < ActiveSupport::TestCase
       end
 
       should("not change notes when locked") do
-        @artist.notes = "abababab"
-        as(create(:user)) { @artist.save }
+        @artist.update_with(@user, notes: "abababab")
 
         assert_equal("abababab", @artist.wiki_page.body)
 
         @artist.wiki_page.update_columns(protection_level: User::Levels::JANITOR)
 
-        @artist.notes = "babababa"
         assert_no_difference(-> { ArtistVersion.count }) do
-          as(create(:user)) { @artist.save }
+          @artist.update_with(@user, notes: "babababa")
         end
 
         assert_equal("abababab", @artist.wiki_page.body)

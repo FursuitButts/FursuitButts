@@ -10,12 +10,12 @@ module ModActions
 
     context("mod actions for avoid posting entries") do
       setup do
-        @avoid_posting = create(:avoid_posting)
+        @avoid_posting = create(:avoid_posting, creator: @admin)
         set_count!
       end
 
       should("parse avoid_posting_create correctly") do
-        @avoid_posting = create(:avoid_posting)
+        @avoid_posting = create(:avoid_posting, creator: @admin)
 
         assert_matches(
           actions:     %w[avoid_posting_create],
@@ -26,7 +26,7 @@ module ModActions
       end
 
       should("parse avoid_posting_delete correctly") do
-        @avoid_posting.update(is_active: false)
+        @avoid_posting.update_with!(@admin, is_active: false)
 
         assert_matches(
           actions:     %w[avoid_posting_delete],
@@ -36,8 +36,8 @@ module ModActions
         )
       end
 
-      should("parse avoid_posting_destroy correctly") do
-        @avoid_posting.destroy
+      should("parse avoid_posting_destroy_with(@admin) correctly") do
+        @avoid_posting.destroy_with(@admin)
 
         assert_matches(
           actions:     %w[avoid_posting_destroy],
@@ -49,7 +49,7 @@ module ModActions
 
       should("parse avoid_posting_undelete correctly") do
         @avoid_posting.update_columns(is_active: false)
-        @avoid_posting.update(is_active: true)
+        @avoid_posting.update_with!(@admin, is_active: true)
 
         assert_matches(
           actions:     %w[avoid_posting_undelete],
@@ -60,7 +60,7 @@ module ModActions
       end
 
       should("parse avoid_posting_update correctly") do
-        @avoid_posting.update(details: "foo")
+        @avoid_posting.update_with!(@admin, details: "foo")
 
         assert_matches(
           actions:     %w[avoid_posting_update],

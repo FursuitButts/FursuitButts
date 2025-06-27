@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 class NewsUpdate < ApplicationRecord
-  belongs_to_creator
-  belongs_to_updater
+  belongs_to_user(:creator, ip: true, clones: :updater)
+  belongs_to_user(:updater, ip: true)
+  resolvable(:destroyer)
 
   validates(:message, length: { minimum: 1, maximum: FemboyFans.config.news_update_max_size })
 

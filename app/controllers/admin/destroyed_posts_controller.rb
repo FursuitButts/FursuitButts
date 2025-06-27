@@ -6,7 +6,7 @@ module Admin
 
     def index
       @destroyed_posts = authorize(DestroyedPost).html_includes(request, :destroyer, :uploader)
-                                                 .search(search_params(DestroyedPost))
+                                                 .search_current(search_params(DestroyedPost))
                                                  .paginate(params[:page], limit: params[:limit])
     end
 
@@ -17,7 +17,7 @@ module Admin
 
     def update
       @destroyed_post = authorize(DestroyedPost.find_by!(post_id: params[:id]))
-      @destroyed_post.update(permitted_attributes(@destroyed_post))
+      @destroyed_post.update_with_current(:updater, permitted_attributes(@destroyed_post))
       flash[:notice] = @destroyed_post.notify? ? "Re-uploads of that post will now notify admins" : "Re-uploads of that post will no longer notify admins"
       redirect_to(admin_destroyed_posts_path)
     end

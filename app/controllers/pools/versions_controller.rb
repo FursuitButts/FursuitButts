@@ -10,7 +10,7 @@ module Pools
       end
 
       @pool_versions = authorize(PoolVersion).html_includes(request, :updater)
-                                             .search(search_params(PoolVersion))
+                                             .search_current(search_params(PoolVersion))
                                              .paginate(params[:page], limit: params[:limit])
       respond_with(@pool_versions)
     end

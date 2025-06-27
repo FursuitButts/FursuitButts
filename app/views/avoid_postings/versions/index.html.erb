@@ -21,7 +21,7 @@
           <%= avoid_posting_version.details %>
         <% end %>
         </span>
-    <% if CurrentUser.is_staff? %>
+    <% if CurrentUser.user.is_staff? %>
       <span class="avoid-posting-staff-notes">
         <% if previous.present? && previous.staff_notes != avoid_posting_version.staff_notes %>
           <b>Staff Notes</b>

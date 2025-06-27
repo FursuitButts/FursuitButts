@@ -2,7 +2,6 @@
 
 # Remember to update the posts_trigger_change_seq sql function if new fields which should be considered a change are added
 class Post < ApplicationRecord
-  class RevertError < StandardError; end
   class DeletionError < StandardError; end
   class TimeoutError < StandardError; end
   class EditRestrictedError < StandardError; end
@@ -31,7 +30,6 @@ class Post < ApplicationRecord
   include(FemboyFans::HasBitFlags)
   has_bit_flags(Flags.map)
 
-  before_validation(:initialize_uploader, on: :create)
   before_validation(:merge_old_changes)
   before_validation(:apply_source_diff)
   before_validation(:apply_tag_diff, if: :should_process_tags?)
@@ -65,9 +63,10 @@ class Post < ApplicationRecord
   after_commit(:remove_iqdb_async, on: :destroy)
   after_commit(:update_iqdb_async, on: :create)
 
-  belongs_to(:updater, class_name: "User", optional: true) # this is handled in versions
-  belongs_to(:approver, class_name: "User", optional: true)
-  belongs_to(:uploader, class_name: "User", counter_cache: "post_count")
+  belongs_to_user(:uploader, ip: true, clones: :updater, aliases: %i[creator], counter_cache: "post_count") # TODO: convert to creator?
+  belongs_to_user(:updater, ip: true)
+  belongs_to_user(:approver, optional: true)
+  resolvable(:destroyer)
   belongs_to(:parent, class_name: "Post", optional: true)
   belongs_to(:media_asset, class_name: "UploadMediaAsset", foreign_key: :upload_media_asset_id)
   has_one(:upload, dependent: :destroy)
@@ -82,6 +81,14 @@ class Post < ApplicationRecord
   has_many(:favorites)
   has_many(:replacements, -> { default_order }, class_name: "PostReplacement", dependent: :destroy)
   has_many(:pool_covers, class_name: "Pool", foreign_key: :cover_post_id, dependent: :nullify)
+  revertible do |version|
+    self.tag_string = version.tags
+    self.rating = version.rating
+    self.source = version.source
+    self.parent_id = version.parent_id
+    self.description = version.description
+    self.edit_reason = "Revert to version #{version.version}"
+  end
 
   attr_accessor(:old_tag_string, :old_parent_id, :old_source, :old_rating,
                 :do_not_version_changes, :tag_string_diff, :source_diff, :edit_reason, :tag_string_before_parse,
@@ -98,7 +105,7 @@ class Post < ApplicationRecord
   scope(:pending_or_flagged, -> { pending.or(flagged) })
   scope(:has_notes, -> { where.not(last_noted_at: nil) })
   scope(:for_user, ->(user_id) { where(uploader_id: user_id) })
-  scope(:expired, -> { pending.where("posts.created_at < ?", PostPruner::MODERATION_WINDOW.days.ago) })
+  scope(:expired, -> { pending.where(posts: { created_at: ...PostPruner::MODERATION_WINDOW.days.ago }) })
   scope(:with_assets, -> { includes(:media_asset) })
   scope(:with_assets_and_metadata, -> { with_assets.includes(media_asset: :media_metadata) })
 
@@ -135,27 +142,39 @@ class Post < ApplicationRecord
     extend(ActiveSupport::Concern)
 
     def delete_files
-      media_asset&.expunge!
+      media_asset&.expunge!(destroyer)
     end
 
-    def move_files_on_delete
-      media_asset.delete!
+    def move_files_on_delete(user)
+      media_asset.delete!(user)
     end
 
-    def move_files_on_undelete
-      media_asset.undelete!
+    def move_files_on_undelete(user)
+      media_asset.undelete!(user)
     end
 
     def file_path
       media_asset.original.file_path
     end
 
-    def file_url
-      media_asset.original.file_url
+    def file_url(user)
+      media_asset.original.file_url(user: user)
     end
 
     def file(&)
       media_asset.original.open_file(&)
+    end
+
+    def apionly_file_url
+      file_url(CurrentUser.user)
+    end
+
+    def apionly_large_file_url
+      large_file_url(CurrentUser.user)
+    end
+
+    def apionly_preview_file_url
+      preview_file_url(CurrentUser.user)
     end
 
     FemboyFans.config.image_variants.keys.map(&:to_s).each do |name|
@@ -163,8 +182,8 @@ class Post < ApplicationRecord
         variant_path(name)
       end
 
-      define_method("#{name}_file_url") do
-        variant_url(name)
+      define_method("#{name}_file_url") do |user|
+        variant_url(name, user)
       end
 
       define_method("#{name}_file") do |&block|
@@ -185,12 +204,12 @@ class Post < ApplicationRecord
         variant_path(name, "mp4")
       end
 
-      define_method("#{name}_webm_file_url") do
-        variant_url(name, "webm")
+      define_method("#{name}_webm_file_url") do |user|
+        variant_url(name, user, "webm")
       end
 
-      define_method("#{name}_mp4_file_url") do
-        variant_url(name, "mp4")
+      define_method("#{name}_mp4_file_url") do |user|
+        variant_url(name, user, "mp4")
       end
 
       define_method("#{name}_webm_file") do |&block|
@@ -209,21 +228,21 @@ class Post < ApplicationRecord
       alias_method("file_#{name}_mp4", "#{name}_mp4_file")
     end
 
-    def reverse_image_url
-      return large_file_url if has_large?
-      return preview_file_url if has_preview?
-      file_url
+    def reverse_image_url(user)
+      return large_file_url(user) if has_large?
+      return preview_file_url(user) if has_preview?
+      file_url(user)
     end
 
-    def avatar_image_url
-      return large_file_url if has_large?
-      return preview_file_url if has_preview?
-      file_url
+    def avatar_image_url(user)
+      return large_file_url(user) if has_large?
+      return preview_file_url(user) if has_preview?
+      file_url(user)
     end
 
-    def video_poster_url
-      return large_file_url if has_large?
-      file_url
+    def video_poster_url(user)
+      return large_file_url(user) if has_large?
+      file_url(user)
     end
 
     def find_variant(...)
@@ -234,8 +253,8 @@ class Post < ApplicationRecord
       media_asset.find_variant!(...)
     end
 
-    def variant_url(type, ext = nil)
-      find_variant!(type, ext).file_url
+    def variant_url(type, user, ext = nil)
+      find_variant!(type, ext).file_url(user: user)
     end
 
     def variant_path(type, ext = nil)
@@ -246,40 +265,40 @@ class Post < ApplicationRecord
       find_variant!(type, ext).open_file(&)
     end
 
-    def open_graph_video_url
+    def open_graph_video_url(user)
       if image_height > 720 && has_720p?
-        return file_url_720p_mp4
+        return file_url_720p_mp4(user)
       end
       variant_url("original", "mp4")
     end
 
-    def open_graph_image_url
+    def open_graph_image_url(user)
       if is_image?
         if has_large?
-          large_file_url
+          large_file_url(user)
         else
-          file_url
+          file_url(user)
         end
       elsif has_preview?
-        preview_file_url
+        preview_file_url(user)
       else
-        file_url
+        file_url(user)
       end
     end
 
     def file_url_for(user)
       if user.default_image_size == "large" && has_large?
-        large_file_url
+        large_file_url(user)
       else
-        file_url
+        file_url(user)
       end
     end
 
     def file_url_ext_for(user, ext)
       if user.default_image_size == "large" && is_video? && has_720p?
-        variant_url("720p", ext)
+        variant_url("720p", user, ext)
       else
-        variant_url("original", ext)
+        variant_url("original", user, ext)
       end
     end
 
@@ -305,13 +324,7 @@ class Post < ApplicationRecord
       media_asset.generated_variants.include?(scale)
     end
 
-    delegate(:regenerate_video_variants, to: :media_asset)
-
-    delegate(:regenerate_video_variants!, to: :media_asset)
-
-    delegate(:regenerate_image_variants, to: :media_asset)
-
-    delegate(:regenerate_image_variants!, to: :media_asset)
+    delegate(:regenerate_video_variants, :regenerate_video_variants!, :regenerate_image_variants, :regenerate_image_variants!, to: :media_asset)
   end
 
   module ImageMethods
@@ -364,21 +377,21 @@ class Post < ApplicationRecord
       !is_pending? && !is_deleted?
     end
 
-    def unflag!
+    def unflag!(user)
       post_flag_id = flags.pending.last&.id
-      flags.each(&:resolve!)
-      update(is_flagged: false)
-      PostEvent.add!(id, CurrentUser.user, :flag_removed, post_flag_id: post_flag_id)
+      flags.each { |f| f.resolve!(user) }
+      update(is_flagged: false, updater: user)
+      PostEvent.add!(id, user, :flag_removed, post_flag_id: post_flag_id)
     end
 
     def approved_by?(user)
       approver == user || approvals.exists?(user: user)
     end
 
-    def unapprove!
-      PostEvent.add!(id, CurrentUser.user, :unapproved)
-      update(approver: nil, is_pending: true)
-      uploader.notify_for_upload(self, :post_unapprove) if uploader_id != CurrentUser.id
+    def unapprove!(user)
+      PostEvent.add!(id, user, :unapproved)
+      update(approver: nil, is_pending: true, updater: user)
+      uploader.notify_for_upload(self, :post_unapprove) if uploader_id != user.id
     end
 
     def is_unapprovable?(user)
@@ -390,16 +403,16 @@ class Post < ApplicationRecord
       !is_pending? && !is_deleted? && created_at.after?(PostPruner::MODERATION_WINDOW.days.ago)
     end
 
-    def approve!(approver = CurrentUser.user)
+    def approve!(approver)
       return unless self.approver.nil?
 
       if uploader == approver
         update(is_pending: false)
       else
-        PostEvent.add!(id, CurrentUser.user, :approved)
+        PostEvent.add!(id, approver, :approved)
         approvals.create(user: approver)
-        update(approver: approver, is_pending: false)
-        uploader.notify_for_upload(self, :post_approve) if uploader_id != CurrentUser.id
+        update(approver: approver, is_pending: false, updater: approver)
+        uploader.notify_for_upload(self, :post_approve) if uploader_id != approver.id
       end
     end
   end
@@ -471,6 +484,7 @@ class Post < ApplicationRecord
     def copy_sources_to_parent
       return if parent_id.blank?
       parent.source += "\n#{source}"
+      parent.updater = updater
     end
   end
 
@@ -704,7 +718,7 @@ class Post < ApplicationRecord
       add_dnp_tags_to_locked(normalized_tags)
       normalized_tags -= @locked_to_remove if @locked_to_remove # Prevent adding locked tags through implications or aliases.
       normalized_tags = normalized_tags.compact.uniq
-      normalized_tags = Tag.find_or_create_by_name_list(normalized_tags)
+      normalized_tags = Tag.find_or_create_by_name_list(normalized_tags, user: updater)
       normalized_tags = remove_invalid_tags(normalized_tags)
       normalized_tags = normalized_tags.map(&:name).uniq.sort.join(" ")
       set_tag_string(normalized_tags)
@@ -861,7 +875,7 @@ class Post < ApplicationRecord
         when /^newpool:(.+)$/i
           pool = Pool.find_by(name: $1)
           if pool.nil?
-            Pool.create(name: $1)
+            Pool.create(creator: updater, name: $1)
           end
         end
       end
@@ -890,7 +904,7 @@ class Post < ApplicationRecord
 
     def apply_categorization_metatags(tags)
       prefixed, unprefixed = tags.partition { |x| x =~ TagCategory.regexp }
-      prefixed = Tag.find_or_create_by_name_list(prefixed)
+      prefixed = Tag.find_or_create_by_name_list(prefixed, user: updater)
       prefixed.map! do |tag|
         @bad_type_changes << tag.name if tag.errors.include?(:category)
         tag.name
@@ -906,7 +920,7 @@ class Post < ApplicationRecord
         when /^-pool:(\d+)$/i
           pool = Pool.find_by(id: $1.to_i)
           if pool
-            pool.remove!(self)
+            pool.remove!(self, updater)
             if pool.errors.any?
               errors.add(:base, pool.errors.full_messages.join("; "))
             end
@@ -915,7 +929,7 @@ class Post < ApplicationRecord
         when /^-pool:(.+)$/i
           pool = Pool.find_by_name($1)
           if pool
-            pool.remove!(self)
+            pool.remove!(self, updater)
             if pool.errors.any?
               errors.add(:base, pool.errors.full_messages.join("; "))
             end
@@ -924,7 +938,7 @@ class Post < ApplicationRecord
         when /^pool:(\d+)$/i
           pool = Pool.find_by(id: $1.to_i)
           if pool
-            pool.add!(self)
+            pool.add!(self, updater)
             if pool.errors.any?
               errors.add(:base, pool.errors.full_messages.join("; "))
             end
@@ -933,7 +947,7 @@ class Post < ApplicationRecord
         when /^(?:new)?pool:(.+)$/i
           pool = Pool.find_by_name($1)
           if pool
-            pool.add!(self)
+            pool.add!(self, updater)
             if pool.errors.any?
               errors.add(:base, pool.errors.full_messages.join("; "))
             end
@@ -941,8 +955,8 @@ class Post < ApplicationRecord
 
         when /^set:(\d+)$/i
           set = PostSet.find_by(id: $1.to_i)
-          if set&.can_edit_posts?(CurrentUser.user)
-            set.add!(self)
+          if set&.can_edit_posts?(updater)
+            set.add!(self, updater)
             if set.errors.any?
               errors.add(:base, set.errors.full_messages.join("; "))
             end
@@ -950,8 +964,8 @@ class Post < ApplicationRecord
 
         when /^-set:(\d+)$/i
           set = PostSet.find_by(id: $1.to_i)
-          if set&.can_edit_posts?(CurrentUser.user)
-            set.remove!(self)
+          if set&.can_edit_posts?(updater)
+            set.remove!(self, updater)
             if set.errors.any?
               errors.add(:base, set.errors.full_messages.join("; "))
             end
@@ -959,8 +973,8 @@ class Post < ApplicationRecord
 
         when /^set:(.+)$/i
           set = PostSet.find_by(shortname: $1)
-          if set&.can_edit_posts?(CurrentUser.user)
-            set.add!(self)
+          if set&.can_edit_posts?(updater)
+            set.add!(self, updater)
             if set.errors.any?
               errors.add(:base, set.errors.full_messages.join("; "))
             end
@@ -968,8 +982,8 @@ class Post < ApplicationRecord
 
         when /^-set:(.+)$/i
           set = PostSet.find_by(shortname: $1)
-          if set&.can_edit_posts?(CurrentUser.user)
-            set.remove!(self)
+          if set&.can_edit_posts?(updater)
+            set.remove!(self, updater)
             if set.errors.any?
               errors.add(:base, set.errors.full_messages.join("; "))
             end
@@ -1016,13 +1030,13 @@ class Post < ApplicationRecord
           self.rating = $1
 
         when /^(-?)locked:notes?$/i
-          self.is_note_locked = ($1 != "-") if CurrentUser.is_janitor?
+          self.is_note_locked = ($1 != "-") if updater.is_janitor?
 
         when /^(-?)locked:rating$/i
-          self.is_rating_locked = ($1 != "-") if CurrentUser.is_janitor?
+          self.is_rating_locked = ($1 != "-") if updater.is_janitor?
 
         when /^(-?)locked:status$/i
-          self.is_status_locked = ($1 != "-") if CurrentUser.is_admin?
+          self.is_status_locked = ($1 != "-") if updater.is_admin?
 
         end
       end
@@ -1071,6 +1085,7 @@ class Post < ApplicationRecord
     def copy_tags_to_parent
       return if parent_id.blank?
       parent.tag_string += " #{tag_string}"
+      parent.updater = updater
     end
 
     def update_typed_tags(tags = tag_string)
@@ -1122,11 +1137,13 @@ class Post < ApplicationRecord
       self.fav_count = array.size
     end
 
-    def favorited_by?(user_id = CurrentUser.id)
-      !!(fav_string =~ /(?:\A| )fav:#{user_id}(?:\Z| )/)
+    def is_favorited?(user)
+      !!(fav_string =~ /(?:\A| )fav:#{u2id(user)}(?:\Z| )/)
     end
 
-    alias is_favorited? favorited_by?
+    def apionly_is_favorited?
+      is_favorited?(CurrentUser.user)
+    end
 
     def append_user_to_fav_string(user_id)
       self.fav_string = (fav_string + " fav:#{user_id}").strip
@@ -1139,9 +1156,9 @@ class Post < ApplicationRecord
     end
 
     # users who favorited this post, ordered by users who favorited it first
-    def favorited_users
+    def favorited_users(user)
       favorited_user_ids = fav_string.scan(/\d+/).map(&:to_i)
-      visible_users = User.find(favorited_user_ids).reject(&:hide_favorites?)
+      visible_users = User.find(favorited_user_ids).reject { |u| u.hide_favorites?(user) }
       visible_users.index_by(&:id).slice(*favorited_user_ids).values
     end
 
@@ -1149,22 +1166,6 @@ class Post < ApplicationRecord
       Favorite.where(post_id: id).delete_all
       user_ids = fav_string.scan(/\d+/)
       User.where(id: user_ids).update_all("favorite_count = favorite_count - 1")
-    end
-  end
-
-  module UploaderMethods
-    def initialize_uploader
-      if uploader_id.blank?
-        self.uploader_id = CurrentUser.id
-        self.uploader_ip_addr = CurrentUser.ip_addr
-      end
-    end
-
-    def uploader_name
-      if association(:uploader).loaded?
-        return uploader&.name || "Anonymous"
-      end
-      User.id_to_name(uploader_id)
     end
   end
 
@@ -1185,24 +1186,27 @@ class Post < ApplicationRecord
       pool_string =~ /(?:\A| )set:#{set.id}(?:\z| )/
     end
 
-    def add_set!(set, force: false)
+    def add_set!(set, user, force: false)
       return if belongs_to_post_set(set) && !force
       with_lock do
         self.pool_string = "#{pool_string} set:#{set.id}".strip
+        self.updater = user
       end
     end
 
-    def remove_set!(set)
+    def remove_set!(set, user)
       with_lock do
         self.pool_string = (pool_string.split - ["set:#{set.id}"]).join(" ").strip
+        self.updater = user
       end
     end
 
-    def give_post_sets_to_parent
+    def give_post_sets_to_parent(user)
       transaction do
         post_sets.find_each do |set|
           set.remove([id])
           set.add([parent.id]) if parent_id.present? && set.transfer_on_delete
+          set.updater = user
           set.save!
         rescue StandardError
           # Ignore set errors due to things like set post count
@@ -1238,56 +1242,74 @@ class Post < ApplicationRecord
       pool_string =~ /(?:\A| )pool:#{pool.id}(?:\Z| )/
     end
 
-    def add_pool!(pool)
+    def add_pool!(pool, user)
       return if belongs_to_pool?(pool)
 
       with_lock do
         self.pool_string = "#{pool_string} pool:#{pool.id}".strip
+        self.updater = user
       end
     end
 
-    def remove_pool!(pool)
+    def remove_pool!(pool, user)
       return unless belongs_to_pool?(pool)
-      return unless CurrentUser.user.can_remove_from_pools?
+      return unless user.can_remove_from_pools?
 
       with_lock do
         self.pool_string = pool_string.gsub(/(?:\A| )pool:#{pool.id}(?:\Z| )/, " ").strip
+        self.updater = user
       end
     end
 
-    def remove_from_all_pools
+    def remove_from_all_pools(user)
       pools.find_each do |pool|
-        pool.remove!(self)
+        pool.remove!(self, user)
       end
     end
   end
 
   module VoteMethods
-    def own_vote(user = CurrentUser.user)
+    def own_vote(user)
       return nil unless user
-      v = vote_string.scan(/(?:\A| )(up|down|locked):#{user.id}(?:\Z| )/).map { $1 }.first
+      v = vote_string.scan(/(?:\A| )(up|down|locked):#{u2id(user)}(?:\Z| )/).map { $1 }.first
       return nil if v.nil?
       %w[down locked up].index(v) - 1
     end
 
-    def is_voted?(user = CurrentUser.user)
+    def is_voted?(user)
       return false unless user
       own_vote(user).present?
     end
 
-    def is_voted_down?(user = CurrentUser.user)
+    def apionly_is_voted?
+      is_voted?(CurrentUser.user)
+    end
+
+    def is_voted_down?(user)
       return false unless user
       own_vote(user) == -1
     end
 
-    def is_voted_up?(user = CurrentUser.user)
+    def apionly_is_voted_down?
+      is_voted_down?(CurrentUser.user)
+    end
+
+    def is_voted_up?(user)
       return false unless user
       own_vote(user) == 1
     end
 
-    def is_vote_locked?(user = CurrentUser.user)
+    def apionly_is_voted_up?
+      is_voted_up?(CurrentUser.user)
+    end
+
+    def is_vote_locked?(user)
       return false unless user
       own_vote(user) == 0
+    end
+
+    def apionly_is_vote_locked?
+      is_vote_locked?(CurrentUser.user)
     end
 
     def append_user_to_vote_string(user_id, type)
@@ -1313,29 +1335,38 @@ class Post < ApplicationRecord
       self.score = up_score - down_score
     end
 
-    def voted_users
+    def voted_users(_user)
       voted_user_ids = vote_string.scan(/\d+/).map(&:to_i)
       User.find(voted_user_ids)
     end
   end
 
   module CountMethods
-    def fast_count(tags = "", enable_safe_mode: CurrentUser.safe_mode?, include_deleted: nil)
+    def fast_count(user, tags = "", enable_safe_mode: user.safe_mode?, include_deleted: nil)
       tags = tags.to_s
       tags += " rating:s" if enable_safe_mode
       tags += " -status:deleted" if include_deleted != true && (include_deleted == false || !TagQuery.has_metatag?(tags, "status", "-status"))
       tags = TagQuery.normalize(tags)
 
-      cache_key = "pfc:#{tags}"
+      parts = %w[fc]
+      parts << user.id if TagQuery.has_any_metatag?(tags, list: TagQuery::UNIQUE_METATAGS)
+      parts << "safe" if enable_safe_mode
+      parts << tags
+      cache_key = parts.join(":")
+
       count = Cache.fetch(cache_key)
       if count.nil?
-        count = Post.tag_match(tags).count_only
+        count = Post.tag_match(tags, user).count_only
         expiry = count.seconds.clamp(3.minutes, 20.hours).to_i
         Cache.write(cache_key, count, expires_in: expiry)
       end
       count
     rescue TagQuery::CountExceededError
       0
+    end
+
+    def system_count(...)
+      fast_count(User.system, ...)
     end
   end
 
@@ -1374,15 +1405,14 @@ class Post < ApplicationRecord
       parent&.update_has_children_flag
     end
 
-    def update_children_on_destroy
+    def update_children_on_destroy(user)
       return if children.blank?
 
       eldest = children[0]
       siblings = children[1..]
 
       eldest.update(parent_id: nil)
-      Post.where(id: siblings).find_each { |p| p.update(parent_id: eldest.id) }
-      # Post.where(id: siblings).update(parent_id: eldest.id) # XXX rails 5
+      Post.where(id: siblings).update(parent_id: eldest.id, updater: user)
     end
 
     def update_parent_on_save
@@ -1392,23 +1422,23 @@ class Post < ApplicationRecord
       Post.find(parent_id_before_last_save).update_has_children_flag if parent_id_before_last_save.present?
     end
 
-    def give_favorites_to_parent
-      TransferFavoritesJob.perform_later(id, CurrentUser.id)
+    def give_favorites_to_parent(user)
+      TransferFavoritesJob.perform_later(self, user)
     end
 
-    def give_favorites_to_parent!
+    def give_favorites_to_parent!(user)
       return if parent.nil?
 
       FavoriteManager.give_to_parent!(self)
-      PostEvent.add!(id, CurrentUser.user, :favorites_moved, parent_id: parent_id)
-      PostEvent.add!(parent_id, CurrentUser.user, :favorites_received, child_id: id)
+      PostEvent.add!(id, user, :favorites_moved, parent_id: parent_id)
+      PostEvent.add!(parent_id, user, :favorites_received, child_id: id)
     end
 
-    def give_votes_to_parent
-      TransferVotesJob.perform_later(id, CurrentUser.id)
+    def give_votes_to_parent(user)
+      TransferVotesJob.perform_later(self, user)
     end
 
-    def give_votes_to_parent!
+    def give_votes_to_parent!(_user)
       return if parent.nil?
 
       VoteManager::Posts.give_to_parent!(self)
@@ -1418,16 +1448,18 @@ class Post < ApplicationRecord
       Post.exists?(parent_id)
     end
 
-    def has_visible_children?
+    def has_visible_children?(user)
       return true if has_active_children?
-      return true if has_children? && CurrentUser.is_approver?
+      return true if has_children? && user.is_approver?
       return true if has_children? && is_deleted?
       false
     end
 
+    # rubocop:disable Local/CurrentUserOutsideOfRequests -- used exclusively within requests for json
     def has_visible_children
-      has_visible_children?
+      has_visible_children?(CurrentUser.user)
     end
+    # rubocop:enable Local/CurrentUserOutsideOfRequests
 
     def inject_children(ids)
       @children_ids = ids.map(&:id).join(" ")
@@ -1441,7 +1473,7 @@ class Post < ApplicationRecord
   end
 
   module DeletionMethods
-    def backup_post_data_destroy(reason: "")
+    def backup_post_data_destroy(destroyer, reason: "")
       post_data = {
         id:            id,
         description:   description,
@@ -1464,28 +1496,29 @@ class Post < ApplicationRecord
       }
       DestroyedPost.create!(post_id: id, post_data: post_data, md5: md5,
                             uploader_ip_addr: uploader_ip_addr, uploader_id: uploader_id,
-                            destroyer_id: CurrentUser.id, destroyer_ip_addr: CurrentUser.ip_addr,
+                            destroyer: destroyer,
                             upload_date: created_at, reason: reason || "")
     end
 
-    def expunge!(reason: "")
+    def expunge!(user, reason: "")
       if is_status_locked?
         errors.add(:is_status_locked, "; cannot delete post")
         return false
       end
 
       transaction do
-        backup_post_data_destroy(reason: reason)
+        backup_post_data_destroy(user, reason: reason)
       end
 
       # transaction do
       Post.without_timeout do
-        PostEvent.add!(id, CurrentUser.user, :expunged)
+        PostEvent.add!(id, user, :expunged)
 
+        self.destroyer = user
         reset_followers_on_destroy
-        update_children_on_destroy
+        update_children_on_destroy(user)
         decrement_tag_post_counts
-        remove_from_all_pools
+        remove_from_all_pools(user)
         remove_from_post_sets
         remove_from_favorites
         destroy
@@ -1498,7 +1531,7 @@ class Post < ApplicationRecord
       is_deleted?
     end
 
-    def delete!(reason, options = {})
+    def delete!(user, reason, options = {})
       if is_status_locked? && !options.fetch(:force, false)
         errors.add(:is_status_locked, "; cannot delete post")
         return false
@@ -1519,7 +1552,7 @@ class Post < ApplicationRecord
       force_flag = options.fetch(:force, false)
       Post.with_timeout(30_000) do
         transaction do
-          flag = flags.create(reason: reason, reason_name: "deletion", is_resolved: false, is_deletion: true, force_flag: force_flag)
+          flag = flags.create(reason: reason, reason_name: "deletion", is_resolved: false, is_deletion: true, force_flag: force_flag, creator: user)
 
           if flag.errors.any? && !force_flag
             raise(PostFlag::Error, flag.errors.full_messages.join("; "))
@@ -1531,9 +1564,9 @@ class Post < ApplicationRecord
             is_flagged: false,
           )
           decrement_tag_post_counts
-          move_files_on_delete
-          PostEvent.add!(id, CurrentUser.user, :deleted, reason: reason)
-          uploader.notify_for_upload(self, :post_delete) if uploader_id != CurrentUser.id
+          move_files_on_delete(user)
+          PostEvent.add!(id, user, :deleted, reason: reason)
+          uploader.notify_for_upload(self, :post_delete) if uploader_id != user.id
         end
       end
 
@@ -1541,24 +1574,24 @@ class Post < ApplicationRecord
       # We don't care if these fail per-se so they are outside the transaction.
       User.where(id: uploader_id).update_all("post_deleted_count = post_deleted_count + 1")
       if options[:move_favorites]
-        give_favorites_to_parent
-        give_votes_to_parent
-        give_post_sets_to_parent
+        give_favorites_to_parent(user)
+        give_votes_to_parent(user)
+        give_post_sets_to_parent(user)
       end
-      reject_pending_replacements
+      reject_pending_replacements(user)
     end
 
-    def reject_pending_replacements
-      replacements.where(status: "pending").update_all(status: "rejected")
+    def reject_pending_replacements(user)
+      replacements.where(status: "pending").update(status: "rejected", rejector: user)
     end
 
-    def undelete!(options = {})
+    def undelete!(user, options = {})
       if is_status_locked? && !options.fetch(:force, false)
         errors.add(:is_status_locked, "; cannot undelete post")
         return
       end
 
-      if !CurrentUser.is_admin? && uploader_id == CurrentUser.id
+      if !user.is_admin? && uploader_id == user.id
         raise(User::PrivilegeError, "You cannot undelete a post you uploaded")
       end
 
@@ -1570,16 +1603,16 @@ class Post < ApplicationRecord
       transaction do
         self.is_deleted = false
         self.is_pending = false
-        self.approver_id = CurrentUser.id
-        flags.each(&:resolve!)
+        self.approver = user
+        flags.each { |f| f.resolve!(user) }
         increment_tag_post_counts
         save
-        approvals.create(user: CurrentUser.user)
-        PostEvent.add!(id, CurrentUser.user, :undeleted)
-        appeals.pending.map(&:accept!)
-        uploader.notify_for_upload(self, :post_undelete) if uploader_id != CurrentUser.id
+        approvals.create(user: user)
+        PostEvent.add!(id, user, :undeleted)
+        appeals.pending.each { |p| p.accept!(user) }
+        uploader.notify_for_upload(self, :post_undelete) if uploader_id != user.id
       end
-      move_files_on_undelete
+      move_files_on_undelete(user)
       User.where(id: uploader_id).update_all("post_deleted_count = post_deleted_count - 1")
     end
 
@@ -1601,7 +1634,7 @@ class Post < ApplicationRecord
         # the original tag string is not useful for automated edits
         self.original_tag_string = nil
         latest = versions.last
-        if saved_change_to_mergable_attributes? && !saved_change_to_unmergable_attributes? && latest.updater_id == CurrentUser.user.id && latest.basic? && !latest.first?
+        if saved_change_to_mergable_attributes? && !saved_change_to_unmergable_attributes? && latest.updater_id == updater.id && latest.basic? && !latest.first?
           merge_post_version(versions.last)
           return
         end
@@ -1625,30 +1658,12 @@ class Post < ApplicationRecord
 
     def create_new_version
       # This function name is misleading, this directly creates the version.
-      # Previously there was a queue involved, now there isn't.
-      PostVersion.queue(self)
+      # Previously there was a  involved, now there isn't.
+      PostVersion.queue(self, updater.resolvable(updater_ip_addr))
     end
 
     def merge_post_version(version)
-      PostVersion.merge(version, self)
-    end
-
-    def revert_to(target)
-      if id != target.post_id
-        raise(RevertError, "You cannot revert to a previous version of another post.")
-      end
-
-      self.tag_string = target.tags
-      self.rating = target.rating
-      self.source = target.source
-      self.parent_id = target.parent_id
-      self.description = target.description
-      self.edit_reason = "Revert to version #{target.version}"
-    end
-
-    def revert_to!(target)
-      revert_to(target)
-      save!
+      PostVersion.merge(version, self, updater.resolvable(updater_ip_addr))
     end
   end
 
@@ -1657,7 +1672,7 @@ class Post < ApplicationRecord
       last_noted_at.present?
     end
 
-    def copy_notes_to(other_post, copy_tags: NOTE_COPY_TAGS)
+    def copy_notes_to(other_post, user, copy_tags: NOTE_COPY_TAGS)
       if id == other_post.id
         errors.add(:base, "Source and destination posts are the same")
         return false
@@ -1669,22 +1684,23 @@ class Post < ApplicationRecord
 
       transaction do
         notes.active.each do |note|
-          note.copy_to(other_post)
+          note.copy_to(other_post, user)
         end
 
-        PostEvent.add!(other_post.id, CurrentUser.user, :copied_notes, source_post_id: id, note_count: notes.active.count)
+        PostEvent.add!(other_post.id, user, :copied_notes, source_post_id: id, note_count: notes.active.count)
         copy_tags.each do |tag|
           other_post.remove_tag(tag)
           other_post.add_tag(tag) if has_tag?(tag)
         end
 
+        other_post.updater = user
         other_post.save
       end
     end
   end
 
   module ApiMethods
-    def thumbnail_attributes
+    def thumbnail_attributes(user)
       attributes = {
         id:           id,
         flags:        status_flags,
@@ -1702,18 +1718,18 @@ class Post < ApplicationRecord
 
         score:        score,
         fav_count:    fav_count,
-        is_favorited: favorited_by?(CurrentUser.user.id),
-        own_vote:     own_vote,
+        is_favorited: is_favorited?(user),
+        own_vote:     own_vote(user),
 
         pools:        pool_ids,
       }
 
-      if visible?
+      if visible?(user)
         attributes[:md5] = md5
-        attributes[:preview_url] = preview_file_url if has_preview?
-        attributes[:large_url] = large_file_url if has_large?
-        attributes[:file_url] = file_url
-        attributes[:cropped_url] = crop_file_url if has_crop?
+        attributes[:preview_url] = preview_file_url(user) if has_preview?
+        attributes[:large_url] = large_file_url(user) if has_large?
+        attributes[:file_url] = file_url(user)
+        attributes[:cropped_url] = crop_file_url(user) if has_crop?
         attributes[:preview_width] = find_variant("preview")&.width
         attributes[:preview_height] = find_variant("preview")&.height
       end
@@ -1721,10 +1737,10 @@ class Post < ApplicationRecord
       attributes
     end
 
-    def variants
+    def variants(user)
       results = []
       media_asset.variants_images_first.without(media_asset.original).each do |variant|
-        results << variant.cached_hash.merge(url: visible? ? variant.file_url : nil)
+        results << variant.cached_hash.merge(url: visible?(user) ? variant.file_url(user: user) : nil)
       end
       results
     end
@@ -1741,7 +1757,10 @@ class Post < ApplicationRecord
       end
     end
 
-    def serializable_hash(*)
+    def serializable_hash(options = {})
+      options ||= {}
+      options[:user] ||= CurrentUser.user || User.anonymous
+      user = options[:user]
       {
         id:              id,
         created_at:      created_at,
@@ -1752,9 +1771,9 @@ class Post < ApplicationRecord
           ext:    file_ext,
           size:   file_size,
           md5:    md5,
-          url:    visible? ? file_url : nil,
+          url:    visible?(user) ? file_url(user) : nil,
         },
-        variants:        variants,
+        variants:        variants(user),
         score:           {
           up:    up_score,
           down:  down_score,
@@ -1788,9 +1807,9 @@ class Post < ApplicationRecord
         approver_id:     approver_id,
         uploader_id:     uploader_id,
         description:     description,
-        comment_count:   visible_comment_count(CurrentUser.user),
-        is_favorited:    is_favorited?,
-        own_vote:        own_vote,
+        comment_count:   visible_comment_count(user),
+        is_favorited:    is_favorited?(user),
+        own_vote:        own_vote(user),
         has_notes:       has_notes?,
         duration:        duration&.to_f,
         framecount:      framecount,
@@ -1810,11 +1829,11 @@ class Post < ApplicationRecord
     end
 
     def random_up(key)
-      where("md5 < ?", key).reorder("md5 desc").first
+      where(md5: ...key).reorder("md5 desc").first
     end
 
     def random_down(key)
-      where("md5 >= ?", key).reorder("md5 asc").first
+      where(md5: key..).reorder("md5 asc").first
     end
 
     def sample(query, sample_size)
@@ -1830,13 +1849,18 @@ class Post < ApplicationRecord
       where("string_to_array(posts.tag_string, ' ') @> ARRAY[?]", tag)
     end
 
-    def tag_match_system(query, free_tags_count: 0)
-      tag_match(query, free_tags_count: free_tags_count, enable_safe_mode: false, always_show_deleted: true)
+    def tag_match_system(query, **)
+      tag_match(query, User.system, enable_safe_mode: false, always_show_deleted: true, **)
     end
 
-    def build_query(query, resolve_aliases: true, free_tags_count: 0, enable_safe_mode: CurrentUser.safe_mode?, always_show_deleted: false)
+    def tag_match_current(query, **)
+      tag_match(query, CurrentUser.user, **)
+    end
+
+    def build_query(query, user, resolve_aliases: true, free_tags_count: 0, enable_safe_mode: user.safe_mode?, always_show_deleted: false)
       ElasticPostQueryBuilder.new(
         query,
+        user,
         resolve_aliases:     resolve_aliases,
         free_tags_count:     free_tags_count,
         enable_safe_mode:    enable_safe_mode,
@@ -1844,12 +1868,13 @@ class Post < ApplicationRecord
       )
     end
 
-    def tag_match(...)
-      build_query(...).search
+    # not using ... so required arguments can be determined
+    def tag_match(query, user, **)
+      build_query(query, user, **).search
     end
 
-    def tag_match_sql(query)
-      PostQueryBuilder.new(query).search
+    def tag_match_sql(query, user)
+      PostQueryBuilder.new(query, user).search
     end
   end
 
@@ -1879,36 +1904,37 @@ class Post < ApplicationRecord
     def create_post_events
       if saved_change_to_is_rating_locked?
         action = is_rating_locked? ? :rating_locked : :rating_unlocked
-        PostEvent.add!(id, CurrentUser.user, action)
+        PostEvent.add!(id, updater, action)
       end
       if saved_change_to_is_status_locked?
         action = is_status_locked? ? :status_locked : :status_unlocked
-        PostEvent.add!(id, CurrentUser.user, action)
+        PostEvent.add!(id, updater, action)
       end
       if saved_change_to_is_note_locked?
         action = is_note_locked? ? :note_locked : :note_unlocked
-        PostEvent.add!(id, CurrentUser.user, action)
+        PostEvent.add!(id, updater, action)
       end
       if saved_change_to_is_comment_disabled?
         action = is_comment_disabled? ? :comment_disabled : :comment_enabled
-        PostEvent.add!(id, CurrentUser.user, action)
+        PostEvent.add!(id, updater, action)
       end
       if saved_change_to_is_comment_locked?
         action = is_comment_locked? ? :comment_locked : :comment_unlocked
-        PostEvent.add!(id, CurrentUser.user, action)
+        PostEvent.add!(id, updater, action)
       end
       if saved_change_to_bg_color?
-        PostEvent.add!(id, CurrentUser.user, :changed_bg_color, bg_color: bg_color)
+        PostEvent.add!(id, updater, :changed_bg_color, bg_color: bg_color)
       end
       if saved_change_to_thumbnail_frame?
-        PostEvent.add!(id, CurrentUser.user, :changed_thumbnail_frame, old_thumbnail_frame: thumbnail_frame_before_last_save, new_thumbnail_frame: thumbnail_frame)
+        PostEvent.add!(id, updater, :changed_thumbnail_frame, old_thumbnail_frame: thumbnail_frame_before_last_save, new_thumbnail_frame: thumbnail_frame)
       end
       if saved_change_to_min_edit_level?
-        PostEvent.add!(id, CurrentUser.user, :set_min_edit_level, min_edit_level: min_edit_level)
+        PostEvent.add!(id, updater, :set_min_edit_level, min_edit_level: min_edit_level)
       end
     end
   end
 
+  # noinspection ALL
   module ValidationMethods
     def fix_bg_color
       if bg_color.blank?
@@ -1933,12 +1959,17 @@ class Post < ApplicationRecord
     def added_tags_are_valid
       # Load this only once since it isn't cached
       added = Tag.where(name: added_tags)
+      # noinspection RubyArgCount
       added_invalid_tags = added.select { |t| t.category == TagCategory.invalid }
+      # noinspection RubyArgCount
       new_tags = added.select { |t| t.post_count <= 0 }
+      # noinspection RubyArgCount
       new_general_tags = new_tags.select { |t| t.category == TagCategory.general }
+      # noinspection RubyArgCount
       new_artist_tags = new_tags.select { |t| t.category == TagCategory.artist }
       # See https://github.com/e621ng/e621ng/issues/494
-      # If the tag is fresh it's save to assume it was created with a prefix
+      # If the tag is fresh it's safe to assume it was created with a prefix
+      # noinspection RubyArgCount
       repopulated_tags = new_tags.select { |t| t.category != TagCategory.general && t.category != TagCategory.meta && t.created_at < 10.seconds.ago }
 
       if added_invalid_tags.present?
@@ -2019,7 +2050,6 @@ class Post < ApplicationRecord
   include(PresenterMethods)
   include(TagMethods)
   include(FavoriteMethods)
-  include(UploaderMethods)
   include(PoolMethods)
   include(SetMethods)
   include(VoteMethods)
@@ -2038,20 +2068,20 @@ class Post < ApplicationRecord
   extend(CountMethods)
   extend(SearchMethods)
 
-  def safeblocked?(_user = CurrentUser.user)
+  def safeblocked?(user)
     return true if FemboyFans.config.safe_mode? && rating != "s"
-    CurrentUser.safe_mode? && (rating != "s" || has_tag?(*FemboyFans.config.safeblocked_tags))
+    (FemboyFans.config.safe_mode? || user.enable_safe_mode?) && (rating != "s" || has_tag?(*FemboyFans.config.safeblocked_tags))
   end
 
-  def deleteblocked?(user = CurrentUser.user)
+  def deleteblocked?(user)
     !FemboyFans.config.can_user_see_post?(user, self)
   end
 
-  def loginblocked?(user = CurrentUser.user)
+  def loginblocked?(user)
     user.is_anonymous? && (hide_from_anonymous? || FemboyFans.config.user_needs_login_for_post?(self))
   end
 
-  def visible?(user = CurrentUser.user)
+  def visible?(user)
     return false if loginblocked?(user)
     return false if safeblocked?(user)
     return false if deleteblocked?(user)
@@ -2066,7 +2096,7 @@ class Post < ApplicationRecord
     false
   end
 
-  def reupload_url
+  def reupload_url(user)
     h = Rails.application.routes.url_helpers
     others = TagCategory.category_names - %w[artist character species]
     options = {
@@ -2076,7 +2106,7 @@ class Post < ApplicationRecord
       "tags-species":   species_tag_array.join(" "),
       "tags":           others.map { |type| public_send("#{type}_tags") }.flatten.join(" "),
       "rating":         rating,
-      "rating_locked":  is_rating_locked? && policy(CurrentUser.user).can_use_attribute?(:is_rating_locked, :update) ? true : nil,
+      "rating_locked":  is_rating_locked? && policy(user).can_use_attribute?(:is_rating_locked, :update) ? true : nil,
       "description":    description,
       "parent":         parent_id || id,
     }.compact_blank
@@ -2095,7 +2125,7 @@ class Post < ApplicationRecord
     self
   end
 
-  def mark_as_translated(params)
+  def mark_as_translated(params, user)
     add_tag("translation_check") if params["translation_check"].to_s.truthy?
     remove_tag("translation_check") if params["translation_check"].to_s.falsy?
 
@@ -2110,6 +2140,7 @@ class Post < ApplicationRecord
       remove_tag("translation_request")
     end
 
+    self.updater = user
     save
   end
 

@@ -42,4 +42,11 @@ class PostReplacementPolicy < ApplicationPolicy
   def api_attributes
     super + %i[file_url md5 file_ext file_size image_width image_height creator_name media_asset_id] - %i[storage_id protected uploader_id_on_approve penalize_uploader_on_approve previous_details post_replacement_media_asset_id]
   end
+
+  def visible_for_search(relation)
+    q = super
+    return q.not_rejected if user.is_anonymous?
+    return q if user.is_staff?
+    q.for_user(user).or(q.not_rejected)
+  end
 end

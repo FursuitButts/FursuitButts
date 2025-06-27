@@ -7,11 +7,9 @@ module WikiPages
     context("The wiki page versions controller") do
       setup do
         @user = create(:user)
-        as(@user) do
-          @wiki_page = create(:wiki_page)
-          @wiki_page.update(body: "1 2")
-          @wiki_page.update(body: "2 3")
-        end
+        @wiki_page = create(:wiki_page)
+        @wiki_page.update_with(@user, body: "1 2")
+        @wiki_page.update_with(@user, body: "2 3")
       end
 
       context("index action") do

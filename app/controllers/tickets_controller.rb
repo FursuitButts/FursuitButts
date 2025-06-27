@@ -5,8 +5,7 @@ class TicketsController < ApplicationController
 
   def index
     @tickets = authorize(Ticket).html_includes(request, :creator, :accused, :claimant, :model)
-                                .visible(CurrentUser.user)
-                                .search(search_params(Ticket))
+                                .search_current(search_params(Ticket))
                                 .paginate(params[:page], limit: params[:limit])
     respond_with(@tickets)
   end
@@ -18,7 +17,7 @@ class TicketsController < ApplicationController
 
   def new
     authorize(Ticket)
-    @ticket = Ticket.new(permitted_attributes(Ticket))
+    @ticket = Ticket.new_with_current(:creator, permitted_attributes(Ticket))
     if @ticket.model_type.present? && Ticket::MODEL_TYPES.exclude?(@ticket.model_type)
       return render_expected_error(404, "Invalid ticket type")
     end
@@ -27,7 +26,7 @@ class TicketsController < ApplicationController
 
   def create
     authorize(Ticket)
-    @ticket = Ticket.new(permitted_attributes(Ticket))
+    @ticket = Ticket.new_with_current(:creator, permitted_attributes(Ticket))
     if @ticket.model_type.present? && Ticket::MODEL_TYPES.exclude?(@ticket.model_type)
       return render_expected_error(404, "Invalid ticket type")
     end
@@ -44,7 +43,7 @@ class TicketsController < ApplicationController
 
   def update
     @ticket = authorize(Ticket.find(params[:id]))
-    if @ticket.claimant_id.present? && @ticket.claimant_id != CurrentUser.id && !params[:force_claim].to_s.truthy?
+    if @ticket.claimant_id.present? && @ticket.claimant_id != CurrentUser.user.id && !params[:force_claim].to_s.truthy?
       notice("Ticket has already been claimed by somebody else, submit again to force")
       redirect_to(ticket_path(@ticket, force_claim: "true"))
       return
@@ -56,13 +55,13 @@ class TicketsController < ApplicationController
         @ticket.content.user_warned!(ticket_params[:record_type].to_i, CurrentUser.user)
       end
 
-      @ticket.handler_id = CurrentUser.id
-      @ticket.claimant_id = CurrentUser.id
-      @ticket.update(ticket_params)
+      @ticket.handler = CurrentUser.user
+      @ticket.claimant = CurrentUser.user
+      @ticket.update_with_current(:updater, ticket_params)
     end
 
     if @ticket.valid?
-      not_changed = ticket_params[:send_update_dmail].to_s.truthy? && (!@ticket.saved_change_to_response? && !@ticket.saved_change_to_status?)
+      not_changed = ticket_params[:send_update_dmail].to_s.truthy? && !@ticket.saved_change_to_response? && !@ticket.saved_change_to_status?
       notice("Not sending update, no changes") if not_changed
       @ticket.push_pubsub("update")
     end
@@ -74,7 +73,7 @@ class TicketsController < ApplicationController
     @ticket = authorize(Ticket.find(params[:id]))
 
     if @ticket.claimant.nil?
-      @ticket.claim!
+      @ticket.claim!(CurrentUser.user)
       redirect_to(ticket_path(@ticket))
       return
     end
@@ -89,7 +88,7 @@ class TicketsController < ApplicationController
       notice("Ticket not claimed")
       redirect_to(ticket_path(@ticket))
       return
-    elsif @ticket.claimant.id != CurrentUser.id
+    elsif @ticket.claimant.id != CurrentUser.user.id
       notice("Ticket not claimed by you")
       redirect_to(ticket_path(@ticket))
       return
@@ -98,7 +97,7 @@ class TicketsController < ApplicationController
       redirect_to(ticket_path(@ticket))
       return
     end
-    @ticket.unclaim!
+    @ticket.unclaim!(CurrentUser.user)
     notrice("Claim removed")
     redirect_to(ticket_path(@ticket))
   end

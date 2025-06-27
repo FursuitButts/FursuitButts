@@ -8,19 +8,15 @@ module Posts
       setup do
         @user = create(:user)
         @admin = create(:admin_user)
-        as(@user) do
-          @post = create(:post, is_pending: true)
-        end
-
-        CurrentUser.user = @admin
+        @post = create(:post, is_pending: true)
       end
 
       context("create action") do
         should("render") do
           assert_difference("PostDisapproval.count", 1) do
             post_auth(post_disapprovals_path, @admin, params: { post_disapproval: { post_id: @post.id, reason: "borderline_quality" }, format: :json })
+            assert_response(:success)
           end
-          assert_response(:success)
         end
 
         should("restrict access") do

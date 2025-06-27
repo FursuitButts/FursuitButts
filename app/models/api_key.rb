@@ -1,15 +1,19 @@
 # frozen_string_literal: true
 
 class ApiKey < ApplicationRecord
-  belongs_to(:user)
+  belongs_to_user(:user)
   array_attribute(:permissions)
   array_attribute(:permitted_ip_addresses)
+  resolvable(:updater)
+  resolvable(:destroyer)
 
   before_validation(:normalize_permissions)
   validates(:name, uniqueness: { scope: :user_id }, presence: true)
   validates(:key, uniqueness: true)
   validate(:validate_permissions, if: :permissions_changed?)
   has_secure_token(:key)
+
+  scope(:for_user, ->(user) { where(user_id: u2id(user)) })
 
   module PermissionMethods
     def has_permission?(ip, controller, action)
@@ -39,15 +43,7 @@ class ApiKey < ApplicationRecord
   end
 
   module SearchMethods
-    def visible(user)
-      if user.is_owner?
-        all
-      else
-        where(user: user)
-      end
-    end
-
-    def search(params)
+    def search(params, user)
       q = super
       q = q.where_user(:user_id, :user, params)
       q.apply_basic_order(params)
@@ -65,7 +61,7 @@ class ApiKey < ApplicationRecord
     permissions.map { |perm| Permissions.route(perm) }
   end
 
-  def visible?(user = CurrentUser.user)
+  def visible?(user)
     user.is_owner? || user_id == user.id
   end
 end

@@ -9,10 +9,10 @@
         <% end %>
       <% end %>
       <% t.column(width: "2%") do |wiki_page_version, i| %>
-        <%= radio_button_tag("otherpage", wiki_page_version.id, (i == 1), title: "Other Version") %>
+        <%= radio_button_tag("otherpage", wiki_page_version.id, i == 1, title: "Other Version") %>
       <% end %>
       <% t.column(width: "2%") do |wiki_page_version, i| %>
-        <%= radio_button_tag("thispage", wiki_page_version.id, (i == 0), title: "This Version") %>
+        <%= radio_button_tag("thispage", wiki_page_version.id, i == 0, title: "This Version") %>
       <% end %>
       <% t.column("Title") do |wiki_page_version| %>
         <span class="category-<%= wiki_page_version.category_id %>">

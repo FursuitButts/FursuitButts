@@ -12,7 +12,7 @@ module Rules
     end
 
     def new
-      @category = authorize(RuleCategory.new)
+      @category = authorize(RuleCategory.new_with_current(:creator))
     end
 
     def edit
@@ -20,7 +20,7 @@ module Rules
     end
 
     def create
-      @category = authorize(RuleCategory).new(permitted_attributes(RuleCategory))
+      @category = authorize(RuleCategory).new_with_current(:creator, permitted_attributes(RuleCategory))
       @category.save
       notice(@category.errors.any? ? @category.errors.full_messages.join(";") : "Category created")
       respond_with(@category, location: rules_path)
@@ -28,14 +28,14 @@ module Rules
 
     def update
       @category = authorize(RuleCategory.find(params[:id]))
-      @category.update(permitted_attributes(@category))
+      @category.update_with_current(:updater, permitted_attributes(@category))
       notice(@category.errors.any? ? @category.errors.full_messages.join(";") : "Category updated")
       respond_with(@category, location: rules_path)
     end
 
     def destroy
       @category = authorize(RuleCategory.find(params[:id]))
-      @category.destroy
+      @category.destroy_with_current(:destroyer)
       notice("Category deleted")
       respond_with(@category, location: rules_path)
     end
@@ -62,12 +62,12 @@ module Rules
           categories.each do |rule|
             errors << { id: rule.id, name: rule.name, message: rule.errors.full_messages.join("; ") } if !rule.valid? && rule.errors.any?
           end
-          render(json: { success: false, errors: errors }, status: 422)
+          render(json: { success: false, errors: errors }, status: :unprocessable_entity)
           raise(ActiveRecord::Rollback)
         else
-          RuleCategory.log_reorder(changes) if changes != 0
+          RuleCategory.log_reorder(changes, CurrentUser.user) if changes != 0
           respond_to do |format|
-            format.json { head(204) }
+            format.json { head(:no_content) }
             format.js do
               render(json: { html: render_to_string(partial: "rules/categories/sort", locals: { categories: RuleCategory.order(:order) }) })
             end

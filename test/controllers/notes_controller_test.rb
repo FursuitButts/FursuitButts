@@ -6,10 +6,8 @@ class NotesControllerTest < ActionDispatch::IntegrationTest
   context("The notes controller") do
     setup do
       @user = create(:user)
-      as(@user) do
-        @post = create(:post)
-        @note = create(:note, body: "000", post: @post)
-      end
+      @post = create(:post)
+      @note = create(:note, body: "000", post: @post)
     end
 
     context("index action") do
@@ -87,9 +85,7 @@ class NotesControllerTest < ActionDispatch::IntegrationTest
       end
 
       should("not allow changing the post id to another post") do
-        as(@admin) do
-          @other = create(:post)
-        end
+        @other = create(:post)
         put_auth(note_path(@note), @user, params: { format: "json", id: @note.id, note: { post_id: @other.id } })
         assert_not_equal(@other.id, @note.reload.post_id)
       end
@@ -146,13 +142,11 @@ class NotesControllerTest < ActionDispatch::IntegrationTest
 
     context("revert action") do
       setup do
-        as(@user) do
-          travel_to(1.day.from_now) do
-            @note.update(body: "111")
-          end
-          travel_to(2.days.from_now) do
-            @note.update(body: "222")
-          end
+        travel_to(1.day.from_now) do
+          @note.update_with(@user, body: "111")
+        end
+        travel_to(2.days.from_now) do
+          @note.update_with(@user, body: "222")
         end
       end
 
@@ -162,9 +156,7 @@ class NotesControllerTest < ActionDispatch::IntegrationTest
       end
 
       should("not allow reverting to a previous version of another note") do
-        as(@user) do
-          @note2 = create(:note, body: "note 2")
-        end
+        @note2 = create(:note, body: "note 2")
         put_auth(revert_note_path(@note), @user, params: { version_id: @note2.versions.first.id })
         assert_not_equal(@note.reload.body, @note2.body)
         assert_response(:missing)

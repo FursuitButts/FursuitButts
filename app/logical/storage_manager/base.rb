@@ -43,8 +43,9 @@ module StorageManager
       raise(NotImplementedError, "#{self.class.name}#move_file not implemented")
     end
 
-    def protected_params(url, secret: FemboyFans.config.protected_file_secret)
-      user_id = CurrentUser.id
+    def protected_params(url, secret: FemboyFans.config.protected_file_secret, user: nil)
+      raise(ArgumentError, "user is required for protected_params") if user.blank?
+      user_id = user.id
       time = (Time.now + 15.minutes).to_i
       hmac = Digest::MD5.base64digest("#{time} #{url} #{user_id} #{secret}").tr("+/", "-_").gsub("==", "")
       "?auth=#{hmac}&expires=#{time}&uid=#{user_id}"
@@ -63,10 +64,10 @@ module StorageManager
       clean_path("#{base_path}/#{prefix}#{protected_prefix if protected}#{subdir}#{file}")
     end
 
-    def url(md5, file_ext, type, protected: false, prefix: "", protected_prefix: "", hierarchical: :default, secret: FemboyFans.config.protected_file_secret)
+    def url(md5, file_ext, type, protected: false, prefix: "", protected_prefix: "", hierarchical: :default, secret: FemboyFans.config.protected_file_secret, user: nil)
       path = url_path(md5, file_ext, type, protected: protected, prefix: prefix, protected_prefix: protected_prefix, hierarchical: hierarchical)
       url = "#{base_url}#{path}"
-      url += protected_params(path, secret: secret) if protected
+      url += protected_params(path, secret: secret, user: user) if protected
       url
     end
 

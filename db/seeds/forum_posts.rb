@@ -18,7 +18,7 @@ ApplicationRecord.transaction do
   topics.find_each.with_index do |topic, i|
     puts("Creating posts.. #{i + 1}/#{TOPIC_COUNT}")
     users.sample(Random.rand(RANGE)).each do |user|
-      user.scoped { topic.posts.create!(body: 4.times.map { 4.times.map { Faker::Hacker.unique.say_something_smart }.join("\n") }.join("\n\n")) }
+      topic.posts.create!(user: user.resolvable, body: 4.times.map { 4.times.map { Faker::Hacker.unique.say_something_smart }.join("\n") }.join("\n\n"))
     end
   end
 end

@@ -6,9 +6,8 @@ module MediaAssets
     respond_to(:html, only: %i[index])
 
     def index
-      @assets = authorize(asset_class).visible(CurrentUser.user)
-                                      .html_includes(request, :creator, :"#{asset_child_class.name.underscore}", (:post if asset_class == UploadMediaAsset))
-                                      .search(search_params(asset_class))
+      @assets = authorize(asset_class).html_includes(request, :creator, :"#{asset_child_class.name.underscore}", (:post if asset_class == UploadMediaAsset))
+                                      .search_current(search_params(asset_class))
                                       .paginate(params[:page], limit: params[:limit])
       respond_with(@assets)
     end

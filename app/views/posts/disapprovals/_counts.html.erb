@@ -2,19 +2,19 @@
   <p>
     It has been reviewed by <%= link_to(pluralize(disapprovals.length, "approver"), post_disapprovals_path(search: { post_id: post.id })) %>.
 
-    <% if disapprovals.map(&:reason).grep("borderline_quality").count > 0 %>
+    <% if disapprovals.map(&:reason).grep("borderline_quality").any? %>
       <%= disapprovals.map(&:reason).grep("borderline_quality").count %> believe it doesn't meet the quality standards.
     <% end %>
 
-    <% if disapprovals.map(&:reason).grep("borderline_relevancy").count > 0 %>
+    <% if disapprovals.map(&:reason).grep("borderline_relevancy").any? %>
       <%= disapprovals.map(&:reason).grep("borderline_relevancy").count %> believe it isn't relevant.
     <% end %>
 
     <% if disapprovals.map(&:message).any?(&:present?) %>
-      Messages: <%= disapprovals.map(&:message).select(&:present?).map { |msg| format_text(msg, inline: true) }.to_sentence.html_safe %>.
+      Messages: <%= disapprovals.map(&:message).compact_blank.map { |msg| format_text(msg, inline: true) }.to_sentence.html_safe %>.
     <% end %>
 
-    <% @our_disapproval = disapprovals.select { |x| x.user_id == CurrentUser.id }.first %>
+    <% @our_disapproval = disapprovals.select { |x| x.user_id == CurrentUser.user.id }.first %>
     <% if @our_disapproval.present? %>
       <div>
         You are currently disapproving of this post for the following reason: <strong><%= @our_disapproval.reason %></strong>

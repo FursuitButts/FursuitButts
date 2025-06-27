@@ -13,7 +13,7 @@ class PostsController < ApplicationController
       end
     else
       authorize(Post)
-      @post_set = PostSets::Post.new(tag_query, params[:page], limit: params[:limit], random: params[:random])
+      @post_set = PostSets::Post.new(tag_query, params[:page], limit: params[:limit], random: params[:random], current_user: CurrentUser.user)
       @post_set.load_view_counts! # force load view counts all at once
       @votes = PostVote.where(user_id: CurrentUser.user.id, post_id: @post_set.posts.map(&:id))
       @posts = PostsDecorator.decorate_collection(@post_set.posts)
@@ -31,23 +31,23 @@ class PostsController < ApplicationController
 
     raise(User::PrivilegeError, "Post unavailable") unless Security::Lockdown.post_visible?(@post, CurrentUser.user)
 
-    include_deleted = @post.is_deleted? || (@post.parent_id.present? && @post.parent.is_deleted?) || CurrentUser.is_approver?
-    @parent_post_set = PostSets::PostRelationship.new(@post.parent_id, include_deleted: include_deleted, want_parent: true)
-    @children_post_set = PostSets::PostRelationship.new(@post.id, include_deleted: include_deleted, want_parent: false)
+    include_deleted = @post.is_deleted? || (@post.parent_id.present? && @post.parent.is_deleted?) || CurrentUser.user.is_approver?
+    @parent_post_set = PostSets::PostRelationship.new(@post.parent_id, include_deleted: include_deleted, want_parent: true, current_user: CurrentUser.user)
+    @children_post_set = PostSets::PostRelationship.new(@post.id, include_deleted: include_deleted, want_parent: false, current_user: CurrentUser.user)
     @comment_votes = {}
-    @comment_votes = CommentVote.for_comments_and_user(@post.comments.visible(CurrentUser.user).map(&:id), CurrentUser.id) if request.format.html?
+    @comment_votes = CommentVote.for_comments_and_user(@post.comments.visible(CurrentUser.user).map(&:id), CurrentUser.user.id) if request.format.html?
 
     respond_with(@post)
   end
 
   def show_seq
     authorize(Post)
-    @post = PostSearchContext.new(params).post
-    include_deleted = @post.is_deleted? || (@post.parent_id.present? && @post.parent.is_deleted?) || CurrentUser.is_approver?
-    @parent_post_set = PostSets::PostRelationship.new(@post.parent_id, include_deleted: include_deleted, want_parent: true)
-    @children_post_set = PostSets::PostRelationship.new(@post.id, include_deleted: include_deleted, want_parent: false)
+    @post = PostSearchContext.new(params, CurrentUser.user).post
+    include_deleted = @post.is_deleted? || (@post.parent_id.present? && @post.parent.is_deleted?) || CurrentUser.user.is_approver?
+    @parent_post_set = PostSets::PostRelationship.new(@post.parent_id, include_deleted: include_deleted, want_parent: true, current_user: CurrentUser.user)
+    @children_post_set = PostSets::PostRelationship.new(@post.id, include_deleted: include_deleted, want_parent: false, current_user: CurrentUser.user)
     @comment_votes = {}
-    @comment_votes = CommentVote.for_comments_and_user(@post.comments.visible(CurrentUser.user).map(&:id), CurrentUser.id) if request.format.html?
+    @comment_votes = CommentVote.for_comments_and_user(@post.comments.visible(CurrentUser.user).map(&:id), CurrentUser.user.id) if request.format.html?
     @fixup_post_url = true
 
     respond_with(@post) do |fmt|
@@ -62,7 +62,7 @@ class PostsController < ApplicationController
     pparams = permitted_attributes(@post)
     pparams.delete(:tag_string) if pparams[:tag_string_diff].present?
     pparams.delete(:source) if pparams[:source_diff].present?
-    @post.update(pparams)
+    @post.update_with_current(:updater, pparams)
     respond_with_post_after_update(@post)
   end
 
@@ -71,7 +71,7 @@ class PostsController < ApplicationController
     ensure_can_edit(@post)
     @version = @post.versions.find(params[:version_id])
 
-    @post.revert_to!(@version)
+    @post.revert_to!(@version, CurrentUser.user)
 
     respond_with(@post, &:js)
   end
@@ -81,20 +81,20 @@ class PostsController < ApplicationController
     ensure_can_edit(@post)
     @other_post = Post.find(params[:other_post_id].to_i)
     raise(User::PrivilegeError, "post ##{@other_post.id} is edit restricted") unless policy(@other_post).min_level?
-    @post.copy_notes_to(@other_post)
+    @post.copy_notes_to(@other_post, CurrentUser.user)
 
     if @post.errors.any?
       @error_message = @post.errors.full_messages.join("; ")
-      render(json: { success: false, reason: @error_message }.to_json, status: 400)
+      render(json: { success: false, reason: @error_message }.to_json, status: :bad_request)
     else
-      head(204)
+      head(:no_content)
     end
   end
 
   def random
     authorize(Post)
     tags = params[:tags] || ""
-    @post = Post.tag_match("#{tags} order:random").limit(1).first
+    @post = Post.tag_match_current("#{tags} order:random").limit(1).first
     raise(ActiveRecord::RecordNotFound) if @post.nil?
     respond_with(@post) do |format|
       format.html { redirect_to(post_path(@post, tags: params[:tags])) }
@@ -124,7 +124,7 @@ class PostsController < ApplicationController
   def destroy
     @post = authorize(Post.find(params[:id]))
     if params[:commit] != "Cancel"
-      @post.delete!(params[:reason], move_favorites: params[:move_favorites]&.truthy?)
+      @post.delete!(CurrentUser.user, params[:reason], move_favorites: params[:move_favorites]&.truthy?)
       @post.copy_sources_to_parent if params[:copy_sources]&.truthy?
       @post.copy_tags_to_parent if params[:copy_tags]&.truthy?
       @post.parent.save if params[:copy_tags]&.truthy? || params[:copy_sources]&.truthy?
@@ -137,7 +137,7 @@ class PostsController < ApplicationController
   def undelete
     @post = authorize(Post.find(params[:id]))
     appeal = @post.is_appealed?
-    @post.undelete!
+    @post.undelete!(CurrentUser.user)
     if appeal && request.format.html?
       notice("Post appeal accepted")
       return redirect_back(fallback_location: post_path(@post))
@@ -147,7 +147,7 @@ class PostsController < ApplicationController
 
   def expunge
     @post = authorize(Post.find(params[:id]))
-    @post.expunge!(reason: params[:reason])
+    @post.expunge!(CurrentUser.user, reason: params[:reason])
     respond_with(@post)
   end
 
@@ -168,7 +168,7 @@ class PostsController < ApplicationController
   def approve
     @post = authorize(Post.find(params[:id]))
     if @post.is_approvable?
-      @post.approve!
+      @post.approve!(CurrentUser.user)
       respond_to do |format|
         format.json
       end
@@ -184,7 +184,7 @@ class PostsController < ApplicationController
   def unapprove
     @post = authorize(Post.find(params[:id]))
     if @post.is_unapprovable?(CurrentUser.user)
-      @post.unapprove!
+      @post.unapprove!(CurrentUser.user)
       respond_with(nil)
     else
       flash[:notice] = "You can't unapprove this post"
@@ -207,7 +207,7 @@ class PostsController < ApplicationController
     end
 
     @pool.with_lock do
-      @pool.add!(@post)
+      @pool.add!(@post, CurrentUser.user)
       @pool.save
     end
     append_pool_to_session(@pool)
@@ -223,7 +223,7 @@ class PostsController < ApplicationController
     end
 
     @pool.with_lock do
-      @pool.remove!(@post)
+      @pool.remove!(@post, CurrentUser.user)
       @pool.save
     end
     respond_with(@pool, location: post_path(@post))
@@ -232,8 +232,8 @@ class PostsController < ApplicationController
   def favorites
     @post = authorize(Post.find(params[:id]))
     query = User.joins(:favorites)
-    unless CurrentUser.is_moderator?
-      query = query.where("bit_prefs & :value != :value", { value: User.flag_value_for("enable_privacy_mode") }).or(query.where(favorites: { user_id: CurrentUser.id }))
+    unless CurrentUser.user.is_moderator?
+      query = query.where("bit_prefs & :value != :value", { value: User.flag_value_for("enable_privacy_mode") }).or(query.where(favorites: { user_id: CurrentUser.user.id }))
     end
     query = query.where(favorites: { post_id: @post.id })
     query = query.order("users.name asc")
@@ -268,14 +268,14 @@ class PostsController < ApplicationController
           warnings = post.warnings.full_messages.join(".\n \n")
           if warnings.length > 45_000
             Dmail.create_automated({
-              to_id: CurrentUser.id,
+              to_id: CurrentUser.user.id,
               title: "Post update notices for post ##{post.id}",
               body:  "While editing post ##{post.id} some notices were generated. Please review them below:\n\n#{warnings[0..45_000]}",
             })
             flash[:notice] = "What the heck did you even do to this poor post? That generated way too many warnings. But you get a dmail with most of them anyways"
           elsif warnings.length > 1500
             Dmail.create_automated({
-              to_id: CurrentUser.id,
+              to_id: CurrentUser.user.id,
               title: "Post update notices for post ##{post.id}",
               body:  "While editing post ##{post.id} some notices were generated. Please review them below:\n\n#{warnings}",
             })
@@ -311,7 +311,7 @@ class PostsController < ApplicationController
   end
 
   def ensure_lockdown_disabled
-    access_denied if Security::Lockdown.uploads_disabled? && !CurrentUser.is_staff?
+    access_denied if Security::Lockdown.uploads_disabled? && !CurrentUser.user.is_staff?
   end
 
   def append_pool_to_session(pool)

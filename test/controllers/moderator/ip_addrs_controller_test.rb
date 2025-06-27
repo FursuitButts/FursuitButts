@@ -8,9 +8,7 @@ module Moderator
       setup do
         @user = create(:admin_user, created_at: 1.month.ago)
 
-        as(@user) do
-          create(:comment)
-        end
+        create(:comment, creator: @user)
       end
 
       context("index action") do

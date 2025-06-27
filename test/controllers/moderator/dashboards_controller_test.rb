@@ -13,9 +13,7 @@ module Moderator
       context("show action") do
         context("for mod actions") do
           setup do
-            as(@admin) do
-              @mod_action = create(:mod_action)
-            end
+            @mod_action = create(:mod_action, creator: @user)
           end
 
           should("render") do
@@ -26,9 +24,7 @@ module Moderator
 
         context("for user feedbacks") do
           setup do
-            as(@admin) do
-              @feedback = create(:user_feedback)
-            end
+            @feedback = create(:user_feedback, creator: @admin)
           end
 
           should("render") do
@@ -39,9 +35,7 @@ module Moderator
 
         context("for wiki pages") do
           setup do
-            as(@user) do
-              @wiki_page = create(:wiki_page)
-            end
+            @wiki_page = create(:wiki_page, creator: @user)
           end
 
           should("render") do
@@ -52,9 +46,7 @@ module Moderator
 
         context("for tags and uploads") do
           setup do
-            as(@user) do
-              @post = create(:post)
-            end
+            @post = create(:post, uploader: @user)
           end
 
           should("render") do
@@ -65,10 +57,8 @@ module Moderator
 
         context("for notes") do
           setup do
-            as(@user) do
-              @post = create(:post)
-              @note = create(:note, post_id: @post.id)
-            end
+            @post = create(:post, uploader: @user)
+            @note = create(:note, post: @post, creator: @user)
           end
 
           should("render") do
@@ -79,16 +69,12 @@ module Moderator
 
         context("for comments") do
           setup do
-            @users = (0..5).map { create(:user) }
+            @users = create_list(:user, 6)
 
-            as(create(:user)) do
-              @comment = create(:comment)
-            end
+            @comment = create(:comment)
 
             @users.each do |user|
-              as(user) do
-                VoteManager::Comments.vote!(user: user, comment: @comment, score: -1)
-              end
+              VoteManager::Comments.vote!(user: user, ip_addr: "127.0.0.1", comment: @comment, score: -1)
             end
           end
 
@@ -100,9 +86,7 @@ module Moderator
 
         context("for artists") do
           setup do
-            as(@user) do
-              @artist = create(:artist)
-            end
+            @artist = create(:artist, creator: @user)
           end
 
           should("render") do
@@ -113,10 +97,8 @@ module Moderator
 
         context("for flags") do
           setup do
-            as(@user) do
-              @post = create(:post)
-              create(:post_flag, post: @post)
-            end
+            @post = create(:post, uploader: @user)
+            create(:post_flag, post: @post, creator: @user)
           end
 
           should("render") do

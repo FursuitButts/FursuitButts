@@ -6,9 +6,7 @@ class NewsUpdatesControllerTest < ActionDispatch::IntegrationTest
   context("the news updates controller") do
     setup do
       @admin = create(:admin_user)
-      as(@admin) do
-        @news_update = create(:news_update)
-      end
+      @news_update = create(:news_update)
     end
 
     context("index action") do

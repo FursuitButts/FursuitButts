@@ -11,7 +11,6 @@ class UserDeletionTest < ActiveSupport::TestCase
     context("for an invalid password") do
       setup do
         @user = create(:user)
-        CurrentUser.user = @user
         @deletion = UserDeletion.new(@user, "wrongpassword", @request)
       end
 
@@ -25,7 +24,6 @@ class UserDeletionTest < ActiveSupport::TestCase
     context("for an admin") do
       setup do
         @user = create(:admin_user)
-        CurrentUser.user = @user
         @deletion = UserDeletion.new(@user, "password", @request)
       end
 
@@ -40,7 +38,6 @@ class UserDeletionTest < ActiveSupport::TestCase
   context("a valid user deletion") do
     setup do
       @user = create(:trusted_user, created_at: 2.weeks.ago, mfa_secret: MFA.generate_secret)
-      CurrentUser.user = @user
 
       @post = create(:post)
       FavoriteManager.add!(user: @user, post: @post)
@@ -48,7 +45,7 @@ class UserDeletionTest < ActiveSupport::TestCase
       @tag = @post.tags.first
       @tag.follow!(@user)
 
-      @user.update(email: "gay@femboy.fan")
+      @user.update_with(@user, email: "gay@femboy.fan")
 
       @deletion = UserDeletion.new(@user, "password", @request)
       with_inline_jobs { @deletion.delete! }

@@ -9,7 +9,6 @@ module Users
         @user = create(:user)
         @user2 = create(:user)
         @admin = create(:admin_user)
-        CurrentUser.user = @user
       end
 
       context("index action") do

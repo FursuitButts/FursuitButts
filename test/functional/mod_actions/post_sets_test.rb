@@ -10,15 +10,13 @@ module ModActions
 
     context("mod actions for post sets") do
       setup do
-        as(@user) do
-          @set = create(:post_set)
-        end
+        @set = create(:post_set, creator: @user)
         set_count!
       end
 
       should("format set_change_visibility correctly") do
         FemboyFans.config.stubs(:disable_age_checks?).returns(true)
-        @set.update!(is_public: true)
+        @set.update_with!(@admin, is_public: true)
 
         assert_matches(
           actions:   %w[set_change_visibility],
@@ -30,7 +28,7 @@ module ModActions
       end
 
       should("format set_delete correctly") do
-        @set.destroy
+        @set.destroy_with(@admin)
 
         assert_matches(
           actions: %w[set_delete],
@@ -41,7 +39,7 @@ module ModActions
       end
 
       should("format set_update correctly") do
-        @set.update!(name: "xxx")
+        @set.update_with!(@admin, name: "xxx")
 
         assert_matches(
           actions: %w[set_update],

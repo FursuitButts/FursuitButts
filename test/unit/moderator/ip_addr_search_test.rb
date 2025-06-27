@@ -7,9 +7,7 @@ module Moderator
     context("an ip addr search") do
       setup do
         @user = create(:user)
-        CurrentUser.user = @user
-        CurrentUser.ip_addr = "170.1.2.3"
-        create(:comment, creator: @user, creator_ip_addr: CurrentUser.ip_addr)
+        create(:comment, creator: @user, creator_ip_addr: "170.1.2.3")
       end
 
       should("find by ip addr") do

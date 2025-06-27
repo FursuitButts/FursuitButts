@@ -10,14 +10,12 @@ module ModActions
 
     context("mod actions for forum topics") do
       setup do
-        as(@user) do
-          @topic = create(:forum_topic)
-        end
+        @topic = create(:forum_topic, creator: @user)
         set_count!
       end
 
       should("format forum_topic_delete correctly") do
-        @topic.destroy
+        @topic.destroy_with(@admin)
 
         assert_matches(
           actions:           %w[forum_topic_delete forum_post_delete],
@@ -29,10 +27,10 @@ module ModActions
       end
 
       should("format forum_topic_hide correctly") do
-        @topic.hide!
+        @topic.hide!(@admin)
 
         assert_matches(
-          actions:           %w[forum_topic_hide forum_post_update],
+          actions:           %w[forum_topic_hide],
           text:              "Hid topic ##{@topic.id} (with title #{@topic.title}) by #{user(@user)}",
           subject:           @topic,
           forum_topic_title: @topic.title,
@@ -41,10 +39,10 @@ module ModActions
       end
 
       should("format forum_topic_lock correctly") do
-        @topic.update!(is_locked: true)
+        @topic.update_with!(@admin, is_locked: true)
 
         assert_matches(
-          actions:           %w[forum_topic_lock forum_post_update],
+          actions:           %w[forum_topic_lock],
           text:              "Locked topic ##{@topic.id} (with title #{@topic.title}) by #{user(@user)}",
           subject:           @topic,
           forum_topic_title: @topic.title,
@@ -55,10 +53,10 @@ module ModActions
       should("format forum_topic_merge correctly") do
         @target = create(:forum_topic)
         set_count!
-        @topic.merge_into!(@target)
+        @topic.merge_into!(@target, @admin)
 
         assert_matches(
-          actions:           %w[forum_topic_merge forum_post_update],
+          actions:           %w[forum_topic_merge],
           text:              "Merged topic ##{@topic.id} (with title #{@topic.title}) by #{user(@user)} into topic ##{@target.id} (with title #{@target.title})",
           subject:           @topic,
           forum_topic_title: @topic.title,
@@ -72,10 +70,10 @@ module ModActions
         old_category = @topic.category
         category = create(:forum_category)
         set_count!
-        @topic.update!(category: category)
+        @topic.update_with!(@admin, category: category)
 
         assert_matches(
-          actions:                 %w[forum_topic_move forum_post_update],
+          actions:                 %w[forum_topic_move],
           text:                    "Moved topic ##{@topic.id} (with title #{@topic.title}) by #{user(@user)} from #{old_category.name} to #{category.name}",
           subject:                 @topic,
           forum_topic_title:       @topic.title,
@@ -88,10 +86,10 @@ module ModActions
       end
 
       should("format forum_topic_stick correctly") do
-        @topic.update!(is_sticky: true)
+        @topic.update_with!(@admin, is_sticky: true)
 
         assert_matches(
-          actions:           %w[forum_topic_stick forum_post_update],
+          actions:           %w[forum_topic_stick],
           text:              "Stickied topic ##{@topic.id} (with title #{@topic.title}) by #{user(@user)}",
           subject:           @topic,
           forum_topic_title: @topic.title,
@@ -101,10 +99,10 @@ module ModActions
 
       should("format forum_topic_update correctly") do
         @original = @topic.dup
-        @topic.update!(title: "xxx")
+        @topic.update_with!(@admin, title: "xxx")
 
         assert_matches(
-          actions:           %w[forum_topic_update forum_post_update],
+          actions:           %w[forum_topic_update],
           text:              "Edited topic ##{@topic.id} (with title #{@topic.title}) by #{user(@user)}",
           subject:           @topic,
           forum_topic_title: @topic.title,
@@ -114,10 +112,10 @@ module ModActions
 
       should("format forum_topic_unhide correctly") do
         @topic.update_columns(is_hidden: true)
-        @topic.unhide!
+        @topic.unhide!(@admin)
 
         assert_matches(
-          actions:           %w[forum_topic_unhide forum_post_update],
+          actions:           %w[forum_topic_unhide],
           text:              "Unhid topic ##{@topic.id} (with title #{@topic.title}) by #{user(@user)}",
           subject:           @topic,
           forum_topic_title: @topic.title,
@@ -127,10 +125,10 @@ module ModActions
 
       should("format forum_topic_unlock correctly") do
         @topic.update_columns(is_locked: true)
-        @topic.update!(is_locked: false)
+        @topic.update_with!(@admin, is_locked: false)
 
         assert_matches(
-          actions:           %w[forum_topic_unlock forum_post_update],
+          actions:           %w[forum_topic_unlock],
           text:              "Unlocked topic ##{@topic.id} (with title #{@topic.title}) by #{user(@user)}",
           subject:           @topic,
           forum_topic_title: @topic.title,
@@ -140,9 +138,9 @@ module ModActions
 
       should("format forum_topic_unmerge correctly") do
         @target = create(:forum_topic)
-        @topic.merge_into!(@target)
+        @topic.merge_into!(@target, @admin)
         set_count!
-        @topic.undo_merge!
+        @topic.undo_merge!(@admin)
 
         assert_matches(
           actions:           %w[forum_topic_unmerge],
@@ -157,10 +155,10 @@ module ModActions
 
       should("format forum_topic_unstick correctly") do
         @topic.update_columns(is_sticky: true)
-        @topic.update!(is_sticky: false)
+        @topic.update_with!(@admin, is_sticky: false)
 
         assert_matches(
-          actions:           %w[forum_topic_unstick forum_post_update],
+          actions:           %w[forum_topic_unstick],
           text:              "Unstickied topic ##{@topic.id} (with title #{@topic.title}) by #{user(@user)}",
           subject:           @topic,
           forum_topic_title: @topic.title,

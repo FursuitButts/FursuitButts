@@ -10,7 +10,7 @@ module ModActions
 
     context("mod actions for users") do
       setup do
-        @target = create(:user)
+        @target = create(:user, resolvable: false)
         @restricted = create(:restricted_user)
         @original = @target.dup
         set_count!
@@ -18,7 +18,7 @@ module ModActions
 
       should("format user_approve correctly") do
         @approval = create(:user_approval, user: @restricted)
-        @approval.approve!
+        @approval.approve!(@admin)
 
         assert_matches(
           actions: %w[user_approve],
@@ -29,7 +29,7 @@ module ModActions
       end
 
       should("format user_blacklist_change correctly") do
-        @target.update!(is_admin_edit: true, blacklisted_tags: "aaa bbb")
+        @target.update_with!(@admin, is_admin_edit: true, blacklisted_tags: "aaa bbb")
 
         assert_matches(
           actions: %w[user_blacklist_change],
@@ -40,7 +40,7 @@ module ModActions
       end
 
       should("format user_ban correctly") do
-        @target.ban!
+        @target.ban!(@admin)
 
         assert_matches(
           actions: %w[user_ban],
@@ -51,18 +51,19 @@ module ModActions
       end
 
       should("format user_delete correctly") do
-        UserDeletion.new(@target, nil, mock_request).send(:create_mod_action)
+        UserDeletion.new(@target.resolvable("127.0.0.1"), nil, mock_request).send(:create_mod_action)
 
         assert_matches(
           actions: %w[user_delete],
           text:    "Deleted user #{user(@target)}",
+          creator: @target,
           subject: @target,
           user_id: @target.id,
         )
       end
 
       should("format user_flags_change correctly") do
-        @target.admin_edit!(@admin, unrestricted_uploads: true)
+        @target.admin_edit!(@admin, @admin.ip_addr, unrestricted_uploads: true)
 
         assert_matches(
           actions: %w[user_flags_change],
@@ -75,7 +76,7 @@ module ModActions
       end
 
       should("format user_level_change correctly") do
-        @target.admin_edit!(@admin, level: User::Levels::TRUSTED)
+        @target.admin_edit!(@admin, @admin.ip_addr, level: User::Levels::TRUSTED)
 
         assert_matches(
           actions:   %w[user_level_change],
@@ -88,7 +89,7 @@ module ModActions
       end
 
       should("format user_name_change correctly") do
-        @target.log_name_change
+        @target.log_name_change(@admin)
 
         assert_matches(
           actions: %w[user_name_change],
@@ -100,7 +101,7 @@ module ModActions
 
       should("format user_reject correctly") do
         @approval = create(:user_approval, user: @restricted)
-        @approval.reject!
+        @approval.reject!(@admin)
 
         assert_matches(
           actions: %w[user_reject],
@@ -111,7 +112,7 @@ module ModActions
       end
 
       should("format user_text_change correctly") do
-        @target.update!(is_admin_edit: true, profile_about: "xxx")
+        @target.update_with!(@admin, is_admin_edit: true, profile_about: "xxx")
 
         assert_matches(
           actions: %w[user_text_change],
@@ -122,7 +123,7 @@ module ModActions
       end
 
       should("format user_upload_limit_change correctly") do
-        @target.update!(is_admin_edit: true, base_upload_limit: 20)
+        @target.update_with!(@admin, is_admin_edit: true, base_upload_limit: 20)
 
         assert_matches(
           actions:          %w[user_upload_limit_change],
@@ -135,9 +136,9 @@ module ModActions
       end
 
       should("format user_unban correctly") do
-        @target.ban!
+        @target.ban!(@admin)
         set_count!
-        @target.unban!
+        @target.unban!(@admin)
 
         assert_matches(
           actions: %w[user_unban],

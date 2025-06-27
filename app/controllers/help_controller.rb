@@ -30,7 +30,7 @@ class HelpController < ApplicationController
   end
 
   def new
-    @help = authorize(HelpPage.new(permitted_attributes(HelpPage)))
+    @help = authorize(HelpPage.new_with_current(:creator, permitted_attributes(HelpPage)))
     respond_with(@help)
   end
 
@@ -40,7 +40,7 @@ class HelpController < ApplicationController
   end
 
   def create
-    @help = authorize(HelpPage.new(permitted_attributes(HelpPage)))
+    @help = authorize(HelpPage.new_with_current(:creator, permitted_attributes(HelpPage)))
     @help.save
     notice(@help.valid? ? "Help page created" : @help.errors.full_messages.join("; "))
     respond_with(@help)
@@ -48,14 +48,14 @@ class HelpController < ApplicationController
 
   def update
     @help = authorize(HelpPage.find(params[:id]))
-    @help.update(permitted_attributes(@help))
+    @help.update_with_current(:updater, permitted_attributes(@help))
     notice(@help.errors.any? ? @help.errors.full_messages.join("; ") : "Help page updated")
     respond_with(@help)
   end
 
   def destroy
     @help = authorize(HelpPage.find(params[:id]))
-    @help.destroy
+    @help.destroy_with_current(:destroyer)
     respond_with(@help)
   end
 end

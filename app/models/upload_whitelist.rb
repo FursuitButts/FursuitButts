@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 class UploadWhitelist < ApplicationRecord
+  belongs_to_user(:creator, ip: true, clones: :updater)
+  belongs_to_user(:updater, ip: true)
+  resolvable(:destroyer)
   before_save(:clean_pattern)
   after_create(:log_create)
   after_update(:log_update)
@@ -21,15 +24,15 @@ class UploadWhitelist < ApplicationRecord
 
   module LogMethods
     def log_create
-      ModAction.log!(:upload_whitelist_create, self, pattern: pattern, note: note, hidden: hidden)
+      ModAction.log!(creator, :upload_whitelist_create, self, pattern: pattern, note: note, hidden: hidden)
     end
 
     def log_update
-      ModAction.log!(:upload_whitelist_update, self, pattern: pattern, note: note, old_pattern: pattern_before_last_save, hidden: hidden)
+      ModAction.log!(updater, :upload_whitelist_update, self, pattern: pattern, note: note, old_pattern: pattern_before_last_save, hidden: hidden)
     end
 
     def log_delete
-      ModAction.log!(:upload_whitelist_delete, self, pattern: pattern, note: note, hidden: hidden)
+      ModAction.log!(destroyer, :upload_whitelist_delete, self, pattern: pattern, note: note, hidden: hidden)
     end
   end
 
@@ -38,7 +41,7 @@ class UploadWhitelist < ApplicationRecord
       order("upload_whitelists.note")
     end
 
-    def search(params)
+    def search(params, user)
       q = super
 
       if params[:pattern].present?
@@ -64,12 +67,12 @@ class UploadWhitelist < ApplicationRecord
     end
   end
 
-  def self.is_whitelisted?(url)
+  def self.is_whitelisted?(url, user)
     entries = Cache.fetch("upload_whitelist", expires_in: 6.hours) do
       all
     end
 
-    if FemboyFans.config.bypass_upload_whitelist?(CurrentUser.user)
+    if FemboyFans.config.bypass_upload_whitelist?(user)
       return [true, "bypassed"]
     end
 

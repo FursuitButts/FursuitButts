@@ -10,7 +10,7 @@ module Rules
     end
 
     def new
-      @quick = authorize(QuickRule.new)
+      @quick = authorize(QuickRule.new_with_current(:creator))
       @rules = Rule.joins(:category).order("rule_categories.order, rules.order")
       respond_with(@quick)
     end
@@ -22,7 +22,7 @@ module Rules
     end
 
     def create
-      @quick = authorize(QuickRule.new(permitted_attributes(QuickRule)))
+      @quick = authorize(QuickRule.new_with_current(:creator, permitted_attributes(QuickRule)))
       @quick.save
       @rules = Rule.joins(:category).order("rule_categories.order, rules.order")
       notice(@quick.errors.any? ? @quick.errors.full_messages.join(", ") : "Quick rule created")
@@ -32,14 +32,14 @@ module Rules
     def update
       @quick = authorize(QuickRule.find(params[:id]))
       @rules = Rule.joins(:category).order("rule_categories.order, rules.order")
-      @quick.update(permitted_attributes(@quick))
+      @quick.update_with_current(:updater, permitted_attributes(@quick))
       notice(@quick.errors.any? ? @quick.errors.full_messages.join(", ") : "Quick rule updated")
       respond_with(@quick, location: quick_rules_path)
     end
 
     def destroy
       @quick = authorize(QuickRule.find(params[:id]))
-      @quick.destroy
+      @quick.destroy_with_current(:destroyer)
       notice("Quick rule deleted")
       respond_with(@quick, location: quick_rules_path)
     end
@@ -67,12 +67,12 @@ module Rules
           list.each do |quick|
             errors << { id: quick.id, name: quick.name, message: quick.errors.full_messages.join("; ") } if !quick.valid? && quick.errors.any?
           end
-          render(json: { success: false, errors: errors }, status: 422)
+          render(json: { success: false, errors: errors }, status: :unprocessable_entity)
           raise(ActiveRecord::Rollback)
         else
-          QuickRule.log_reorder(changes) if changes != 0
+          QuickRule.log_reorder(changes, CurrentUser.user) if changes != 0
           respond_to do |format|
-            format.json { head(204) }
+            format.json { head(:no_content) }
             format.js do
               render(json: { html: render_to_string(partial: "rules/quick/sort", locals: { list: QuickRule.order(:order) }) })
             end

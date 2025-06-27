@@ -10,6 +10,6 @@ class TagAliasJob < ApplicationJob
 
   def perform(*args)
     ta = TagAlias.find(args[0])
-    ta.process!(update_topic: args[1])
+    ta.process!(args[2], update_topic: args[1])
   end
 end

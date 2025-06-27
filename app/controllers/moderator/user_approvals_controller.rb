@@ -6,14 +6,14 @@ module Moderator
 
     def index
       @user_approvals = authorize(UserApproval).html_includes(request, :user, :updater)
-                                               .search(search_params(UserApproval))
+                                               .search_current(search_params(UserApproval))
                                                .paginate(params[:page], limit: params[:limit])
     end
 
     def approve
       @user_approval = authorize(UserApproval.find(params[:id]))
 
-      @user_approval.approve!
+      @user_approval.approve!(CurrentUser.user)
       if @user_approval.errors.empty?
         flash[:notice] = "User approved"
       else
@@ -26,7 +26,7 @@ module Moderator
 
     def reject
       @user_approval = authorize(UserApproval.find(params[:id]))
-      @user_approval.reject!
+      @user_approval.reject!(CurrentUser.user)
       if @user_approval.errors.empty?
         flash[:notice] = "User rejected"
       else

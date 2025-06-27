@@ -5,12 +5,13 @@ class ForumPost < ApplicationRecord
   simple_versioning
   mentionable
   has_dtext_links(:body)
-  belongs_to_creator(counter_cache: "forum_post_count")
-  belongs_to_updater
+  belongs_to_user(:creator, ip: true, clones: :updater, counter_cache: "forum_post_count")
+  belongs_to_user(:updater, ip: true)
+  resolvable(:destroyer)
   belongs_to(:topic, class_name: "ForumTopic")
   has_one(:category, through: :topic)
   belongs_to(:original_topic, class_name: "ForumTopic", optional: true)
-  belongs_to(:warning_user, class_name: "User", optional: true)
+  belongs_to_user(:warning_user, optional: true)
   has_many(:votes, class_name: "ForumPostVote")
   has_many(:tickets, as: :model)
   has_many(:versions, class_name: "EditHistory", as: :versionable, dependent: :destroy)
@@ -25,7 +26,7 @@ class ForumPost < ApplicationRecord
   after_create(-> { category.increment!(:post_count) })
   after_create(:log_create)
   after_update(:log_update)
-  before_destroy(:validate_topic_is_unlocked)
+  before_destroy(:validate_topic_is_unlocked_on_destroy)
   after_destroy(:update_topic_updated_at_on_destroy)
   normalizes(:body, with: ->(body) { body.gsub("\r\n", "\n") })
   validates(:body, :creator_id, presence: true)
@@ -44,18 +45,11 @@ class ForumPost < ApplicationRecord
   attr_accessor(:bypass_limits, :is_merging)
 
   scope(:votable, -> { where(allow_voting: true) })
+  scope(:for_user, ->(user) { where(creator_id: u2id(user)) })
 
   module SearchMethods
-    def topic_title_matches(title)
-      joins(:topic).merge(ForumTopic.search(title_matches: title))
-    end
-
-    def for_user(user_id)
-      where("forum_posts.creator_id = ?", user_id)
-    end
-
-    def visible(user)
-      active(user).permitted(user)
+    def topic_title_matches(title, user)
+      joins(:topic).merge(ForumTopic.search(user, title_matches: title))
     end
 
     def not_visible(user)
@@ -63,17 +57,17 @@ class ForumPost < ApplicationRecord
     end
 
     def permitted(user)
-      q = joins(topic: :category).where("forum_categories.can_view <= ?", user.level)
-      q = q.joins(:topic).where("forum_topics.is_hidden = FALSE OR forum_topics.creator_id = ?", user.id) unless user.is_moderator?
+      q = joins(topic: :category).merge(ForumCategory.viewable(user))
+      q = q.joins(:topic).where("forum_topics.is_hidden": false).or(q.joins(:topic).where("forum_topics.creator_id": user.id)) unless user.is_moderator?
       q
     end
 
     def active(user)
       return all if user.is_moderator?
-      where("forum_posts.is_hidden = FALSE OR forum_posts.creator_id = ?", user.id)
+      where("forum_posts.is_hidden": false).or(where("forum_posts.creator_id": user.id))
     end
 
-    def search(params)
+    def search(params, user)
       q = super
       q = q.where_user(:creator_id, :creator, params)
 
@@ -82,7 +76,7 @@ class ForumPost < ApplicationRecord
       end
 
       if params[:topic_title_matches].present?
-        q = q.topic_title_matches(params[:topic_title_matches])
+        q = q.topic_title_matches(params[:topic_title_matches], user)
       end
 
       q = q.attribute_matches(:body, params[:body_matches])
@@ -131,16 +125,16 @@ class ForumPost < ApplicationRecord
       log_voting_change if saved_change_to_allow_voting?
 
       if saved_change_to_is_hidden?
-        ModAction.log!(is_hidden? ? :forum_post_hide : :forum_post_unhide, self, forum_topic_id: topic_id, user_id: creator_id)
+        ModAction.log!(updater, is_hidden? ? :forum_post_hide : :forum_post_unhide, self, forum_topic_id: topic_id, user_id: creator_id)
       end
 
       if !saved_change_to_is_hidden? && updater_id != creator_id && !is_merging
-        ModAction.log!(:forum_post_update, self, forum_topic_id: topic_id, user_id: creator_id)
+        ModAction.log!(updater, :forum_post_update, self, forum_topic_id: topic_id, user_id: creator_id)
       end
     end
 
     def log_destroy
-      ModAction.log!(:forum_post_delete, self, forum_topic_id: topic_id, user_id: creator_id)
+      ModAction.log!(destroyer, :forum_post_delete, self, forum_topic_id: topic_id, user_id: creator_id)
     end
 
     def log_voting_change
@@ -167,8 +161,17 @@ class ForumPost < ApplicationRecord
     tag_change_request.present?
   end
 
+  def validate_topic_is_unlocked_on_destroy
+    return if destroyer.is_moderator? || topic.nil?
+
+    if topic.is_locked?
+      errors.add(:topic, "is locked")
+      throw(:abort)
+    end
+  end
+
   def validate_topic_is_unlocked
-    return if CurrentUser.is_moderator? || topic.nil?
+    return if updater.is_moderator? || topic.nil? || changes.blank?
 
     if topic.is_locked?
       errors.add(:topic, "is locked")
@@ -187,7 +190,7 @@ class ForumPost < ApplicationRecord
   end
 
   def validate_not_aibur
-    return if CurrentUser.is_moderator? || !is_aibur?
+    return if updater.is_moderator? || !is_aibur?
 
     if is_hidden?
       errors.add(:post, "is for an alias, implication, or bulk update request. It cannot be hidden")
@@ -196,7 +199,7 @@ class ForumPost < ApplicationRecord
   end
 
   def validate_topic_is_not_stale
-    return if !topic&.is_stale_for?(CurrentUser.user) || bypass_limits
+    return if !topic&.is_stale_for?(creator) || bypass_limits
     errors.add(:topic, "is stale. New posts cannot be created")
     throw(:abort)
   end
@@ -243,18 +246,18 @@ class ForumPost < ApplicationRecord
     if topic
       # need to do this to bypass the topic's original post from getting touched
       t = Time.now
-      ForumTopic.where(id: topic.id).update_all(["updater_id = ?, response_count = response_count + 1, updated_at = ?, last_post_created_at = ?", CurrentUser.id, t, t])
+      ForumTopic.where(id: topic.id).update_all(["updater_id = ?, response_count = response_count + 1, updated_at = ?, last_post_created_at = ?", creator_id, t, t])
       topic.response_count += 1
     end
   end
 
-  def hide!
-    update(is_hidden: true)
+  def hide!(user)
+    update(is_hidden: true, updater: user)
     update_topic_updated_at_on_hide
   end
 
-  def unhide!
-    update(is_hidden: false)
+  def unhide!(user)
+    update(is_hidden: false, updater: user)
     update_topic_updated_at_on_hide
   end
 
@@ -322,16 +325,16 @@ class ForumPost < ApplicationRecord
     end
   end
 
-  def mark_spam!
+  def mark_spam!(user)
     return if is_spam?
-    update!(is_spam: true)
+    update!(is_spam: true, updater: user)
     return if spam_ticket.present?
     SpamDetector.new(self, user_ip: creator_ip_addr.to_s).spam!
   end
 
-  def mark_not_spam!
+  def mark_not_spam!(user)
     return unless is_spam?
-    update!(is_spam: false)
+    update!(is_spam: false, updater: user)
     return if spam_ticket.blank?
     SpamDetector.new(self, user_ip: creator_ip_addr.to_s).ham!
   end
@@ -340,7 +343,7 @@ class ForumPost < ApplicationRecord
     %i[creator updater topic dtext_links tag_change_request]
   end
 
-  def visible?(user = CurrentUser.user)
+  def visible?(user)
     topic.visible?(user) && (user.is_moderator? || !is_hidden? || user.id == creator_id)
   end
 
@@ -349,7 +352,7 @@ class ForumPost < ApplicationRecord
   end
 
   def self.update_scores(id: nil)
-    if id.present? && ForumPostVote.for_forum_post(id).count == 0
+    if id.present? && ForumPostVote.for_forum_post(id).none?
       ForumPost.where(id: id).update_all("total_score = 0, percentage_score = 0, total_votes = 0, up_votes = 0, down_votes = 0, meh_votes = 0")
       return
     end
@@ -374,7 +377,7 @@ class ForumPost < ApplicationRecord
                  COUNT(*) FILTER (WHERE score = -1) AS down_count,
                  COUNT(*) FILTER (WHERE score = 0) AS meh_count
           FROM forum_post_votes
-          #{id ? "WHERE forum_post_id = #{id}" : ''}
+          #{"WHERE forum_post_id = #{id}" if id}
           GROUP BY forum_post_id
       ) AS votes
       WHERE forum_posts.id = votes.forum_post_id;

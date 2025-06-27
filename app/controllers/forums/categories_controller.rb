@@ -6,7 +6,7 @@ module Forums
     respond_to(:html, :json)
 
     def index
-      @forum_categories = authorize(ForumCategory).visible
+      @forum_categories = authorize(ForumCategory).visible(CurrentUser.user)
                                                   .ordered_categories
                                                   .paginate(params[:page], limit: params[:limit] || 50)
       respond_with(@forum_categories)
@@ -20,7 +20,7 @@ module Forums
     end
 
     def new
-      @forum_category = authorize(ForumCategory.new(permitted_attributes(ForumCategory)))
+      @forum_category = authorize(ForumCategory.new_with_current(:creator, permitted_attributes(ForumCategory)))
     end
 
     def edit
@@ -28,7 +28,7 @@ module Forums
     end
 
     def create
-      @forum_category = authorize(ForumCategory.new(permitted_attributes(ForumCategory)))
+      @forum_category = authorize(ForumCategory.new_with_current(:creator, permitted_attributes(ForumCategory)))
       @forum_category.save
       notice(@forum_category.valid? ? "Forum category created" : @forum_category.errors.full_messages.join("; "))
       respond_with(@forum_category) do |format|
@@ -37,14 +37,14 @@ module Forums
     end
 
     def update
-      authorize(@forum_category).update(permitted_attributes(ForumCategory))
+      authorize(@forum_category).update_with_current(:updater, permitted_attributes(ForumCategory))
 
       notice(@forum_category.valid? ? "Category updated" : @forum_category.errors.full_messages.join("; "))
       respond_with(@forum_category, location: forum_categories_path)
     end
 
     def destroy
-      authorize(@forum_category).destroy
+      authorize(@forum_category).destroy_with_current(:destroyer)
       notice(@forum_category.errors.any? ? @forum_category.errors.full_messages.join("; ") : "Forum category deleted")
       respond_with(@forum_category, location: forum_categories_path)
     end
@@ -73,7 +73,7 @@ module Forums
         end
       end
 
-      ForumCategory.log_reorder(changes) if changes != 0
+      ForumCategory.log_reorder(changes, CurrentUser.user) if changes != 0
 
       respond_to do |format|
         format.html do
@@ -95,7 +95,7 @@ module Forums
         return respond_with(@forum_category)
       end
       @new_forum_category = ForumCategory.find(permitted_attributes(ForumCategory)[:new_category_id])
-      @forum_category.move_all_topics(@new_forum_category)
+      @forum_category.move_all_topics(@new_forum_category, CurrentUser.user)
       respond_to do |format|
         format.html { redirect_to(forum_categories_path, notice: "The category is now locked, topics will be moved soon") }
         format.json

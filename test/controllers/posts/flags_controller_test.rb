@@ -7,10 +7,8 @@ module Posts
     context("The post flags controller") do
       setup do
         @user = create(:user, created_at: 2.weeks.ago)
-        as(@user) do
-          @post = create(:post)
-          @post_flag = create(:post_flag, post: @post)
-        end
+        @post = create(:post, uploader: @user)
+        @post_flag = create(:post_flag, post: @post, creator: @user)
       end
 
       context("new action") do

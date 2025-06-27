@@ -22,9 +22,9 @@ module CommentsHelper
 
   def comment_edited_notice(comment)
     return "" if comment.edited_version.nil?
-    if comment.edited_version.user != comment.creator
-      tag.span(safe_join(["Updated by ", link_to_user(comment.edited_version.user), " ", time_ago_in_words_tagged(comment.edited_at)]), class: "comment-edited-when")
-    elsif CurrentUser.is_moderator? || comment.updated_at - comment.created_at > 5.minutes
+    if comment.edited_version.updater != comment.creator
+      tag.span(safe_join(["Updated by ", link_to_user(comment.edited_version.updater), " ", time_ago_in_words_tagged(comment.edited_at)]), class: "comment-edited-when")
+    elsif CurrentUser.user.is_moderator? || comment.updated_at - comment.created_at > 5.minutes
       tag.span(safe_join(["Updated ", time_ago_in_words_tagged(comment.edited_at)]), class: "comment-edited-when")
     end
   end
@@ -36,14 +36,14 @@ module CommentsHelper
     vote_score = voted ? vote.score : 0
     comment_score = comment.score
 
-    if CurrentUser.id == comment.creator_id
+    if CurrentUser.user.id == comment.creator_id
       up_tag = tag.li
     else
       up_tag = tag.li(
         tag.a(
           tag.i(class: "fas fa-arrow-up"),
           class: "comment-vote-link",
-          href:  (CurrentUser.is_member? ? nil : new_session_path),
+          href:  (CurrentUser.user.is_member? ? nil : new_session_path),
           data:  {
             comment: comment.id,
             action:  1,
@@ -59,14 +59,14 @@ module CommentsHelper
       class: "comment-score #{score_class(comment_score)}",
     )
 
-    if CurrentUser.id == comment.creator_id
+    if CurrentUser.user.id == comment.creator_id
       down_tag = tag.li
     else
       down_tag = tag.li(
         tag.a(
           tag.i(class: "fas fa-arrow-down"),
           class: "comment-vote-link",
-          href:  (CurrentUser.is_member? ? nil : new_session_path),
+          href:  (CurrentUser.user.is_member? ? nil : new_session_path),
           data:  {
             comment: comment.id,
             action:  -1,

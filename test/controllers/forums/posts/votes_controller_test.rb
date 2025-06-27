@@ -8,21 +8,18 @@ module Forums
       context("The forum post votes controller") do
         setup do
           @user = create(:user)
-          as(@user) do
-            @topic = create(:forum_topic, original_post_attributes: { body: "test" })
-            @forum_post = @topic.original_post
-            @ta = create(:tag_alias, forum_post: @forum_post, antecedent_name: "aaa", consequent_name: "bbb", status: "pending")
-            @forum_post.update(tag_change_request: @ta, allow_voting: true)
-            @topic2 = create(:forum_topic, original_post_attributes: { body: "test2" })
-            @forum_post2 = @topic2.original_post
-            @ti = create(:tag_implication, forum_post: @forum_post2, antecedent_name: "ccc", consequent_name: "ddd", status: "pending")
-            @forum_post2.update(tag_change_request: @ti, allow_voting: true)
-            @forum_post3 = create(:forum_post, topic: @topic, allow_voting: false)
-          end
+          @topic = create(:forum_topic, original_post_attributes: { body: "test" }, creator: @user)
+          @forum_post = @topic.original_post
+          @ta = create(:tag_alias, forum_post: @forum_post, antecedent_name: "aaa", consequent_name: "bbb", status: "pending", creator: @user)
+          @forum_post.update_with(@user, tag_change_request: @ta, allow_voting: true)
+          @topic2 = create(:forum_topic, original_post_attributes: { body: "test2" }, creator: @user)
+          @forum_post2 = @topic2.original_post
+          @ti = create(:tag_implication, forum_post: @forum_post2, antecedent_name: "ccc", consequent_name: "ddd", status: "pending", creator: @user)
+          @forum_post2.update_with(@user, tag_change_request: @ti, allow_voting: true)
+          @forum_post3 = create(:forum_post, topic: @topic, allow_voting: false, creator: @user)
 
           @user2 = create(:user)
           @admin = create(:admin_user)
-          CurrentUser.user = @user2
         end
 
         context("index action") do
@@ -62,7 +59,7 @@ module Forums
           end
 
           should("not allow voting if user is forbidden") do
-            as(@admin) { @user2.update(no_aibur_voting: true) }
+            @user2.update(no_aibur_voting: true, updater: @admin)
             post_auth(forum_post_votes_path(@forum_post), @user2, params: { score: 1, format: :json })
             assert_response(:forbidden)
             assert_equal("Access Denied: You are not allowed to vote on tag change requests.", @response.parsed_body["reason"])
@@ -96,8 +93,8 @@ module Forums
             pct = ->(val) { ActiveSupport::NumberHelper.number_to_percentage(val, precision: 2, strip_insignificant_zeros: true) }
             assert_equal(0, @forum_post.total_score)
             assert_equal("0%", pct.call(@forum_post.percentage_score))
-            as(create(:user)) { create(:forum_post_vote, forum_post: @forum_post, score: 1) }
-            as(create(:user)) { create(:forum_post_vote, forum_post: @forum_post, score: 1) }
+            create(:forum_post_vote, forum_post: @forum_post, score: 1)
+            create(:forum_post_vote, forum_post: @forum_post, score: 1)
 
             @forum_post.reload
             assert_equal(2, @forum_post.total_score)

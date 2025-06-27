@@ -8,21 +8,21 @@ class PopularController < ApplicationController
 
   def uploads
     @date, @scale, @min_date, @max_date = parse_date(params)
-    @post_set = PostSets::Popular::Uploads.new(@date, @scale, @min_date, @max_date, limit: limit)
+    @post_set = PostSets::Popular::Uploads.new(@date, @scale, @min_date, @max_date, limit: limit, current_user: CurrentUser.user)
     @posts = @post_set.posts
     respond_with(@posts)
   end
 
   def views
     @date, @scale, @min_date, @max_date = parse_date(params, scales: %w[day])
-    @post_set = PostSets::Popular::Views.new(@date, limit: limit)
+    @post_set = PostSets::Popular::Views.new(@date, limit: limit, current_user: CurrentUser.user)
     @posts = @post_set.posts
     @ranking = @post_set.ranking.to_h { |r| [r["post"], r["count"]] }
     respond_with(@posts)
   end
 
   def top_views
-    @post_set = PostSets::Popular::TopViews.new(limit: limit)
+    @post_set = PostSets::Popular::TopViews.new(limit: limit, current_user: CurrentUser.user)
     @ranking = @post_set.ranking.to_h { |r| [r["post"], r["count"]] }
     @posts = @post_set.posts
     @stats = Reports.get_stats
@@ -74,7 +74,7 @@ class PopularController < ApplicationController
   end
 
   def popular_posts(min_date, max_date)
-    Post.where(created_at: min_date..max_date).tag_match("order:score")
+    Post.where(created_at: min_date..max_date).tag_match_current("order:score")
   end
 
   def limit(default: 100, min: 1, max: default)

@@ -15,7 +15,6 @@ module Downloads
 
     context("A post download that is whitelisted") do
       setup do
-        CurrentUser.user = create(:user)
         CloudflareService.stubs(:ips).returns([])
         create(:upload_whitelist, pattern: "https://example.com/*")
       end
@@ -31,7 +30,6 @@ module Downloads
 
     context("A post download") do
       setup do
-        CurrentUser.user = create(:user)
         CloudflareService.stubs(:ips).returns([])
         create(:upload_whitelist, pattern: "*")
       end

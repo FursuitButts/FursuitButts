@@ -6,7 +6,7 @@ module HasMediaAsset
   class_methods do
     def has_media_asset(attribute, nullable: false)
       attribute = attribute.to_sym
-      mod = nullable ? MediaAsset::NullableDelegateProperties : MediaAsset::DelegateProperties
+      mod = nullable ? MediaAsset::DelegateProperties::Nullable : MediaAsset::DelegateProperties
       class_eval do
         include(mod)
         scope(:with_assets, -> { includes(attribute) })
@@ -22,6 +22,7 @@ module HasMediaAsset
         validate(:validate_status, on: :status)
         validate(:validate_checksum_present, if: :validate_media_asset_not_direct?)
         after_initialize(:"build_#{attribute}", unless: -> { (association(attribute).loaded? && send(attribute).present?) || send("#{attribute}_id").present? })
+        after_initialize(:set_media_asset_creator, if: -> { creator.present? && (send("#{attribute}_id").blank? || send(attribute).blank? || send(attribute).creator.blank?) })
         before_validation(:propagate_file, if: -> { validate_media_asset? && is_direct? && !propagated? })
         define_method(:media_asset_id) { send("#{attribute}_id") }
         define_method(:media_asset) { send(attribute) }
@@ -30,6 +31,7 @@ module HasMediaAsset
         define_method(:validate_media_asset_direct?) { validate_media_asset? && send(attribute)&.is_direct? }
         define_method(:validate_media_asset_not_direct?) { validate_media_asset? && !send(attribute)&.is_direct? }
         define_method(:is_direct?) { !file.nil? || direct_url.present? }
+        define_method(:set_media_asset_creator) { (send(attribute) || send("build_#{attribute}")).creator = creator }
         define_method(:validate_status) do
           status = send(attribute)&.status
           status_message = send(attribute)&.status_message.presence || status
@@ -48,7 +50,7 @@ module HasMediaAsset
           if !file.nil?
             final = file
           elsif direct_url.present?
-            download = Downloads::File.new(direct_url, exception: false)
+            download = Downloads::File.new(direct_url, exception: false, user: creator)
             if download.valid?
               begin
                 final = download.download!

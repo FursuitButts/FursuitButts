@@ -20,7 +20,6 @@ class PaginatorTest < ActiveSupport::TestCase
     context(type) do
       setup do
         @user = create(:user)
-        CurrentUser.user = @user
       end
 
       context("sequential pagination (before)") do
@@ -84,12 +83,12 @@ class PaginatorTest < ActiveSupport::TestCase
       end
 
       should("apply the correct limit when paginating posts") do
-        assert_equal(@user.per_page, model.paginate_posts(1).records_per_page)
-        assert_equal(10, model.paginate_posts(1, limit: 10).records_per_page)
+        assert_equal(@user.per_page, model.paginate_posts(1, user: @user).records_per_page)
+        assert_equal(10, model.paginate_posts(1, limit: 10, user: @user).records_per_page)
 
         @user.update_columns(per_page: 25)
-        assert_equal(25, model.paginate_posts(1).records_per_page)
-        assert_equal(10, model.paginate_posts(1, limit: 10).records_per_page)
+        assert_equal(25, model.paginate_posts(1, user: @user).records_per_page)
+        assert_equal(10, model.paginate_posts(1, limit: 10, user: @user).records_per_page)
       end
     end
   end

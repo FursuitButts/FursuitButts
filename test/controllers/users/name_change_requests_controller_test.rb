@@ -9,14 +9,11 @@ module Users
         @user = create(:user)
         @user2 = create(:user)
         @admin = create(:admin_user)
-        as(@user2) do
-          @change_request = UserNameChangeRequest.create!(
-            user_id:       @user2.id,
-            original_name: @user2.name,
-            desired_name:  "abc",
-            change_reason: "hello",
-          )
-        end
+        @change_request = UserNameChangeRequest.create_with!(@user2,
+                                                             user_id:       @user2.id,
+                                                             original_name: @user2.name,
+                                                             desired_name:  "abc",
+                                                             change_reason: "hello")
       end
 
       context("new action") do
@@ -67,12 +64,11 @@ module Users
 
         should("restrict access") do
           assert_access(User::Levels::REJECTED) do |user|
-            request = UserNameChangeRequest.create!(
-              user_id:       user.id,
-              original_name: user.name,
-              desired_name:  "user_#{SecureRandom.hex(6)}",
-              change_reason: "hello",
-            )
+            request = UserNameChangeRequest.create_with!(user,
+                                                         user_id:       user.id,
+                                                         original_name: user.name,
+                                                         desired_name:  "user_#{SecureRandom.hex(6)}",
+                                                         change_reason: "hello")
             get_auth(user_name_change_request_path(request), user)
           end
         end

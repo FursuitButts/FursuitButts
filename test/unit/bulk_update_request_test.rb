@@ -6,7 +6,6 @@ class BulkUpdateRequestTest < ActiveSupport::TestCase
   context("a bulk update request") do
     setup do
       @admin = create(:admin_user)
-      CurrentUser.user = @admin
     end
 
     context("#estimate_update_count") do
@@ -23,12 +22,11 @@ class BulkUpdateRequestTest < ActiveSupport::TestCase
                   "unalias ccc -> 222\n" \
                   "unimply ddd -> 333\n" \
                   "update eee -> 444\n"
+        @bur = create(:bulk_update_request, script: @script)
       end
 
-      subject { BulkUpdateRequest.new(script: @script) }
-
       should("return the correct count") do
-        assert_equal(3, subject.estimate_update_count)
+        assert_equal(3, @bur.estimate_update_count)
       end
     end
 
@@ -144,7 +142,7 @@ class BulkUpdateRequestTest < ActiveSupport::TestCase
 
     context("for a `category <tag> -> type` change") do
       should("work") do
-        tag = Tag.find_or_create_by_name("tagme")
+        tag = Tag.find_or_create_by_name("tagme", user: @admin)
         bur = create(:bulk_update_request, script: "category tagme -> meta")
         with_inline_jobs { bur.approve!(@admin) }
 
@@ -217,14 +215,14 @@ class BulkUpdateRequestTest < ActiveSupport::TestCase
 
     context("when searching") do
       setup do
-        @bur1 = create(:bulk_update_request, title: "foo", script: "alias aaa -> bbb", creator_id: @admin.id)
-        @bur2 = create(:bulk_update_request, title: "bar", script: "imply bbb -> ccc", creator_id: @admin.id)
+        @bur1 = create(:bulk_update_request, title: "foo", script: "alias aaa -> bbb")
+        @bur2 = create(:bulk_update_request, title: "bar", script: "imply bbb -> ccc")
         with_inline_jobs { @bur1.approve!(@admin) }
       end
 
       should("work") do
-        assert_equal([@bur2.id, @bur1.id], BulkUpdateRequest.search({}).map(&:id))
-        assert_equal([@bur1.id], BulkUpdateRequest.search(user_name: @admin.name, approver_name: @admin.name, status: "approved").map(&:id))
+        assert_equal([@bur2.id, @bur1.id], BulkUpdateRequest.search({}, @admin).map(&:id))
+        assert_equal([@bur1.id], BulkUpdateRequest.search({ user_name: @admin.name, approver_name: @admin.name, status: "approved" }, @admin).map(&:id))
       end
     end
   end

@@ -19,6 +19,8 @@ class Tag < ApplicationRecord
   before_save(:update_category, if: :category_changed?)
   after_create(:create_version)
   after_update(:create_version, if: ->(rec) { rec.saved_change_to_category? || rec.saved_change_to_is_locked? })
+  belongs_to_user(:creator, ip: true, clones: :updater)
+  resolvable(:updater)
 
   attr_accessor(:reason)
 
@@ -60,7 +62,7 @@ class Tag < ApplicationRecord
     end
 
     def real_post_count
-      @real_post_count ||= Post.tag_match(name, resolve_aliases: false).count_only
+      @real_post_count ||= Post.tag_match_system(name, resolve_aliases: false).count_only
     end
 
     def fix_post_count
@@ -86,7 +88,7 @@ class Tag < ApplicationRecord
         else
           found = Cache.read_multi(Array(tag_names), "tc")
           not_found = tag_names - found.keys
-          if not_found.count > 0
+          if not_found.any?
             # Is multi_write worth it here? Normal usage of this will be short put lists and then never touched.
             Tag.where(name: not_found).select(%i[id name category]).find_each do |tag|
               Cache.write("tc:#{tag.name}", tag.category)
@@ -132,7 +134,7 @@ class Tag < ApplicationRecord
     def user_can_change_category?
       cat = TagCategory.get(category)
       return false unless cat
-      unless cat.can_use?(CurrentUser.user)
+      unless cat.can_use?(updater)
         errors.add(:category, "can only used by admins")
         return false
       end
@@ -149,6 +151,7 @@ class Tag < ApplicationRecord
 
     def create_version
       TagVersion.create(tag_id:        id,
+                        updater:       updater,
                         category:      category.to_i,
                         is_locked:     is_locked?,
                         is_deprecated: is_deprecated?,
@@ -180,7 +183,7 @@ class Tag < ApplicationRecord
       names
     end
 
-    def find_or_create_by_name_list(names, user: CurrentUser.user, reason: nil)
+    def find_or_create_by_name_list(names, user:, reason: nil, artist: false)
       names = names.map { |x| normalize_name(x) }
       names = names.to_h do |x|
         if x =~ /\A(#{TagCategory.regexp}):(.+)\Z/
@@ -191,33 +194,32 @@ class Tag < ApplicationRecord
       end
 
       existing = Tag.where(name: names.keys).to_a
-      CurrentUser.scoped(user) do
-        existing.each do |tag|
-          cat = names[tag.name]
-          category_id = TagCategory.value_for(cat)
-          if cat && category_id != tag.category
-            if tag.category_editable_by_implicit?(user)
-              tag.update(category: category_id, reason: reason)
-            else
-              tag.errors.add(:category, "cannot be changed implicitly through a tag prefix")
-            end
+      existing.each do |tag|
+        cat = names[tag.name]
+        category_id = TagCategory.value_for(cat)
+        if cat && category_id != tag.category
+          if tag.category_editable_by_implicit?(user, artist: artist)
+            tag.update(category: category_id, reason: reason, updater: user)
+          else
+            tag.errors.add(:category, "cannot be changed implicitly through a tag prefix")
           end
-          names.delete(tag.name)
         end
+        names.delete(tag.name)
+      end
 
-        names.each do |name, cat|
-          existing << Tag.new.tap do |t|
-            t.name = name
-            t.category = TagCategory.value_for(cat)
-            t.reason = reason
-            t.save
-          end
+      names.each do |name, cat|
+        existing << Tag.new.tap do |t|
+          t.name = name
+          t.category = TagCategory.value_for(cat)
+          t.reason = reason
+          t.creator = user
+          t.save
         end
       end
       existing
     end
 
-    def find_or_create_by_name(name, user: CurrentUser.user, reason: nil)
+    def find_or_create_by_name(name, user:, reason: nil, artist: false)
       name = normalize_name(name)
       category = nil
 
@@ -227,32 +229,31 @@ class Tag < ApplicationRecord
       end
 
       tag = find_by(name: name)
-      CurrentUser.scoped(user) do
-        if tag
-          if category
-            category_id = TagCategory.value_for(category)
-            # in case a category change hasn't propagated to this server yet,
-            # force an update the local cache. This may get overwritten in the
-            # next few lines if the category is changed.
-            tag.update_category_cache
+      if tag
+        if category
+          category_id = TagCategory.value_for(category)
+          # in case a category change hasn't propagated to this server yet,
+          # force an update the local cache. This may get overwritten in the
+          # next few lines if the category is changed.
+          tag.update_category_cache
 
-            unless category_id == tag.category
-              if tag.category_editable_by_implicit?(user)
-                tag.update(category: category_id, reason: reason)
-              else
-                tag.errors.add(:category, "cannot be changed implicitly through a tag prefix")
-              end
+          unless category_id == tag.category
+            if tag.category_editable_by_implicit?(user, artist: artist)
+              tag.update(category: category_id, reason: reason, updater: user)
+            else
+              tag.errors.add(:category, "cannot be changed implicitly through a tag prefix")
             end
           end
+        end
 
-          tag
-        else
-          Tag.new.tap do |t|
-            t.name = name
-            t.category = TagCategory.value_for(category)
-            t.reason = reason
-            t.save
-          end
+        tag
+      else
+        Tag.new.tap do |t|
+          t.name = name
+          t.category = TagCategory.value_for(category)
+          t.reason = reason
+          t.creator = user
+          t.save
         end
       end
     end
@@ -317,7 +318,7 @@ class Tag < ApplicationRecord
       where("tags.name LIKE ? ESCAPE E'\\\\'", normalize_name(name).to_escaped_for_sql_like)
     end
 
-    def search(params)
+    def search(params, user)
       q = super
 
       if params[:fuzzy_name_matches].present?
@@ -373,21 +374,21 @@ class Tag < ApplicationRecord
   end
 
   module FollowerMethods
-    def follow!(user = CurrentUser.user)
+    def follow!(user)
       return if followers.exists?(user: user)
       raise(TagFollower::AliasedTagError) if antecedent_alias.present?
       last_post = Post.sql_raw_tag_match(name).order(id: :asc).last
       followers.create(user: user, last_post: last_post)
     end
 
-    def unfollow!(user = CurrentUser.user)
+    def unfollow!(user)
       return unless followers.exists?(user: user)
       followers.find_by(user: user).destroy
     end
   end
 
-  def category_editable_by_implicit?(user)
-    return false unless user.is_janitor?
+  def category_editable_by_implicit?(user, artist: false)
+    return false unless user.is_janitor? || artist
     return false if is_locked?
     return false if post_count >= FemboyFans.config.tag_type_change_cutoff(user)
     true
@@ -402,7 +403,7 @@ class Tag < ApplicationRecord
   end
 
   def user_can_create_tag?
-    if name =~ /\A.*_\((lore)\)\z/ && !CurrentUser.user.is_admin?
+    if name =~ /\A.*_\((lore)\)\z/ && !creator.is_admin?
       errors.add(:base, "Can not create #{$1} tags unless admin")
       errors.add(:name, "is invalid")
       return false

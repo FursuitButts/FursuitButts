@@ -20,7 +20,7 @@ module Forums
         check_merge
         @target = authorize(ForumTopic.find_by(id: permitted_attributes(ForumTopic, :merge)[:target_topic_id]), :merge?, policy_class: ForumTopicPolicy)
         return render_expected_error(404, "The target topic could not be found.") if @target.blank?
-        @forum_topic.merge_into!(@target)
+        @forum_topic.merge_into!(@target, CurrentUser.user)
         respond_with(@target, notice: "Successfully merged the two topics.")
       end
 
@@ -33,7 +33,7 @@ module Forums
       def destroy
         @forum_topic = authorize(ForumTopic.find(params[:id]), :unmerge?)
         check_unmerge
-        @forum_topic.undo_merge!
+        @forum_topic.undo_merge!(CurrentUser.user)
         respond_with(@forum_topic)
       end
 

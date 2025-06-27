@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 class TagVersion < ApplicationRecord
-  belongs_to_updater
+  belongs_to_user(:updater, ip: true)
   belongs_to(:tag)
 
   module SearchMethods
-    def search(params)
+    def search(params, user)
       q = super.includes(:updater, :tag)
 
       if params[:tag].present?

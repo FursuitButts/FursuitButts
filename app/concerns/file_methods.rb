@@ -6,7 +6,7 @@ module FileMethods
   IMAGE_EXTENSIONS = %w[png jpg gif webp].freeze
   EXTENSIONS = (IMAGE_EXTENSIONS + VIDEO_EXTENSIONS).freeze
 
-  class_methods do
+  module ClassMethods
     def file_header_to_file_ext(file_path)
       File.open(file_path) do |bin|
         mime_type = Marcel::MimeType.for(bin)
@@ -34,9 +34,9 @@ module FileMethods
       define_method("is_file_#{ext}?") { |file_path| send("is_#{ext}?", file_header_to_file_ext(file_path)) }
     end
 
-    def video(file_path, **)
+    def video(file_path, ...)
       return unless is_file_video?(file_path)
-      FFMPEG::Movie.new(file_path, **)
+      FFMPEG::Movie.new(file_path, ...)
     end
 
     def video_duration(file_path)
@@ -45,7 +45,7 @@ module FileMethods
 
     def video_framecount(file_path)
       video = self.video(file_path)
-      return nil unless video&.duration && video&.frame_rate
+      return nil unless video&.duration && video.frame_rate
       (video.frame_rate * video.duration).ceil
     end
 

@@ -11,18 +11,12 @@ module Notes
 
       context("index action") do
         setup do
-          as(@user) do
-            @note = create(:note)
-          end
+          @note = create(:note, creator: @user)
           @user2 = create(:user)
 
-          as(@user2, "1.2.3.4") do
-            @note.update(body: "1 2")
-          end
+          @note.update_with(@user2, body: "1 2")
 
-          as(@user, "1.2.3.4") do
-            @note.update(body: "1 2 3")
-          end
+          @note.update_with(@user, body: "1 2 3")
         end
 
         should("list all versions") do

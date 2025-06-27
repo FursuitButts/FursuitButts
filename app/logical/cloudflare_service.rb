@@ -14,6 +14,7 @@ module CloudflareService
 
     json = JSON.parse(text, symbolize_names: true)
     ips = json[:result][:ipv4_cidrs] + json[:result][:ipv6_cidrs]
+    # noinspection RubyArgCount
     ips.map { |ip| IPAddr.new(ip) }
   end
 end

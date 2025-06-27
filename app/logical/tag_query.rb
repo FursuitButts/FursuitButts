@@ -3,12 +3,21 @@
 class TagQuery
   class CountExceededError < StandardError; end
 
+  METATAG_SEARCH_TYPE = {
+    "-" => :must_not,
+    "~" => :should,
+  }.freeze
+
   COUNT_METATAGS = %w[
     comment_count
   ].freeze
 
   BOOLEAN_METATAGS = %w[
     hassource hasdescription isparent ischild inpool pending_replacements artverified
+  ].freeze
+
+  UNIQUE_METATAGS = %w[
+    flagger set fav favoritedby upvote votedup downvote voteddown voted disapprovals
   ].freeze
 
   NEGATABLE_METATAGS = %w[
@@ -44,9 +53,9 @@ class TagQuery
   ] + COUNT_METATAGS + TagCategory.short_name_list.flat_map { |str| %W[#{str}tags #{str}tags_asc] }
 
   delegate(:[], :include?, to: :@q)
-  attr_reader(:q, :resolve_aliases)
+  attr_reader(:q, :user, :resolve_aliases)
 
-  def initialize(query, resolve_aliases: true, free_tags_count: 0)
+  def initialize(query, user, resolve_aliases: true, free_tags_count: 0)
     @q = {
       tags: {
         must:     [],
@@ -54,6 +63,7 @@ class TagQuery
         should:   [],
       },
     }
+    @user = user
     @resolve_aliases = resolve_aliases
     @tag_count = 0
 
@@ -80,11 +90,11 @@ class TagQuery
     quote_delimited + tagstr.split.uniq
   end
 
-  def self.has_any_metatag?(tags)
+  def self.has_any_metatag?(tags, list: METATAGS)
     return false if tags.blank?
 
     tags = scan(tags) if tags.is_a?(String)
-    tags.any? { |tag| tag.include?(":") && METATAGS.include?(tag.split(":", 2).first) }
+    tags.any? { |tag| tag.include?(":") && list.include?(tag.split(":", 2).first) }
   end
 
   def self.is_simple_tag?(tags)
@@ -117,11 +127,6 @@ class TagQuery
   end
 
   private
-
-  METATAG_SEARCH_TYPE = {
-    "-" => :must_not,
-    "~" => :should,
-  }.freeze
 
   def parse_query(query)
     TagQuery.scan(query).each do |token| # rubocop:disable Metrics/BlockLength
@@ -157,7 +162,7 @@ class TagQuery
         end
 
       when "disapprover", "-disapprover", "~disapprover"
-        if CurrentUser.user.can_approve_posts?
+        if user.can_approve_posts?
           add_to_query(type, :disapprover_ids, any_none_key: :disapprover, value: g2) do
             user_id = User.name_or_id_to_id(g2)
             id_or_invalid(user_id)
@@ -193,7 +198,7 @@ class TagQuery
           post_set = PostSet.find_by(id: post_set_id)
 
           next 0 unless post_set
-          unless post_set.can_view?(CurrentUser.user)
+          unless post_set.can_view?(user)
             raise(User::PrivilegeError)
           end
 
@@ -205,7 +210,7 @@ class TagQuery
           favuser = User.find_by_normalized_name_or_id(g2)
 
           next 0 unless favuser
-          raise(User::PrivacyModeError) if favuser.hide_favorites?
+          raise(User::PrivacyModeError) if favuser.hide_favorites?(user)
 
           favuser.id
         end
@@ -336,44 +341,44 @@ class TagQuery
 
       when "upvote", "-upvote", "~upvote", "votedup", "-votedup", "~votedup"
         add_to_query(type, :upvote) do
-          if CurrentUser.is_moderator?
+          if user.is_moderator?
             user_id = User.name_or_id_to_id(g2)
-          elsif CurrentUser.is_member?
-            user_id = CurrentUser.id
+          elsif user.is_member?
+            user_id = user.id
           end
           id_or_invalid(user_id)
         end
 
       when "downvote", "-downvote", "~downvote", "voteddown", "-voteddown", "~voteddown"
         add_to_query(type, :downvote) do
-          if CurrentUser.is_moderator?
+          if user.is_moderator?
             user_id = User.name_or_id_to_id(g2)
-          elsif CurrentUser.is_member?
-            user_id = CurrentUser.id
+          elsif user.is_member?
+            user_id = user.id
           end
           id_or_invalid(user_id)
         end
 
       when "voted", "-voted", "~voted"
         add_to_query(type, :voted) do
-          if CurrentUser.is_moderator?
+          if user.is_moderator?
             user_id = User.name_or_id_to_id(g2)
-          elsif CurrentUser.is_member?
-            user_id = CurrentUser.id
+          elsif user.is_member?
+            user_id = user.id
           end
           id_or_invalid(user_id)
         end
 
       when "disapprovals", "-disapprovals", "~disapprovals"
-        if CurrentUser.user.can_approve_posts?
+        if user.can_approve_posts?
           add_to_query(type, :disapproval_count, any_none_key: :disapprover, value: g2) { ParseValue.range(g2) }
         end
 
       when /[-~]?(#{TagQuery::COUNT_METATAGS.join('|')})/
-        q[:"#{$1.downcase}#{type == :must ? '' : "_#{type}"}"] = ParseValue.range(g2)
+        q[:"#{$1.downcase}#{"_#{type}" unless type == :must}"] = ParseValue.range(g2)
 
       when /[-~]?(#{TagQuery::BOOLEAN_METATAGS.join('|')})/
-        q[:"#{$1.downcase}#{type == :must ? '' : "_#{type}"}"] = parse_boolean(g2)
+        q[:"#{$1.downcase}#{"_#{type}" unless type == :must}"] = parse_boolean(g2)
 
       else
         add_tag(token)
@@ -404,7 +409,7 @@ class TagQuery
   end
 
   def add_to_query(type, key, any_none_key: nil, value: nil, wildcard: false, &)
-    if any_none_key && (value.downcase == "none" || value.downcase == "any")
+    if any_none_key && %w[none any].include?(value.downcase)
       add_any_none_to_query(type, value.downcase, any_none_key)
       return
     end

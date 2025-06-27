@@ -37,8 +37,8 @@ module Admin
 
           should("rename") do
             assert_difference(%w[ModAction.count UserNameChangeRequest.count], 1) do
-              put_auth(admin_user_path(@user), @admin, params: { user: { name: "renamed" } })
-              assert_redirected_to(user_path(@user))
+              put_auth(admin_user_path(@user), @admin, params: { user: { name: "renamed" }, format: :json })
+              assert_response(:success)
               assert_equal("renamed", @user.reload.name)
             end
           end

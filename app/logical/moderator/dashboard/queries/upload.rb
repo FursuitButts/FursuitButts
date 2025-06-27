@@ -7,7 +7,7 @@ module Moderator
         def self.all(min_date, max_level)
           ::Post.joins(:uploader)
                 .where("posts.created_at > ?", min_date)
-                .where("users.level <= ?", max_level)
+                .where(users: { level: ..max_level })
                 .group(:uploader)
                 .order(Arel.sql("count(*) desc"))
                 .limit(10)

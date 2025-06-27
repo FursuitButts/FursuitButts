@@ -145,7 +145,7 @@ module ChunkedUpload
     # once the media asset is created and has an id we need to move it so it's in the correct spot for the future
     def update_tempfile
       return unless instance_variable_defined?(:@temp_id) && file.present? && File.exist?(file.path)
-      if %r{#{Dir.tmpdir}/#{self.class.name.underscore}-(\w+)\.partial} =~ (file.path) && (!/\d+$/.match?($1) || $1.to_i != id)
+      if %r{#{Dir.tmpdir}/#{self.class.name.underscore}-(\w+)\.partial} =~ file.path && (!/\d+$/.match?($1) || $1.to_i != id)
         FileUtils.mv(file.path, tempfile_path)
         self.file = File.open(tempfile_path)
         # puts "moved tempfile #{@temp_id} to #{id}"
@@ -154,17 +154,17 @@ module ChunkedUpload
   end
 
   # both of the after callbacks are before a forced save, this may cause unexpected behavior
-  class_methods do
-    def after_finalize(*args, &block)
-      set_callback(:finalize, :after, *args, &block)
+  module ClassMethods
+    def after_finalize(*, &)
+      set_callback(:finalize, :after, *, &)
     end
 
-    def before_cancel(*args, &block)
-      set_callback(:cancel, :before, *args, &block)
+    def before_cancel(*, &)
+      set_callback(:cancel, :before, *, &)
     end
 
-    def after_cancel(*args, &block)
-      set_callback(:cancel, :after, *args, &block)
+    def after_cancel(*, &)
+      set_callback(:cancel, :after, *, &)
     end
   end
 end

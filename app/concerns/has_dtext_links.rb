@@ -3,7 +3,7 @@
 module HasDtextLinks
   extend(ActiveSupport::Concern)
 
-  class_methods do
+  module ClassMethods
     # Declare a field that has DText links. Any wiki links or external links
     # contained in this field will be saved in the dtext_links table whenever
     # the field is updated. This allows finding wiki pages, forum posts, and
@@ -15,7 +15,7 @@ module HasDtextLinks
       before_save(:update_dtext_links, if: :dtext_links_changed?)
 
       define_method(:dtext_links_changed?) do
-        attribute_changed?(attribute) && DTextHelper.dtext_links_differ?(self[attribute], attribute_was(attribute))
+        attribute_changed?(attribute) && DTextHelper.dtext_links_differ?(send(attribute), attribute_was(attribute))
       end
 
       define_method(:update_dtext_links) do

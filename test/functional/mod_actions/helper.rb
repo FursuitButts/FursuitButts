@@ -7,7 +7,6 @@ module ModActions
     def self.included(mod)
       mod.setup do
         @admin = create(:admin_user)
-        CurrentUser.user = @admin
         @user = create(:user)
         set_count!
       end
@@ -21,7 +20,7 @@ module ModActions
       "\"#{user.name}\":#{user_path(user)}"
     end
 
-    def assert_matches(actions:, text:, subject:, creator: CurrentUser.user, **attributes)
+    def assert_matches(actions:, text:, subject:, creator: @admin, **attributes)
       diff = ModAction.count - @count
       assert_equal(actions.length, diff, "modaction count diff (#{ModAction.last(diff).map(&:action).join(', ')})")
       assert_same_elements(actions, ModAction.last(actions.length).map(&:action), "actions")

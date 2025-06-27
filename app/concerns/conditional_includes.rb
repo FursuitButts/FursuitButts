@@ -3,7 +3,7 @@
 module ConditionalIncludes
   extend(ActiveSupport::Concern)
 
-  class_methods do
+  module ClassMethods
     def html_includes(request, *)
       includes_if(request.format.html?, *)
     end

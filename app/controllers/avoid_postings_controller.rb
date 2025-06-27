@@ -7,7 +7,7 @@ class AvoidPostingsController < ApplicationController
 
   def index
     @avoid_postings = authorize(AvoidPosting).html_includes(request, :artist, :creator)
-                                             .search(search_params(AvoidPosting))
+                                             .search_current(search_params(AvoidPosting))
                                              .paginate(params[:page], limit: params[:limit])
     respond_with(@avoid_postings)
   end
@@ -18,8 +18,8 @@ class AvoidPostingsController < ApplicationController
   end
 
   def new
-    @avoid_posting = authorize(AvoidPosting.new(permitted_attributes(AvoidPosting)))
-    @avoid_posting.artist = Artist.new(permitted_attributes(AvoidPosting)[:artist_attributes])
+    @avoid_posting = authorize(AvoidPosting.new_with_current(:creator, permitted_attributes(AvoidPosting)))
+    @avoid_posting.artist = Artist.new_with_current(:creator, permitted_attributes(AvoidPosting)[:artist_attributes])
     respond_with(@artist)
   end
 
@@ -29,7 +29,7 @@ class AvoidPostingsController < ApplicationController
 
   def create
     pparams = permitted_attributes(AvoidPosting)
-    @avoid_posting = authorize(AvoidPosting).new(pparams)
+    @avoid_posting = authorize(AvoidPosting.new_with_current(:creator, pparams))
     artparams = pparams.try(:[], :artist_attributes)
     if artparams.present? && (artist = Artist.named(artparams[:name]))
       @avoid_posting.artist = artist
@@ -52,20 +52,22 @@ class AvoidPostingsController < ApplicationController
       notices = notices.join("\n")
       # Remove period from last notice
       flash[:notice] = notices[0..-2] if notices.present?
-      artist.update(artparams)
+      artist.update_with_current(:updater, artparams)
     end
     @avoid_posting.save
     respond_with(@avoid_posting)
   end
 
   def update
-    authorize(@avoid_posting).update(permitted_attributes(@avoid_posting))
+    pparams = permitted_attributes(@avoid_posting)
+    @avoid_posting.artist.updater = CurrentUser.user if pparams[:artist_attributes].present?
+    authorize(@avoid_posting).update_with_current(:updater, pparams)
     notice(@avoid_posting.valid? ? "Avoid posting entry updated" : @avoid_posting.errors.full_messages.join("; "))
     respond_with(@avoid_posting)
   end
 
   def destroy
-    authorize(@avoid_posting).destroy
+    authorize(@avoid_posting).destroy_with_current(:destroyer)
     notice("Avoid posting entry destroyed")
     respond_with(@avoid_posting) do |format|
       format.html { redirect_to(artist_path(@avoid_posting.artist)) }
@@ -73,7 +75,7 @@ class AvoidPostingsController < ApplicationController
   end
 
   def delete
-    authorize(@avoid_posting).update(is_active: false)
+    authorize(@avoid_posting).update_with_current(:updater, is_active: false)
     notice("Avoid posting entry deleted")
     respond_with(@avoid_posting) do |format|
       format.html { redirect_back(fallback_location: avoid_posting_path(@avoid_posting)) }
@@ -81,7 +83,7 @@ class AvoidPostingsController < ApplicationController
   end
 
   def undelete
-    authorize(@avoid_posting).update(is_active: true)
+    authorize(@avoid_posting).update_with_current(:updater, is_active: true)
     notice("Avoid posting entry undeleted")
     respond_with(@avoid_posting) do |format|
       format.html { redirect_back(fallback_location: avoid_posting_path(@avoid_posting)) }

@@ -39,11 +39,11 @@
           <li><%= link_to("Visually similar", posts_iqdb_path(search: { post_id: @post.id }), rel: "nofollow") %></li>
           <li><%= link_to("Recommendations", post_recommendations_path(search: { post_id: @post.id }), rel: "nofollow") %></li>
         <% end %>
-        <% if @post.visible? && @post.is_image? %>
-          <li><a rel="nofollow" href="https://www.google.com/searchbyimage?image_url=<%= @post.reverse_image_url %>&client=<%= FemboyFans.config.app_name %>">Reverse Google Search</a></li>
-          <li><a rel="nofollow" href="https://saucenao.com/search.php?url=<%= @post.reverse_image_url %>">Reverse SauceNAO Search</a></li>
-          <li><a rel="nofollow" href="https://derpibooru.org/search/reverse?url=<%= @post.reverse_image_url %>">Reverse Derpibooru Search</a></li>
-          <li><a rel="nofollow" href="https://kheina.com/?url=<%= @post.reverse_image_url %>">Reverse Kheina Search</a></li>
+        <% if @post.visible?(CurrentUser.user) && @post.is_image? %>
+          <li><a rel="nofollow" href="https://www.google.com/searchbyimage?image_url=<%= @post.reverse_image_url(CurrentUser.user) %>&client=<%= FemboyFans.config.app_name %>">Reverse Google Search</a></li>
+          <li><a rel="nofollow" href="https://saucenao.com/search.php?url=<%= @post.reverse_image_url(CurrentUser.user) %>">Reverse SauceNAO Search</a></li>
+          <li><a rel="nofollow" href="https://derpibooru.org/search/reverse?url=<%= @post.reverse_image_url(CurrentUser.user) %>">Reverse Derpibooru Search</a></li>
+          <li><a rel="nofollow" href="https://kheina.com/?url=<%= @post.reverse_image_url(CurrentUser.user) %>">Reverse Kheina Search</a></li>
         <% end %>
         <li><a rel="nofollow" href="https://inkbunny.net/search_process.php?text=<%= @post.md5 %>&md5=yes">Inkbunny MD5 Search</a></li>
       </ul>
@@ -73,9 +73,9 @@
       <%= render("posts/partials/show/embedded", post: @post) %>
     <% end -%>
 
-    <% if @post.visible? && @post.has_large? %>
+    <% if @post.visible?(CurrentUser.user) && @post.has_large? %>
       <div class="ui-corner-all ui-state-highlight notice notice-resized" id="image-resize-notice" style="<%= CurrentUser.default_image_size == "large" ? "" : "display: none;" %>">
-        <span>Viewing sample resized to <span id="image-resize-size"><%= number_to_percentage(@post.resize_percentage.floor, precision: 0) %></span> of original (<%= link_to("view original", @post.file_url, id: "image-resize-link") %>)</span>
+        <span>Viewing sample resized to <span id="image-resize-size"><%= number_to_percentage(@post.resize_percentage.floor, precision: 0) %></span> of original (<%= link_to("view original", @post.file_url(CurrentUser.user), id: "image-resize-link") %>)</span>
         <span style="display: none;">Loading...</span>
       </div>
     <% end %>
@@ -90,11 +90,11 @@
   <section id="image-extra-controls">
     <% if CurrentUser.user.can_post_vote? %>
       <div id="image-vote-buttons">
-        <%= post_vote_block(@post, @post.own_vote, buttons: true) %>
+        <%= post_vote_block(@post, @post.own_vote(CurrentUser.user), buttons: true) %>
       </div>
     <% end %>
     <% if CurrentUser.user.can_favorite? %>
-      <%= tag.div(class: "fav-buttons fav-buttons-#{@post.is_favorited?}") do %>
+      <%= tag.div(class: "fav-buttons fav-buttons-#{@post.is_favorited?(CurrentUser.user)}") do %>
         <%= button_tag("id": "add-fav-button", "class": "button btn-success", "data-pid": @post.id) do %>
           <%= tag.i(class: "fa-regular fa-star") %>
           <span>Favorite</span>
@@ -105,9 +105,9 @@
         <% end %>
       <% end %>
     <% end %>
-    <% if @post.visible? %>
+    <% if @post.visible?(CurrentUser.user) %>
       <div id="image-full-screen-button">
-        <%= link_to("Full Screen", @post.file_url, class: "button btn-warn") %>
+        <%= link_to("Full Screen", @post.file_url(CurrentUser.user), class: "button btn-warn") %>
       </div>
       <div id="image-add-buttons">
         <%# TODO: find some way to remove the whitespace that's being inserted here, then return the margin to 0.5 %>
@@ -142,7 +142,7 @@
       </div>
     <% end %>
     <div id="image-download-button">
-      <%= link_to("Download", @post.file_url, class: "button btn-neutral", download: @post.download_filename) %>
+      <%= link_to("Download", @post.file_url(CurrentUser.user), class: "button btn-neutral", download: @post.download_filename) %>
     </div>
   </section>
 
@@ -180,7 +180,7 @@
 
   <% if @post.description.present? %>
     <div id="post-description-container" class="styled-dtext">
-      <details id="description" <%= "open" unless CurrentUser.description_collapsed_initially? %>>
+      <details id="description" <%= "open" unless CurrentUser.user.description_collapsed_initially? %>>
         <summary>Description</summary>
         <div>
           <%= format_text(@post.description, max_thumbs: 0, qtags: true) %>
@@ -201,7 +201,7 @@
       <% name = User::Levels.id_to_name(@post.min_edit_level) %>
       <div class="post-protection">Edits are restricted to <%= link_to(name, help_page_path(id: "accounts", anchor: name.downcase), class: "#{User::Levels.level_class(name)} with-style") %> users and above.</div>
     <% end %>
-    <% unless CurrentUser.hide_comments? %>
+    <% unless CurrentUser.user.hide_comments? %>
       <li class="active"><a href="#comments">Comments</a></li>
     <% end %>
     <% if policy(@post).update? %>
@@ -209,7 +209,7 @@
     <% end %>
   </menu>
 
-  <% unless CurrentUser.hide_comments? %>
+  <% unless CurrentUser.user.hide_comments? %>
     <section id="comments">
       <%= render("comments/partials/index/list", comments: @post.comments.visible(CurrentUser.user), post: @post, show_header: false) %>
     </section>
@@ -217,7 +217,7 @@
 
   <ul class="menu mobile-only">
     <li><a href="#image-and-nav">Image</a></li>
-    <% unless CurrentUser.hide_comments? %>
+    <% unless CurrentUser.user.hide_comments? %>
       <li><a href="#comments">Comments</a></li>
     <% end %>
   </ul>

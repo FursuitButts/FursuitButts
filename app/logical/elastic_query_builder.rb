@@ -1,15 +1,16 @@
 # frozen_string_literal: true
 
 class ElasticQueryBuilder
-  attr_accessor(:q, :must, :must_not, :should, :order)
+  attr_accessor(:q, :must, :must_not, :should, :order, :user)
 
-  def initialize(query)
+  def initialize(query, user)
     @q = query
     @must = [] # These terms are ANDed together
     @must_not = [] # These terms are NOT ANDed together
     @should = [] # These terms are ORed together
     @order = []
     @function_score = nil
+    @user = user
     build
   end
 
@@ -41,7 +42,7 @@ class ElasticQueryBuilder
       query:   query,
       sort:    order,
       _source: false,
-      timeout: "#{CurrentUser.user.try(:statement_timeout) || 3_000}ms",
+      timeout: "#{user.try(:statement_timeout) || 3_000}ms",
     }
   end
 

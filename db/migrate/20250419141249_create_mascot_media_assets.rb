@@ -9,8 +9,8 @@ class CreateMascotMediaAssets < ActiveRecord::Migration[7.1]
       t.string(:checksum, limit: 32, null: true, index: true)
       t.string(:md5, limit: 32, null: true, index: { unique: true, where: "status = 'active'" }) # only set when completed
       t.string(:file_ext, limit: 4, null: true) # only set when completed
-      t.boolean(:is_animated_png, null: true) # rubocop:disable Rails/ThreeStateBooleanColumn # only set when completed
-      t.boolean(:is_animated_gif, null: true) # rubocop:disable Rails/ThreeStateBooleanColumn # only set when completed
+      t.boolean(:is_animated_png, null: true) # rubocop:disable Rails/ThreeStateBooleanColumn -- only set when completed
+      t.boolean(:is_animated_gif, null: true) # rubocop:disable Rails/ThreeStateBooleanColumn -- only set when completed
       t.integer(:file_size, null: true) # only set when completed
       t.integer(:image_width, null: true) # only set when completed
       t.integer(:image_height, null: true) # only set when completed

@@ -10,12 +10,12 @@ module ModActions
 
     context("mod actions for user feedbacks") do
       setup do
-        @feedback = create(:user_feedback, user: @user, body: "test")
+        @feedback = create(:user_feedback, user: @user, body: "test", creator: @admin)
         set_count!
       end
 
       should("format user_feedback_create correctly") do
-        @feedback = create(:user_feedback, user: @user, body: "test")
+        @feedback = create(:user_feedback, user: @user, body: "test", creator: @admin)
 
         assert_matches(
           actions: %w[user_feedback_create],
@@ -28,7 +28,7 @@ module ModActions
       end
 
       should("format user_feedback_delete correctly") do
-        @feedback.update(is_deleted: true)
+        @feedback.update_with!(@admin, is_deleted: true)
 
         assert_matches(
           actions: %w[user_feedback_delete],
@@ -42,7 +42,7 @@ module ModActions
 
       should("format user_feedback_undelete correctly") do
         @feedback.update_column(:is_deleted, true)
-        @feedback.update(is_deleted: false)
+        @feedback.update_with!(@admin, is_deleted: false)
 
         assert_matches(
           actions: %w[user_feedback_undelete],
@@ -55,7 +55,7 @@ module ModActions
       end
 
       should("format user_feedback_destroy correctly") do
-        @feedback.destroy
+        @feedback.destroy_with(@admin)
 
         assert_matches(
           actions: %w[user_feedback_destroy],
@@ -73,6 +73,7 @@ module ModActions
         end
 
         should("format no changes correctly") do
+          @feedback.updater = @admin
           @feedback.save
 
           assert_matches(
@@ -88,7 +89,7 @@ module ModActions
         end
 
         should("format type changes correctly") do
-          @feedback.update!(category: "neutral")
+          @feedback.update_with!(@admin, category: "neutral")
 
           assert_matches(
             actions:    %w[user_feedback_update],
@@ -106,7 +107,7 @@ module ModActions
         end
 
         should("format reason changes correctly") do
-          @feedback.update!(body: "new")
+          @feedback.update_with!(@admin, body: "new")
 
           assert_matches(
             actions:    %w[user_feedback_update],
@@ -124,7 +125,7 @@ module ModActions
         end
 
         should("format all changes correctly") do
-          @feedback.update!(category: "neutral", body: "new")
+          @feedback.update_with!(@admin, category: "neutral", body: "new")
 
           assert_matches(
             actions:    %w[user_feedback_update],

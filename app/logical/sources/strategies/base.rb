@@ -26,7 +26,7 @@ module Sources
       #   behave accordingly.
       def initialize(url)
         @url = url
-        @urls = [url].select(&:present?)
+        @urls = [url].compact_blank
 
         @parsed_url = begin
           Addressable::URI.heuristic_parse(url)

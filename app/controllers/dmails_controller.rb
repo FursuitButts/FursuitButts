@@ -7,9 +7,8 @@ class DmailsController < ApplicationController
   def index
     @query = authorize(Dmail).html_includes(request, :from, :to, :owner)
                              .active
-                             .visible
-                             .for_folder(params[:folder])
-                             .search(search_params(Dmail))
+                             .for_folder(params[:folder], CurrentUser.user)
+                             .search_current(search_params(Dmail))
     @dmails = @query.paginate(params[:page], limit: params[:limit])
     respond_with(@dmails)
   end
@@ -23,7 +22,7 @@ class DmailsController < ApplicationController
       @dmail = authorize(Dmail.find(params[:id]))
     end
     respond_with(@dmail) do |format|
-      format.html { @dmail.mark_as_read! if CurrentUser.user == @dmail.owner }
+      format.html { @dmail.mark_as_read!(CurrentUser.user) if @dmail.is_owner?(CurrentUser.user) }
     end
   end
 
@@ -32,22 +31,22 @@ class DmailsController < ApplicationController
       parent = authorize(Dmail.find(params[:respond_to_id]), :respond?)
       @dmail = parent.build_response(forward: params[:forward])
     else
-      @dmail = authorize(Dmail.new(permitted_attributes(Dmail)))
+      @dmail = authorize(Dmail.new_with_current(:from, permitted_attributes(Dmail)))
     end
 
     respond_with(@dmail)
   end
 
   def create
-    authorize(Dmail.new(permitted_attributes(Dmail)))
-    @dmail = Dmail.create_split(permitted_attributes(Dmail))
+    authorize(Dmail.new_with_current(:from, permitted_attributes(Dmail)))
+    @dmail = Dmail.create_split(**permitted_attributes(Dmail), from: CurrentUser.user)
     respond_with(@dmail)
   end
 
   def destroy
     @dmail = authorize(Dmail.find(params[:id]))
-    @dmail.mark_as_read!
-    @dmail.update_column(:is_deleted, true)
+    @dmail.mark_as_read!(CurrentUser.user)
+    @dmail.update_with_current(:updater, is_deleted: true)
     respond_to do |format|
       format.html { redirect_to(dmails_path, notice: "Message deleted") }
       format.json
@@ -56,12 +55,12 @@ class DmailsController < ApplicationController
 
   def mark_as_read
     @dmail = authorize(Dmail.find(params[:id]))
-    @dmail.mark_as_read!
+    @dmail.mark_as_read!(CurrentUser.user)
   end
 
   def mark_as_unread
     @dmail = authorize(Dmail.find(params[:id]))
-    @dmail.mark_as_unread!
+    @dmail.mark_as_unread!(CurrentUser.user)
     respond_to do |format|
       format.html { redirect_to(dmails_path, notice: "Message marked as unread") }
       format.json
@@ -70,7 +69,7 @@ class DmailsController < ApplicationController
 
   def mark_all_as_read
     authorize(Dmail)
-    Dmail.visible.unread.each do |x|
+    Dmail.visible(CurrentUser.user).unread.each do |x|
       x.update_column(:is_read, true)
     end
     CurrentUser.user.update(unread_dmail_count: 0)
@@ -82,14 +81,14 @@ class DmailsController < ApplicationController
 
   def mark_spam
     @dmail = authorize(Dmail.find(params[:id]))
-    @dmail.mark_spam!
+    @dmail.mark_spam!(CurrentUser.user)
     notice("DMail marked as spam")
     respond_with(@dmail)
   end
 
   def mark_not_spam
     @dmail = authorize(Dmail.find(params[:id]))
-    @dmail.mark_not_spam!
+    @dmail.mark_not_spam!(CurrentUser.user)
     notice("DMail marked as not spam")
     respond_with(@dmail)
   end

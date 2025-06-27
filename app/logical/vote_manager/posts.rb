@@ -4,7 +4,7 @@ module VoteManager
   module Posts
     module_function
 
-    def vote!(user:, post:, score:)
+    def vote!(user:, ip_addr:, post:, score:)
       @vote = nil
       retries = 5
       score = score.to_i
@@ -20,7 +20,7 @@ module VoteManager
               raise(VoteManager::NeedUnvoteError) if @vote.score == score
               @vote.destroy
             end
-            @vote = post.votes.create!(user: user, score: score)
+            @vote = post.votes.create!(user: user, user_ip_addr: ip_addr, score: score)
             post.append_user_to_vote_string(user.id, %w[down locked up].fetch(score + 1))
             post.do_not_version_changes = true
             post.save
@@ -63,12 +63,12 @@ module VoteManager
       # Ignored
     end
 
-    def lock!(id)
+    def lock!(id, user)
       post = nil
       PostVote.transaction(**ISOLATION) do
         vote = PostVote.find_by(id: id)
         raise(VoteManager::NoVoteError) unless vote
-        StaffAuditLog.log!(:post_vote_lock, CurrentUser.user, post_id: vote.post_id, vote: vote.score, voter_id: vote.user_id)
+        StaffAuditLog.log!(user, :post_vote_lock, post_id: vote.post_id, vote: vote.score, voter_id: vote.user_id)
         post = vote.post
         post.append_user_to_vote_string(vote.user_id, "locked")
         post.do_not_version_changes = true
@@ -80,10 +80,10 @@ module VoteManager
       # Ignored
     end
 
-    def admin_unvote!(id)
+    def admin_unvote!(id, user)
       vote = PostVote.find_by(id: id)
       return unless vote
-      StaffAuditLog.log!(:post_vote_delete, CurrentUser.user, post_id: vote.post_id, vote: vote.score, voter_id: vote.user_id)
+      StaffAuditLog.log!(user, :post_vote_delete, post_id: vote.post_id, vote: vote.score, voter_id: vote.user_id)
       unvote!(post: vote.post, user: vote.user, force: true)
     end
 
@@ -97,7 +97,7 @@ module VoteManager
         tries = 5
         begin
           unvote!(user: vote.user, post: post, force: true)
-          vote!(user: vote.user, post: parent, score: vote.score)
+          vote!(user: vote.user, ip_addr: vote.user_ip_addr, post: parent, score: vote.score)
         rescue ActiveRecord::SerializationFailure
           tries -= 1
           retry if tries > 0

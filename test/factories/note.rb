@@ -2,7 +2,8 @@
 
 FactoryBot.define do
   factory(:note) do
-    post { create(:post) }
+    association(:creator, factory: :user)
+    association(:post)
     x { 1 }
     y { 1 }
     width { 1 }

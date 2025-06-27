@@ -12,8 +12,7 @@ module Forums
       params[:search][:order] ||= "sticky" if request.format.html?
 
       @query = authorize(ForumTopic).html_includes(request, :creator, :updater, :category, :statuses, posts: :creator, last_post: :creator)
-                                    .visible(CurrentUser.user)
-                                    .search(search_params(ForumTopic))
+                                    .search_current(search_params(ForumTopic))
       @forum_topics = @query.paginate(params[:page], limit: params[:limit] || 50)
 
       respond_with(@forum_topics) do |format|
@@ -32,15 +31,15 @@ module Forums
       end
       @forum_posts = ForumPost.html_includes(request, :creator, :spam_ticket, :last_edit_version, topic: %i[category original_post], votes: %i[user])
                               .permitted(CurrentUser.user)
-                              .search(topic_id: @forum_topic.id)
+                              .search_current(topic_id: @forum_topic.id, visible: false)
                               .reorder("forum_posts.id")
                               .paginate(params[:page])
       respond_with(@forum_topic)
     end
 
     def new
-      @forum_topic = authorize(ForumTopic.new(permitted_attributes(ForumTopic)))
-      @forum_topic.original_post = ForumPost.new(permitted_attributes(ForumTopic)[:original_post_attributes])
+      @forum_topic = authorize(ForumTopic.new_with_current(:creator, permitted_attributes(ForumTopic)))
+      @forum_topic.original_post = ForumPost.new_with_current(:creator, permitted_attributes(ForumTopic)[:original_post_attributes])
       respond_with(@forum_topic)
     end
 
@@ -50,28 +49,27 @@ module Forums
     end
 
     def create
-      @forum_topic = authorize(ForumTopic.new(permitted_attributes(ForumTopic)))
+      @forum_topic = authorize(ForumTopic.new_with_current(:creator, permitted_attributes(ForumTopic)))
       @forum_topic.save
       respond_with(@forum_topic)
     end
 
     def update
       authorize(@forum_topic)
-      @forum_topic.assign_attributes(permitted_attributes(@forum_topic))
-      @forum_topic.save(touch: false)
+      @forum_topic.update_with_current(:updater, permitted_attributes(@forum_topic))
       respond_with(@forum_topic)
     end
 
     def destroy
       authorize(@forum_topic)
-      @forum_topic.destroy
+      @forum_topic.destroy_with_current(:destroyer)
       notice("Topic deleted")
       respond_with(@forum_topic, location: forum_topics_path)
     end
 
     def hide
       authorize(@forum_topic)
-      @forum_topic.hide!
+      @forum_topic.hide!(CurrentUser.user)
       if @forum_topic.errors.any?
         respond_with(@forum_topic) do |format|
           format.html do
@@ -86,35 +84,35 @@ module Forums
 
     def unhide
       authorize(@forum_topic)
-      @forum_topic.unhide!
+      @forum_topic.unhide!(CurrentUser.user)
       notice("Topic unhidden")
       respond_with(@forum_topic)
     end
 
     def lock
       authorize(@forum_topic)
-      @forum_topic.update(is_locked: true)
+      @forum_topic.update_with_current(:updater, is_locked: true)
       notice("Topic locked")
       respond_with(@forum_topic)
     end
 
     def unlock
       authorize(@forum_topic)
-      @forum_topic.update(is_locked: false)
+      @forum_topic.update_with_current(:updater, is_locked: false)
       notice("Topic unlocked")
       respond_with(@forum_topic)
     end
 
     def sticky
       authorize(@forum_topic)
-      @forum_topic.update(is_sticky: true)
+      @forum_topic.update_with_current(:updater, is_sticky: true)
       notice("Topic stickied")
       respond_with(@forum_topic)
     end
 
     def unsticky
       authorize(@forum_topic)
-      @forum_topic.update(is_sticky: false)
+      @forum_topic.update_with_current(:updater, is_sticky: false)
       notice("Topic unstickied")
       respond_with(@forum_topic)
     end
@@ -171,7 +169,7 @@ module Forums
     end
 
     def ensure_lockdown_disabled
-      access_denied if Security::Lockdown.forums_disabled? && !CurrentUser.is_staff?
+      access_denied if Security::Lockdown.forums_disabled? && !CurrentUser.user.is_staff?
     end
   end
 end

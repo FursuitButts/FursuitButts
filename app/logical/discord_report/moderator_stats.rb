@@ -26,8 +26,8 @@ module DiscordReport
       oldest = Ticket.active.order(id: :asc).first&.created_at || Time.now
       {
         pending: Ticket.active.count,
-        created: Ticket.where("created_at >= ? ", 1.day.ago).count,
-        handled: Ticket.approved.where("updated_at >= ? ", 1.day.ago).count,
+        created: Ticket.where(created_at: 1.day.ago..).count,
+        handled: Ticket.approved.where(updated_at: 1.day.ago..).count,
         oldest:  (Time.now - oldest).seconds.in_days.to_i,
       }
     end

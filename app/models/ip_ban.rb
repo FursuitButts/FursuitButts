@@ -1,16 +1,18 @@
 # frozen_string_literal: true
 
 class IpBan < ApplicationRecord
-  belongs_to_creator
+  belongs_to_user(:creator, ip: true, clones: :updater)
+  resolvable(:updater)
+  resolvable(:destroyer)
   validates(:reason, :ip_addr, presence: true)
   validates(:ip_addr, uniqueness: true)
   validate(:validate_ip_addr)
   after_create do |rec|
-    StaffAuditLog.log!(:ip_ban_create, CurrentUser.user, ip_addr: rec.subnetted_ip, reason: rec.reason)
+    StaffAuditLog.log!(creator, :ip_ban_create, ip_addr: rec.subnetted_ip, reason: rec.reason)
     Cache.delete("ipban:#{rec.ip_addr}")
   end
   after_destroy do |rec|
-    StaffAuditLog.log!(:ip_ban_delete, CurrentUser.user, ip_addr: rec.subnetted_ip, reason: rec.reason)
+    StaffAuditLog.log!(destroyer, :ip_ban_delete, ip_addr: rec.subnetted_ip, reason: rec.reason)
     Cache.delete("ipban:#{rec.ip_addr}")
   end
 
@@ -21,7 +23,7 @@ class IpBan < ApplicationRecord
     end
   end
 
-  def self.search(params)
+  def self.search(params, user)
     q = super
 
     if params[:ip_addr].present?
@@ -61,7 +63,7 @@ class IpBan < ApplicationRecord
     %i[creator]
   end
 
-  def visible?(user = CurrentUser.user)
+  def visible?(user)
     user.is_admin?
   end
 end

@@ -11,7 +11,7 @@ class UploadsController < ApplicationController
   def index
     # TODO: this route has many performance issues and needs to be revised
     @uploads = authorize(Upload).html_includes(request, :post, :uploader, :upload_media_asset)
-                                .search(search_params(Upload))
+                                .search_current(search_params(Upload))
                                 .paginate(params[:page], limit: params[:limit])
     respond_with(@uploads)
   end
@@ -28,7 +28,7 @@ class UploadsController < ApplicationController
   end
 
   def new
-    @upload = authorize(Upload.new)
+    @upload = authorize(Upload.new_with_current(:uploader))
     if CurrentUser.can_upload_with_reason == :REJ_UPLOAD_NEWBIE
       return access_denied("You cannot upload during your first three days.")
     end
@@ -36,13 +36,13 @@ class UploadsController < ApplicationController
   end
 
   def create
-    @upload = authorize(Upload.new(permitted_attributes(Upload).merge(uploader_id: CurrentUser.id, uploader_ip_addr: CurrentUser.ip_addr)))
+    @upload = authorize(Upload.new_with_current(:uploader, permitted_attributes(Upload)))
     @upload.save
     if @upload.invalid?
       flash.now[:notice] = @upload.errors.full_messages.join("; ")
-      return render(json: { success: false, reason: "invalid", message: @upload.errors.full_messages.join("; ") }, status: 412)
+      return render(json: { success: false, reason: "invalid", message: @upload.errors.full_messages.join("; ") }, status: :precondition_failed)
     end
-    return render(json: { success: true, id: @upload.id, media_asset_id: @upload.media_asset_id }, status: 202) unless @upload.is_direct?
+    return render(json: { success: true, id: @upload.id, media_asset_id: @upload.media_asset_id }, status: :accepted) unless @upload.is_direct?
     respond_after_upload
   end
 
@@ -50,18 +50,18 @@ class UploadsController < ApplicationController
 
   def respond_after_upload
     if @upload.media_asset.expunged?
-      return render(json: { success: false, reason: "invalid", message: "That image #{@upload.media_asset.status_message}" }, status: 412)
+      return render(json: { success: false, reason: "invalid", message: "That image #{@upload.media_asset.status_message}" }, status: :precondition_failed)
     end
 
     if @upload.errors.any?
       flash.now[:notice] = @upload.errors.full_messages.join("; ")
-      return render(json: { success: false, reason: "invalid", message: @upload.errors.full_messages.join("; ") }, status: 412)
+      return render(json: { success: false, reason: "invalid", message: @upload.errors.full_messages.join("; ") }, status: :precondition_failed)
     end
 
     respond_to do |format|
       format.json do
-        return render(json: { success: false, reason: "duplicate", location: post_path(@upload.duplicate_post_id), post_id: @upload.duplicate_post_id }, status: 412) if @upload.duplicate?
-        return render(json: { success: false, reason: "invalid", message: @upload.pretty_status }, status: 412) if @upload.failed?
+        return render(json: { success: false, reason: "duplicate", location: post_path(@upload.duplicate_post_id), post_id: @upload.duplicate_post_id }, status: :precondition_failed) if @upload.duplicate?
+        return render(json: { success: false, reason: "invalid", message: @upload.pretty_status }, status: :precondition_failed) if @upload.failed?
 
         render(json: { success: true, location: post_path(@upload.post_id), post_id: @upload.post_id })
       end

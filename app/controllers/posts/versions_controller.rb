@@ -6,7 +6,8 @@ module Posts
     respond_to(:js, only: %i[undo])
 
     def index
-      @post_versions = PostVersion.search(search_params).paginate(params[:page], limit: params[:limit], max_count: 10_000, includes: [:updater, { post: [:versions] }])
+      @post_versions = PostVersion.search_current(search_params)
+                                  .paginate(params[:page], limit: params[:limit], max_count: 10_000, includes: [:updater, { post: [:versions] }])
       respond_with(@post_versions)
     end
 
@@ -15,7 +16,7 @@ module Posts
       raise(User::PrivilegeError, "Updater #{User.throttle_reason(can_edit)}") unless can_edit == true
 
       @post_version = PostVersion.find(params[:id])
-      @post_version.undo!
+      @post_version.undo!(CurrentUser.user)
     end
   end
 end

@@ -24,7 +24,7 @@ module ModActions
 
       should("format nuke correctly") do
         create(:post, tag_string: "aaa bbb")
-        @bur = create(:bulk_update_request, skip_forum: true, script: "nuke aaa")
+        @bur = create(:bulk_update_request, skip_forum: true, script: "nuke aaa", creator: @admin)
         with_inline_jobs { @bur.approve!(@admin) }
 
         assert_matches(

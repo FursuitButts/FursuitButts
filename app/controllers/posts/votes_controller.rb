@@ -9,8 +9,7 @@ module Posts
 
     def index
       @post_votes = authorize(PostVote).html_includes(request, :user)
-                                       .visible(CurrentUser.user)
-                                       .search(search_params(PostVote))
+                                       .search_current(search_params(PostVote))
                                        .paginate(params[:page], limit: 100)
       respond_with(@post_votes)
     end
@@ -18,7 +17,7 @@ module Posts
     def create
       authorize(PostVote)
       @post = Post.find(params[:post_id])
-      @post_vote, @status = VoteManager::Posts.vote!(post: @post, user: CurrentUser.user, score: params[:score])
+      @post_vote, @status = VoteManager::Posts.vote!(post: @post, user: CurrentUser.user, ip_addr: CurrentUser.ip_addr, score: params[:score])
       if @status == :need_unvote && !params[:no_unvote].to_s.truthy?
         VoteManager::Posts.unvote!(post: @post, user: CurrentUser.user)
       end
@@ -40,7 +39,7 @@ module Posts
       ids = params[:ids].split(",")
 
       ids.each do |id|
-        VoteManager::Posts.lock!(id)
+        VoteManager::Posts.lock!(id, CurrentUser.user)
       end
     end
 
@@ -49,14 +48,14 @@ module Posts
       ids = params[:ids].split(",")
 
       ids.each do |id|
-        VoteManager::Posts.admin_unvote!(id)
+        VoteManager::Posts.admin_unvote!(id, CurrentUser.user)
       end
     end
 
     private
 
     def ensure_lockdown_disabled
-      access_denied if Security::Lockdown.votes_disabled? && !CurrentUser.is_staff?
+      access_denied if Security::Lockdown.votes_disabled? && !CurrentUser.user.is_staff?
     end
   end
 end

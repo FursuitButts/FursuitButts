@@ -81,8 +81,8 @@ class SessionLoader
   end
 
   def refresh_old_remember_token
-    if cookies.encrypted[:remember] && !CurrentUser.is_anonymous?
-      cookies.encrypted[:remember] = { value: @remember_validator.generate("#{CurrentUser.id}:#{CurrentUser.password_token}", purpose: "rbr", expires_in: 14.days), expires: Time.now + 14.days, httponly: true, same_site: :lax, secure: Rails.env.production? }
+    if cookies.encrypted[:remember] && !CurrentUser.user.is_anonymous?
+      cookies.encrypted[:remember] = { value: @remember_validator.generate("#{CurrentUser.user.id}:#{CurrentUser.password_token}", purpose: "rbr", expires_in: 14.days), expires: Time.now + 14.days, httponly: true, same_site: :lax, secure: Rails.env.production? }
     end
   end
 
@@ -118,13 +118,13 @@ class SessionLoader
   end
 
   def update_last_logged_in_at
-    return if CurrentUser.is_anonymous?
+    return if CurrentUser.user.is_anonymous?
     return if CurrentUser.last_logged_in_at && CurrentUser.last_logged_in_at > 1.week.ago
     CurrentUser.user.update_attribute(:last_logged_in_at, Time.now)
   end
 
   def update_last_ip_addr
-    return if CurrentUser.is_anonymous?
+    return if CurrentUser.user.is_anonymous?
     return if CurrentUser.user.last_ip_addr == request.remote_ip
     CurrentUser.user.update_attribute(:last_ip_addr, request.remote_ip)
   end

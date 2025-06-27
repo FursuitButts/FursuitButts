@@ -57,4 +57,14 @@ class CommentPolicy < ApplicationPolicy
   def api_attributes
     super - %i[notified_mentions] + %i[mentions creator_name updater_name]
   end
+
+  def visible_for_search(relation)
+    q = super
+    q = q.where("comments.score": user.comment_threshold..).or(q.where("comments.is_sticky": true))
+    return q if user.is_moderator?
+    q = q.joins(:post).where("comments.is_sticky": true).or(q.where("posts.is_comment_disabled": false)).or(q.where("comments.creator_id": user.id))
+    qq = q.where("comments.is_hidden": false).or(q.where("comments.creator_id": user.id))
+    qq = qq.or(q.where("comments.is_sticky": true)) if user.is_janitor?
+    qq
+  end
 end

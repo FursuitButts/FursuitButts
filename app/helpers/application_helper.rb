@@ -2,7 +2,7 @@
 
 module ApplicationHelper
   def disable_mobile_mode?
-    if CurrentUser.user.present? && CurrentUser.is_member?
+    if CurrentUser.user.present? && CurrentUser.user.is_member?
       return CurrentUser.disable_responsive_mode?
     end
     cookies[:nmm].present?
@@ -157,7 +157,7 @@ module ApplicationHelper
     }
   end
 
-  def data_attributes_for(record, attributes = record.html_data_attributes, prefix: "data")
+  def data_attributes_for(record, attributes = record.html_data_attributes(CurrentUser.user), prefix: "data")
     attributes.flat_map do |attr|
       # If we have a hash, we assume this hash is a key-value of (relation, attributes)
       # [:is_read?, { category: %i[id name] }]
@@ -166,7 +166,7 @@ module ApplicationHelper
           data_attributes_for(record.send(key), sub_attrs, prefix: "#{prefix}-#{key}").to_a
         end
       else
-        name = attr.to_s.dasherize.delete("?")
+        name = attr.to_s.dasherize.delete("?").gsub("apionly_", "")
         value = record.send(attr)
         if value.is_a?(ApplicationRecord)
           data_attributes_for(value, prefix: "#{prefix}-#{name}").to_a
@@ -209,7 +209,7 @@ module ApplicationHelper
   end
 
   def latest_link(records, raw: false, separator: !raw)
-    return unless CurrentUser.is_moderator?
+    return unless CurrentUser.user.is_moderator?
     return if params[:action] != "index" || records.blank?
     link = link_to_latest(records.first.id)
     if raw

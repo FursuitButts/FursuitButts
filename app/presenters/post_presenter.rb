@@ -14,7 +14,7 @@ class PostPresenter < Presenter
       return ""
     end
 
-    if post.loginblocked? || post.safeblocked?
+    if post.loginblocked?(CurrentUser.user) || post.safeblocked?(CurrentUser.user)
       return ""
     end
 
@@ -46,20 +46,20 @@ class PostPresenter < Presenter
     locals[:tooltip] = "Rating: #{post.rating}\nID: #{post.id}\nDate: #{post.created_at}\nStatus: #{post.status}\nScore: #{post.score}\n\n#{post.tag_string}"
 
     locals[:cropped_url] = if FemboyFans.config.enable_image_cropping? && options[:show_cropped] && post.has_crop? && !CurrentUser.user.disable_cropped_thumbnails?
-                             post.crop_file_url
+                             post.crop_file_url(CurrentUser.user)
                            elsif post.has_preview?
-                             post.preview_file_url
+                             post.preview_file_url(CurrentUser.user)
                            else
-                             post.file_url
+                             post.file_url(CurrentUser.user)
                            end
 
-    locals[:cropped_url] = FemboyFans.config.deleted_preview_url if post.deleteblocked?
-    locals[:preview_url] = if post.deleteblocked?
+    locals[:cropped_url] = FemboyFans.config.deleted_preview_url if post.deleteblocked?(CurrentUser.user)
+    locals[:preview_url] = if post.deleteblocked?(CurrentUser.user)
                              FemboyFans.config.deleted_preview_url
                            elsif post.has_preview?
-                             post.preview_file_url
+                             post.preview_file_url(CurrentUser.user)
                            else
-                             post.file_url
+                             post.file_url(CurrentUser.user)
                            end
 
     locals[:alt_text] = post.tag_string
@@ -103,7 +103,7 @@ class PostPresenter < Presenter
     klass << "post-status-flagged" if post.is_flagged?
     klass << "post-status-deleted" if post.is_deleted?
     klass << "post-status-has-parent" if post.parent_id
-    klass << "post-status-has-children" if post.has_visible_children?
+    klass << "post-status-has-children" if post.has_visible_children?(CurrentUser.user)
     klass << "post-rating-safe" if post.rating == "s"
     klass << "post-rating-questionable" if post.rating == "q"
     klass << "post-rating-explicit" if post.rating == "e"
@@ -112,7 +112,7 @@ class PostPresenter < Presenter
   end
 
   def self.data_attributes(post, include_post: false)
-    attributes = post.thumbnail_attributes
+    attributes = post.thumbnail_attributes(CurrentUser.user)
     attributes[:post] = post_attribute_attribute(post).to_json if include_post
     { data: attributes }
   end
@@ -123,17 +123,17 @@ class PostPresenter < Presenter
       created_at:    post.created_at,
       updated_at:    post.updated_at,
       fav_count:     post.fav_count,
-      comment_count: post.visible_comment_count(CurrentUser),
+      comment_count: post.visible_comment_count(CurrentUser.user),
       change_seq:    post.change_seq,
       uploader_id:   post.uploader_id,
       description:   post.description,
       flags:         {
-        pending:       post.is_pending,
-        flagged:       post.is_flagged,
-        note_locked:   post.is_note_locked,
-        status_locked: post.is_status_locked,
-        rating_locked: post.is_rating_locked,
-        deleted:       post.is_deleted,
+        pending:       post.is_pending?,
+        flagged:       post.is_flagged?,
+        note_locked:   post.is_note_locked?,
+        status_locked: post.is_status_locked?,
+        rating_locked: post.is_rating_locked?,
+        deleted:       post.is_deleted?,
         has_notes:     post.has_notes?,
       },
       score:         {
@@ -143,8 +143,8 @@ class PostPresenter < Presenter
       },
       relationships: {
         parent_id:           post.parent_id,
-        has_children:        post.has_children,
-        has_active_children: post.has_active_children,
+        has_children:        post.has_children?,
+        has_active_children: post.has_active_children?,
         children:            [],
       },
       pools:         post.pool_ids,
@@ -154,14 +154,14 @@ class PostPresenter < Presenter
         ext:    post.file_ext,
         size:   post.file_size,
         md5:    post.md5,
-        url:    post.visible? ? post.file_url : nil,
+        url:    post.visible?(CurrentUser.user) ? post.file_url(CurrentUser.user) : nil,
       },
-      variants:      post.variants,
+      variants:      post.variants(CurrentUser.user),
       sources:       post.source&.split('\n'),
       tags:          post.tag_string.split,
       locked_tags:   post.locked_tags&.split || [],
-      is_favorited:  post.is_favorited?,
-      own_vote:      post.own_vote,
+      is_favorited:  post.is_favorited?(CurrentUser.user),
+      own_vote:      post.own_vote(CurrentUser.user),
     }
   end
 
@@ -205,7 +205,7 @@ class PostPresenter < Presenter
   end
 
   def has_nav_links?(template)
-    has_sequential_navigation?(template.params) || @post.has_active_pools? || @post.post_sets.owned.any?
+    has_sequential_navigation?(template.params) || @post.has_active_pools? || @post.post_sets.owned_by(CurrentUser.user).any?
   end
 
   def has_sequential_navigation?(params)

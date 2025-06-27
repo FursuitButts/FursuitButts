@@ -3,7 +3,8 @@
 class EmailBlacklist < ApplicationRecord
   UNVERIFY_COUNT_TRESHOLD = 250
 
-  belongs_to_creator
+  belongs_to_user(:creator, ip: true)
+  resolvable(:destroyer)
 
   validates(:domain, uniqueness: { case_sensitive: false, message: "already exists" })
   after_create(:invalidate_cache)
@@ -26,7 +27,7 @@ class EmailBlacklist < ApplicationRecord
     banned_domains.any? { |banned_domain| domain.end_with?(banned_domain) }
   end
 
-  def self.search(params)
+  def self.search(params, user)
     q = super
 
     q = q.includes(:creator)
@@ -64,7 +65,7 @@ class EmailBlacklist < ApplicationRecord
 
   def unverify_accounts
     # Only unverify exact domain matches
-    matching_users = User.search(email_matches: "*@#{domain}")
+    matching_users = User.search({ email_matches: "*@#{domain}" }, creator)
     return if matching_users.count > UNVERIFY_COUNT_TRESHOLD
 
     matching_users.each(&:mark_unverified!)

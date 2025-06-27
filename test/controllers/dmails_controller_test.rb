@@ -8,9 +8,7 @@ class DmailsControllerTest < ActionDispatch::IntegrationTest
       @user = create(:user)
       @user2 = create(:user)
       @mod = create(:moderator_user)
-      as(@user) do
-        @dmail = create(:dmail, owner: @user, to: @user, from: @user2)
-      end
+      @dmail = create(:dmail, owner: @user, to: @user, from: @user2)
     end
 
     context("new action") do
@@ -126,7 +124,7 @@ class DmailsControllerTest < ActionDispatch::IntegrationTest
 
     context("mark as unread action") do
       should("mark the dmail as unread") do
-        @dmail.mark_as_read!
+        @dmail.mark_as_read!(@dmail.owner)
         assert_equal(0, @dmail.owner.reload.unread_dmail_count)
         assert_not_predicate(@dmail.owner, :has_mail?)
         assert_equal(0, @dmail.owner.reload.unread_notification_count)
@@ -188,9 +186,7 @@ class DmailsControllerTest < ActionDispatch::IntegrationTest
 
     context("spam") do
       setup do
-        as(@mod) do
-          @mod_dmail = create(:dmail, owner: @mod, from: @user, to: @mod)
-        end
+        @mod_dmail = create(:dmail, owner: @mod, from: @user, to: @mod)
         SpamDetector.stubs(:enabled?).returns(true)
         stub_request(:post, %r{https://.*\.rest\.akismet\.com/(\d\.?)+/comment-check}).to_return(status: 200, body: "true")
         stub_request(:post, %r{https://.*\.rest\.akismet\.com/(\d\.?)+/submit-spam}).to_return(status: 200, body: nil)

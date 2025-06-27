@@ -8,7 +8,7 @@ class Upload < ApplicationRecord
 
   attr_accessor(:as_pending, :original_post_id, :locked_rating, :locked_tags, :is_replacement, :replacement_id)
 
-  belongs_to(:uploader, class_name: "User")
+  belongs_to_user(:uploader, ip: true, aliases: :creator)
   belongs_to(:post, optional: true)
 
   after_initialize(:set_locked_tags)
@@ -67,11 +67,11 @@ class Upload < ApplicationRecord
   end
 
   module SearchMethods
-    def post_tags_match(query)
-      where(post_id: Post.tag_match_sql(query))
+    def post_tags_match(query, user)
+      where(post_id: Post.tag_match_sql(query, user))
     end
 
-    def search(params)
+    def search(params, user)
       q = super
 
       q = q.where_user(:uploader_id, :uploader, params)
@@ -103,7 +103,7 @@ class Upload < ApplicationRecord
       end
 
       if params[:post_tags_match].present?
-        q = q.post_tags_match(params[:post_tags_match])
+        q = q.post_tags_match(params[:post_tags_match], user)
       end
 
       if params[:status].present?
@@ -146,7 +146,7 @@ class Upload < ApplicationRecord
 
   def direct_url_is_whitelisted
     return true if direct_url_parsed.blank?
-    valid, reason = UploadWhitelist.is_whitelisted?(direct_url_parsed)
+    valid, reason = UploadWhitelist.is_whitelisted?(direct_url_parsed, uploader)
     unless valid
       errors.add(:source, "is not whitelisted: #{reason}")
       return false
@@ -168,7 +168,7 @@ class Upload < ApplicationRecord
     as_pending.to_s.truthy?
   end
 
-  def visible?(user = CurrentUser.user)
+  def visible?(user)
     user.is_janitor?
   end
 
@@ -181,8 +181,7 @@ class Upload < ApplicationRecord
       p.description = description.strip
       p.rating = rating
       p.source = source
-      p.uploader_id = uploader_id
-      p.uploader_ip_addr = uploader_ip_addr
+      p.uploader = uploader
       p.parent_id = parent_id
       p.upload_url = direct_url
       p.media_asset = media_asset

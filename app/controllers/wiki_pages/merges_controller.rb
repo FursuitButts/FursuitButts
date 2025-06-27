@@ -23,7 +23,7 @@ module WikiPages
       end
       authorize(@target, :merge?, policy_class: WikiPagePolicy)
       return render_expected_error(404, "The target wiki page could not be found.") if @target.blank?
-      @wiki_page.merge_into!(@target)
+      @wiki_page.merge_into!(@target, CurrentUser.user)
       respond_with(@target, notice: "Successfully merged the two wiki pages.")
     end
   end

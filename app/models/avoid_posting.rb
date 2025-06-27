@@ -1,13 +1,15 @@
 # frozen_string_literal: true
 
 class AvoidPosting < ApplicationRecord
-  belongs_to_creator
-  belongs_to_updater
+  belongs_to_user(:creator, ip: true, clones: :updater)
+  belongs_to_user(:updater, ip: true)
+  resolvable(:destroyer)
   belongs_to(:artist)
   has_many(:versions, -> { order("avoid_posting_versions.id ASC") }, class_name: "AvoidPostingVersion", dependent: :destroy)
   validates(:artist_id, uniqueness: { message: "already has an avoid posting entry" })
   validates(:details, length: { maximum: 1024 })
   validates(:staff_notes, length: { maximum: 4096 })
+  before_validation(:initialize_artist_creator, on: :create)
   after_create(:log_create)
   after_create(:create_version)
   after_update(:log_update, if: :saved_change_to_watched_attributes?)
@@ -20,9 +22,14 @@ class AvoidPosting < ApplicationRecord
   scope(:active, -> { where(is_active: true) })
   scope(:deleted, -> { where(is_active: false) })
 
+  def initialize_artist_creator
+    return if artist.blank?
+    artist.creator ||= creator
+  end
+
   module LogMethods
     def log_create
-      ModAction.log!(:avoid_posting_create, self, artist_name: artist_name)
+      ModAction.log!(creator, :avoid_posting_create, self, artist_name: artist_name)
     end
 
     def saved_change_to_watched_attributes?
@@ -33,24 +40,25 @@ class AvoidPosting < ApplicationRecord
       entry = { artist_name: artist_name }
       if saved_change_to_is_active?
         action = is_active? ? :avoid_posting_undelete : :avoid_posting_delete
-        ModAction.log!(action, self, **entry)
-        # only log delete/undelete if only is_active changed (checking for 2 because of updated_at)
-        return if previous_changes.length == 2
+        ModAction.log!(updater, action, self, **entry)
+        # only log delete/undelete if only is_active is changed
+        return if previous_changes.keys.all? { |key| %w[updater_id updated_at is_active].include?(key) }
       end
       entry = entry.merge({ details: details, old_details: details_before_last_save }) if saved_change_to_details?
       entry = entry.merge({ staff_notes: staff_notes, old_staff_notes: staff_notes_before_last_save }) if saved_change_to_staff_notes?
 
-      ModAction.log!(:avoid_posting_update, self, **entry)
+      ModAction.log!(updater, :avoid_posting_update, self, **entry)
     end
 
     def log_destroy
-      ModAction.log!(:avoid_posting_destroy, self, artist_name: artist_name)
+      ModAction.log!(destroyer, :avoid_posting_destroy, self, artist_name: artist_name)
     end
   end
 
   def create_version
     AvoidPostingVersion.create({
       avoid_posting: self,
+      updater:       updater,
       details:       details,
       staff_notes:   staff_notes,
       is_active:     is_active,
@@ -66,19 +74,19 @@ class AvoidPosting < ApplicationRecord
   end
 
   module ArtistMethods
-    delegate(:other_names, :other_names_string, :linked_user_id, :linked_user, :any_name_matches, to: :artist)
+    delegate(:other_names, :other_names_string, :linked_user_id, :linked_user, :any_name_matches, to: :artist, allow_nil: true)
     delegate(:name, to: :artist, prefix: true, allow_nil: true)
   end
 
   module SearchMethods
-    def artist_search(params)
-      Artist.search(params.slice(:any_name_matches, :any_other_name_matches).merge({ id: params[:artist_id], name: params[:artist_name] }))
+    def artist_search(params, user)
+      Artist.search(user, params.slice(:any_name_matches, :any_other_name_matches).merge({ id: params[:artist_id], name: params[:artist_name] }))
     end
 
-    def search(params)
+    def search(params, user)
       q = super
       artist_keys = %i[artist_id artist_name any_name_matches any_other_name_matches]
-      q = q.joins(:artist).merge(artist_search(params)) if artist_keys.any? { |key| params.key?(key) }
+      q = q.joins(:artist).merge(artist_search(params, user)) if artist_keys.any? { |key| params.key?(key) }
 
       if params[:is_active].present?
         q = q.active if params[:is_active].to_s.truthy?

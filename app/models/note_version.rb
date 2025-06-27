@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 class NoteVersion < ApplicationRecord
-  belongs_to_updater(counter_cache: "note_update_count")
+  belongs_to_user(:updater, ip: true, counter_cache: "note_update_count")
   belongs_to(:note)
   scope(:for_user, ->(user_id) { where("updater_id = ?", user_id) })
 
-  def self.search(params)
+  def self.search(params, user)
     q = super
 
     q = q.where_user(:updater_id, :updater, params)

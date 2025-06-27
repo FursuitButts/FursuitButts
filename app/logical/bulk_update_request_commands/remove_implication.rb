@@ -31,7 +31,7 @@ module BulkUpdateRequestCommands
       ensure_valid!
       tag_implication = TagImplication.active.find_by(antecedent_name: antecedent_name, consequent_name: consequent_name)
       raise(ProcessingError, "Implication #{antecedent_name} -> #{consequent_name} not found") if tag_implication.nil?
-      approver.scoped { tag_implication.reject!(update_topic: false) }
+      tag_implication.reject!(approver, update_topic: false)
     end
   end
 end

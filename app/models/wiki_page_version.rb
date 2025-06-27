@@ -2,7 +2,7 @@
 
 class WikiPageVersion < ApplicationRecord
   belongs_to(:wiki_page)
-  belongs_to_updater(counter_cache: "wiki_update_count")
+  belongs_to_user(:updater, ip: true, counter_cache: "wiki_update_count")
   belongs_to(:artist, optional: true)
   delegate(:visible?, to: :wiki_page)
 
@@ -11,7 +11,7 @@ class WikiPageVersion < ApplicationRecord
       where("updater_id = ?", user_id)
     end
 
-    def search(params)
+    def search(params, user)
       q = super
 
       q = q.where_user(:updater_id, :updater, params)

@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class UserTextVersion < ApplicationRecord
-  belongs_to(:updater, class_name: "User")
-  belongs_to(:user)
+  belongs_to_user(:user, clones: :updater)
+  belongs_to_user(:updater, ip: true)
   array_attribute(:text_changes) # "changes" is used by Rails
 
   CHANGE_TYPES = {
@@ -11,30 +11,28 @@ class UserTextVersion < ApplicationRecord
     blacklist: "Blacklist",
   }.freeze
 
-  def self.create_version(user)
+  def self.create_version(user, updater)
     count = UserTextVersion.where(user: user).count
     if count == 0
       count += 1
       create({
-        user:            user,
-        updater:         user,
-        updater_ip_addr: user.last_ip_addr || "0.0.0.0",
-        about_text:      user.profile_about_before_last_save || user.profile_about,
-        artinfo_text:    user.profile_artinfo_before_last_save || user.profile_artinfo,
-        blacklist_text:  user.blacklisted_tags_before_last_save || user.blacklisted_tags,
-        version:         1,
-        text_changes:    [],
+        user:           user,
+        updater:        user.resolvable,
+        about_text:     user.profile_about_before_last_save || user.profile_about,
+        artinfo_text:   user.profile_artinfo_before_last_save || user.profile_artinfo,
+        blacklist_text: user.blacklisted_tags_before_last_save || user.blacklisted_tags,
+        version:        1,
+        text_changes:   [],
       })
     end
     create({
-      user:            user,
-      updater:         CurrentUser.user,
-      updater_ip_addr: CurrentUser.ip_addr,
-      about_text:      user.profile_about,
-      artinfo_text:    user.profile_artinfo,
-      blacklist_text:  user.blacklisted_tags,
-      version:         count + 1,
-      text_changes:    changes_for_create(user),
+      user:           user,
+      updater:        updater,
+      about_text:     user.profile_about,
+      artinfo_text:   user.profile_artinfo,
+      blacklist_text: user.blacklisted_tags,
+      version:        count + 1,
+      text_changes:   changes_for_create(user),
     })
   end
 
@@ -108,7 +106,7 @@ class UserTextVersion < ApplicationRecord
   end
 
   module SearchMethods
-    def search(params)
+    def search(params, user)
       q = super
 
       q = q.where_user(:updater_id, :updater, params)
@@ -150,7 +148,7 @@ class UserTextVersion < ApplicationRecord
     %i[updater user]
   end
 
-  def visible?(user = CurrentUser.user)
+  def visible?(user)
     user.is_moderator?
   end
 end

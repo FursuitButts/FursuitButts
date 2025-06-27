@@ -3,19 +3,20 @@
 class TagAlias < TagRelationship
   attr_accessor(:skip_forum)
 
+  belongs_to_user(:creator, ip: true, clones: :updater)
+  belongs_to_user(:updater, ip: true)
+  belongs_to_user(:approver, optional: true)
   after_save(:create_mod_action)
   validates(:antecedent_name, uniqueness: { conditions: -> { duplicate_relevant } }, unless: :is_deleted?)
   validate(:absence_of_transitive_relation, unless: :is_deleted?)
 
   module ApprovalMethods
-    def approve!(approver: CurrentUser.user, update_topic: true)
-      CurrentUser.scoped(approver) do
-        update(status: "queued", approver_id: approver.id)
-        TagAliasJob.perform_later(id, update_topic)
-      end
+    def approve!(approver, update_topic: true)
+      update(status: "queued", approver: approver)
+      TagAliasJob.perform_later(id, update_topic, approver)
     end
 
-    def undo!(user: CurrentUser.user)
+    def undo!(user = User.system)
       TagAliasUndoJob.perform_later(id, user.id, true)
     end
   end
@@ -142,36 +143,32 @@ class TagAlias < TagRelationship
     output.uniq.join("\n")
   end
 
-  def process_undo!(user: User.system, update_topic: true)
+  def process_undo!(user = User.system, update_topic: true)
     unless valid?
       errors.add(:base, "Nothing to undo") if undo_data.blank?
       raise(errors.full_messages.join("; "))
     end
 
-    CurrentUser.scoped(user) do
-      update!(status: "retired")
-      mover = tag_mover_undo(user)
-      mover.undo!
-      update_column(:undo_data, undo_data - mover.applied.as_json)
-      forum_updater.update(retirement_message, "RETIRED") if update_topic
-    end
+    update!(status: "retired", updater: user)
+    mover = tag_mover_undo(user)
+    mover.undo!
+    update_column(:undo_data, undo_data - mover.applied.as_json)
+    forum_updater.update(retirement_message, "RETIRED") if update_topic
   end
 
-  def process!(update_topic: true)
+  def process!(user, update_topic: true)
     tries = 0
 
     begin
-      CurrentUser.scoped(approver) do
-        update!(status: "processing")
-        mover = tag_mover(approver)
-        mover.move!
-        update_column(:undo_data, mover.undos)
-        forum_updater.update(approval_message(approver), "APPROVED") if update_topic
-        update(status: "active", post_count: consequent_tag.post_count)
-        # TODO: Race condition with indexing jobs here.
-        antecedent_tag.fix_post_count if antecedent_tag&.persisted?
-        consequent_tag.fix_post_count if consequent_tag&.persisted?
-      end
+      update!(status: "processing", updater: user)
+      mover = tag_mover(user)
+      mover.move!
+      update_column(:undo_data, mover.undos)
+      forum_updater.update(approval_message(user), "APPROVED") if update_topic
+      update!(status: "active", post_count: consequent_tag.post_count, updater: user)
+      # TODO: Race condition with indexing jobs here.
+      antecedent_tag.fix_post_count if antecedent_tag&.persisted?
+      consequent_tag.fix_post_count if consequent_tag&.persisted?
     rescue Exception => e
       Rails.logger.error("[TA] #{e.message}\n#{e.backtrace}")
       if tries < 5 && !Rails.env.test?
@@ -180,18 +177,16 @@ class TagAlias < TagRelationship
         retry
       end
 
-      CurrentUser.scoped(approver) do
-        forum_updater.update(failure_message(e), "FAILED") if update_topic
-        update_columns(status: "error: #{e}")
-      end
+      forum_updater.update(failure_message(e), "FAILED") if update_topic
+      update_columns(status: "error: #{e}", updater_id: user.id, updater_ip_addr: user.ip_addr)
     end
   end
 
-  def tag_mover(user = CurrentUser.user)
+  def tag_mover(user)
     TagMover.new(antecedent_name, consequent_name, user: user, request: self)
   end
 
-  def tag_mover_undo(user = CurrentUser.user)
+  def tag_mover_undo(user)
     TagMover::Undo.new(undo_data, user: user, request: self)
   end
 
@@ -203,9 +198,9 @@ class TagAlias < TagRelationship
     end
   end
 
-  def reject!(update_topic: true)
-    update(status: "deleted")
-    forum_updater.update(reject_message(CurrentUser.user), "REJECTED") if update_topic
+  def reject!(rejector, update_topic: true)
+    update(status: "deleted", updater: rejector)
+    forum_updater.update(reject_message(rejector), "REJECTED") if update_topic
   end
 
   def self.update_cached_post_counts_for_all
@@ -218,7 +213,7 @@ class TagAlias < TagRelationship
     alias_desc = %("tag alias ##{id}":[#{Rails.application.routes.url_helpers.tag_alias_path(self)}]: [[#{antecedent_name}]] -> [[#{consequent_name}]])
 
     if previously_new_record?
-      ModAction.log!(:tag_alias_create, self, alias_desc: alias_desc)
+      ModAction.log!(creator, :tag_alias_create, self, alias_desc: alias_desc)
     else
       # format the changes hash more nicely.
       change_desc = saved_changes.except(:updated_at).map do |attribute, values|
@@ -231,7 +226,7 @@ class TagAlias < TagRelationship
         end
       end.join(", ")
 
-      ModAction.log!(:tag_alias_update, self, alias_desc: alias_desc, change_desc: change_desc)
+      ModAction.log!(updater, :tag_alias_update, self, alias_desc: alias_desc, change_desc: change_desc)
     end
   end
 

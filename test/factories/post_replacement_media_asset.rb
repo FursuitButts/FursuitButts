@@ -10,8 +10,7 @@ end
 
 FactoryBot.define do
   factory(:post_replacement_media_asset) do
-    creator { create(:user, created_at: 2.weeks.ago) }
-    creator_ip_addr { "127.0.0.1" }
+    creator { association(:user, created_at: 2.weeks.ago) }
     checksum { SecureRandom.hex(16) }
 
     factory(:random_post_replacement_media_asset) do

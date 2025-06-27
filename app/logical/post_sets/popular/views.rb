@@ -5,7 +5,8 @@ module PostSets
     class Views < PostSets::Base
       attr_reader(:date, :limit)
 
-      def initialize(date, limit: Reports::LIMIT)
+      def initialize(date, current_user:, limit: Reports::LIMIT)
+        super(current_user)
         @date = date
         @limit = limit
       end

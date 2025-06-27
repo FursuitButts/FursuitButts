@@ -10,18 +10,18 @@ module ModActions
 
     context("mod actions for forum categories") do
       setup do
-        @category = create(:forum_category, can_view: User::Levels::TRUSTED)
+        @category = create(:forum_category, can_view: User::Levels::TRUSTED, creator: @admin)
         @trusted = create(:trusted_user)
         set_count!
       end
 
       context("forum_category_create") do
         setup do
-          @category = create(:forum_category, can_view: User::Levels::TRUSTED)
+          @category = create(:forum_category, can_view: User::Levels::TRUSTED, creator: @admin)
         end
 
         should("format correctly for users that can see the category") do
-          as(@trusted) do
+          CurrentUser.scoped(@trusted) do # rubocop:disable Local/CurrentUserOutsideOfRequests
             assert_matches(
               actions:             %w[forum_category_create],
               text:                <<~TEXT.strip,
@@ -39,7 +39,7 @@ module ModActions
         end
 
         should("format correctly for users that cannot see the category") do
-          as(@user) do
+          CurrentUser.scoped(@user) do # rubocop:disable Local/CurrentUserOutsideOfRequests
             assert_matches(
               actions: %w[forum_category_create],
               text:    "Created forum category ##{@category.id}",
@@ -52,14 +52,13 @@ module ModActions
 
       context("forum_category_delete") do
         should("format correctly for users that can see the category") do
-          @category.destroy
+          @category.destroy_with!(@admin)
 
-          as(@trusted) do
+          CurrentUser.scoped(@trusted) do # rubocop:disable Local/CurrentUserOutsideOfRequests
             assert_matches(
               actions:             %w[forum_category_delete],
               text:                "Deleted forum category ##{@category.id} (#{@category.name})",
               subject:             @category,
-              creator:             @admin,
               forum_category_name: @category.name,
               can_view:            @category.can_view,
               can_create:          @category.can_create,
@@ -68,9 +67,9 @@ module ModActions
         end
 
         should("format correctly for users that cannot see the category") do
-          @category.destroy
+          @category.destroy_with!(@admin)
 
-          as(@user) do
+          CurrentUser.scoped(@user) do # rubocop:disable Local/CurrentUserOutsideOfRequests
             assert_matches(
               actions: %w[forum_category_delete],
               text:    "Deleted forum category ##{@category.id}",
@@ -83,15 +82,15 @@ module ModActions
 
       context("forum_category_topics_move") do
         setup do
-          @topic = create(:forum_topic, category: @category)
-          @category2 = create(:forum_category, can_view: User::Levels::TRUSTED)
+          @topic = create(:forum_topic, category: @category, creator: @admin)
+          @category2 = create(:forum_category, can_view: User::Levels::TRUSTED, creator: @admin)
           set_count!
         end
 
         should("format correctly for users that can see the category") do
-          with_inline_jobs { @category.move_all_topics(@category2, user: @admin) }
+          with_inline_jobs { @category.move_all_topics(@category2, @admin) }
 
-          as(@trusted) do
+          CurrentUser.scoped(@trusted) do # rubocop:disable Local/CurrentUserOutsideOfRequests
             assert_matches(
               actions:                 %w[forum_category_topics_move forum_category_update forum_category_update],
               text:                    "Moved all topics in [#{@category.name}](#{forum_category_path(@category)}) to [#{@category2.name}](#{forum_category_path(@category2)})",
@@ -108,9 +107,9 @@ module ModActions
         end
 
         should("format correctly for users that cannot see the category") do
-          with_inline_jobs { @category.move_all_topics(@category2, user: @admin) }
+          with_inline_jobs { @category.move_all_topics(@category2, @admin) }
 
-          as(@user) do
+          CurrentUser.scoped(@user) do # rubocop:disable Local/CurrentUserOutsideOfRequests
             assert_matches(
               actions:               %w[forum_category_topics_move forum_category_update forum_category_update],
               text:                  "Moved all topics in category ##{@category.id} to category ##{@category2.id}",
@@ -130,9 +129,9 @@ module ModActions
 
         context("with no changes") do
           should("format correctly for users that can see the category") do
-            @category.save
+            @category.update_with!(@admin)
 
-            as(@trusted) do
+            CurrentUser.scoped(@trusted) do # rubocop:disable Local/CurrentUserOutsideOfRequests
               assert_matches(
                 actions:                 %w[forum_category_update],
                 text:                    "Updated forum category ##{@category.id} (#{@category.name})",
@@ -149,9 +148,9 @@ module ModActions
           end
 
           should("format correctly for users that cannot see the category") do
-            @category.save
+            @category.update_with!(@admin)
 
-            as(@user) do
+            CurrentUser.scoped(@user) do # rubocop:disable Local/CurrentUserOutsideOfRequests
               assert_matches(
                 actions: %w[forum_category_update],
                 text:    "Updated forum category ##{@category.id}",
@@ -164,9 +163,9 @@ module ModActions
 
         context("with name change") do
           should("format correctly for users that can see the category") do
-            @category.update!(name: "xxx")
+            @category.update_with!(@admin, name: "xxx")
 
-            as(@trusted) do
+            CurrentUser.scoped(@trusted) do # rubocop:disable Local/CurrentUserOutsideOfRequests
               assert_matches(
                 actions:                 %w[forum_category_update],
                 text:                    <<~TEXT.strip,
@@ -186,9 +185,9 @@ module ModActions
           end
 
           should("format correctly for users that cannot see the category") do
-            @category.update!(name: "xxx")
+            @category.update_with!(@admin, name: "xxx")
 
-            as(@user) do
+            CurrentUser.scoped(@user) do # rubocop:disable Local/CurrentUserOutsideOfRequests
               assert_matches(
                 actions: %w[forum_category_update],
                 text:    "Updated forum category ##{@category.id}",
@@ -201,9 +200,9 @@ module ModActions
 
         context("with can_view change") do
           should("format correctly for users that can see the category") do
-            @category.update!(can_view: User::Levels::ADMIN)
+            @category.update_with!(@admin, can_view: User::Levels::ADMIN)
 
-            as(@admin) do
+            CurrentUser.scoped(@admin) do # rubocop:disable Local/CurrentUserOutsideOfRequests
               assert_matches(
                 actions:                 %w[forum_category_update],
                 text:                    <<~TEXT.strip,
@@ -223,9 +222,9 @@ module ModActions
           end
 
           should("format correctly for users that cannot see the category") do
-            @category.update!(can_view: User::Levels::ADMIN)
+            @category.update_with!(@admin, can_view: User::Levels::ADMIN)
 
-            as(@user) do
+            CurrentUser.scoped(@user) do # rubocop:disable Local/CurrentUserOutsideOfRequests
               assert_matches(
                 actions: %w[forum_category_update],
                 text:    "Updated forum category ##{@category.id}",
@@ -238,9 +237,9 @@ module ModActions
 
         context("with can_create change") do
           should("format correctly for users that can see the category") do
-            @category.update!(can_create: User::Levels::ADMIN)
+            @category.update_with!(@admin, can_create: User::Levels::ADMIN)
 
-            as(@admin) do
+            CurrentUser.scoped(@admin) do # rubocop:disable Local/CurrentUserOutsideOfRequests
               assert_matches(
                 actions:                 %w[forum_category_update],
                 text:                    <<~TEXT.strip,
@@ -260,9 +259,9 @@ module ModActions
           end
 
           should("format correctly for users that cannot see the category") do
-            @category.update!(can_create: User::Levels::ADMIN)
+            @category.update_with!(@admin, can_create: User::Levels::ADMIN)
 
-            as(@user) do
+            CurrentUser.scoped(@user) do # rubocop:disable Local/CurrentUserOutsideOfRequests
               assert_matches(
                 actions: %w[forum_category_update],
                 text:    "Updated forum category ##{@category.id}",
@@ -275,9 +274,9 @@ module ModActions
 
         context("with all changes") do
           should("format correctly for users that can see the category") do
-            @category.update!(name: "xxx", can_view: User::Levels::ADMIN, can_create: User::Levels::ADMIN)
+            @category.update_with!(@admin, name: "xxx", can_view: User::Levels::ADMIN, can_create: User::Levels::ADMIN)
 
-            as(@admin) do
+            CurrentUser.scoped(@admin) do # rubocop:disable Local/CurrentUserOutsideOfRequests
               assert_matches(
                 actions:                 %w[forum_category_update],
                 text:                    <<~TEXT.strip,
@@ -299,9 +298,9 @@ module ModActions
           end
 
           should("format correctly for users that cannot see the category") do
-            @category.update!(name: "xxx", can_view: User::Levels::ADMIN, can_create: User::Levels::ADMIN)
+            @category.update_with!(@admin, name: "xxx", can_view: User::Levels::ADMIN, can_create: User::Levels::ADMIN)
 
-            as(@user) do
+            CurrentUser.scoped(@user) do # rubocop:disable Local/CurrentUserOutsideOfRequests
               assert_matches(
                 actions: %w[forum_category_update],
                 text:    "Updated forum category ##{@category.id}",

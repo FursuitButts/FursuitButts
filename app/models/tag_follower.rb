@@ -3,7 +3,7 @@
 class TagFollower < ApplicationRecord
   class AliasedTagError < StandardError; end
   belongs_to(:tag)
-  belongs_to(:user, counter_cache: "followed_tag_count")
+  belongs_to_user(:user, counter_cache: "followed_tag_count")
   belongs_to(:last_post, class_name: "Post", optional: true)
   validate(:validate_user_can_follow_tags, on: :create)
   validate(:validate_tag_is_not_aliased, on: :create)
@@ -51,7 +51,7 @@ class TagFollower < ApplicationRecord
 
   def self.update_from_post!(post)
     transaction do
-      followers = where(tag_id: post.tag_ids).and(where("last_post_id < ?", post.id)).unbanned
+      followers = where(tag_id: post.tag_ids).and(where(last_post_id: ...post.id)).unbanned
       followers.each do |follower|
         follower.user.notifications.create!(category: :new_post, data: { post_id: post.id, tag_name: follower.tag_name }) unless follower.user_id == post.uploader_id
         follower.update!(last_post: post)
@@ -63,7 +63,7 @@ class TagFollower < ApplicationRecord
     %i[tag user]
   end
 
-  def visible?(user = CurrentUser.user)
+  def visible?(user)
     user.is_moderator? || !user.enable_privacy_mode? || user_id == user.id
   end
 end

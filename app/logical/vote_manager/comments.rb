@@ -4,7 +4,7 @@ module VoteManager
   module Comments
     module_function
 
-    def vote!(user:, comment:, score:)
+    def vote!(user:, ip_addr:, comment:, score:)
       retries = 5
       @vote = nil
       score = score.to_i
@@ -23,7 +23,7 @@ module VoteManager
               score_modifier *= 2
               @vote.destroy
             end
-            @vote = comment.votes.create!(user: user, score: score)
+            @vote = comment.votes.create!(user: user, user_ip_addr: ip_addr, score: score)
             Comment.where(id: comment.id).update_all("score = score + #{score_modifier}")
           end
         end
@@ -54,11 +54,11 @@ module VoteManager
       # Ignored
     end
 
-    def lock!(id)
+    def lock!(id, user)
       CommentVote.transaction(**ISOLATION) do
         vote = CommentVote.find_by(id: id)
         raise(VoteManager::NoVoteError) unless vote
-        StaffAuditLog.log!(:comment_vote_lock, CurrentUser.user, comment_id: vote.comment_id, vote: vote.score, voter_id: vote.user_id)
+        StaffAuditLog.log!(user, :comment_vote_lock, comment_id: vote.comment_id, vote: vote.score, voter_id: vote.user_id)
         Comment.where(id: vote.comment_id).update_all("score = score - #{vote.score}")
         vote.update_columns(is_locked: true)
       end
@@ -66,10 +66,10 @@ module VoteManager
       # Ignored
     end
 
-    def admin_unvote!(id)
+    def admin_unvote!(id, user)
       vote = CommentVote.find_by(id: id)
       return unless vote
-      StaffAuditLog.log!(:comment_vote_delete, CurrentUser.user, comment_id: vote.comment_id, vote: vote.score, voter_id: vote.user_id)
+      StaffAuditLog.log!(user, :comment_vote_delete, comment_id: vote.comment_id, vote: vote.score, voter_id: vote.user_id)
       unvote!(comment: vote.comment, user: vote.user, force: true)
     end
   end

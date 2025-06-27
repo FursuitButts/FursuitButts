@@ -5,14 +5,10 @@ require("test_helper")
 class PoolsControllerTest < ActionDispatch::IntegrationTest
   context("The pools controller") do
     setup do
-      travel_to(1.month.ago) do
-        @user = create(:user)
-        @mod = create(:moderator_user)
-      end
-      as(@user) do
-        @post = create(:post)
-        @pool = create(:pool)
-      end
+      @user = create(:user)
+      @mod = create(:moderator_user)
+      @post = create(:post)
+      @pool = create(:pool)
     end
 
     context("index action") do
@@ -73,7 +69,7 @@ class PoolsControllerTest < ActionDispatch::IntegrationTest
 
       context("min_edit_level") do
         setup do
-          as(@user) { @post2 = create(:post, min_edit_level: User::Levels::TRUSTED) }
+          @post2 = create(:post, min_edit_level: User::Levels::TRUSTED)
         end
 
         should("prevent adding posts when the editors level is lower") do
@@ -117,12 +113,10 @@ class PoolsControllerTest < ActionDispatch::IntegrationTest
 
       context("min_edit_level") do
         setup do
-          as(@user) do
-            @post2 = create(:post, min_edit_level: User::Levels::TRUSTED)
-            @post3 = create(:post)
-            @pool.add!(@post3)
-            @post3.update_column(:min_edit_level, User::Levels::TRUSTED)
-          end
+          @post2 = create(:post, min_edit_level: User::Levels::TRUSTED)
+          @post3 = create(:post)
+          @pool.add!(@post3, @user)
+          @post3.update_column(:min_edit_level, User::Levels::TRUSTED)
         end
 
         should("prevent adding posts when the editors level is lower") do
@@ -166,13 +160,9 @@ class PoolsControllerTest < ActionDispatch::IntegrationTest
 
     context("revert action") do
       setup do
-        as(@user) do
-          @post2 = create(:post)
-          @pool = create(:pool, post_ids: [@post.id])
-        end
-        as(@user, "1.2.3.4") do
-          @pool.update(post_ids: [@post.id, @post2.id])
-        end
+        @post2 = create(:post)
+        @pool = create(:pool, post_ids: [@post.id])
+        @pool.update_with(@user, post_ids: [@post.id, @post2.id])
       end
 
       should("revert to a previous version") do
@@ -185,9 +175,7 @@ class PoolsControllerTest < ActionDispatch::IntegrationTest
       end
 
       should("not allow reverting to a previous version of another pool") do
-        as(@user) do
-          @pool2 = create(:pool)
-        end
+        @pool2 = create(:pool)
         put_auth(revert_pool_path(@pool), @user, params: { version_id: @pool2.versions.first.id })
         @pool.reload
         assert_not_equal(@pool.name, @pool2.name)
@@ -195,7 +183,7 @@ class PoolsControllerTest < ActionDispatch::IntegrationTest
       end
 
       should("restrict access") do
-        as(@user) { User::Levels.constants.length.times { |i| @pool.update(name: "pool_#{i}") } }
+        User::Levels.constants.length.times { |i| @pool.update_with(@user, name: "pool_#{i}") }
         @versions = @pool.reload.versions.to_a
         assert_access(User::Levels::MEMBER, success_response: :redirect) { |user| put_auth(revert_pool_path(@pool), user, params: { version_id: @versions.pop.id }) }
       end

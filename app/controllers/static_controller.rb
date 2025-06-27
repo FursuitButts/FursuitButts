@@ -29,7 +29,7 @@ class StaticController < ApplicationController
   end
 
   def not_found
-    render("static/404", formats: %i[html], status: 404)
+    render("static/404", formats: %i[html], status: :not_found)
   end
 
   def error
@@ -47,7 +47,7 @@ class StaticController < ApplicationController
   end
 
   def toggle_mobile_mode
-    if CurrentUser.is_member?
+    if CurrentUser.user.is_member?
       user = CurrentUser.user
       user.disable_responsive_mode = !user.disable_responsive_mode
       user.save
@@ -67,8 +67,8 @@ class StaticController < ApplicationController
       time = (Time.now + 5.minutes).to_i
       secret = FemboyFans.config.discord_secret
       # TODO: Proper HMAC
-      hashed_values = Digest::SHA256.hexdigest("#{CurrentUser.id};#{CurrentUser.name};#{time};#{secret};index")
-      user_hash = "?user_id=#{CurrentUser.id}&user_name=#{CurrentUser.name}&time=#{time}&hash=#{hashed_values}"
+      hashed_values = Digest::SHA256.hexdigest("#{CurrentUser.user.id};#{CurrentUser.name};#{time};#{secret};index")
+      user_hash = "?user_id=#{CurrentUser.user.id}&user_name=#{CurrentUser.name}&time=#{time}&hash=#{hashed_values}"
 
       redirect_to(FemboyFans.config.discord_site + user_hash, allow_other_host: true)
     else

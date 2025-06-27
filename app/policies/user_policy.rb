@@ -36,14 +36,14 @@ class UserPolicy < ApplicationPolicy
   def permitted_attributes_for_update
     attr = super + %i[enable_hover_zoom_form forum_unread_form] + [upload_notifications: []]
     attr += %i[profile_about profile_artinfo avatar_id] if unbanned? # Prevent editing when banned
-    attr += %i[enable_compact_uploader] if CurrentUser.post_active_count >= FemboyFans.config.compact_uploader_minimum_posts
+    attr += %i[enable_compact_uploader] if record.post_active_count >= FemboyFans.config.compact_uploader_minimum_posts
     attr
   end
 
   def permitted_search_params
     params = super + %i[name_matches about_me avatar_id level min_level max_level unrestricted_uploads can_approve_posts]
     params += %i[ip_addr] if can_search_ip_addr?
-    params += %i[email_matches] if CurrentUser.is_admin?
+    params += %i[email_matches] if user.is_admin?
     params
   end
 

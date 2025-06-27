@@ -14,13 +14,13 @@ module ModActions
 
     context("mod actions for bans") do
       setup do
-        @ban = create(:ban, user: @user)
+        @ban = create(:ban, user: @user, creator: @admin)
         set_count!
       end
 
       context("ban_create") do
         should("format permanent bans correctly") do
-          @ban = create(:ban, duration: -1, user: @user)
+          @ban = create(:ban, duration: -1, user: @user, creator: @admin)
 
           assert_matches(
             actions:  %w[ban_create user_feedback_create],
@@ -33,7 +33,7 @@ module ModActions
         end
 
         should("format temporary bans correctly") do
-          @ban = create(:ban, duration: 1, user: @user)
+          @ban = create(:ban, duration: 1, user: @user, creator: @admin)
 
           assert_matches(
             actions:  %w[ban_create user_feedback_create],
@@ -47,7 +47,7 @@ module ModActions
 
         # should be impossible in normal usage
         should("format invalid durations correctly") do
-          @ban = build(:ban, duration: nil, user: @user)
+          @ban = build(:ban, duration: nil, user: @user, creator: @admin)
           @ban.save(validate: false)
 
           assert_matches(
@@ -62,7 +62,7 @@ module ModActions
       end
 
       should("format ban_delete correctly") do
-        @ban.destroy
+        @ban.destroy_with(@admin)
         assert_matches(
           actions: %w[ban_delete],
           subject: @ban,
@@ -77,6 +77,7 @@ module ModActions
         end
 
         should("format no changes correctly") do
+          @ban.updater = @admin
           @ban.save
 
           assert_matches(
@@ -92,7 +93,7 @@ module ModActions
         end
 
         should("format duration changes correctly") do
-          @ban.update!(duration: -1)
+          @ban.update_with!(@admin, duration: -1)
 
           assert_matches(
             actions:        %w[ban_update],
@@ -110,7 +111,7 @@ module ModActions
         end
 
         should("format reason changes correctly") do
-          @ban.update!(reason: "xxx")
+          @ban.update_with!(@admin, reason: "xxx")
 
           assert_matches(
             actions:        %w[ban_update],
@@ -128,7 +129,7 @@ module ModActions
         end
 
         should("format both duration and reason changes correctly") do
-          @ban.update!(duration: -1, reason: "xxx")
+          @ban.update_with!(@admin, duration: -1, reason: "xxx")
 
           assert_matches(
             actions:        %w[ban_update],

@@ -1,14 +1,18 @@
 # frozen_string_literal: true
 
 class Pool < ApplicationRecord
-  class RevertError < StandardError
-  end
-
   ARTIST_EXCLUSION_TAGS = TagCategory::ARTIST.exclusion
 
   array_attribute(:post_ids, parse: %r{(?:https://#{FemboyFans.config.domain}/posts/)?(\d+)}i, cast: :to_i)
-  belongs_to_creator
+  belongs_to_user(:creator, ip: true, clones: :updater)
+  resolvable(:updater)
+  resolvable(:destroyer)
   has_dtext_links(:description)
+  revertible do |version|
+    self.post_ids = version.post_ids
+    self.name = version.name
+    self.description = version.description
+  end
 
   normalizes(:description, with: ->(desc) { desc.gsub("\r\n", "\n") })
   validates(:name, uniqueness: { case_sensitive: false, if: :name_changed? })
@@ -23,7 +27,7 @@ class Pool < ApplicationRecord
   validate(:validate_number_of_posts)
   before_validation(:normalize_post_ids)
   before_validation(:normalize_name)
-  before_save(:update_cover_post, if: :will_save_change_to_post_ids?)
+  before_validation(:update_cover_post, if: :post_ids_changed?)
   after_create(:synchronize!)
   before_destroy(:remove_all_posts)
   after_destroy(:log_delete)
@@ -34,6 +38,8 @@ class Pool < ApplicationRecord
   has_many(:versions, -> { order("id asc") }, class_name: "PoolVersion", dependent: :destroy)
 
   attr_accessor(:skip_sync)
+
+  validates(:cover_post_id, presence: true, allow_nil: false, unless: -> { post_ids.empty? })
 
   def limited_attribute_changed?
     name_changed? || description_changed? || is_active_changed?
@@ -62,7 +68,7 @@ class Pool < ApplicationRecord
       order(updated_at: :desc)
     end
 
-    def search(params)
+    def search(params, user)
       q = super
 
       if params[:name_matches].present?
@@ -110,7 +116,7 @@ class Pool < ApplicationRecord
   end
 
   def user_not_limited
-    allowed = CurrentUser.can_pool_edit_with_reason
+    allowed = updater.can_pool_edit_with_reason
     if allowed != true
       errors.add(:updater, User.throttle_reason(allowed))
       return false
@@ -119,7 +125,7 @@ class Pool < ApplicationRecord
   end
 
   def user_not_posts_limited
-    allowed = CurrentUser.can_pool_post_edit_with_reason
+    allowed = updater.can_pool_post_edit_with_reason
     if allowed != true
       errors.add(:updater, "#{User.throttle_reason(allowed)}: updating unique pools posts")
       return false
@@ -160,17 +166,6 @@ class Pool < ApplicationRecord
     self.post_ids = post_ids.uniq.select { |id| valid.include?(id) }
   end
 
-  def revert_to!(version)
-    if id != version.pool_id
-      raise(RevertError, "You cannot revert to a previous version of another pool.")
-    end
-
-    self.post_ids = version.post_ids
-    self.name = version.name
-    self.description = version.description
-    save
-  end
-
   def contains?(post_id)
     post_ids.include?(post_id)
   end
@@ -187,7 +182,7 @@ class Pool < ApplicationRecord
     post_ids_before = post_ids_before_last_save || post_ids_was
     added = post_ids - post_ids_before
     return if added.empty?
-    max = FemboyFans.config.pool_post_limit(CurrentUser.user)
+    max = FemboyFans.config.pool_post_limit(updater)
     if post_ids.size > max
       errors.add(:base, "Pools can only have up to #{ActiveSupport::NumberHelper.number_to_delimited(max)} posts each")
       false
@@ -196,20 +191,21 @@ class Pool < ApplicationRecord
     end
   end
 
-  def add!(post)
+  def add!(post, user)
     return if post.nil?
     return if post.id.nil?
     return if contains?(post.id)
-    return unless post.can_edit?(CurrentUser.user)
+    return unless post.can_edit?(user)
 
     with_lock do
       reload
       self.skip_sync = true
+      self.updater = user
       update(post_ids: post_ids + [post.id])
       raise(ActiveRecord::Rollback) unless valid?
       update_artists!
       self.skip_sync = false
-      post.add_pool!(self)
+      post.add_pool!(self, user)
       post.save
     end
   end
@@ -221,19 +217,20 @@ class Pool < ApplicationRecord
     post_ids << id
   end
 
-  def remove!(post)
+  def remove!(post, user)
     return unless contains?(post.id)
-    return unless CurrentUser.user.can_remove_from_pools?
-    return unless post.can_edit?(CurrentUser.user)
+    return unless user.can_remove_from_pools?
+    return unless post.can_edit?(user)
 
     with_lock do
       reload
       self.skip_sync = true
+      self.updater = user
       update(post_ids: post_ids - [post.id])
       raise(ActiveRecord::Rollback) unless valid?
       update_artists!
       self.skip_sync = false
-      post.remove_pool!(self)
+      post.remove_pool!(self, user)
       post.save
     end
   end
@@ -268,12 +265,12 @@ class Pool < ApplicationRecord
     removed = post_ids_before - post_ids
 
     Post.where(id: added).find_each do |post|
-      post.add_pool!(self)
+      post.add_pool!(self, updater)
       post.save
     end
 
     Post.where(id: removed).find_each do |post|
-      post.remove_pool!(self)
+      post.remove_pool!(self, updater)
       post.save
     end
     update_artists!
@@ -288,7 +285,7 @@ class Pool < ApplicationRecord
     with_lock do
       transaction do
         Post.where(id: post_ids).find_each do |post|
-          post.remove_pool!(self)
+          post.remove_pool!(self, updater)
           post.save
         end
       end
@@ -322,13 +319,15 @@ class Pool < ApplicationRecord
     post_ids[n]
   end
 
-  def create_version(updater: CurrentUser.user, updater_ip_addr: CurrentUser.ip_addr)
-    PoolVersion.queue(self, updater, updater_ip_addr)
+  def create_version
+    PoolVersion.queue(self, updater.resolvable(updater_ip_addr))
   end
 
+  # rubocop:disable Local/CurrentUserOutsideOfRequests -- this is used exclusively within requests
   def last_page
     (post_count / CurrentUser.user.per_page.to_f).ceil
   end
+  # rubocop:enable Local/CurrentUserOutsideOfRequests
 
   def validate_name
     case name
@@ -349,7 +348,7 @@ class Pool < ApplicationRecord
 
   def updater_can_remove_posts
     removed = post_ids_was - post_ids
-    if removed.any? && !CurrentUser.user.can_remove_from_pools?
+    if removed.any? && !updater.can_remove_from_pools?
       errors.add(:base, "You cannot removes posts from pools within the 3 days of sign up")
     end
   end
@@ -359,7 +358,7 @@ class Pool < ApplicationRecord
     added = post_ids - post_ids_was
     posts = Post.select(:id, :min_edit_level).where(id: removed + added)
     posts.each do |post|
-      unless post.can_edit?(CurrentUser.user)
+      unless post.can_edit?(updater)
         errors.add(:base, "post ##{post.id} is edit restricted")
       end
     end
@@ -367,7 +366,7 @@ class Pool < ApplicationRecord
 
   module LogMethods
     def log_delete
-      ModAction.log!(:pool_delete, self, pool_name: name, user_id: creator_id)
+      ModAction.log!(destroyer, :pool_delete, self, pool_name: name, user_id: creator_id)
     end
   end
 

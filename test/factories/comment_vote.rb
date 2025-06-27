@@ -2,6 +2,7 @@
 
 FactoryBot.define do
   factory(:comment_vote) do
+    association(:user)
     score { 1 }
   end
 end

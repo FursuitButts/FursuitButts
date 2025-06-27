@@ -1,10 +1,11 @@
 # frozen_string_literal: true
 
 class PostQueryBuilder
-  attr_accessor(:query_string)
+  attr_accessor(:query_string, :user)
 
-  def initialize(query_string)
+  def initialize(query_string, user)
     @query_string = query_string
+    @user = user
   end
 
   def add_tag_string_search_relation(tags, relation)
@@ -37,7 +38,7 @@ class PostQueryBuilder
   end
 
   def search
-    q = TagQuery.new(query_string)
+    q = TagQuery.new(query_string, user)
     relation = Post.all
 
     relation = add_array_range_relation(relation, q[:post_id], "posts.id")
@@ -79,7 +80,7 @@ class PostQueryBuilder
       relation = relation.where("posts.is_deleted": true)
     elsif q[:status] == "active"
       relation = relation.where("posts.is_pending": false, "posts.is_deleted": false, "posts.is_flagged": false)
-    elsif q[:status] == "all" || q[:status] == "any"
+    elsif %w[all any].include?(q[:status])
       # do nothing
     elsif q[:status_must_not] == "pending"
       relation = relation.where("posts.is_pending": false)

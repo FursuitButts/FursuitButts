@@ -11,7 +11,10 @@ module BulkUpdateRequestCommands
       attr_reader(:command, :arguments, :regex, :groups)
     end
 
-    def initialize(*args)
+    attr_reader(:user)
+
+    def initialize(user, *args)
+      @user = user
       raise(InvalidCommandError, "missing arguments") if self.class.arguments.nil?
       raise(ArgumentError, "expected #{self.class.arguments.size} arguments, got #{args.size}") if self.class.arguments.size != args.size
       args.each_with_index do |value, index|
@@ -60,9 +63,7 @@ module BulkUpdateRequestCommands
       self.class.arguments.map { |name| send(name) }
     end
 
-    def command
-      self.class.command
-    end
+    delegate(:command, to: :class)
 
     def dtext
       self.class.to_dtext(*tokenized)
@@ -87,7 +88,7 @@ module BulkUpdateRequestCommands
       if self.class.has_comment? || instance_of?(Comment)
         tokens = tokenized
         tokens[-1] = "#{self.comment}; #{comment}"
-        self.class.new(*tokens)
+        self.class.new(user, *tokens)
       else
         raise(ArgumentError, "Attempted to merge comment into class without comments: #{self.class}")
       end

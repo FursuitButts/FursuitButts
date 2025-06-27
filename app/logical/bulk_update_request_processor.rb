@@ -8,13 +8,13 @@ class BulkUpdateRequestProcessor
   validate(:validate_script, unless: -> { @script_validated })
   validate(:validate_script_length)
 
-  def initialize(text, topic_id, creator:, context: :create, ip_addr: nil, bur: nil)
+  def initialize(text, topic_id, creator:, context: :create, ip_addr: nil, request: nil)
     @text = text
     @topic_id = topic_id
     @context = context
     @creator = creator
     @creator_ip_addr = ip_addr
-    @request = bur
+    @request = request
   end
 
   def tokens
@@ -22,7 +22,7 @@ class BulkUpdateRequestProcessor
   end
 
   def commands
-    @commands ||= BulkUpdateRequestCommands.parse(text)
+    @commands ||= BulkUpdateRequestCommands.parse(text, creator.resolvable(creator_ip_addr))
   end
 
   def script
@@ -38,7 +38,7 @@ class BulkUpdateRequestProcessor
   end
 
   def validate_script
-    creator.scoped(creator_ip_addr) { commands.each { |cmd| cmd.validate(context) } }
+    commands.each { |cmd| cmd.validate(context) }
     @script_validated = true
     errors.add(:script, "is invalid: #{script_errors.map(&:full_messages).flatten.join('; ')}") if script_errors.any?(&:any?)
   end
@@ -116,10 +116,8 @@ class BulkUpdateRequestProcessor
   end
 
   def process!(approver)
-    CurrentUser.scoped(approver) do
-      commands.each do |command|
-        command.process(self, approver)
-      end
+    commands.each do |command|
+      command.process(self, approver)
     end
   end
 end

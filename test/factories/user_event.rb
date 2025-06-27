@@ -2,6 +2,7 @@
 
 FactoryBot.define do
   factory(:user_event) do
-    user
+    association(:user)
+    association(:user_session)
   end
 end

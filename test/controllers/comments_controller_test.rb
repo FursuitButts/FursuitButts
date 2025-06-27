@@ -7,13 +7,10 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
     setup do
       @mod = create(:moderator_user)
       @user = create(:member_user)
-      CurrentUser.user = @user
 
       @post = create(:post)
-      @comment = create(:comment, post: @post)
-      as(@mod) do
-        @mod_comment = create(:comment, post: @post)
-      end
+      @comment = create(:comment, post: @post, creator: @user)
+      @mod_comment = create(:comment, post: @post, creator: @mod)
     end
 
     context("index action") do
@@ -87,7 +84,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
         should("fail if updater is not a moderator") do
           put_auth(comment_path(@mod_comment.id), @user, params: { comment: { body: "abc" } })
           assert_not_equal("abc", @mod_comment.reload.body)
-          assert_response(403)
+          assert_response(:forbidden)
         end
       end
 
@@ -117,9 +114,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
       end
 
       should("not allow changing do_not_bump_post or post_id") do
-        as(@user) do
-          @another_post = create(:post)
-        end
+        @another_post = create(:post)
         put_auth(comment_path(@comment.id), @comment.creator, params: { do_not_bump_post: true, post_id: @another_post.id })
         assert_equal(false, @comment.reload.do_not_bump_post)
         assert_equal(@post.id, @comment.post_id)
@@ -165,8 +160,8 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
     context("hide action") do
       should("mark comment as hidden") do
         put_auth(hide_comment_path(@comment), @user)
-        assert_equal(true, @comment.reload.is_hidden)
         assert_redirected_to(@comment)
+        assert_equal(true, @comment.reload.is_hidden?)
       end
 
       should("restrict access") do
@@ -176,19 +171,19 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
 
     context("unhide action") do
       setup do
-        @comment.hide!
+        @comment.hide!(@user)
       end
 
       should("mark comment as unhidden if mod") do
         put_auth(unhide_comment_path(@comment.id), @mod)
-        assert_equal(false, @comment.reload.is_hidden)
         assert_redirected_to(@comment)
+        assert_equal(false, @comment.reload.is_hidden?)
       end
 
       should("not mark comment as unhidden if not mod") do
         put_auth(unhide_comment_path(@comment.id), @user)
-        assert_equal(true, @comment.reload.is_hidden)
         assert_response(:forbidden)
+        assert_equal(true, @comment.reload.is_hidden)
       end
 
       should("restrict access") do
@@ -204,9 +199,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
 
       context("on a comment with edit history") do
         setup do
-          as(@user) do
-            @comment.update!(body: "hi hello")
-          end
+          @comment.update_with!(@user, body: "hi hello")
         end
 
         should("also delete the edit history") do

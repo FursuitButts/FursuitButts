@@ -2,7 +2,8 @@
 
 FactoryBot.define do
   factory(:user_feedback) do
-    user
+    association(:user)
+    association(:creator, factory: :moderator_user)
     category { "positive" }
     sequence(:body) { |n| "user_feedback_body_#{n}" }
   end

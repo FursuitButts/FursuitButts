@@ -14,7 +14,7 @@ class WikiPagesController < ApplicationController
       redirect_to(wiki_page_path(@wiki_page))
     end
     @wiki_pages = WikiPage.html_includes(request, :updater)
-                          .search(search_params(WikiPage))
+                          .search_current(search_params(WikiPage))
                           .paginate(params[:page], limit: params[:limit])
     respond_with(@wiki_pages)
   end
@@ -39,7 +39,7 @@ class WikiPagesController < ApplicationController
   end
 
   def new
-    @wiki_page = authorize(WikiPage.new(permitted_attributes(WikiPage)))
+    @wiki_page = authorize(WikiPage.new_with_current(:creator, permitted_attributes(WikiPage)))
     respond_with(@wiki_page)
   end
 
@@ -62,21 +62,21 @@ class WikiPagesController < ApplicationController
   end
 
   def create
-    @wiki_page = authorize(WikiPage.new(permitted_attributes(WikiPage)))
+    @wiki_page = authorize(WikiPage.new_with_current(:creator, permitted_attributes(WikiPage)))
     @wiki_page.save
     respond_with(@wiki_page)
   end
 
   def update
     @wiki_page = authorize(WikiPage.find(params[:id]))
-    @wiki_page.update(permitted_attributes(@wiki_page))
+    @wiki_page.update_with_current(:updater, permitted_attributes(@wiki_page))
     flash[:notice] = @wiki_page.warnings.full_messages.join(".\n \n") if @wiki_page.warnings.any?
     respond_with(@wiki_page)
   end
 
   def destroy
     @wiki_page = authorize(WikiPage.find(params[:id]))
-    @wiki_page.destroy
+    @wiki_page.destroy_with_current(:destroyer)
     notice(@wiki_page.valid? ? "Page destroyed" : @wiki_page.errors.full_messages.join("; "))
     respond_with(@wiki_page)
   end
@@ -84,7 +84,7 @@ class WikiPagesController < ApplicationController
   def revert
     @wiki_page = authorize(WikiPage.find(params[:id]))
     @version = @wiki_page.versions.find(params[:version_id])
-    @wiki_page.revert_to!(@version)
+    @wiki_page.revert_to!(@version, CurrentUser.user)
     notice("Page was reverted")
     respond_with(@wiki_page)
   end

@@ -6,7 +6,7 @@ module Posts
     # Show uses POST because it needs a file parameter. This would be GET otherwise.
     skip_forgery_protection(only: :show)
     before_action(:validate_enabled)
-    skip_before_action(:api_check, if: -> { CurrentUser.is_owner? })
+    skip_before_action(:api_check, if: -> { CurrentUser.user.is_owner? })
 
     def show
       authorize(:iqdb)
@@ -28,9 +28,9 @@ module Posts
           nil
         end
         raise(User::PrivilegeError, "Invalid URL") unless parsed_url
-        whitelist_result = UploadWhitelist.is_whitelisted?(parsed_url)
+        whitelist_result = UploadWhitelist.is_whitelisted?(parsed_url, CurrentUser.user)
         raise(User::PrivilegeError, "Not allowed to request content from this URL") unless whitelist_result[0]
-        @matches = IqdbProxy.query_url(search_params[:url], search_params[:score_cutoff])
+        @matches = IqdbProxy.query_url(CurrentUser.user, search_params[:url], search_params[:score_cutoff])
       elsif search_params[:post_id].present?
         @matches = IqdbProxy.query_post(Post.find_by(id: search_params[:post_id]), search_params[:score_cutoff])
       elsif search_params[:hash].present?
@@ -49,7 +49,7 @@ module Posts
     private
 
     def throttle(search_params)
-      return if FemboyFans.config.disable_throttles? || CurrentUser.is_trusted?
+      return if FemboyFans.config.disable_throttles? || CurrentUser.user.is_trusted?
 
       if %i[file url post_id hash].any? { |key| search_params[key].present? }
         if RateLimiter.check_limit("img:#{CurrentUser.ip_addr}", 1, 2.seconds)

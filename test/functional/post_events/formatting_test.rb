@@ -15,7 +15,7 @@ module PostEvents
 
       context("deletions") do
         should("format deleted correctly") do
-          @post.delete!("Test")
+          @post.delete!(@admin, "Test")
 
           assert_matches(
             post_id: @post.id,
@@ -27,7 +27,7 @@ module PostEvents
 
         should("format undeleted correctly") do
           @post.update_column(:is_deleted, true)
-          @post.undelete!
+          @post.undelete!(@admin)
 
           assert_matches(
             post_id: @post.id,
@@ -39,7 +39,7 @@ module PostEvents
 
       context("approvals") do
         should("format approved correctly") do
-          @post.approve!
+          @post.approve!(@admin)
 
           assert_matches(
             post_id: @post.id,
@@ -50,7 +50,7 @@ module PostEvents
 
         should("format unapproved correctly") do
           @post.update_column(:is_pending, false)
-          @post.unapprove!
+          @post.unapprove!(@admin)
 
           assert_matches(
             post_id: @post.id,
@@ -62,7 +62,7 @@ module PostEvents
 
       context("flags") do
         should("format flag_created correctly") do
-          @flag = @post.flags.create!(reason_name: "uploading_guidelines")
+          @flag = @post.flags.create!(reason_name: "uploading_guidelines", creator: @admin)
 
           reason = FemboyFans.config.flag_reasons.find { |r| r[:name] == "uploading_guidelines" }[:reason]
           assert_matches(
@@ -76,7 +76,7 @@ module PostEvents
 
         should("format flag_removed correctly") do
           @post2 = create(:post, parent_id: @post.id)
-          @post2.give_favorites_to_parent!
+          @post2.give_favorites_to_parent!(@admin)
 
           # FIXME: make a way to test two actions at once, as these are both only ever created at the same time in a determined order
           assert_matches(
@@ -90,7 +90,7 @@ module PostEvents
 
       context("locks") do
         should("format rating_locked correctly") do
-          @post.update!(is_rating_locked: true)
+          @post.update_with!(@admin, is_rating_locked: true)
 
           assert_matches(
             post_id: @post.id,
@@ -101,7 +101,7 @@ module PostEvents
 
         should("format rating_unlocked correctly") do
           @post.update_column(:is_rating_locked, true)
-          @post.update!(is_rating_locked: false)
+          @post.update_with!(@admin, is_rating_locked: false)
 
           assert_matches(
             post_id: @post.id,
@@ -111,7 +111,7 @@ module PostEvents
         end
 
         should("format status_locked correctly") do
-          @post.update!(is_status_locked: true)
+          @post.update_with!(@admin, is_status_locked: true)
 
           assert_matches(
             post_id: @post.id,
@@ -122,7 +122,7 @@ module PostEvents
 
         should("format status_unlocked correctly") do
           @post.update_column(:is_status_locked, true)
-          @post.update!(is_status_locked: false)
+          @post.update_with!(@admin, is_status_locked: false)
 
           assert_matches(
             post_id: @post.id,
@@ -132,7 +132,7 @@ module PostEvents
         end
 
         should("format note_locked correctly") do
-          @post.update!(is_note_locked: true)
+          @post.update_with!(@admin, is_note_locked: true)
 
           assert_matches(
             post_id: @post.id,
@@ -143,7 +143,7 @@ module PostEvents
 
         should("format note_unlocked correctly") do
           @post.update_column(:is_note_locked, true)
-          @post.update!(is_note_locked: false)
+          @post.update_with!(@admin, is_note_locked: false)
 
           assert_matches(
             post_id: @post.id,
@@ -163,7 +163,7 @@ module PostEvents
 
         should("format replacement_accepted correctly") do
           previous_md5 = @post.md5
-          @replacement.approve!(penalize_current_uploader: true)
+          @replacement.approve!(@admin, penalize_current_uploader: true)
 
           assert_matches(
             post_id:             @post.id,
@@ -176,7 +176,7 @@ module PostEvents
         end
 
         should("format replacement_rejected correctly") do
-          @replacement.reject!
+          @replacement.reject!(@admin)
 
           assert_matches(
             post_id:             @post.id,
@@ -187,7 +187,7 @@ module PostEvents
         end
 
         should("format replacement_promoted correctly") do
-          @post2 = @replacement.promote!.post
+          @post2 = @replacement.promote!(@admin).post
 
           assert_matches(
             post_id:             @post2.id,
@@ -200,26 +200,27 @@ module PostEvents
 
         context("replacement_deleted") do
           should("format correctly for admins") do
-            @replacement.destroy
+            @replacement.destroy_with(@admin)
 
-            assert_matches(
-              post_id:             @post.id,
-              actions:             %w[replacement_deleted],
-              text:                "",
-              post_replacement_id: @replacement.id,
-              md5:                 @replacement.md5,
-              storage_id:          @replacement.storage_id,
-            )
-          end
-
-          should("format correctly for users") do
-            @replacement.destroy
-
-            as(@user) do
+            CurrentUser.scoped(@admin) do # rubocop:disable Local/CurrentUserOutsideOfRequests
               assert_matches(
                 post_id:             @post.id,
                 actions:             %w[replacement_deleted],
-                creator:             @admin,
+                text:                "",
+                post_replacement_id: @replacement.id,
+                md5:                 @replacement.md5,
+                storage_id:          @replacement.storage_id,
+              )
+            end
+          end
+
+          should("format correctly for users") do
+            @replacement.destroy_with(@admin)
+
+            CurrentUser.scoped(@user) do # rubocop:disable Local/CurrentUserOutsideOfRequests
+              assert_matches(
+                post_id:             @post.id,
+                actions:             %w[replacement_deleted],
                 text:                "",
                 post_replacement_id: @replacement.id,
               )
@@ -230,7 +231,7 @@ module PostEvents
 
       context("misc") do
         should("format expunged correctly") do
-          @post.expunge!
+          @post.expunge!(@admin)
 
           assert_matches(
             post_id: @post.id,
@@ -240,7 +241,7 @@ module PostEvents
         end
 
         should("format changed_bg_color correctly") do
-          @post.update!(bg_color: "000000")
+          @post.update_with!(@admin, bg_color: "000000")
 
           assert_matches(
             post_id:  @post.id,
@@ -254,7 +255,7 @@ module PostEvents
           @upload = create(:webm_upload, uploader: @admin)
           @post = @upload.post
           set_count!
-          @post.update!(thumbnail_frame: 1)
+          @post.update_with!(@admin, thumbnail_frame: 1)
 
           assert_matches(
             post_id:             @post.id,
@@ -268,7 +269,7 @@ module PostEvents
         should("format copied_notes correctly") do
           @post2 = create(:post)
           @note = create(:note, post: @post)
-          @post.copy_notes_to(@post2)
+          @post.copy_notes_to(@post2, @admin)
 
           assert_matches(
             post_id:        @post2.id,
@@ -280,7 +281,7 @@ module PostEvents
         end
 
         should("format set_min_edit_level correctly") do
-          @post.update(min_edit_level: User::Levels::TRUSTED)
+          @post.update_with!(@admin, min_edit_level: User::Levels::TRUSTED)
 
           assert_matches(
             post_id:        @post.id,
@@ -294,13 +295,13 @@ module PostEvents
       context("appeals") do
         setup do
           @post.update_column(:is_deleted, true)
-          @appeal = @post.appeals.create!(reason: "Test")
+          @appeal = @post.appeals.create!(reason: "Test", creator: @admin)
           set_count!
         end
 
         should("format appeal_created correctly") do
           @appeal.delete
-          @appeal = @post.appeals.create!(reason: "Test")
+          @appeal = @post.appeals.create!(reason: "Test", creator: @admin)
 
           assert_matches(
             post_id:        @post.id,
@@ -311,7 +312,7 @@ module PostEvents
         end
 
         should("format appeal_accepted correctly") do
-          @appeal.accept!
+          @appeal.accept!(@admin)
 
           assert_matches(
             post_id:        @post.id,
@@ -322,7 +323,7 @@ module PostEvents
         end
 
         should("format appeal_rejected correctly") do
-          @appeal.reject!
+          @appeal.reject!(@admin)
 
           assert_matches(
             post_id:        @post.id,

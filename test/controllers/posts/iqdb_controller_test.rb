@@ -8,10 +8,7 @@ module Posts
       setup do
         IqdbProxy.stubs(:endpoint).returns("http://iqdb:5588")
         @user = create(:user)
-        CurrentUser.user = @user
-        as(@user) do
-          @posts = create_list(:post, 2)
-        end
+        @posts = create_list(:post, 2, uploader: @user)
       end
 
       context("show action") do
@@ -28,7 +25,7 @@ module Posts
           end
 
           should("render a response") do
-            IqdbProxy.expects(:query_url).with(@url, nil).returns(@mocked_response)
+            IqdbProxy.expects(:query_url).with(@user, @url, nil).returns(@mocked_response)
             get_auth(posts_iqdb_path, @user, params: @params)
             assert_select("#post_#{@posts[0].id}")
           end
@@ -37,7 +34,7 @@ module Posts
         context("with a post_id parameter") do
           setup do
             @params = { post_id: @posts[0].id }
-            @url = @posts[0].preview_file_url
+            @url = @posts[0].preview_file_url(@user)
             @mocked_response = [{
               "post"    => @posts[0],
               "post_id" => @posts[0].id,

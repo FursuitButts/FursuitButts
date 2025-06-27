@@ -8,14 +8,12 @@ module Posts
       setup do
         @admin = create(:admin_user)
         @user = create(:user, created_at: 1.month.ago)
-        as(@user) do
-          @parent = create(:post)
-          @child = create(:post, parent: @parent)
-        end
+        @parent = create(:post, uploader: @user)
+        @child = create(:post, parent: @parent, uploader: @user)
         @users = create_list(:user, 2)
         @users.each do |u|
           FavoriteManager.add!(user: u, post: @child)
-          VoteManager::Posts.vote!(user: u, post: @child, score: 1)
+          VoteManager::Posts.vote!(user: u, ip_addr: "127.0.0.1", post: @child, score: 1)
           @child.reload
         end
       end
@@ -38,12 +36,10 @@ module Posts
           perform_enqueued_jobs(only: [TransferFavoritesJob, TransferVotesJob])
           @parent.reload
           @child.reload
-          as(@admin) do
-            assert_equal(@users.map(&:id).sort, @parent.favorited_users.map(&:id).sort)
-            assert_equal(@users.map(&:id).sort, @parent.voted_users.map(&:id).sort)
-            assert_equal([], @child.favorited_users.map(&:id))
-            assert_equal([], @child.voted_users.map(&:id))
-          end
+          assert_equal(@users.map(&:id).sort, @parent.favorited_users(@user).map(&:id).sort)
+          assert_equal(@users.map(&:id).sort, @parent.voted_users(@admin).map(&:id).sort)
+          assert_equal([], @child.favorited_users(@admin).map(&:id))
+          assert_equal([], @child.voted_users(@user).map(&:id))
         end
 
         should("restrict access") do

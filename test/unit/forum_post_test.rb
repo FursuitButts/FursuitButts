@@ -6,16 +6,15 @@ class ForumPostTest < ActiveSupport::TestCase
   context("A forum post") do
     setup do
       @user = create(:user)
-      CurrentUser.user = @user
-      @topic = create(:forum_topic)
+      @mod = create(:moderator_user)
+      @topic = create(:forum_topic, creator: @user)
     end
 
     context("that has an alias, implication, or bulk update request") do
       setup do
-        @post = build(:forum_post, topic_id: @topic.id, body: "[[aaa]] -> [[bbb]]")
-        @tag_alias = create(:tag_alias, forum_post: @post)
+        @post = build(:forum_post, topic_id: @topic.id, body: "[[aaa]] -> [[bbb]]", creator: @user)
+        @tag_alias = create(:tag_alias, forum_post: @post, creator: @user)
         @post.update_columns(tag_change_request_id: @tag_alias.id, tag_change_request_type: "TagAlias", allow_voting: true)
-        @mod = create(:moderator_user)
       end
 
       should("be votable") do
@@ -23,14 +22,12 @@ class ForumPostTest < ActiveSupport::TestCase
       end
 
       should("only be hidable by moderators") do
-        @post.hide!
+        @post.hide!(@user)
 
         assert_equal(["Post is for an alias, implication, or bulk update request. It cannot be hidden"], @post.errors.full_messages)
         assert_equal(@post.reload.is_hidden, false)
 
-        as(@mod) do
-          @post.hide!
-        end
+        @post.hide!(@mod)
 
         assert_equal([], @post.errors.full_messages)
         assert_equal(@post.reload.is_hidden, true)
@@ -50,14 +47,10 @@ class ForumPostTest < ActiveSupport::TestCase
       end
 
       context("that is deleted") do
-        setup do
-          CurrentUser.user = create(:moderator_user)
-        end
-
         should("update the topic's updated_at timestamp") do
           @topic.reload
           assert_in_delta(@posts[-1].updated_at.to_i, @topic.updated_at.to_i, 1)
-          @posts[-1].hide!
+          @posts[-1].hide!(@user)
           @topic.reload
           assert_in_delta(@posts[-2].updated_at.to_i, @topic.updated_at.to_i, 1)
         end
@@ -71,7 +64,7 @@ class ForumPostTest < ActiveSupport::TestCase
       end
 
       should("update the topic's updated_at when destroyed") do
-        @posts.last.destroy
+        @posts.last.destroy_with(@user)
         @topic.reload
         assert_equal(@posts[8].updated_at.to_s, @topic.updated_at.to_s)
       end
@@ -85,14 +78,14 @@ class ForumPostTest < ActiveSupport::TestCase
       end
 
       should("not be updateable") do
-        @post.update(body: "xxx")
+        @post.update_with(@user, body: "xxx")
         @post.reload
         assert_equal("zzz", @post.body)
       end
 
       should("not be deletable") do
-        assert_difference("ForumPost.count", 0) do
-          @post.destroy
+        assert_no_difference("ForumPost.count") do
+          @post.destroy_with(@user)
         end
       end
     end
@@ -108,30 +101,28 @@ class ForumPostTest < ActiveSupport::TestCase
 
     should("be searchable by body content") do
       create(:forum_post, topic_id: @topic.id, body: "xxx")
-      assert_equal(1, ForumPost.search(body_matches: "xxx").count)
-      assert_equal(0, ForumPost.search(body_matches: "aaa").count)
+      assert_equal(1, ForumPost.search_current(body_matches: "xxx").count)
+      assert_equal(0, ForumPost.search_current(body_matches: "aaa").count)
     end
 
     should("initialize its creator") do
-      post = create(:forum_post, topic_id: @topic.id)
+      post = create(:forum_post, topic_id: @topic.id, creator: @user)
       assert_equal(@user.id, post.creator_id)
     end
 
     context("that is edited by a moderator") do
       setup do
         @post = create(:forum_post, topic_id: @topic.id)
-        @mod = create(:moderator_user)
-        CurrentUser.user = @mod
       end
 
       should("create a mod action") do
         assert_difference(-> { ModAction.count }, 1) do
-          @post.update(body: "nope")
+          @post.update_with(@mod, body: "nope")
         end
       end
 
       should("credit the moderator as the updater") do
-        @post.update(body: "test")
+        @post.update_with(@mod, body: "test")
         assert_equal(@mod.id, @post.updater_id)
       end
     end
@@ -139,18 +130,16 @@ class ForumPostTest < ActiveSupport::TestCase
     context("that is hidden by a moderator") do
       setup do
         @post = create(:forum_post, topic_id: @topic.id)
-        @mod = create(:moderator_user)
-        CurrentUser.user = @mod
       end
 
       should("create a mod action") do
         assert_difference(-> { ModAction.count }, 1) do
-          @post.update(is_hidden: true)
+          @post.hide!(@mod)
         end
       end
 
       should("credit the moderator as the updater") do
-        @post.update(is_hidden: true)
+        @post.hide!(@mod)
         assert_equal(@mod.id, @post.updater_id)
       end
     end
@@ -162,7 +151,7 @@ class ForumPostTest < ActiveSupport::TestCase
 
       should("create a mod action") do
         assert_difference(-> { ModAction.count }, 1) do
-          @post.destroy
+          @post.destroy_with(@mod)
         end
       end
     end
@@ -174,7 +163,7 @@ class ForumPostTest < ActiveSupport::TestCase
 
     context("when modified") do
       setup do
-        @forum_post = create(:forum_post, topic_id: @topic.id)
+        @forum_post = create(:forum_post, topic_id: @topic.id, creator: @user)
         original_body = @forum_post.body
         @forum_post.class_eval do
           after_save do
@@ -195,15 +184,14 @@ class ForumPostTest < ActiveSupport::TestCase
           throw("history is nil (#{forum_post.id}:#{edit_type}:#{user}:#{forum_post.creator_id})") if history.nil?
           assert_equal(forum_post.body_history[history.version - 1], history.body, "history body did not match")
           assert_equal(edit_type, history.edit_type, "history edit_type did not match")
-          assert_equal(user, history.user_id, "history user_id did not match")
+          assert_equal(user, history.updater_id, "history updater_id did not match")
         end
       end
 
       should("create edit histories when body is changed") do
-        @mod = create(:moderator_user)
         assert_difference("EditHistory.count", 3) do
-          @forum_post.update(body: "test")
-          as(@mod) { @forum_post.update(body: "test2") }
+          @forum_post.update_with(@user, body: "test")
+          @forum_post.update_with(@mod, body: "test2")
 
           original, edit, edit2 = EditHistory.where(versionable_id: @forum_post.id).order(version: :asc)
           verify_history(original, @forum_post, "original", @user.id)
@@ -213,10 +201,9 @@ class ForumPostTest < ActiveSupport::TestCase
       end
 
       should("create edit histories when hidden is changed") do
-        @mod = create(:moderator_user)
         assert_difference("EditHistory.count", 3) do
-          @forum_post.hide!
-          as(@mod) { @forum_post.unhide! }
+          @forum_post.hide!(@user)
+          @forum_post.unhide!(@mod)
 
           original, hide, unhide = EditHistory.where(versionable_id: @forum_post.id).order(version: :asc)
           verify_history(original, @forum_post, "original")
@@ -226,25 +213,22 @@ class ForumPostTest < ActiveSupport::TestCase
       end
 
       should("create edit histories when warning is changed") do
-        @mod = create(:moderator_user)
         assert_difference("EditHistory.count", 7) do
-          as(@mod) do
-            @forum_post.user_warned!("warning", @mod)
-            @forum_post.remove_user_warning!
-            @forum_post.user_warned!("record", @mod)
-            @forum_post.remove_user_warning!
-            @forum_post.user_warned!("ban", @mod)
-            @forum_post.remove_user_warning!
+          @forum_post.user_warned!("warning", @mod)
+          @forum_post.remove_user_warning!(@mod)
+          @forum_post.user_warned!("record", @mod)
+          @forum_post.remove_user_warning!(@mod)
+          @forum_post.user_warned!("ban", @mod)
+          @forum_post.remove_user_warning!(@mod)
 
-            original, warn, unmark1, record, unmark2, ban, unmark3 = EditHistory.where(versionable_id: @forum_post.id).order(version: :asc)
-            verify_history(original, @forum_post, "original")
-            verify_history(warn, @forum_post, "mark_warning", @mod.id)
-            verify_history(unmark1, @forum_post, "unmark", @mod.id)
-            verify_history(record, @forum_post, "mark_record", @mod.id)
-            verify_history(unmark2, @forum_post, "unmark", @mod.id)
-            verify_history(ban, @forum_post, "mark_ban", @mod.id)
-            verify_history(unmark3, @forum_post, "unmark", @mod.id)
-          end
+          original, warn, unmark1, record, unmark2, ban, unmark3 = EditHistory.where(versionable_id: @forum_post.id).order(version: :asc)
+          verify_history(original, @forum_post, "original")
+          verify_history(warn, @forum_post, "mark_warning", @mod.id)
+          verify_history(unmark1, @forum_post, "unmark", @mod.id)
+          verify_history(record, @forum_post, "mark_record", @mod.id)
+          verify_history(unmark2, @forum_post, "unmark", @mod.id)
+          verify_history(ban, @forum_post, "mark_ban", @mod.id)
+          verify_history(unmark3, @forum_post, "unmark", @mod.id)
         end
       end
     end

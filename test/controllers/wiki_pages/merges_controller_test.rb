@@ -8,12 +8,9 @@ module WikiPages
       setup do
         @user = create(:trusted_user, created_at: 1.month.ago)
         @admin = create(:admin_user)
-        CurrentUser.user = @admin
-        as(@user) do
-          @wiki_page = create(:wiki_page)
-          @ogversion = @wiki_page.versions.first
-          @target = create(:wiki_page)
-        end
+        @wiki_page = create(:wiki_page)
+        @ogversion = @wiki_page.versions.first
+        @target = create(:wiki_page)
       end
 
       context("show action") do

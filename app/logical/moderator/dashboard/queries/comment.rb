@@ -8,7 +8,7 @@ module Moderator
           ::CommentVote.joins(comment: [:creator])
                        .where("comments.score < 0")
                        .where("comment_votes.created_at > ?", min_date)
-                       .where("users.level <= ?", max_level)
+                       .where(users: { level: ..max_level })
                        .group(:comment)
                        .having("count(*) >= 3")
                        .order(Arel.sql("count(*) desc"))

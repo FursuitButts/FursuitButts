@@ -12,15 +12,15 @@ require_relative("seeds/posts")
 # ActiveRecord::Base.logger = ActiveSupport::Logger.new($stdout)
 
 module Seeds
-  def self.run!
-    CurrentUser.user = User.system
-    Seeds::Posts.run!
-    Mascots.run!
+  def self.run!(user = User.system)
+    Seeds::Posts.run!(user)
+    Mascots.run!(user)
   end
 
-  def self.create_aibur_category!
+  def self.create_aibur_category!(user = User.system)
     ForumCategory.find_or_create_by!(name: "Tag Alias and Implication Suggestions") do |category|
       category.can_view = 0
+      category.creator = user
     end
   end
 
@@ -53,8 +53,18 @@ module Seeds
     puts(...)
   end
 
-  module Mascots
-    def self.run!
+  class Mascots
+    def self.run!(user = User.system)
+      new(user).run!
+    end
+
+    attr_reader(:user)
+
+    def initialize(user)
+      @user = user.resolvable
+    end
+
+    def run!
       Seeds.read_resources do |resources|
         if resources["mascots"].empty?
           create_from_web
@@ -64,54 +74,55 @@ module Seeds
       end
     end
 
-    def self.create_from_web
+    def create_from_web
       Seeds.api_request("/mascots.json").each do |mascot|
         next if Mascot.exists?(display_name: mascot["display_name"])
         url = Seeds.e621? ? mascot["url_path"] : mascot["file_url"]
         puts(url)
         Mascot.find_or_create_by!(display_name: mascot["display_name"]) do |masc|
-          masc.file = Downloads::File.new(url).download!
+          masc.file = Downloads::File.new(url, user: user).download!
           masc.background_color = mascot["background_color"]
           masc.artist_url = mascot["artist_url"]
           masc.artist_name = mascot["artist_name"]
           masc.available_on_string = FemboyFans.config.app_name
           masc.hide_anonymous = mascot["hide_anonymous"]
           masc.active = mascot["active"]
+          masc.creator = user
         end
       end
     end
 
-    def self.create_from_local
+    def create_from_local
       resources = Seeds.read_resources
       resources["mascots"].each do |mascot|
         next if ::Mascot.exists?(display_name: mascot["name"])
         puts(mascot["file"])
         Mascot.find_or_create_by!(display_name: mascot["name"]) do |masc|
-          masc.file = Downloads::File.new(mascot["file"]).download!
+          masc.file = Downloads::File.new(mascot["file"], user: user).download!
           masc.background_color = mascot["color"]
           masc.artist_url = mascot["artist_url"]
           masc.artist_name = mascot["artist_name"]
           masc.available_on_string = FemboyFans.config.app_name
           masc.active = mascot["active"]
           masc.hide_anonymous = mascot["hide_anonymous"]
+          masc.creator = user
         end
       end
     end
   end
 end
 
+USER = User.system
 if ENV.fetch("POSTS_ONLY", false).to_s.truthy?
-  CurrentUser.as_system { Seeds::Posts.run! }
+  Seeds::Posts.run!(USER)
 else
-  CurrentUser.as_system do
-    ModAction.without_logging do
-      Seeds.create_aibur_category!
-      PostDeletionReasons.run!
-      PostReplacementRejectionReasons.run!
+  ModAction.without_logging do
+    Seeds.create_aibur_category!(USER)
+    PostDeletionReasons.run!(USER)
+    PostReplacementRejectionReasons.run!(USER)
 
-      unless Rails.env.test?
-        Seeds.run!
-      end
+    unless Rails.env.test?
+      Seeds.run!(USER)
     end
   end
 end

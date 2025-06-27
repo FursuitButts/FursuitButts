@@ -6,7 +6,7 @@ module WikiPages
 
     def index
       @wiki_page_versions = authorize(WikiPageVersion).html_includes(request, :updater)
-                                                      .search(search_params(WikiPageVersion))
+                                                      .search_current(search_params(WikiPageVersion))
                                                       .paginate(params[:page], limit: params[:limit])
       respond_with(@wiki_page_versions)
     end

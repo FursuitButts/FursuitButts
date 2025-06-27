@@ -7,9 +7,7 @@ module Artists
     context("An artist versions controller") do
       setup do
         @user = create(:trusted_user)
-        as(@user) do
-          @artist = create(:artist)
-        end
+        @artist = create(:artist, creator: @user)
       end
 
       should("get the index page") do

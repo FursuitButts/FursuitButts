@@ -10,7 +10,7 @@ class EditHistoryPolicy < ApplicationPolicy
   end
 
   def permitted_search_params
-    params = super + %i[versionable_type versionable_id edit_type user_id user_name]
+    params = super + %i[versionable_type versionable_id edit_type updater_id updater_name]
     params += %i[ip_addr] if can_search_ip_addr?
     params
   end

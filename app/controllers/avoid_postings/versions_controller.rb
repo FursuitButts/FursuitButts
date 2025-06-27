@@ -6,7 +6,7 @@ module AvoidPostings
 
     def index
       @avoid_posting_versions = authorize(AvoidPostingVersion).html_includes(request, :updater, :avoid_posting)
-                                                              .search(search_params(AvoidPostingVersion))
+                                                              .search_current(search_params(AvoidPostingVersion))
                                                               .paginate(params[:page], limit: params[:limit])
       respond_with(@avoid_posting_versions)
     end

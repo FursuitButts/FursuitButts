@@ -85,7 +85,7 @@
 </style>
 
 <%= javascript_tag(nonce: true) do -%>
-  var mascots = <%= Mascot.active_for_browser.to_json.html_safe %>;
+  var mascots = <%= Mascot.active_for_user(CurrentUser.user).to_json.html_safe %>;
 <% end -%>
 
 <div id="searchbox" class="mascotbox">
@@ -118,12 +118,12 @@
 </div>
 
 <div id="searchbox2" class="mascotbox">
-  <% Post.fast_count.to_s.each_char do |x| %>
+  <% Post.fast_count(CurrentUser.user).to_s.each_char do |x| %>
     <%= image_tag("counter/#{x}.png") %>
   <% end %>
 </div>
 
-<% if (news_update = NewsUpdate.recent) %>
+<% if news_update = NewsUpdate.recent %>
   <div id="news-excerpt-box" class="mascotbox">
     <div class="news-excerpt dtext-container"><%= format_text(news_update.message.lines.first, inline: true) %></div>
     <div class="previous-news-link"><%= link_to("Click here for previous news", news_updates_path) %></div>
@@ -132,7 +132,7 @@
 
 <div id="searchbox3" class="mascotbox">
   <p>
-    Serving <%= number_with_delimiter(Post.fast_count) %> posts<br/>
+    Serving <%= number_with_delimiter(Post.fast_count(CurrentUser.user)) %> posts<br/>
     <%= link_to("Takedown Policy and Process", takedown_static_path, title: "Takedown Information") %>
     | <%= link_to("Contact Us", contact_path, title: "Contact Us") %>
     | <%= link_to("Terms of Service", terms_of_service_path, title: "Terms of Service") %>

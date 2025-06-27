@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class PostEvent < ApplicationRecord
-  belongs_to_creator
+  belongs_to_user(:creator, ip: true)
   belongs_to(:post)
   enum(:action, {
     deleted:                 0,
@@ -66,7 +66,7 @@ class PostEvent < ApplicationRecord
   end
 
   def self.add(...)
-    Rails.logger.warn("PostEvent: use PostEvent.add! instead of PostEvent.add")
+    TraceLogger.warn("PostEvent", "use PostEvent.add! instead of PostEvent.add", ignore: %r{/models/post_event\.rb})
     add!(...)
   end
 
@@ -84,7 +84,7 @@ class PostEvent < ApplicationRecord
   end
 
   module SearchMethods
-    def search(params)
+    def search(params, user)
       q = super
 
       if params[:post_id].present?
@@ -94,12 +94,12 @@ class PostEvent < ApplicationRecord
       q = q.where_user(:creator_id, :creator, params) do |condition, user_ids|
         condition.where.not(
           action:     actions[:flag_created],
-          creator_id: user_ids.reject { |user_id| CurrentUser.can_view_flagger?(user_id) },
+          creator_id: user_ids.reject { |user_id| user.can_view_flagger?(user_id) },
         )
       end
 
       if params[:action].present?
-        if !CurrentUser.is_moderator? && MOD_ONLY_SEARCH_ACTIONS.include?(actions[params[:action]])
+        if !user.is_moderator? && MOD_ONLY_SEARCH_ACTIONS.include?(actions[params[:action]])
           raise(User::PrivilegeError)
         end
         q = q.where(action: actions[params[:action]])
@@ -110,9 +110,10 @@ class PostEvent < ApplicationRecord
   end
 
   module ApiMethods
-    def serializable_hash(*)
+    def serializable_hash(options)
       hash = super
-      hash[:creator_id] = nil unless is_creator_visible?(CurrentUser.user)
+      options[:user] ||= CurrentUser.user || User.anonymous
+      hash[:creator_id] = nil unless is_creator_visible?(options[:user])
       hash
     end
   end
@@ -120,6 +121,7 @@ class PostEvent < ApplicationRecord
   include(ApiMethods)
   extend(SearchMethods)
 
+  # rubocop:disable Local/CurrentUserOutsideOfRequests
   BLANK = { text: ->(_log) { "" }, json: [] }.freeze
   FORMATTERS = {
     deleted:                 {
@@ -230,7 +232,7 @@ class PostEvent < ApplicationRecord
   end
 
   KNOWN_ACTIONS = FORMATTERS.keys.freeze
-
+  # rubocop:enable Local/CurrentUserOutsideOfRequests
   def self.available_includes
     %i[post]
   end

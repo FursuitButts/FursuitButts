@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 
 class UserEvent < ApplicationRecord
-  belongs_to(:user)
+  belongs_to_user(:user, ip: true)
   belongs_to(:user_session)
+
+  scope(:for_user, ->(user) { where(user_id: u2id(user)) })
 
   enum(:category, {
     login:                                   0,
@@ -39,27 +41,19 @@ class UserEvent < ApplicationRecord
       raise(StandardError, "Anonymous user supplied to UserEvent#create_from_request!") if user == User.anonymous
       ip_addr = request.remote_ip
       user_session = UserSession.new(session_id: request.session[:session_id], ip_addr: ip_addr, user_agent: request.user_agent)
-      user.user_events.create!(category: category, user_session: user_session, ip_addr: ip_addr, session_id: request.session[:session_id], user_agent: request.user_agent)
+      user.user_events.create!(category: category, user_session: user_session, user_ip_addr: ip_addr, session_id: request.session[:session_id], user_agent: request.user_agent)
     end
   end
 
   module SearchMethods
-    def visible(user)
-      if user.is_admin?
-        all
-      else
-        where(user: user)
-      end
-    end
-
-    def search(params)
+    def search(params, user)
       q = super
       q = q.where_user(:user_id, :user, params)
       q = q.attribute_matches(:category, params[:category])
       q = q.attribute_matches(:session_id, params[:session_id])
       q = q.attribute_matches(:user_agent, params[:user_agent])
       if params[:ip_addr].present?
-        q = q.where("ip_addr <<= ?", params[:ip_addr])
+        q = q.where("user_ip_addr <<= ?", params[:ip_addr])
       end
       q.apply_basic_order(params)
     end

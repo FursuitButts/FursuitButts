@@ -6,24 +6,23 @@ class TagImplicationRequestTest < ActiveSupport::TestCase
   context("A tag implication request") do
     setup do
       @user = create(:user)
-      CurrentUser.user = @user
     end
 
     should("handle invalid attributes") do
-      tir = TagImplicationRequest.create(antecedent_name: "", consequent_name: "", reason: "reason")
+      tir = TagImplicationRequest.create(antecedent_name: "", consequent_name: "", reason: "reason", user: @user)
       assert(tir.invalid?)
     end
 
     should("create a tag implication") do
       assert_difference("TagImplication.count", 1) do
-        TagImplicationRequest.create(antecedent_name: "aaa", consequent_name: "bbb", reason: "reason")
+        TagImplicationRequest.create(antecedent_name: "aaa", consequent_name: "bbb", reason: "reason", user: @user)
       end
       assert_equal("pending", TagImplication.last.status)
     end
 
     should("create a forum topic") do
       assert_difference("ForumTopic.count", 1) do
-        @tir = TagImplicationRequest.create(antecedent_name: "aaa", consequent_name: "bbb", reason: "reason").tag_relationship
+        @tir = TagImplicationRequest.create(antecedent_name: "aaa", consequent_name: "bbb", reason: "reason", user: @user).tag_relationship
       end
       @topic = ForumTopic.last
       assert_equal(@tir.forum_topic_id, @topic.id)
@@ -35,7 +34,7 @@ class TagImplicationRequestTest < ActiveSupport::TestCase
     should("create a post in an existing topic") do
       @topic = create(:forum_topic)
       assert_difference("ForumPost.count", 1) do
-        @tir = TagImplicationRequest.create(antecedent_name: "aaa", consequent_name: "bbb", reason: "reason", forum_topic: @topic).tag_relationship
+        @tir = TagImplicationRequest.create(antecedent_name: "aaa", consequent_name: "bbb", reason: "reason", user: @user, forum_topic: @topic).tag_relationship
       end
       assert_equal(@tir.forum_topic_id, @topic.id)
       assert_equal(@tir.forum_post_id, @topic.posts.second.id)
@@ -45,7 +44,7 @@ class TagImplicationRequestTest < ActiveSupport::TestCase
 
     should("not create a topic when skip_forum is true") do
       assert_no_difference("ForumTopic.count") do
-        TagImplicationRequest.create(antecedent_name: "aaa", consequent_name: "bbb", skip_forum: true)
+        TagImplicationRequest.create(antecedent_name: "aaa", consequent_name: "bbb", user: @user, skip_forum: true)
       end
     end
   end

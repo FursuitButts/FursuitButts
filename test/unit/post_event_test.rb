@@ -14,12 +14,12 @@ class PostEventTest < ActiveSupport::TestCase
     @post = create(:post, uploader: @user, parent: @post2)
   end
 
-  def assert_post_events_created(user, events, &block)
+  def assert_post_events_created(user, events, &)
     count = Array.wrap(events).count
-    as(user) do
-      assert_difference("PostEvent.count", count, &block)
-      assert_equal(Array.wrap(events).map(&:to_s), PostEvent.last(count).map(&:action))
-    end
+    assert_difference("PostEvent.count", count, &)
+    list = PostEvent.last(count)
+    assert_equal(Array.wrap(events).map(&:to_s), list.map(&:action))
+    assert_equal([user] * count, list.map(&:creator))
   end
 
   context("certain actions") do
@@ -29,95 +29,106 @@ class PostEventTest < ActiveSupport::TestCase
       end
 
       assert_post_events_created(@janitor, :unapproved) do
-        @post.unapprove!
+        @post.unapprove!(@janitor)
       end
 
       assert_post_events_created(@user, :flag_created) do
-        create(:post_flag, post: @post)
+        create(:post_flag, post: @post, creator: @user)
       end
 
       assert_post_events_created(@janitor, :flag_removed) do
-        @post.unflag!
+        @post.unflag!(@janitor)
       end
 
       assert_post_events_created(@janitor, :deleted) do
-        @post.delete!("reason")
+        @post.delete!(@janitor, "reason")
       end
 
       assert_post_events_created(@janitor, :undeleted) do
-        @post.undelete!
+        @post.undelete!(@janitor)
       end
 
       assert_post_events_created(@janitor, %i[favorites_moved favorites_received]) do
-        TransferFavoritesJob.new.perform(@post.id, @janitor.id)
+        TransferFavoritesJob.new.perform(@post, @janitor)
       end
 
       assert_post_events_created(@admin, :rating_locked) do
         @post.is_rating_locked = true
+        @post.updater = @admin
         @post.save
       end
 
       assert_post_events_created(@admin, :rating_unlocked) do
         @post.is_rating_locked = false
+        @post.updater = @admin
         @post.save
       end
 
       assert_post_events_created(@admin, :status_locked) do
         @post.is_status_locked = true
+        @post.updater = @admin
         @post.save
       end
 
       assert_post_events_created(@admin, :status_unlocked) do
         @post.is_status_locked = false
+        @post.updater = @admin
         @post.save
       end
 
       assert_post_events_created(@admin, :comment_disabled) do
         @post.is_comment_disabled = true
+        @post.updater = @admin
         @post.save
       end
 
       assert_post_events_created(@admin, :comment_enabled) do
         @post.is_comment_disabled = false
+        @post.updater = @admin
         @post.save
       end
 
       assert_post_events_created(@admin, :comment_locked) do
         @post.is_comment_locked = true
+        @post.updater = @admin
         @post.save
       end
 
       assert_post_events_created(@admin, :comment_unlocked) do
         @post.is_comment_locked = false
+        @post.updater = @admin
         @post.save
       end
 
       assert_post_events_created(@admin, :note_locked) do
         @post.is_note_locked = true
+        @post.updater = @admin
         @post.save
       end
 
       assert_post_events_created(@admin, :note_unlocked) do
         @post.is_note_locked = false
+        @post.updater = @admin
         @post.save
       end
 
       assert_post_events_created(@janitor, :changed_bg_color) do
         @post.bg_color = "FFFFFF"
+        @post.updater = @janitor
         @post.save
       end
 
       assert_post_events_created(@janitor, :copied_notes) do
-        create(:note, post: @post)
-        @post.copy_notes_to(@post2)
+        create(:note, post: @post, creator: @janitor)
+        @post.copy_notes_to(@post2, @janitor)
       end
 
       assert_post_events_created(@admin, :set_min_edit_level) do
-        @post.update(min_edit_level: User::Levels::TRUSTED)
+        @post.update_with(@admin, min_edit_level: User::Levels::TRUSTED)
       end
 
       assert_post_events_created(@admin, :expunged) do
-        @post.expunge!
+        @post.expunge!(@admin)
       end
     end
 
@@ -130,19 +141,19 @@ class PostEventTest < ActiveSupport::TestCase
 
       should("reject") do
         assert_post_events_created(@admin, :replacement_rejected) do
-          @replacement.reject!
+          @replacement.reject!(@admin)
         end
       end
 
       should("approve") do
         assert_post_events_created(@admin, :replacement_accepted) do
-          @replacement.approve!(penalize_current_uploader: true)
+          @replacement.approve!(@admin, penalize_current_uploader: true)
         end
       end
 
       should("destroy") do
         assert_post_events_created(@admin, :replacement_deleted) do
-          @replacement.destroy!
+          @replacement.destroy_with!(@admin)
         end
       end
     end

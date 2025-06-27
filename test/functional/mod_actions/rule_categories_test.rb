@@ -10,12 +10,12 @@ module ModActions
 
     context("mod actions for rule categories") do
       setup do
-        @category = create(:rule_category)
+        @category = create(:rule_category, creator: @admin)
         set_count!
       end
 
       should("format rule_category_create correctly") do
-        @category = create(:rule_category)
+        @category = create(:rule_category, creator: @admin)
 
         assert_matches(
           actions: %w[rule_category_create],
@@ -26,7 +26,7 @@ module ModActions
       end
 
       should("format rule_category_delete correctly") do
-        @category.destroy
+        @category.destroy_with(@admin)
 
         assert_matches(
           actions: %w[rule_category_delete],
@@ -37,7 +37,7 @@ module ModActions
       end
 
       should("format rule_categories_reorder correctly") do
-        RuleCategory.log_reorder(2)
+        RuleCategory.log_reorder(2, @admin)
 
         assert_matches(
           actions: %w[rule_categories_reorder],
@@ -53,7 +53,7 @@ module ModActions
         end
 
         should("format name changes correctly") do
-          @category.update!(name: "aaa")
+          @category.update_with!(@admin, name: "aaa")
 
           assert_matches(
             actions:  %w[rule_category_update],

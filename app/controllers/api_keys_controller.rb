@@ -8,14 +8,13 @@ class ApiKeysController < ApplicationController
   def index
     params[:search][:user_id] ||= params[:user_id]
     @api_keys = authorize(ApiKey).includes_if(params[:user_id].blank?, :user)
-                                 .visible(CurrentUser.user)
-                                 .search(search_params(ApiKey))
+                                 .search_current(search_params(ApiKey))
                                  .paginate(params[:page], limit: params[:limit])
     respond_with(@api_keys)
   end
 
   def new
-    @api_key = authorize(ApiKey.new(user: CurrentUser.user))
+    @api_key = authorize(ApiKey.new_with_current(:user))
     respond_with(@api_key)
   end
 
@@ -25,7 +24,7 @@ class ApiKeysController < ApplicationController
   end
 
   def create
-    @api_key = authorize(ApiKey.new(user: CurrentUser.user, **permitted_attributes(ApiKey)))
+    @api_key = authorize(ApiKey.new_with_current(:user, permitted_attributes(ApiKey)))
     @api_key.save
     notice(@api_key.valid? ? "API key created" : @api_key.errors.full_messages.join("; "))
     respond_with(@api_key, location: user_api_keys_path(CurrentUser.user))
@@ -33,14 +32,14 @@ class ApiKeysController < ApplicationController
 
   def update
     authorize(@api_key)
-    @api_key.update(permitted_attributes(@api_key))
+    @api_key.update_with_current(:updater, permitted_attributes(@api_key))
     notice("API key updated")
     respond_with(@api_key, location: user_api_keys_path(CurrentUser.user))
   end
 
   def destroy
     authorize(@api_key)
-    @api_key.destroy
+    @api_key.destroy_with_current(:destroyer)
     notice("API key deleted")
     respond_with(@api_key, location: user_api_keys_path(CurrentUser.user))
   end

@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 class ModAction < ApplicationRecord
-  belongs_to_creator
+  class InvalidCreatorError < StandardError; end
+  belongs_to_user(:creator, ip: true)
   belongs_to(:subject, polymorphic: true, optional: true)
   cattr_accessor(:disable_logging, default: false)
 
@@ -43,18 +44,20 @@ class ModAction < ApplicationRecord
   store_accessor(:values, *VALUES)
 
   def self.log(...)
-    Rails.logger.warn("ModAction: use ModAction.log! instead of ModAction.log")
+    TraceLogger.warn("ModAction", "use ModAction.log! instead of ModAction.log", ignore: %r{/models/mod_action\.rb})
     log!(...)
   end
 
-  def self.log!(action, subject, **details)
+  def self.log!(creator, action, subject, **details)
     if disable_logging
       Rails.logger.warn("ModAction: skipped logging for #{action} #{subject&.class&.name} #{details.inspect}")
       return
     end
-    create!(action: action.to_s, subject: subject, values: details)
+    raise(InvalidCreatorError, "Invalid creator: #{creator.inspect}") if creator.nil? || !(creator.is_a?(User) || (creator.is_a?(UserResolvable) && creator.user.is_a?(User)))
+    create!(creator: creator, action: action.to_s, subject: subject, values: details)
   end
 
+  # rubocop:disable Local/CurrentUserOutsideOfRequests
   FORMATTERS = {
     ### Artist ###
     artist_lock:                                {
@@ -186,10 +189,10 @@ class ModAction < ApplicationRecord
         text
       end,
       json: ->(mod, _user) do
-        values = %i[]
-        return values unless CurrentUser.user.level >= mod.can_view
-        values + %i[forum_category_name can_view can_create]
-      end,
+              values = %i[]
+              return values unless CurrentUser.user.level >= mod.can_view
+              values + %i[forum_category_name can_view can_create]
+            end,
     },
     forum_category_delete:                      {
       text: ->(mod, _user) do
@@ -198,10 +201,10 @@ class ModAction < ApplicationRecord
         "#{text} (#{mod.forum_category_name})"
       end,
       json: ->(mod, _user) do
-        values = %i[]
-        return values unless CurrentUser.user.level >= mod.can_view
-        values + %i[forum_category_name can_view can_create]
-      end,
+              values = %i[]
+              return values unless CurrentUser.user.level >= mod.can_view
+              values + %i[forum_category_name can_view can_create]
+            end,
     },
     forum_category_topics_move:                 {
       text: ->(mod, _user) do
@@ -212,11 +215,11 @@ class ModAction < ApplicationRecord
         "Moved all topics in #{old_category} to #{new_category}"
       end,
       json: ->(mod, _user) do
-        values = %i[forum_category_id old_forum_category_id]
-        values += %i[forum_category_name can_view] if CurrentUser.user.level >= mod.can_view
-        values += %i[old_forum_category_name old_can_view] if CurrentUser.user.level >= mod.old_can_view
-        values
-      end,
+              values = %i[forum_category_id old_forum_category_id]
+              values += %i[forum_category_name can_view] if CurrentUser.user.level >= mod.can_view
+              values += %i[old_forum_category_name old_can_view] if CurrentUser.user.level >= mod.old_can_view
+              values
+            end,
     },
     forum_category_update:                      {
       text: ->(mod, _user) do
@@ -229,10 +232,10 @@ class ModAction < ApplicationRecord
         text
       end,
       json: ->(mod, _user) do
-        values = %i[]
-        return values unless CurrentUser.user.level >= mod.can_view
-        values + %i[forum_category_name old_forum_category_name can_view old_can_view can_create old_can_create]
-      end,
+              values = %i[]
+              return values unless CurrentUser.user.level >= mod.can_view
+              values + %i[forum_category_name old_forum_category_name can_view old_can_view can_create old_can_create]
+            end,
     },
 
     ### Forum Post ###
@@ -404,37 +407,37 @@ class ModAction < ApplicationRecord
     ### Upload Whitelist ###
     upload_whitelist_create:                    {
       text: ->(mod, _user) do
-        return "Created whitelist entry" if mod.hidden && !CurrentUser.is_admin?
-        "Created whitelist entry '[nodtext]#{CurrentUser.is_admin? ? mod.pattern : mod.note}[/nodtext]'"
+        return "Created whitelist entry" if mod.hidden && !CurrentUser.user.is_admin?
+        "Created whitelist entry '[nodtext]#{CurrentUser.user.is_admin? ? mod.pattern : mod.note}[/nodtext]'"
       end,
       json: ->(mod, _user) {
-        values = %i[hidden]
-        values += %i[pattern note] if CurrentUser.is_admin? || !mod.hidden
-        values
-      },
+              values = %i[hidden]
+              values += %i[pattern note] if CurrentUser.user.is_admin? || !mod.hidden
+              values
+            },
     },
     upload_whitelist_delete:                    {
       text: ->(mod, _user) do
-        return "Deleted whitelist entry" if mod.hidden && !CurrentUser.is_admin?
-        "Deleted whitelist entry '[nodtext]#{CurrentUser.is_admin? ? mod.pattern : mod.note}[/nodtext]'"
+        return "Deleted whitelist entry" if mod.hidden && !CurrentUser.user.is_admin?
+        "Deleted whitelist entry '[nodtext]#{CurrentUser.user.is_admin? ? mod.pattern : mod.note}[/nodtext]'"
       end,
       json: ->(mod, _user) {
-        values = %i[hidden]
-        values += %i[pattern note] if CurrentUser.is_admin? || !mod.hidden
-        values
-      },
+              values = %i[hidden]
+              values += %i[pattern note] if CurrentUser.user.is_admin? || !mod.hidden
+              values
+            },
     },
     upload_whitelist_update:                    {
       text: ->(mod, _user) do
-        return "Updated whitelist entry" if mod.hidden && !CurrentUser.is_admin?
-        return "Updated whitelist entry '[nodtext]#{mod.old_pattern}[/nodtext]' -> '[nodtext]#{mod.pattern}[/nodtext]'" if mod.old_pattern && mod.old_pattern != mod.pattern && CurrentUser.is_admin?
-        "Updated whitelist entry '[nodtext]#{CurrentUser.is_admin? ? mod.pattern : mod.note}[/nodtext]'"
+        return "Updated whitelist entry" if mod.hidden && !CurrentUser.user.is_admin?
+        return "Updated whitelist entry '[nodtext]#{mod.old_pattern}[/nodtext]' -> '[nodtext]#{mod.pattern}[/nodtext]'" if mod.old_pattern && mod.old_pattern != mod.pattern && CurrentUser.user.is_admin?
+        "Updated whitelist entry '[nodtext]#{CurrentUser.user.is_admin? ? mod.pattern : mod.note}[/nodtext]'"
       end,
       json: ->(mod, _user) {
-        values = %i[hidden]
-        values += %i[pattern old_pattern note] if CurrentUser.is_admin? || !mod.hidden
-        values
-      },
+              values = %i[hidden]
+              values += %i[pattern old_pattern note] if CurrentUser.user.is_admin? || !mod.hidden
+              values
+            },
     },
 
     ### User ###
@@ -580,7 +583,7 @@ class ModAction < ApplicationRecord
 
     ### Quick Rules ###
     quick_rule_create:                          {
-      text: ->(mod, _user) { "Created quick rule #{mod.header.blank? ? '' : "\"#{mod.header}\" "}with reason: #{mod.reason}" },
+      text: ->(mod, _user) { "Created quick rule #{"\"#{mod.header}\" " if mod.header.present?}with reason: #{mod.reason}" },
       json: %i[reason header],
     },
     quick_rule_delete:                          {
@@ -628,7 +631,7 @@ class ModAction < ApplicationRecord
   }.freeze
 
   def format_unknown(mod, _user)
-    CurrentUser.is_admin? ? "Unknown action #{mod.action}: #{mod.values.inspect}" : "Unknown action #{mod.action}"
+    CurrentUser.user.is_admin? ? "Unknown action #{mod.action}: #{mod.values.inspect}" : "Unknown action #{mod.action}"
   end
 
   def user
@@ -655,11 +658,11 @@ class ModAction < ApplicationRecord
     keys = keys.call(self, user) if keys.is_a?(Proc)
     keys.index_with(&method(:send))
   end
-
   KNOWN_ACTIONS = FORMATTERS.keys.freeze
+  # rubocop:enable Local/CurrentUserOutsideOfRequests
 
   module SearchMethods
-    def search(params)
+    def search(params, user)
       q = super
 
       q = q.where_user(:creator_id, :creator, params)

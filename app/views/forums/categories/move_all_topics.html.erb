@@ -4,6 +4,6 @@
 <p>Note that this will prevent ANYONE from creating topics in the category while topics are being moved.</p>
 
 <%= custom_form_for(:forum_category, url: move_all_topics_forum_category_path(@forum_category), method: :post) do |f| %>
-  <%= f.input(:new_category_id, label: "New Category", collection: ForumCategory.visible.without(@forum_category).select { |cat| cat.can_create_within?(CurrentUser.user) }.map { |c| [c.name, c.id] }, include_blank: false) %>
+  <%= f.input(:new_category_id, label: "New Category", collection: ForumCategory.visible(CurrentUser.user).without(@forum_category).select { |cat| cat.can_create_within?(CurrentUser.user) }.map { |c| [c.name, c.id] }, include_blank: false) %>
   <%= f.submit("Move Topics") %>
 <% end %>

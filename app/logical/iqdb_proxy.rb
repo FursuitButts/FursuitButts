@@ -40,16 +40,16 @@ module IqdbProxy
     raise(Error, "iqdb request failed") if response.status != 200
   end
 
-  def query_url(image_url, score_cutoff)
-    file, _strategy = Downloads::File.new(image_url).download!
+  def query_url(user, image_url, score_cutoff)
+    file, _strategy = Downloads::File.new(image_url, user: user).download!
     query_file(file, score_cutoff)
   end
 
   def query_post(post, score_cutoff)
     return [] unless post&.has_preview?
 
-    File.open(post.preview_file_path) do |f|
-      query_file(f, score_cutoff)
+    post.preview_file do |file|
+      query_file(file, score_cutoff)
     end
   end
 

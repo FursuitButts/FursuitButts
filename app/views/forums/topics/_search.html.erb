@@ -4,7 +4,7 @@
   <%= f.input(:is_sticky, label: "Sticky?", collection: [%w[Yes true], %w[No false]], include_blank: true) %>
   <%= f.input(:is_locked, label: "Locked?", collection: [%w[Yes true], %w[No false]], include_blank: true) %>
   <%= f.input(:is_hidden, label: "Hidden?", collection: [%w[Yes true], %w[No false]], include_blank: true) %>
-  <%= f.input(:category_id, label: "Category", collection: ForumCategory.visible.reverse_mapping, include_blank: true) %>
+  <%= f.input(:category_id, label: "Category", collection: ForumCategory.visible(CurrentUser.user).reverse_mapping, include_blank: true) %>
   <%= f.input(:order, collection: [%w[Sticky sticky], %w[Created created_at], %w[Activity last_post_created_at]]) %>
 <% end %>
 

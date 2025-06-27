@@ -19,7 +19,7 @@ module Users
           should("fail when MFA is not enabled") do
             @user.update_mfa_secret!(nil, mock_request)
             get_auth(user_mfa_backup_codes_path, @user)
-            assert_response(422)
+            assert_response(:unprocessable_entity)
           end
 
           context("for a user who hasn't authenticated recently") do

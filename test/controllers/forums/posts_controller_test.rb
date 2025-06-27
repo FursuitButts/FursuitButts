@@ -10,20 +10,16 @@ module Forums
         @other_user = create(:user)
         @mod = create(:moderator_user)
         @admin = create(:admin_user)
-        as(@user) do
-          @forum_topic = create(:forum_topic, title: "my forum topic", original_post_attributes: { body: "alias xxx -> yyy" })
-          @forum_post = @forum_topic.original_post
-        end
+        @forum_topic = create(:forum_topic, title: "my forum topic", original_post_attributes: { body: "alias xxx -> yyy" }, creator: @user)
+        @forum_post = @forum_topic.original_post
       end
 
       context("with votes") do
         setup do
-          as(@user) do
-            @tag_alias = create(:tag_alias, forum_post: @forum_post, status: "pending")
-            @forum_post.update(tag_change_request: @tag_alias, allow_voting: true)
-            @vote = create(:forum_post_vote, forum_post: @forum_post, score: 1)
-            @forum_post.reload
-          end
+          @tag_alias = create(:tag_alias, forum_post: @forum_post, status: "pending", creator: @user)
+          @forum_post.update_with(@user, tag_change_request: @tag_alias, allow_voting: true)
+          @vote = create(:forum_post_vote, forum_post: @forum_post, score: 1, user: @user)
+          @forum_post.reload
         end
 
         should("not render the vote links for the requesting user") do
@@ -46,9 +42,7 @@ module Forums
 
         context("after the alias is rejected") do
           setup do
-            as(@mod) do
-              @tag_alias.reject!
-            end
+            @tag_alias.reject!(@mod)
             get_auth(forum_topic_path(@forum_topic), @mod)
           end
 
@@ -70,11 +64,9 @@ module Forums
 
         context("with posts in a hidden category") do
           setup do
-            as(@mod) do
-              @category2 = ForumCategory.create!(name: "test", can_view: @mod.level)
-              @forum_topic = create(:forum_topic, category: @category2, title: "test", original_post_attributes: { body: "test" })
-              @forum_post2 = @forum_topic.original_post
-            end
+            @category2 = create(:forum_category, can_view: @mod.level)
+            @forum_topic = create(:forum_topic, category: @category2, title: "test", original_post_attributes: { body: "test" }, creator: @mod)
+            @forum_post2 = @forum_topic.original_post
           end
 
           should("only list visible posts") do
@@ -166,10 +158,8 @@ module Forums
         end
 
         should("not allow admins to disable allow_voting on TCRs") do
-          as(@user) do
-            @ta = create(:tag_alias, forum_post: @forum_post)
-            @forum_post.update(tag_change_request: @ta, allow_voting: true)
-          end
+          @ta = create(:tag_alias, forum_post: @forum_post)
+          @forum_post.update_with(@user, tag_change_request: @ta, allow_voting: true)
           assert_no_difference("EditHistory.count") do
             put_auth(forum_post_path(@forum_post), @admin, params: { format: :json, forum_post: { allow_voting: false } })
             assert_response(:bad_request)
@@ -208,7 +198,7 @@ module Forums
         end
 
         should("not create a new forum post if topic is stale") do
-          as(@mod) { create(:forum_post, topic: @forum_topic) } # if the topic doesn't have any posts it will never be stale
+          create(:forum_post, topic: @forum_topic, creator: @mod) # if the topic doesn't have any posts it will never be stale
           FemboyFans.config.stubs(:enable_stale_forum_topics?).returns(true)
           FemboyFans.config.stubs(:forum_topic_stale_window).returns(6.months)
           travel_to(1.year.from_now) do
@@ -232,7 +222,7 @@ module Forums
         end
 
         should("still create a new forum post if topic is stale for moderators") do
-          as(@mod) { create(:forum_post, topic: @forum_topic) } # if the topic doesn't have any posts it will never be stale
+          create(:forum_post, topic: @forum_topic, creator: @mod) # if the topic doesn't have any posts it will never be stale
           FemboyFans.config.stubs(:enable_stale_forum_topics?).returns(true)
           FemboyFans.config.stubs(:forum_topic_stale_window).returns(6.months)
           travel_to(1.year.from_now) do
@@ -257,9 +247,7 @@ module Forums
 
         context("on a forum post with edit history") do
           setup do
-            as(@user) do
-              @forum_post.update!(body: "hi hello")
-            end
+            @forum_post.update_with!(@user, body: "hi hello")
           end
 
           should("also delete the edit history") do
@@ -271,7 +259,7 @@ module Forums
 
         context("on a forum post with an AIBUR") do
           should("work (alias)") do
-            as(@user) { @ta = create(:tag_alias, forum_topic: @forum_post.topic, forum_post: @forum_post) }
+            @ta = create(:tag_alias, forum_topic: @forum_post.topic, forum_post: @forum_post)
             assert_equal(@forum_post.id, @ta.reload.forum_post_id)
             assert_difference({ "ForumPost.count" => -1, "TagAlias.count" => 0 }) do
               delete_auth(forum_post_path(@forum_post), create(:admin_user))
@@ -280,7 +268,7 @@ module Forums
           end
 
           should("work (implication)") do
-            as(@user) { @ti = create(:tag_implication, forum_topic: @forum_post.topic, forum_post: @forum_post) }
+            @ti = create(:tag_implication, forum_topic: @forum_post.topic, forum_post: @forum_post)
             assert_equal(@forum_post.id, @ti.reload.forum_post_id)
             assert_difference({ "ForumPost.count" => -1, "TagImplication.count" => 0 }) do
               delete_auth(forum_post_path(@forum_post), create(:admin_user))
@@ -289,7 +277,7 @@ module Forums
           end
 
           should("work (bulk update request)") do
-            as(@user) { @bur = create(:bulk_update_request, forum_topic: @forum_post.topic, forum_post: @forum_post) }
+            @bur = create(:bulk_update_request, forum_topic: @forum_post.topic, forum_post: @forum_post)
             @forum_post = @bur.forum_post
             assert_equal(@forum_post.id, @bur.reload.forum_post_id)
             assert_difference({ "ForumPost.count" => -1, "BulkUpdateRequest.count" => 0 }) do
@@ -300,7 +288,7 @@ module Forums
         end
 
         should("restrict access") do
-          as(create(:admin_user)) { @posts = create_list(:forum_post, User::Levels.constants.length, topic: @forum_topic) }
+          @posts = create_list(:forum_post, User::Levels.constants.length, topic: @forum_topic)
           assert_access(User::Levels::ADMIN, success_response: :redirect) { |user| delete_auth(forum_post_path(@posts.shift), user) }
         end
       end
@@ -320,9 +308,7 @@ module Forums
 
       context("unhide action") do
         setup do
-          as(@mod) do
-            @forum_post.hide!
-          end
+          @forum_post.hide!(@mod)
         end
 
         should("restore the post") do
@@ -374,7 +360,7 @@ module Forums
 
         should("auto ban spammers") do
           SpamDetector.any_instance.stubs(:spam?).returns(true)
-          as(User.system) { create_list(:ticket, SpamDetector::AUTOBAN_THRESHOLD - 1, model: @forum_post, reason: "Spam.") }
+          create_list(:ticket, SpamDetector::AUTOBAN_THRESHOLD - 1, model: @forum_post, reason: "Spam.", creator: User.system)
           assert_difference(%w[Ban.count User.system.tickets.count ForumPost.count], 1) do
             post_auth(forum_posts_path, @user, params: { forum_post: { body: "abc", topic_id: @forum_topic.id } })
             @ticket = User.system.tickets.last
@@ -460,7 +446,7 @@ module Forums
         end
 
         should("unmark") do
-          as(@mod) { @forum_post.user_warned!("warning", @mod) }
+          @forum_post.user_warned!("warning", @mod)
           put_auth(warning_forum_post_path(@forum_post), @mod, params: { record_type: "unmark" })
           assert_response(:success)
           assert_nil(@forum_post.reload.warning_type)

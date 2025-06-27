@@ -1,15 +1,21 @@
 # frozen_string_literal: true
 
 class WikiPage < ApplicationRecord
-  class RevertError < StandardError; end
   class MergeError < StandardError; end
 
   INTERNAL_PREFIXES = %w[internal: help:].freeze
   META_PREFIXES = %w[internal: help: howto: tag_group:].freeze
 
-  belongs_to_creator
-  belongs_to_updater
+  belongs_to_user(:creator, ip: true, clones: :updater)
+  belongs_to_user(:updater, ip: true)
+  resolvable(:destroyer)
   has_dtext_links(:body)
+  revertible do |version|
+    self.title = version.title
+    self.body = version.body
+    self.parent = version.parent
+  end
+
   has_one(:help_page)
   has_one(:tag, foreign_key: "name", primary_key: "title")
   has_one(:artist, foreign_key: "name", primary_key: "title")
@@ -46,18 +52,18 @@ class WikiPage < ApplicationRecord
   module LogMethods
     def log_save
       if saved_change_to_protection_level?
-        ModAction.log!(protection_level.blank? ? :wiki_page_unprotect : :wiki_page_protect, self, wiki_page_title: title, protection_level: protection_level)
+        ModAction.log!(updater, protection_level.blank? ? :wiki_page_unprotect : :wiki_page_protect, self, wiki_page_title: title, protection_level: protection_level)
       end
     end
 
     def log_update
       if saved_change_to_title?
-        ModAction.log!(:wiki_page_rename, self, old_title: title_before_last_save, wiki_page_title: title)
+        ModAction.log!(updater, :wiki_page_rename, self, old_title: title_before_last_save, wiki_page_title: title)
       end
     end
 
     def log_delete
-      ModAction.log!(:wiki_page_delete, self, wiki_page_title: title)
+      ModAction.log!(destroyer, :wiki_page_delete, self, wiki_page_title: title)
     end
   end
 
@@ -74,7 +80,7 @@ class WikiPage < ApplicationRecord
       order(updated_at: :desc)
     end
 
-    def search(params)
+    def search(params, user)
       q = super
 
       if params[:title].present?
@@ -122,13 +128,13 @@ class WikiPage < ApplicationRecord
   end
 
   module RestrictionMethods
-    def is_restricted?(user = CurrentUser.user)
+    def is_restricted?(user)
       protection_level.present? && protection_level > user.level
     end
   end
 
   module MergeMethods
-    def merge_into!(wiki_page)
+    def merge_into!(wiki_page, user)
       theircount = wiki_page.versions.count
       ourcount = versions.count
       transaction do
@@ -140,8 +146,10 @@ class WikiPage < ApplicationRecord
         if (theircount + ourcount) != wiki_page.versions.count
           raise(MergeError, "Expected version count did not match")
         end
-        ModAction.log!(:wiki_page_merge, self, wiki_page_title: title, target_wiki_page_id: wiki_page.id, target_wiki_page_title: wiki_page.title)
+        ModAction.log!(user, :wiki_page_merge, self, wiki_page_title: title, target_wiki_page_id: wiki_page.id, target_wiki_page_title: wiki_page.title)
+        self.destroyer = user
         destroy!
+        wiki_page.update(updater: user)
         wiki_page.create_new_version(merged_from_id: id, merged_from_title: title, reason: "Merge from #{title}")
       end
     end
@@ -154,7 +162,7 @@ class WikiPage < ApplicationRecord
   extend(SearchMethods)
 
   def user_not_limited
-    allowed = CurrentUser.user.can_wiki_edit_with_reason
+    allowed = updater.can_wiki_edit_with_reason
     if allowed != true
       errors.add(:base, "User #{User.throttle_reason(allowed)}.")
       false
@@ -163,7 +171,7 @@ class WikiPage < ApplicationRecord
   end
 
   def validate_not_restricted
-    if is_restricted?
+    if is_restricted?(updater)
       errors.add(:base, "Is protected and cannot be updated")
       false
     end
@@ -171,7 +179,7 @@ class WikiPage < ApplicationRecord
 
   def validate_rename
     return unless will_save_change_to_title?
-    if !CurrentUser.user.is_admin? && help_page.present?
+    if !updater.is_admin? && help_page.present?
       errors.add(:title, "is used as a help page and cannot be changed")
       return
     end
@@ -182,9 +190,9 @@ class WikiPage < ApplicationRecord
     end
 
     broken_wikis = WikiPage.linked_to(title_was)
-    if broken_wikis.count > 0
+    if broken_wikis.any?
       broken_wiki_search = Routes.wiki_pages_path(search: { linked_to: title_was })
-      warnings.add(:base, %(Warning: [[#{title_was}]] is still linked from "#{broken_wikis.count} #{'other wiki page'.pluralize(broken_wikis.count)}":[#{broken_wiki_search}]. Update #{broken_wikis.count > 1 ? 'these wikis' : 'this wiki'} to link to [[#{title}]] instead))
+      warnings.add(:base, %(Warning: [[#{title_was}]] is still linked from "#{broken_wikis.count} #{'other wiki page'.pluralize(broken_wikis.count)}":[#{broken_wiki_search}]. Update #{broken_wikis.many? ? 'these wikis' : 'this wiki'} to link to [[#{title}]] instead))
     end
   end
 
@@ -193,7 +201,7 @@ class WikiPage < ApplicationRecord
   end
 
   def validate_name_not_restricted
-    if INTERNAL_PREFIXES.any? { |prefix| title.starts_with?(prefix) } && !CurrentUser.user.is_janitor?
+    if INTERNAL_PREFIXES.any? { |prefix| title.starts_with?(prefix) } && !updater.is_janitor?
       errors.add(:title, "cannot start with '#{title.split(':')[0]}:'")
       throw(:abort)
     end
@@ -215,21 +223,6 @@ class WikiPage < ApplicationRecord
     if HelpPage.find_by(wiki_page: title).present?
       errors.add(:title, "is used as a help page and cannot be redirected")
     end
-  end
-
-  def revert_to(version)
-    if id != version.wiki_page_id
-      raise(RevertError, "You cannot revert to a previous version of another wiki page.")
-    end
-
-    self.title = version.title
-    self.body = version.body
-    self.parent = version.parent
-  end
-
-  def revert_to!(version)
-    revert_to(version)
-    save!
   end
 
   def normalize_title
@@ -292,8 +285,7 @@ class WikiPage < ApplicationRecord
 
   def create_new_version(extra = {})
     versions.create(
-      updater_id:       CurrentUser.user.id,
-      updater_ip_addr:  CurrentUser.ip_addr,
+      updater:          updater,
       title:            title,
       body:             body,
       protection_level: protection_level,
@@ -309,8 +301,8 @@ class WikiPage < ApplicationRecord
     end
   end
 
-  def post_set
-    @post_set ||= PostSets::Post.new(title, 1, limit: 4)
+  def post_set(user)
+    @post_set ||= PostSets::Post.new(title, 1, limit: 4, current_user: user)
   end
 
   def tags

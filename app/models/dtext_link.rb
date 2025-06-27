@@ -39,13 +39,7 @@ class DtextLink < ApplicationRecord
   end
 
   module SearchMethods
-    def visible(user)
-      # XXX the double negation is to prevent postgres from choosing a bad query
-      # plan (it doesn't know that most forum posts aren't mod-only posts).
-      wiki_page.or(forum_post.where.not(model_id: ForumPost.not_visible(user))).or(pool)
-    end
-
-    def search(params)
+    def search(params, user)
       q = super
 
       q = q.attribute_matches(:link_type, params[:link_type])
@@ -79,7 +73,5 @@ class DtextLink < ApplicationRecord
     %i[model linked_wiki linked_tag]
   end
 
-  def visible?(user = CurrentUser.user)
-    model.visible?(user)
-  end
+  delegate(:visible?, to: :model)
 end

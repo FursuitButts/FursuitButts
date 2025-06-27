@@ -24,13 +24,13 @@ module BulkUpdateRequestCommands
     end
 
     def alias_is_valid
-      tag_alias = TagAlias.new(status: "pending", antecedent_name: antecedent_name, consequent_name: consequent_name)
+      tag_alias = TagAlias.new(status: "pending", antecedent_name: antecedent_name, consequent_name: consequent_name, creator: User.system)
       errors.add(:base, "Error: #{tag_alias.errors.full_messages.join('; ')}") unless tag_alias.valid?
       comments.add(:base, "has blocking transitive relationships, cannot be applied through BUR") if tag_alias.has_transitives?
     end
 
     def estimate_update_count
-      TagAlias.new(antecedent_name: antecedent_name, consequent_name: consequent_name).estimate_update_count
+      TagAlias.new(antecedent_name: antecedent_name, consequent_name: consequent_name, creator: User.system).estimate_update_count
     end
 
     def tags
@@ -64,8 +64,7 @@ module BulkUpdateRequestCommands
           ta.status = "pending"
           ta.antecedent_name = antecedent_name
           ta.consequent_name = consequent_name
-          ta.creator_id = processor.creator.id
-          ta.creator_ip_addr = processor.creator_ip_addr
+          ta.creator = processor.creator.resolvable(processor.creator_ip_addr)
         end
         unless tag_alias.valid?
           raise(ProcessingError, "Error: #{tag_alias.errors.full_messages.join('; ')} (alias #{antecedent_name} -> #{consequent_name})")
@@ -73,7 +72,7 @@ module BulkUpdateRequestCommands
       end
 
       raise(ProcessingError, "Error: Alias would modify other aliases or implications through transitive relationships. (alias #{tag_alias.antecedent_name} -> #{tag_alias.consequent_name})") if tag_alias.has_transitives
-      tag_alias.approve!(approver: approver, update_topic: false)
+      tag_alias.approve!(approver, update_topic: false)
     end
   end
 end

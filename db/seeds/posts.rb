@@ -5,8 +5,14 @@ module Seeds
     MAX_PER_PAGE = 500
     Pool = Struct.new(:id, :name, :created_at, :updated_at, :creator_id, :description, :is_active, :category, :post_ids, :creator_name, :post_count, :artist_names, :cover_post_id)
 
-    def self.run!(limit = ENV.fetch("SEED_POST_COUNT", 100).to_i)
-      new.run!(limit)
+    def self.run!(user = User.system, limit = ENV.fetch("SEED_POST_COUNT", 100).to_i)
+      new(user).run!(limit)
+    end
+
+    attr_reader(:user)
+
+    def initialize(user = User.system)
+      @user = user.resolvable
     end
 
     def run!(limit)
@@ -37,7 +43,7 @@ module Seeds
       data["sources"] << "#{Seeds.base_url}/posts/#{data['id']}"
       data["tags"].each do |category, tags|
         next unless TagCategory.category_names.include?(category) # If we don't support the category, let the tags be created with the post
-        Tag.find_or_create_by_name_list(tags.map { |tag| "#{category}:#{tag}" })
+        Tag.find_or_create_by_name_list(tags.map { |tag| "#{category}:#{tag}" }, user: user)
       end
 
       process_related_posts(data, text: text) if relationships
@@ -56,13 +62,12 @@ module Seeds
       Seeds.log("#{text} #{url}") if text.present?
 
       upload = Upload.create(
-        uploader:         CurrentUser.user,
-        uploader_ip_addr: CurrentUser.ip_addr,
-        direct_url:       url,
-        tag_string:       data["tags"].map { |category, tags| tags.map { |tag| "#{category}:#{tag}" } }.flatten.join(" "),
-        source:           data["sources"].join("\n"),
-        description:      data["description"],
-        rating:           data["rating"],
+        uploader:    user,
+        direct_url:  url,
+        tag_string:  data["tags"].map { |category, tags| tags.map { |tag| "#{category}:#{tag}" } }.flatten.join(" "),
+        source:      data["sources"].join("\n"),
+        description: data["description"],
+        rating:      data["rating"],
       )
 
       if upload.failed?
@@ -163,9 +168,7 @@ module Seeds
       Seeds.read_resources["safe"].to_s.truthy?
     end
 
-    def e621?
-      Seeds.e621?
-    end
+    delegate(:e621?, to: :Seeds)
 
     def fetch_posts(tags, limit = per_page_limit, page = 1)
       tags << "rating:s" if safe?

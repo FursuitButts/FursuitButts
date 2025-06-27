@@ -3,13 +3,13 @@
 require("test_helper")
 
 class ArtistUrlTest < ActiveSupport::TestCase
-  def assert_search_equals(results, conditions)
-    assert_equal(results.map(&:id), subject.search(conditions).map(&:id))
+  def assert_search_equals(results, conditions, user)
+    assert_equal(results.map(&:id), subject.search(conditions, user).map(&:id))
   end
 
   context("An artist url") do
     setup do
-      CurrentUser.user = create(:user)
+      @user = create(:user)
     end
 
     should("allow urls to be marked as inactive") do
@@ -74,22 +74,23 @@ class ArtistUrlTest < ActiveSupport::TestCase
       assert_equal("https://twitter.com/intent/user?user_id=2784590030", url.url)
       assert_equal("http://twitter.com/intent/user?user_id=2784590030/", url.normalized_url)
     end
-    context("#search method") do
+
+    context("#search") do
       subject { ArtistUrl }
 
       should("work") do
         @bkub = create(:artist, name: "bkub", url_string: "https://bkub.com")
         @bkub_url = @bkub.urls.first
 
-        assert_search_equals([@bkub_url], is_active: true)
-        assert_search_equals([@bkub_url], artist: { name: "bkub" })
+        assert_search_equals([@bkub_url], { is_active: true }, @user)
+        assert_search_equals([@bkub_url], { artist: { name: "bkub" } }, @user)
 
-        assert_search_equals([@bkub_url], url_matches: "*bkub*")
+        assert_search_equals([@bkub_url], { url_matches: "*bkub*" }, @user)
 
-        assert_search_equals([@bkub_url], normalized_url_matches: "*bkub*")
-        assert_search_equals([@bkub_url], normalized_url_matches: "http://bkub.com")
+        assert_search_equals([@bkub_url], { normalized_url_matches: "*bkub*" }, @user)
+        assert_search_equals([@bkub_url], { normalized_url_matches: "http://bkub.com" }, @user)
 
-        assert_search_equals([@bkub_url], url: "https://bkub.com")
+        assert_search_equals([@bkub_url], { url: "https://bkub.com" }, @user)
       end
     end
   end

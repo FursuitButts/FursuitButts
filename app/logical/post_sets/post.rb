@@ -4,11 +4,11 @@ module PostSets
   class Post < PostSets::Base
     attr_reader(:tag_array, :public_tag_array, :page, :limit, :random, :post_count)
 
-    def initialize(tags, page = 1, limit: nil, random: nil)
-      super()
+    def initialize(tags, page = 1, current_user:, limit: nil, random: nil)
+      super(current_user)
       tags ||= ""
       @public_tag_array = apply_ratio_tags(TagQuery.scan(tags))
-      tags += " rating:s" if CurrentUser.safe_mode?
+      tags += " rating:s" if current_user.safe_mode?
       tags += " -status:deleted" unless TagQuery.has_metatag?(tags, "status", "-status")
       @tag_array = apply_ratio_tags(TagQuery.scan(tags))
       @page = page
@@ -36,19 +36,19 @@ module PostSets
     end
 
     def has_explicit?
-      !CurrentUser.safe_mode?
+      !current_user.safe_mode?
     end
 
     def hidden_posts
-      @hidden_posts ||= posts.reject(&:visible?)
+      @hidden_posts ||= posts.reject { |p| p.visible?(current_user) }
     end
 
     def login_blocked_posts
-      @login_blocked_posts ||= posts.select(&:loginblocked?)
+      @login_blocked_posts ||= posts.select { |p| p.loginblocked?(current_user) }
     end
 
     def safe_posts
-      @safe_posts ||= posts.select { |p| p.safeblocked? && !p.deleteblocked? }
+      @safe_posts ||= posts.select { |p| p.safeblocked?(current_user) && !p.deleteblocked?(current_user) }
     end
 
     def is_random?
@@ -63,7 +63,7 @@ module PostSets
 
     def posts
       @posts ||= begin
-        temp = ::Post.tag_match(tag_string).paginate_posts(page, limit: limit, includes: %i[uploader media_asset])
+        temp = ::Post.tag_match(tag_string, current_user).paginate_posts(page, limit: limit, includes: %i[uploader media_asset], user: current_user)
 
         @post_count = temp.total_count
         temp

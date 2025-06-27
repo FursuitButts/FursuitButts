@@ -77,11 +77,11 @@ class UserPresenter
   end
 
   def artwork(name)
-    Post.tag_match(name).limit(10)
+    Post.tag_match(name, CurrentUser.user).limit(10)
   end
 
   def uploads
-    Post.tag_match("user:#{user.name}").limit(8)
+    Post.tag_match("user:#{user.name}", CurrentUser.user).limit(8)
   end
 
   def has_active_uploads?
@@ -134,7 +134,7 @@ class UserPresenter
   end
 
   def commented_on_posts_count
-    Post.fast_count("commenter:#{user.name}", enable_safe_mode: false)
+    Post.system_count("commenter:#{user.name}", enable_safe_mode: false)
   end
 
   def post_version_count(template)
@@ -146,7 +146,7 @@ class UserPresenter
   end
 
   def noted_posts_count(template)
-    count = Post.fast_count("noteupdater:#{user.name}", enable_safe_mode: false)
+    count = Post.system_count("noteupdater:#{user.name}", enable_safe_mode: false)
     template.link_to(count, template.posts_path(tags: "noteupdater:#{user.name} order:note"))
   end
 

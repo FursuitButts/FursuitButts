@@ -12,8 +12,7 @@ module Forums
 
       def index
         @forum_post_votes = authorize(ForumPostVote).html_includes(request, :user, forum_post: %i[creator])
-                                                    .visible(CurrentUser.user)
-                                                    .search(search_params(ForumPostVote))
+                                                    .search_current(search_params(ForumPostVote))
                                                     .paginate(params[:page], limit: 100)
         respond_with(@forum_post_votes)
       end
@@ -22,7 +21,7 @@ module Forums
         authorize(@forum_post, policy_class: ForumPostVotePolicy)
         raise(User::PrivilegeError, "You are not allowed to vote on tag change requests.") if @forum_post.is_aibur? && CurrentUser.user.no_aibur_voting?
         raise(User::PrivilegeError, "You cannot vote on completed tag change requests.") if @forum_post.is_aibur? && !@forum_post.tag_change_request.is_pending?
-        @forum_post_vote = VoteManager::ForumPosts.vote!(user: CurrentUser.user, forum_post: @forum_post, score: params[:score])
+        @forum_post_vote = VoteManager::ForumPosts.vote!(user: CurrentUser.user, ip_addr: CurrentUser.ip_addr, forum_post: @forum_post, score: params[:score])
         respond_with(@forum_post_vote) do |fmt|
           fmt.json { render(json: @forum_post_vote, code: 201) }
         end
@@ -41,7 +40,7 @@ module Forums
         ids = params[:ids].split(",")
 
         ids.each do |id|
-          VoteManager::ForumPosts.admin_unvote!(id)
+          VoteManager::ForumPosts.admin_unvote!(id, CurrentUser.user)
         end
       end
 
@@ -61,7 +60,7 @@ module Forums
       end
 
       def ensure_lockdown_disabled
-        access_denied if Security::Lockdown.votes_disabled? && !CurrentUser.is_staff?
+        access_denied if Security::Lockdown.votes_disabled? && !CurrentUser.user.is_staff?
       end
     end
   end

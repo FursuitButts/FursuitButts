@@ -11,9 +11,7 @@ module Forums
         @mod = create(:moderator_user)
         @admin = create(:admin_user)
 
-        as(@user) do
-          @forum_topic = create(:forum_topic, title: "my forum topic", original_post_attributes: { body: "xxx" })
-        end
+        @forum_topic = create(:forum_topic, title: "my forum topic", original_post_attributes: { body: "xxx" }, creator: @user)
       end
 
       context("show action") do
@@ -37,7 +35,7 @@ module Forums
         should("have the correct page number") do
           FemboyFans.config.stubs(:records_per_page).returns(2)
           assert_equal(1, @forum_topic.last_page)
-          as(@user) { @forum_posts = create_list(:forum_post, 3, topic: @forum_topic) }
+          @forum_posts = create_list(:forum_post, 3, topic: @forum_topic, creator: @user)
           assert_equal(2, @forum_topic.last_page)
 
           get_auth(forum_topic_path(@forum_topic), @user, params: { page: 2 })
@@ -46,7 +44,7 @@ module Forums
           assert_equal([1, 2, 2], @forum_posts.map(&:forum_topic_page))
           assert_equal(2, @forum_topic.last_page)
 
-          as(@mod) { @forum_posts.first.hide! }
+          @forum_posts.first.hide!(@mod)
           get_auth(forum_topic_path(@forum_topic), @user, params: { page: 2 })
           assert_select("#forum_post_#{@forum_posts.second.id}")
           assert_select("#forum_post_#{@forum_posts.third.id}")
@@ -61,10 +59,8 @@ module Forums
 
       context("index action") do
         setup do
-          as(@user) do
-            @topic1 = create(:forum_topic, title: "a", is_sticky: true, original_post_attributes: { body: "xxx" })
-            @topic2 = create(:forum_topic, title: "b", original_post_attributes: { body: "xxx" })
-          end
+          @topic1 = create(:forum_topic, title: "a", is_sticky: true, original_post_attributes: { body: "xxx" }, creator: @user)
+          @topic2 = create(:forum_topic, title: "b", original_post_attributes: { body: "xxx" }, creator: @user)
         end
 
         should("list all forum topics") do
@@ -110,7 +106,7 @@ module Forums
 
         should("fail if the editor is not the creator of the topic and is not an admin") do
           get_auth(edit_forum_topic_path(@forum_topic), @other_user)
-          assert_response(403)
+          assert_response(:forbidden)
         end
       end
 
@@ -145,10 +141,8 @@ module Forums
         end
 
         should("not allow admins to disable allow_voting on TCRs") do
-          as(@user) do
-            @ta = create(:tag_alias, forum_post: @forum_post)
-            @forum_topic.original_post.update(tag_change_request: @ta, allow_voting: true)
-          end
+          @ta = create(:tag_alias, forum_post: @forum_post, creator: @user)
+          @forum_topic.original_post.update_with(@user, tag_change_request: @ta, allow_voting: true)
           assert_no_difference("EditHistory.count") do
             put_auth(forum_topic_path(@forum_topic), @admin, params: { format: :json, forum_topic: { original_post_attributes: { id: @forum_topic.original_post.id, allow_voting: false } } })
             assert_response(:bad_request)
@@ -207,9 +201,7 @@ module Forums
 
       context("destroy action") do
         setup do
-          as(@user) do
-            @post = create(:forum_post, topic_id: @forum_topic.id)
-          end
+          @post = create(:forum_post, topic_id: @forum_topic.id, creator: @user)
         end
 
         should("destroy the topic and any associated posts") do
@@ -219,7 +211,7 @@ module Forums
 
         context("on a forum topic with an AIBUR") do
           should("work (alias)") do
-            as(@user) { @ta = create(:tag_alias, forum_topic: @forum_topic) }
+            @ta = create(:tag_alias, forum_topic: @forum_topic, creator: @user)
             assert_equal(@forum_topic.id, @ta.reload.forum_topic_id)
             assert_difference({ "ForumTopic.count" => -1, "TagAlias.count" => 0 }) do
               delete_auth(forum_topic_path(@forum_topic), create(:admin_user))
@@ -228,7 +220,7 @@ module Forums
           end
 
           should("work (implication)") do
-            as(@user) { @ti = create(:tag_implication, forum_topic: @forum_topic) }
+            @ti = create(:tag_implication, forum_topic: @forum_topic, creator: @user)
             assert_equal(@forum_topic.id, @ti.reload.forum_topic_id)
             assert_difference({ "ForumTopic.count" => -1, "TagImplication.count" => 0 }) do
               delete_auth(forum_topic_path(@forum_topic), create(:admin_user))
@@ -237,7 +229,7 @@ module Forums
           end
 
           should("work (bulk update request)") do
-            as(@user) { @bur = create(:bulk_update_request, forum_topic: @forum_topic) }
+            @bur = create(:bulk_update_request, forum_topic: @forum_topic, creator: @user)
             assert_equal(@forum_topic.id, @bur.reload.forum_topic_id)
             assert_difference({ "ForumTopic.count" => -1, "BulkUpdateRequest.count" => 0 }) do
               delete_auth(forum_topic_path(@forum_topic), create(:admin_user))
@@ -286,8 +278,8 @@ module Forums
 
       context("lock action") do
         should("lock the topic") do
-          put_auth(lock_forum_topic_path(@forum_topic), @mod)
-          assert_redirected_to(forum_topic_path(@forum_topic))
+          put_auth(lock_forum_topic_path(@forum_topic), @mod, params: { format: :json })
+          assert_response(:success)
           @forum_topic.reload
           assert(@forum_topic.is_locked?)
         end

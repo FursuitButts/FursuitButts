@@ -82,8 +82,8 @@ class PostReplacementMediaAsset < MediaAssetWithVariants
       storage_manager.file_path(storage_id, ext, type, protected: protected, prefix: path_prefix, protected_prefix: protected_path_prefix, hierarchical: hierarchical?)
     end
 
-    def file_url(protected: is_protected?)
-      storage_manager.url(storage_id, ext, type, protected: protected, prefix: path_prefix, protected_prefix: protected_path_prefix, hierarchical: hierarchical?, secret: protected_secret)
+    def file_url(user:, protected: is_protected?)
+      storage_manager.url(storage_id, ext, type, protected: protected, prefix: path_prefix, protected_prefix: protected_path_prefix, hierarchical: hierarchical?, secret: protected_secret, user: user)
     end
 
     def convert_file(original_file, &block)
@@ -110,7 +110,7 @@ class PostReplacementMediaAsset < MediaAssetWithVariants
   end
 
   module SearchMethods
-    def search(params)
+    def search(params, user)
       q = super
       q = q.joins(:post_replacement).where("post_replacements.id": params[:post_replacement_id]) if params[:post_replacement_id].present?
       q

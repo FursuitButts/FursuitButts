@@ -28,4 +28,10 @@ class MediaAssetPolicy < ApplicationPolicy
   def api_attributes
     super - %i[media_metadata_id checksum last_chunk_id]
   end
+
+  def visible_for_search(relation)
+    q = super
+    return q if user.is_staff?
+    q.for_creator(user)
+  end
 end

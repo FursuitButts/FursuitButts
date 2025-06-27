@@ -10,7 +10,7 @@ class UsersController < ApplicationController
       @user = User.find_by_current_or_former_name!(User.normalize_name(params[:name]))
       redirect_to(user_path(@user, n: params[:n]))
     else
-      @users = User.search(search_params(User))
+      @users = User.search_current(search_params(User))
                    .paginate(params[:page], limit: params[:limit])
       respond_with(@users)
     end
@@ -23,14 +23,14 @@ class UsersController < ApplicationController
   end
 
   def new
-    raise(User::PrivilegeError, "Already signed in") unless CurrentUser.is_anonymous?
+    raise(User::PrivilegeError, "Already signed in") unless CurrentUser.user.is_anonymous?
     return access_denied("Signups are disabled") unless FemboyFans.config.enable_signups?
     @user = User.new
     respond_with(@user)
   end
 
   def edit
-    @user = User.find(CurrentUser.id)
+    @user = User.find(CurrentUser.user.id)
     raise(User::PrivilegeError, "Must verify account email") unless @user.is_verified?
     respond_with(@user)
   end
@@ -57,7 +57,7 @@ class UsersController < ApplicationController
   end
 
   def create
-    raise(User::PrivilegeError, "Already signed in") unless CurrentUser.is_anonymous?
+    raise(User::PrivilegeError, "Already signed in") unless CurrentUser.user.is_anonymous?
     raise(User::PrivilegeError, "Signups are disabled") unless FemboyFans.config.enable_signups?
     User.transaction do
       @user = User.new(permitted_attributes(User).merge({ last_ip_addr: request.remote_ip }))
@@ -90,7 +90,7 @@ class UsersController < ApplicationController
   end
 
   def update
-    @user = User.find(CurrentUser.id)
+    @user = User.find(CurrentUser.user.id)
     @user.validate_email_format = true
     raise(User::PrivilegeError, "Must verify account email") unless @user.is_verified?
     @user.update(permitted_attributes(@user))
@@ -116,7 +116,7 @@ class UsersController < ApplicationController
   def unban
     @user = authorize(User.find(params[:id]))
     return render_expected_error(422, "User is not banned") unless @user.is_banned?
-    @user.unban!
+    @user.unban!(CurrentUser.user)
     notice("User unbanned")
     respond_with(@user)
   end

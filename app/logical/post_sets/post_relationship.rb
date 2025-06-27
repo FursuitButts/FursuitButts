@@ -4,15 +4,15 @@ module PostSets
   class PostRelationship < PostSets::Post
     attr_reader(:parent, :children)
 
-    def initialize(parent_id, options = {})
+    def initialize(parent_id, current_user:, **options)
       @want_parent = options[:want_parent]
       @parent = ::Post.where("id = ?", parent_id)
       @children = ::Post.where("parent_id = ?", parent_id).order("id ASC")
       if options[:include_deleted]
-        super("parent:#{parent_id} status:any")
+        super("parent:#{parent_id} status:any", current_user: current_user)
       else
         @children = @children.where("is_deleted = ?", false)
-        super("parent:#{parent_id}")
+        super("parent:#{parent_id}", current_user: current_user)
       end
     end
 

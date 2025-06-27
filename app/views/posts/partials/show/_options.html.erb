@@ -1,12 +1,12 @@
 <ul>
   <% if CurrentUser.user.can_favorite? %>
-    <li class="vpad-05"><%= tag.a("+Favorite", "href": "#", "class": "button btn-success", "id": "add-to-favorites", "data-shortcut": "f", "style": ("display: none;" if @post.is_favorited?), "data-pid": @post.id) %></li>
-    <li class="vpad-05"><%= tag.a("-Favorite", "href": "#", "class": "button btn-danger", "id": "remove-from-favorites", "data-shortcut": "shift+f", "style": ("display: none;" unless @post.is_favorited?), "data-pid": @post.id) %></li>
+    <li class="vpad-05"><%= tag.a("+Favorite", "href": "#", "class": "button btn-success", "id": "add-to-favorites", "data-shortcut": "f", "style": ("display: none;" if @post.is_favorited?(CurrentUser.user)), "data-pid": @post.id) %></li>
+    <li class="vpad-05"><%= tag.a("-Favorite", "href": "#", "class": "button btn-danger", "id": "remove-from-favorites", "data-shortcut": "shift+f", "style": ("display: none;" unless @post.is_favorited?(CurrentUser.user)), "data-pid": @post.id) %></li>
     <% end %>
   <% if policy(post).update? %>
     <li><%= link_to("Edit", "#edit", id: "side-edit-link") %></li>
   <% end %>
-  <li><%= link_to_if(post.visible?, "Download", post.file_url) %></li>
+  <li><%= link_to_if(post.visible?(CurrentUser.user), "Download", post.file_url(CurrentUser.user)) %></li>
   <li><%= link_to("Set as avatar", "javascript:void", id: "set-as-avatar-link", data: { post_id: post.id }) %> (<%= link_to("list", users_path(search: { avatar_id: post.id })) %>)</li>
   <% if post.has_notes? && policy(post).copy_notes? %>
     <li id="copy-all-notes-list"><%= link_to("Copy notes", "#", id: "copy-notes") %></li>
@@ -16,7 +16,7 @@
     <li><%= link_to("Replace image", new_post_replacement_path(post_id: post.id), id: "replace-image") %></li>
   <% end %>
   <% if CurrentUser.user.is_member? %>
-    <li><%= link_to("Reupload image", post.reupload_url, id: "reupload-image") %></li>
+    <li><%= link_to("Reupload image", post.reupload_url(CurrentUser.user), id: "reupload-image") %></li>
   <% end %>
   <% if post.is_status_locked? %>
     <li><span id="status-locked-notice">Status locked</span></li>

@@ -1,16 +1,23 @@
 # frozen_string_literal: true
 
 class Artist < ApplicationRecord
-  class RevertError < StandardError; end
-
   attr_accessor(:url_string_changed)
 
   array_attribute(:other_names)
 
-  belongs_to_creator
+  belongs_to_user(:creator, ip: true, clones: :updater)
+  belongs_to_user(:linked_user, optional: true)
+  resolvable(:updater)
+  resolvable(:destroyer)
+  revertible do |version|
+    self.name = version.name
+    self.url_string = version.urls.join("\n")
+    self.other_names = version.other_names
+  end
+
   before_validation(:normalize_name, unless: :destroyed?)
   before_validation(:normalize_other_names, unless: :destroyed?)
-  before_validation(:validate_protected_properties_not_changed, if: :dnp_restricted?)
+  before_validation(:validate_protected_properties_not_changed, if: -> { dnp_restricted?(updater) })
   validate(:validate_user_can_edit)
   validate(:wiki_page_not_locked)
   validate(:user_not_limited)
@@ -32,7 +39,6 @@ class Artist < ApplicationRecord
   has_one(:tag, foreign_key: "name", primary_key: "name")
   has_one(:avoid_posting, -> { active })
   has_one(:inactive_dnp, -> { deleted }, class_name: "AvoidPosting")
-  belongs_to(:linked_user, class_name: "User", optional: true)
   attribute(:notes, :string)
   delegate(:post_count, to: :tag)
 
@@ -40,23 +46,27 @@ class Artist < ApplicationRecord
   def assign_attributes(new_attributes)
     assign_first = new_attributes.extract!(:name)
     super(assign_first) unless assign_first.empty?
-    super(new_attributes)
+    super
   end
 
   def log_changes
     if saved_change_to_name? && !previously_new_record?
-      ModAction.log!(:artist_rename, self, new_name: name, old_name: name_before_last_save)
+      ModAction.log!(updater, :artist_rename, self, new_name: name, old_name: name_before_last_save)
     end
     if saved_change_to_is_locked?
-      ModAction.log!(is_locked ? :artist_lock : :artist_unlock, self)
+      ModAction.log!(updater, is_locked? ? :artist_lock : :artist_unlock, self)
     end
     if saved_change_to_linked_user_id?
       if linked_user_id.present?
-        ModAction.log!(:artist_user_link, self, user_id: linked_user_id)
+        ModAction.log!(updater, :artist_user_link, self, user_id: linked_user_id)
       else
-        ModAction.log!(:artist_user_unlink, self, user_id: linked_user_id_before_last_save)
+        ModAction.log!(updater, :artist_user_unlink, self, user_id: linked_user_id_before_last_save)
       end
     end
+  end
+
+  def log_destroy
+    ModAction.log!(destroyer, :artist_delete, self, artist_id: id, artist_name: name)
   end
 
   module UrlMethods
@@ -216,7 +226,7 @@ class Artist < ApplicationRecord
     end
 
     def url_string=(string)
-      # FIXME: This is a hack. Setting an association directly immediatly updates without regard for the parents validity.
+      # FIXME: This is a hack. Setting an association directly immediately updates without regard for the parents validity.
       # As a consequence, removing urls always works. This does not create a new ArtistVersion.
       # This fix isn't great but it's the best I came up with without rather large changes.
       return unless valid?
@@ -248,7 +258,7 @@ class Artist < ApplicationRecord
       Cache.fetch("artist-domains-#{id}", expires_in: 1.day) do
         re = /\.(png|jpeg|jpg|webp|webm|mp4)$/m
         counted = Hash.new(0)
-        sources = Post.tag_match(name, resolve_aliases: false).limit(100).pluck(:source).each do |source_string|
+        sources = Post.tag_match_system(name, resolve_aliases: false).limit(100).pluck(:source).each do |source_string|
           sources = source_string.split("\n")
           # try to filter out direct file urls
           domains = sources.filter { |s| !re.match?(s) }.map do |x|
@@ -298,26 +308,14 @@ class Artist < ApplicationRecord
 
     def create_new_version
       ArtistVersion.create(
-        artist_id:       id,
-        name:            name,
-        updater_id:      CurrentUser.id,
-        updater_ip_addr: CurrentUser.ip_addr,
-        urls:            url_array,
-        other_names:     other_names,
-        notes_changed:   saved_change_to_notes?,
-        linked_user_id:  linked_user_id,
+        artist_id:      id,
+        name:           name,
+        updater:        updater,
+        urls:           url_array,
+        other_names:    other_names,
+        notes_changed:  saved_change_to_notes?,
+        linked_user_id: linked_user_id,
       )
-    end
-
-    def revert_to!(version)
-      if id != version.artist_id
-        raise(RevertError, "You cannot revert to a previous version of another artist.")
-      end
-
-      self.name = version.name
-      self.url_string = version.urls.join("\n")
-      self.other_names = version.other_names
-      save
     end
   end
 
@@ -358,17 +356,18 @@ class Artist < ApplicationRecord
         old_page = WikiPage.titled(name_before_last_save)
         if wiki_page.nil?
           # a wiki page doesn't already exist for the new name, so rename the old one
-          old_page.update(title: name, body: @notes || old_page.body)
+          old_page.update_with(updater, title: name, body: @notes || old_page.body)
         end
       elsif wiki_page.nil?
         # if there are any notes, we need to create a new wiki page
         if @notes.present?
-          create_wiki_page(body: @notes, title: name)
+          create_wiki_page(body: @notes, title: name, creator: updater)
         end
       elsif (!@notes.nil? && (wiki_page.body != @notes)) || wiki_page.title != name
         # if anything changed, we need to update the wiki page
         wiki_page.body = @notes unless @notes.nil?
         wiki_page.title = name
+        wiki_page.updater = updater
         wiki_page.save
       end
     end
@@ -381,7 +380,7 @@ class Artist < ApplicationRecord
 
     def categorize_tag
       if new_record? || saved_change_to_name?
-        Tag.find_or_create_by_name("artist:#{name}", reason: "artist creation")
+        Tag.find_or_create_by_name("artist:#{name}", reason: "artist creation", user: updater, artist: true)
       end
     end
   end
@@ -398,7 +397,7 @@ class Artist < ApplicationRecord
     end
 
     def validate_user_can_edit
-      return if CurrentUser.is_janitor?
+      return if updater.is_janitor?
 
       if is_locked?
         errors.add(:base, "Artist is locked")
@@ -407,7 +406,7 @@ class Artist < ApplicationRecord
     end
 
     def wiki_page_not_locked
-      if @notes.present? && is_note_locked? && wiki_page&.body != @notes
+      if @notes.present? && is_note_locked?(updater) && wiki_page&.body != @notes
         errors.add(:base, "Wiki page is locked")
         throw(:abort)
       end
@@ -433,23 +432,23 @@ class Artist < ApplicationRecord
       where_like(:name, normalized_name).or(any_other_name_like(normalized_name))
     end
 
-    def url_matches(query)
+    def url_matches(query, user)
       if query =~ %r{\Ahttps?://}i
         find_artists(query)
       else
-        where(id: ArtistUrl.search(url_matches: query).select(:artist_id))
+        where(id: ArtistUrl.search({ url_matches: query }, user).select(:artist_id))
       end
     end
 
-    def any_name_or_url_matches(query)
+    def any_name_or_url_matches(query, user)
       if query =~ %r{\Ahttps?://}i
-        url_matches(query)
+        url_matches(query, user)
       else
         any_name_matches(query)
       end
     end
 
-    def search(params)
+    def search(params, user)
       q = super
 
       q = q.attribute_matches(:name, params[:name])
@@ -463,11 +462,11 @@ class Artist < ApplicationRecord
       end
 
       if params[:any_name_or_url_matches].present?
-        q = q.any_name_or_url_matches(params[:any_name_or_url_matches])
+        q = q.any_name_or_url_matches(params[:any_name_or_url_matches], user)
       end
 
       if params[:url_matches].present?
-        q = q.url_matches(params[:url_matches])
+        q = q.url_matches(params[:url_matches], user)
       end
 
       q = q.where_user(:creator_id, :creator, params)
@@ -514,8 +513,8 @@ class Artist < ApplicationRecord
       is_dnp? || inactive_dnp.present?
     end
 
-    def dnp_restricted?
-      is_dnp? && !CurrentUser.can_edit_avoid_posting_entries?
+    def dnp_restricted?(user)
+      is_dnp? && !user.can_edit_avoid_posting_entries?
     end
   end
 
@@ -540,7 +539,7 @@ class Artist < ApplicationRecord
   end
 
   def user_not_limited
-    allowed = CurrentUser.can_artist_edit_with_reason
+    allowed = updater.can_artist_edit_with_reason
     if allowed != true
       errors.add(:base, "User #{User.throttle_reason(allowed)}.")
       false
@@ -548,16 +547,12 @@ class Artist < ApplicationRecord
     true
   end
 
-  def is_note_locked?
-    wiki_page.try(:is_restricted?) || false
+  def is_note_locked?(user)
+    wiki_page.try(:is_restricted?, user) || false
   end
 
   def update_posts_index
     Post.tag_match_system(name).each(&:update_index)
-  end
-
-  def log_destroy
-    ModAction.log!(:artist_delete, self, artist_id: id, artist_name: name)
   end
 
   def self.available_includes

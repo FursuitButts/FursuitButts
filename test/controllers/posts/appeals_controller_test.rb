@@ -8,7 +8,6 @@ module Posts
       setup do
         @admin = create(:admin_user)
         @appeal = create(:post_appeal)
-        CurrentUser.user = @admin
         @post = create(:post, is_deleted: true)
       end
 

@@ -7,9 +7,9 @@
       <% if @avoid_posting.linked_user_id && @avoid_posting.linked_user %>
         <li><strong>User</strong> <%= link_to_user(@avoid_posting.linked_user) %></li>
       <% end %>
-      <li><strong>Created</strong> <%= compact_time(@avoid_posting.created_at) %> by <%= link_to_user(@avoid_posting.creator) %><% if CurrentUser.is_admin? %> (<%= link_to_ip(@avoid_posting.creator_ip_addr) %>)<% end %></li>
+      <li><strong>Created</strong> <%= compact_time(@avoid_posting.created_at) %> by <%= link_to_user(@avoid_posting.creator) %><% if CurrentUser.user.is_admin? %> (<%= link_to_ip(@avoid_posting.creator_ip_addr) %>)<% end %></li>
       <% if @avoid_posting.updater.present? %>
-        <li><strong>Updated</strong> <%= compact_time(@avoid_posting.updated_at) %> by <%= link_to_user(@avoid_posting.updater) %><% if CurrentUser.is_admin? %> (<%= link_to_ip(@avoid_posting.updater_ip_addr) %>)<% end %></li>
+        <li><strong>Updated</strong> <%= compact_time(@avoid_posting.updated_at) %> by <%= link_to_user(@avoid_posting.updater) %><% if CurrentUser.user.is_admin? %> (<%= link_to_ip(@avoid_posting.updater_ip_addr) %>)<% end %></li>
       <% end %>
       <% if @avoid_posting.other_names.present? %>
         <li><strong>Other Names</strong> <%= link_to_artists(@avoid_posting.other_names) %></li>

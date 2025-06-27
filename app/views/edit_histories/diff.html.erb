@@ -1,5 +1,5 @@
 <%= @thisversion.html_title(self) %>
-<p>Showing differences between <%= link_to(compact_time(@otherversion.updated_at), edit_history_path(@otherversion.versionable_id, page: @otherversion.page, type: @otherversion.versionable_type, anchor: "edit-#{@otherversion.id}")) %> (<%= link_to_user(@otherversion.user) %>) and <%= link_to(compact_time(@thisversion.updated_at), edit_history_path(@thisversion.versionable_id, page: @thisversion.page, type: @thisversion.versionable_type, anchor: "edit-#{@thisversion.id}")) %> (<%= link_to_user(@thisversion.user) %>)</p>
+<p>Showing differences between <%= link_to(compact_time(@otherversion.updated_at), edit_history_path(@otherversion.versionable_id, page: @otherversion.page, type: @otherversion.versionable_type, anchor: "edit-#{@otherversion.id}")) %> (<%= link_to_user(@otherversion.user) %>) and <%= link_to(compact_time(@thisversion.updated_at), edit_history_path(@thisversion.versionable_id, page: @thisversion.page, type: @thisversion.versionable_type, anchor: "edit-#{@thisversion.id}")) %> (<%= link_to_user(@thisversion.updater) %>)</p>
 
 <div class="diff">
 <%= text_diff(@otherversion.body, @thisversion.body) %>

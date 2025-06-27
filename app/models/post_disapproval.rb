@@ -2,28 +2,23 @@
 
 class PostDisapproval < ApplicationRecord
   belongs_to(:post)
-  belongs_to(:user)
-  after_initialize(:initialize_attributes, if: :new_record?)
+  belongs_to_user(:user, ip: true)
   validates(:post_id, uniqueness: { scope: %i[user_id], message: "have already hidden this post" })
   validates(:reason, inclusion: { in: %w[borderline_quality borderline_relevancy other] })
   validates(:message, length: { maximum: FemboyFans.config.disapproval_message_max_size })
 
-  scope(:with_message, -> { where("message is not null and message <> ''") })
-  scope(:without_message, -> { where("message is null or message = ''") })
+  scope(:with_message, -> { where.not(message: [nil, ""]) })
+  scope(:without_message, -> { where(message: [nil, ""]) })
   scope(:poor_quality, -> { where(reason: "borderline_quality") })
   scope(:not_relevant, -> { where(reason: "borderline_relevancy") })
   after_save(:update_post_index)
 
-  def initialize_attributes
-    self.user_id ||= CurrentUser.user.id
-  end
-
   module SearchMethods
-    def post_tags_match(query)
-      where(post_id: Post.tag_match_sql(query))
+    def post_tags_match(query, user)
+      where(post_id: Post.tag_match_sql(query, user))
     end
 
-    def search(params)
+    def search(params, user)
       q = super
 
       q = q.where_user(:user_id, :creator, params)
@@ -31,7 +26,7 @@ class PostDisapproval < ApplicationRecord
       q = q.attribute_matches(:post_id, params[:post_id])
       q = q.attribute_matches(:message, params[:message])
 
-      q = q.post_tags_match(params[:post_tags_match]) if params[:post_tags_match].present?
+      q = q.post_tags_match(params[:post_tags_match], user) if params[:post_tags_match].present?
       q = q.where(reason: params[:reason]) if params[:reason].present?
 
       q = q.with_message if params[:has_message].to_s.truthy?
@@ -58,7 +53,7 @@ class PostDisapproval < ApplicationRecord
     %i[post user]
   end
 
-  def visible?(user = CurrentUser.user)
+  def visible?(user)
     user.is_approver?
   end
 end

@@ -2,8 +2,8 @@
 
 module BulkUpdateRequestsHelper
   def script_with_line_breaks(bur, with_decorations:)
-    cache_key = "#{CurrentUser.is_admin? ? 'mod:' : ''}#{with_decorations ? 'color:' : ''}#{bur.updated_at.utc.iso8601}"
-    Cache.fetch(cache_key, expires_in: 1.second) do
+    cache_key = "#{'mod:' if CurrentUser.user.is_admin?}#{'color:' if with_decorations}#{bur.updated_at.utc.iso8601}"
+    Cache.fetch(cache_key, expires_in: 1.hour) do
       processor = bur.processor
       commands = processor.commands
       script_tags = Tag.find_by_name_list(processor.tags)

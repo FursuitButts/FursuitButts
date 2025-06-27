@@ -9,7 +9,6 @@ class MentionsTest < ActiveSupport::TestCase
       @user2 = create(:user)
       @user3 = create(:user)
       @admin = create(:admin_user)
-      CurrentUser.user = @user
     end
 
     context("in a comment") do
@@ -118,10 +117,8 @@ class MentionsTest < ActiveSupport::TestCase
         should("not create a notification if edited by someone other than the creator") do
           @comment = create(:comment, creator: @user, body: "hello")
           assert_equal([], @comment.notified_mentions)
-          as(@admin) do
-            assert_no_difference("Notification.count") do
-              @comment.update!(body: "hello @#{@user2.name}")
-            end
+          assert_no_difference("Notification.count") do
+            @comment.update!(body: "hello @#{@user2.name}", updater: @admin)
           end
           assert_equal([], @comment.notified_mentions)
         end
@@ -239,10 +236,8 @@ class MentionsTest < ActiveSupport::TestCase
       should("not create a notification if edited by someone other than the creator") do
         @forum_post = create(:forum_post, creator: @user, body: "hello", topic: @topic)
         assert_equal([], @forum_post.notified_mentions)
-        as(@admin) do
-          assert_no_difference("Notification.count") do
-            @forum_post.update!(body: "hello @#{@user2.name}")
-          end
+        assert_no_difference("Notification.count") do
+          @forum_post.update!(body: "hello @#{@user2.name}", updater: @admin)
         end
         assert_equal([], @forum_post.notified_mentions)
       end

@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require("test_helper")
+
 class TagAliasTest < ActiveSupport::TestCase
   def assert_undo_data(tag_alias, name, **values)
     tag_alias.reload
@@ -13,7 +15,6 @@ class TagAliasTest < ActiveSupport::TestCase
       @admin = create(:admin_user)
 
       @user = create(:user, created_at: 1.month.ago)
-      CurrentUser.user = @user
     end
 
     context("on validation") do
@@ -69,10 +70,10 @@ class TagAliasTest < ActiveSupport::TestCase
       setup do
         @mod = create(:moderator_user)
         @owner = create(:owner_user)
-        @ta = as(@user) { create(:tag_alias, status: "pending") }
-        @dnp = as(@owner) { create(:avoid_posting) }
-        @ta2 = as(@user) { create(:tag_alias, antecedent_name: @dnp.artist_name, consequent_name: "ccc", status: "pending") }
-        @ta3 = as(@user) { create(:tag_alias, antecedent_name: "ddd", consequent_name: @dnp.artist_name, status: "pending") }
+        @ta = create(:tag_alias, status: "pending", creator: @user)
+        @dnp = create(:avoid_posting, creator: @owner)
+        @ta2 = create(:tag_alias, antecedent_name: @dnp.artist_name, consequent_name: "ccc", status: "pending", creator: @user)
+        @ta3 = create(:tag_alias, antecedent_name: "ddd", consequent_name: @dnp.artist_name, status: "pending", creator: @user)
       end
 
       should("not allow creator") do
@@ -102,7 +103,7 @@ class TagAliasTest < ActiveSupport::TestCase
       setup do
         @user = create(:user)
         @mod = create(:moderator_user)
-        @ta = as(@user) { create(:tag_alias, status: "pending") }
+        @ta = create(:tag_alias, status: "pending", creator: @user)
       end
 
       should("allow creator") do
@@ -119,8 +120,8 @@ class TagAliasTest < ActiveSupport::TestCase
     end
 
     should("populate the creator information") do
-      ta = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb")
-      assert_equal(CurrentUser.user.id, ta.creator_id)
+      ta = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", creator: @user)
+      assert_equal(@user.id, ta.creator_id)
     end
 
     should("convert a tag to its normalized version") do
@@ -142,8 +143,8 @@ class TagAliasTest < ActiveSupport::TestCase
       ta2 = create(:tag_alias, antecedent_name: "eee", consequent_name: "fff")
       assert_difference("PostVersion.count", 2) do
         with_inline_jobs do
-          ta.approve!(approver: @admin)
-          ta2.approve!(approver: @admin)
+          ta.approve!(@admin)
+          ta2.approve!(@admin)
         end
       end
 
@@ -155,7 +156,7 @@ class TagAliasTest < ActiveSupport::TestCase
     should("not validate for transitive relations") do
       create(:tag_alias, antecedent_name: "bbb", consequent_name: "ccc")
       assert_difference("TagAlias.count", 0) do
-        ta2 = build(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb")
+        ta2 = build(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", creator: @user)
         ta2.save
         assert(ta2.errors.any?, "Tag alias should be invalid")
         assert_equal("A tag alias for bbb already exists", ta2.errors.full_messages.join)
@@ -166,8 +167,8 @@ class TagAliasTest < ActiveSupport::TestCase
       ta1 = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", status: "pending")
       ta2 = create(:tag_alias, antecedent_name: "bbb", consequent_name: "ccc", status: "pending")
       with_inline_jobs do
-        ta1.approve!(approver: @admin)
-        ta2.approve!(approver: @admin)
+        ta1.approve!(@admin)
+        ta2.approve!(@admin)
       end
 
       assert_equal("ccc", ta1.reload.consequent_name)
@@ -177,7 +178,7 @@ class TagAliasTest < ActiveSupport::TestCase
     should("move existing implications") do
       ti = create(:tag_implication, antecedent_name: "aaa", consequent_name: "bbb")
       ta = create(:tag_alias, antecedent_name: "bbb", consequent_name: "ccc")
-      with_inline_jobs { ta.approve!(approver: @admin) }
+      with_inline_jobs { ta.approve!(@admin) }
 
       assert_equal("ccc", ti.reload.consequent_name)
       assert_undo_data(ta, :update_tag_implication_consequent_name, id: ti.id, old: "bbb", new: "ccc")
@@ -196,7 +197,7 @@ class TagAliasTest < ActiveSupport::TestCase
       create(:artist_tag, name: "aaa")
       tag2 = create(:copyright_tag, name: "bbb")
       ta = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb")
-      with_inline_jobs { ta.approve!(approver: @admin) }
+      with_inline_jobs { ta.approve!(@admin) }
 
       assert_equal(TagCategory.copyright, tag2.reload.category)
       assert_not_includes(ta.reload.undo_data.map(&:first), "update_tag_category")
@@ -207,7 +208,7 @@ class TagAliasTest < ActiveSupport::TestCase
       tag2 = create(:tag, name: "bbb")
       old = tag2.category
       ta = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb")
-      with_inline_jobs { ta.approve!(approver: @admin) }
+      with_inline_jobs { ta.approve!(@admin) }
 
       assert_equal(TagCategory.artist, tag2.reload.category)
       assert_equal("alias ##{ta.id} (aaa -> bbb)", TagVersion.last.reason)
@@ -218,17 +219,17 @@ class TagAliasTest < ActiveSupport::TestCase
       create(:artist_tag, name: "aaa")
       tag2 = create(:copyright_tag, name: "bbb", is_locked: true)
       ta = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb")
-      with_inline_jobs { ta.approve!(approver: @admin) }
+      with_inline_jobs { ta.approve!(@admin) }
 
       assert_equal(TagCategory.copyright, tag2.reload.category)
       assert_not_includes(ta.reload.undo_data.map(&:first), "update_tag_category")
     end
 
     should("update artist name") do
-      artist = as(@admin) { create(:artist, name: "aaa") }
+      artist = create(:artist, name: "aaa")
       ta = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb")
       Tag.find_by!(name: "bbb").update(category: TagCategory.artist) # avoid the category being carried down
-      with_inline_jobs { ta.approve!(approver: @admin) }
+      with_inline_jobs { ta.approve!(@admin) }
 
       assert_equal("bbb", artist.reload.name)
       assert_undo_data(ta, :update_artist_name, id: artist.id, old: "aaa", new: "bbb")
@@ -236,11 +237,11 @@ class TagAliasTest < ActiveSupport::TestCase
 
     should("not fail if an artist with the same name is locked") do
       ta = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb")
-      artist = as(@admin) { create(:artist, name: "aaa", is_locked: true) }
+      artist = create(:artist, name: "aaa", is_locked: true, creator: @admin)
       Tag.find_by!(name: "bbb").update(category: TagCategory.artist) # avoid the category being carried down
       artist.tag.update(category: TagCategory.artist)
 
-      with_inline_jobs { ta.approve!(approver: @admin) }
+      with_inline_jobs { ta.approve!(@admin) }
 
       assert_equal("active", ta.reload.status)
       assert_equal("bbb", artist.reload.name)
@@ -250,7 +251,7 @@ class TagAliasTest < ActiveSupport::TestCase
     should("update wiki page title") do
       wiki = create(:wiki_page, title: "aaa")
       ta = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb")
-      with_inline_jobs { ta.approve!(approver: @admin) }
+      with_inline_jobs { ta.approve!(@admin) }
 
       assert_equal("bbb", wiki.reload.title)
       assert_undo_data(ta, :update_wiki_page_title, id: wiki.id, old: "aaa", new: "bbb")
@@ -260,7 +261,7 @@ class TagAliasTest < ActiveSupport::TestCase
       create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", status: "active")
       ta = build(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", status: "pending", creator: @admin)
       ta.save(validate: false)
-      with_inline_jobs { ta.approve!(approver: @admin) }
+      with_inline_jobs { ta.approve!(@admin) }
 
       assert_match("error", ta.reload.status)
     end
@@ -269,7 +270,7 @@ class TagAliasTest < ActiveSupport::TestCase
       create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", status: "active")
       ta = build(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", status: "pending", creator: @admin)
       ta.save(validate: false)
-      ta.reject!
+      ta.reject!(@admin)
 
       assert_equal("deleted", ta.reload.status)
     end
@@ -278,7 +279,7 @@ class TagAliasTest < ActiveSupport::TestCase
       create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", status: "active")
       ta = build(:tag_alias, antecedent_name: "bbb", consequent_name: "aaa", status: "pending", creator: @admin)
       ta.save(validate: false)
-      ta.reject!
+      ta.reject!(@admin)
 
       assert_equal("deleted", ta.reload.status)
     end
@@ -287,7 +288,7 @@ class TagAliasTest < ActiveSupport::TestCase
       ta = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", status: "pending")
       post1 = create(:post, locked_tags: "aaa foo")
       post2 = create(:post, locked_tags: "-aaa foo")
-      with_inline_jobs { ta.approve!(approver: @admin) }
+      with_inline_jobs { ta.approve!(@admin) }
 
       ta.reload
       assert_equal("bbb foo", post1.reload.locked_tags)
@@ -299,7 +300,7 @@ class TagAliasTest < ActiveSupport::TestCase
     should("update blacklists when approved") do
       ta = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", status: "pending")
       user = create(:user, blacklisted_tags: "foo aaa bar")
-      with_inline_jobs { ta.approve!(approver: @admin) }
+      with_inline_jobs { ta.approve!(@admin) }
       assert_equal("foo bbb bar", user.reload.blacklisted_tags)
       assert_undo_data(ta, :update_blacklists, old: "aaa", new: "bbb")
     end
@@ -307,7 +308,7 @@ class TagAliasTest < ActiveSupport::TestCase
     should("rewrite wiki page body links") do
       ta = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", status: "pending")
       wiki = create(:wiki_page, body: "abc [[aaa]] def\nghi")
-      with_inline_jobs { ta.approve!(approver: @admin) }
+      with_inline_jobs { ta.approve!(@admin) }
       wiki.reload
       assert_equal("abc [[bbb]] def\nghi", wiki.body)
       assert_undo_data(ta, :update_wiki_page_body, id: wiki.id, old: "aaa", new: "bbb")
@@ -316,7 +317,7 @@ class TagAliasTest < ActiveSupport::TestCase
     should("rewrite pool description links") do
       ta = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", status: "pending")
       pool = create(:pool, description: "abc [[aaa]] def\nghi")
-      with_inline_jobs { ta.approve!(approver: @admin) }
+      with_inline_jobs { ta.approve!(@admin) }
       pool.reload
       assert_equal("abc [[bbb]] def\nghi", pool.description)
       assert_undo_data(ta, :update_pool_description, id: pool.id, old: "aaa", new: "bbb")
@@ -325,7 +326,7 @@ class TagAliasTest < ActiveSupport::TestCase
     should("update tag followers") do
       ta = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", status: "pending")
       follower = create(:tag_follower, tag: Tag.find_by(name: "aaa"))
-      with_inline_jobs { ta.approve!(approver: @admin) }
+      with_inline_jobs { ta.approve!(@admin) }
       follower.reload
       assert_equal("bbb", follower.tag_name)
       assert_undo_data(ta, :update_tag_follower, id: follower.id, old: "aaa", new: "bbb")
@@ -334,35 +335,33 @@ class TagAliasTest < ActiveSupport::TestCase
     context("with an associated forum topic") do
       setup do
         @admin = create(:admin_user)
-        as(@admin) do
-          @topic = create(:forum_topic, title: TagAliasRequest.topic_title("aaa", "bbb"))
-          @post = create(:forum_post, topic_id: @topic.id, body: "Reason: test")
-          @alias = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", forum_topic: @topic, forum_post: @post, status: "pending")
-        end
+        @topic = create(:forum_topic, title: TagAliasRequest.topic_title("aaa", "bbb"))
+        @post = create(:forum_post, topic_id: @topic.id, body: "Reason: test")
+        @alias = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", forum_topic: @topic, forum_post: @post, status: "pending")
       end
 
       should("update the topic when processed") do
         assert_difference("ForumPost.count") do
-          with_inline_jobs { @alias.approve!(approver: @admin) }
+          with_inline_jobs { @alias.approve!(@admin) }
         end
       end
 
       should("update the parent post") do
         previous = @post.body
-        with_inline_jobs { @alias.approve!(approver: @admin) }
+        with_inline_jobs { @alias.approve!(@admin) }
         @post.reload
         assert_not_equal(previous, @post.body)
       end
 
       should("update the topic when rejected") do
         assert_difference("ForumPost.count") do
-          @alias.reject!
+          @alias.reject!(@admin)
         end
       end
 
       should("update the topic when failed") do
         TagMover.any_instance.stubs(:update_blacklists!).raises(Exception, "oh no")
-        with_inline_jobs { @alias.approve!(approver: @admin) }
+        with_inline_jobs { @alias.approve!(@admin) }
         @topic.reload
         @alias.reload
 
@@ -377,10 +376,10 @@ class TagAliasTest < ActiveSupport::TestCase
         create(:tag, name: "aaa", category: TagCategory.copyright)
         tag = create(:tag, name: "bbb")
         ta = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", status: "pending")
-        with_inline_jobs { ta.approve!(approver: @admin) }
+        with_inline_jobs { ta.approve!(@admin) }
         assert_equal(TagCategory.copyright, tag.reload.category)
         assert_not_equal([], ta.reload.undo_data)
-        with_inline_jobs { ta.undo!(user: @admin) }
+        with_inline_jobs { ta.undo!(@admin) }
         assert_equal(TagCategory.general, tag.reload.category)
         assert_equal([], ta.reload.undo_data)
       end
@@ -388,10 +387,10 @@ class TagAliasTest < ActiveSupport::TestCase
       should("undo update_artist_name") do
         artist = create(:artist, name: "aaa")
         ta = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", status: "pending")
-        with_inline_jobs { ta.approve!(approver: @admin) }
+        with_inline_jobs { ta.approve!(@admin) }
         assert_equal("bbb", artist.reload.name)
         assert_not_equal([], ta.reload.undo_data)
-        with_inline_jobs { ta.undo!(user: @admin) }
+        with_inline_jobs { ta.undo!(@admin) }
         assert_equal("aaa", artist.reload.name)
         assert_equal([], ta.reload.undo_data)
       end
@@ -399,10 +398,10 @@ class TagAliasTest < ActiveSupport::TestCase
       should("undo update_wiki_page_title") do
         wiki = create(:wiki_page, title: "aaa")
         ta = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", status: "pending")
-        with_inline_jobs { ta.approve!(approver: @admin) }
+        with_inline_jobs { ta.approve!(@admin) }
         assert_equal("bbb", wiki.reload.title)
         assert_not_equal([], ta.reload.undo_data)
-        with_inline_jobs { ta.undo!(user: @admin) }
+        with_inline_jobs { ta.undo!(@admin) }
         assert_equal("aaa", wiki.reload.title)
         assert_equal([], ta.reload.undo_data)
       end
@@ -410,10 +409,10 @@ class TagAliasTest < ActiveSupport::TestCase
       should("undo update_post_tags") do
         post = create(:post, tag_string: "aaa")
         ta = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", status: "pending")
-        with_inline_jobs { ta.approve!(approver: @admin) }
+        with_inline_jobs { ta.approve!(@admin) }
         assert_equal("bbb", post.reload.tag_string)
         assert_not_equal([], ta.reload.undo_data)
-        with_inline_jobs { ta.undo!(user: @admin) }
+        with_inline_jobs { ta.undo!(@admin) }
         assert_equal("aaa", post.reload.tag_string)
         assert_equal([], ta.reload.undo_data)
       end
@@ -422,11 +421,11 @@ class TagAliasTest < ActiveSupport::TestCase
         post1 = create(:post, locked_tags: "aaa ccc")
         post2 = create(:post, locked_tags: "-aaa ccc")
         ta = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", status: "pending")
-        with_inline_jobs { ta.approve!(approver: @admin) }
+        with_inline_jobs { ta.approve!(@admin) }
         assert_equal("bbb ccc", post1.reload.locked_tags)
         assert_equal("-bbb ccc", post2.reload.locked_tags)
         assert_not_equal([], ta.reload.undo_data)
-        with_inline_jobs { ta.undo!(user: @admin) }
+        with_inline_jobs { ta.undo!(@admin) }
         assert_equal("aaa ccc", post1.reload.locked_tags)
         assert_equal("-aaa ccc", post2.reload.locked_tags)
         assert_equal([], ta.reload.undo_data)
@@ -436,29 +435,29 @@ class TagAliasTest < ActiveSupport::TestCase
         ta1 = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", status: "pending")
         ta2 = create(:tag_alias, antecedent_name: "bbb", consequent_name: "ccc", status: "pending")
         with_inline_jobs do
-          ta1.approve!(approver: @admin)
-          ta2.approve!(approver: @admin)
+          ta1.approve!(@admin)
+          ta2.approve!(@admin)
         end
         assert_equal("ccc", ta1.reload.consequent_name)
         assert_not_equal([], ta2.reload.undo_data)
-        with_inline_jobs { ta2.undo!(user: @admin) }
+        with_inline_jobs { ta2.undo!(@admin) }
         assert_equal("bbb", ta1.reload.consequent_name)
         assert_equal([], ta2.reload.undo_data)
       end
 
       should("undo destroy_tag_alias") do
-        skip # TODO: might not be naturally possible?
+        skip("might not be naturally possible?") # TODO
       end
 
       should("undo update_tag_implication_antecedent_name") do
         ti = create(:tag_implication, antecedent_name: "aaa", consequent_name: "bbb")
         ta = create(:tag_alias, antecedent_name: "aaa", consequent_name: "ccc", status: "pending")
         with_inline_jobs do
-          ta.approve!(approver: @admin)
+          ta.approve!(@admin)
         end
         assert_equal("ccc", ti.reload.antecedent_name)
         assert_not_equal([], ta.reload.undo_data)
-        with_inline_jobs { ta.undo!(user: @admin) }
+        with_inline_jobs { ta.undo!(@admin) }
         assert_equal("aaa", ti.reload.antecedent_name)
         assert_equal([], ta.reload.undo_data)
       end
@@ -467,28 +466,28 @@ class TagAliasTest < ActiveSupport::TestCase
         ti = create(:tag_implication, antecedent_name: "aaa", consequent_name: "bbb")
         ta = create(:tag_alias, antecedent_name: "bbb", consequent_name: "ccc", status: "pending")
         with_inline_jobs do
-          ta.approve!(approver: @admin)
+          ta.approve!(@admin)
         end
         assert_equal("ccc", ti.reload.consequent_name)
         assert_not_equal([], ta.reload.undo_data)
-        with_inline_jobs { ta.undo!(user: @admin) }
+        with_inline_jobs { ta.undo!(@admin) }
         assert_equal("bbb", ti.reload.consequent_name)
         assert_equal([], ta.reload.undo_data)
       end
 
       should("undo destroy_tag_implication") do
-        skip # TODO: might not be naturally possible?`
+        skip(": might not be naturally possible?") # TODO
       end
 
       should("undo update_blacklists") do
         user = create(:user, blacklisted_tags: "abc aaa def\nghi")
         ta = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", status: "pending")
         with_inline_jobs do
-          ta.approve!(approver: @admin)
+          ta.approve!(@admin)
         end
         assert_equal("abc bbb def\nghi", user.reload.blacklisted_tags)
         assert_not_equal([], ta.reload.undo_data)
-        with_inline_jobs { ta.undo!(user: @admin) }
+        with_inline_jobs { ta.undo!(@admin) }
         assert_equal("abc aaa def\nghi", user.reload.blacklisted_tags)
         assert_equal([], ta.reload.undo_data)
       end
@@ -497,11 +496,11 @@ class TagAliasTest < ActiveSupport::TestCase
         wiki = create(:wiki_page, body: "abc [[aaa]] def\nghi")
         ta = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", status: "pending")
         with_inline_jobs do
-          ta.approve!(approver: @admin)
+          ta.approve!(@admin)
         end
         assert_equal("abc [[bbb]] def\nghi", wiki.reload.body)
         assert_not_equal([], ta.reload.undo_data)
-        with_inline_jobs { ta.undo!(user: @admin) }
+        with_inline_jobs { ta.undo!(@admin) }
         assert_equal("abc [[aaa]] def\nghi", wiki.reload.body)
         assert_equal([], ta.reload.undo_data)
       end
@@ -510,11 +509,11 @@ class TagAliasTest < ActiveSupport::TestCase
         pool = create(:pool, description: "abc [[aaa]] def\nghi")
         ta = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", status: "pending")
         with_inline_jobs do
-          ta.approve!(approver: @admin)
+          ta.approve!(@admin)
         end
         assert_equal("abc [[bbb]] def\nghi", pool.reload.description)
         assert_not_equal([], ta.reload.undo_data)
-        with_inline_jobs { ta.undo!(user: @admin) }
+        with_inline_jobs { ta.undo!(@admin) }
         assert_equal("abc [[aaa]] def\nghi", pool.reload.description)
         assert_equal([], ta.reload.undo_data)
       end
@@ -523,11 +522,11 @@ class TagAliasTest < ActiveSupport::TestCase
         follower = create(:tag_follower, tag: create(:tag, name: "aaa"))
         ta = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", status: "pending")
         with_inline_jobs do
-          ta.approve!(approver: @admin)
+          ta.approve!(@admin)
         end
         assert_equal("bbb", follower.reload.tag_name)
         assert_not_equal([], ta.reload.undo_data)
-        with_inline_jobs { ta.undo!(user: @admin) }
+        with_inline_jobs { ta.undo!(@admin) }
         assert_equal("aaa", follower.reload.tag_name)
         assert_equal([], ta.reload.undo_data)
       end

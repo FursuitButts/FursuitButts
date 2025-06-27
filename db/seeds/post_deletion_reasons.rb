@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module PostDeletionReasons
-  def self.run!
+  def self.run!(user = User.system)
     [
       "Inferior version/duplicate of post #%PARENT_ID%",
       "Previously deleted (post #%PARENT_ID%)",
@@ -39,7 +39,7 @@ module PostDeletionReasons
         data = { reason: data }
       end
 
-      PostDeletionReason.find_or_create_by!(**data, order: index + 1)
+      PostDeletionReason.find_or_create_by!(**data, order: index + 1, creator: user.resolvable)
     end
   end
 end

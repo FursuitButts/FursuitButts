@@ -1,11 +1,9 @@
 # frozen_string_literal: true
 
 class NotifyExpungedMediaAssetReuploadJob < ApplicationJob
-  queue_as(:default)
+  queue_as(:high)
 
   def perform(user, text)
-    CurrentUser.as_system do
-      Ticket.create!(model: user, reason: text).push_pubsub("create")
-    end
+    Ticket.create!(model: user.resolve, reason: text, creator: User.system, creator_ip_addr: "127.0.0.1").push_pubsub("create")
   end
 end

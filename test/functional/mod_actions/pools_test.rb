@@ -10,12 +10,12 @@ module ModActions
 
     context("mod actions for pools") do
       setup do
-        @pool = create(:pool)
+        @pool = create(:pool, creator: @admin)
         set_count!
       end
 
       should("format pool_delete correctly") do
-        @pool.destroy
+        @pool.destroy_with(@admin)
 
         assert_matches(
           actions:   %w[pool_delete],

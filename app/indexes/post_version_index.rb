@@ -46,8 +46,8 @@ module PostVersionIndex
   module ClassMethods
     def import(options = {})
       q = all
-      q = q.where("id >= ?", options[:from]) if options[:from]
-      q = q.where("id <= ?", options[:to]) if options[:to]
+      q = q.where(id: (options[:from])..) if options[:from]
+      q = q.where(id: ..(options[:to])) if options[:to]
       q = q.where(options[:query]) if options[:query]
       q.find_in_batches(batch_size: 10_000) do |batch|
         batch.map! do |pv|

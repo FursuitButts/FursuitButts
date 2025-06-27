@@ -74,4 +74,9 @@ class ForumPostPolicy < ApplicationPolicy
   def html_data_attributes
     super + %i[topic]
   end
+
+  def visible_for_search(relation)
+    q = super
+    q.active(user).permitted(user)
+  end
 end

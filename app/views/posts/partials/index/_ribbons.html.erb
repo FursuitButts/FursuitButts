@@ -1,6 +1,6 @@
 <div class="ribbons">
   <% if post.parent_id.present? %>
-    <% if post.has_visible_children? %>
+    <% if post.has_visible_children?(CurrentUser.user) %>
       <div class="ribbon left has-parent has-children" title="Has Parent\nHas Children">
         <span></span>
       </div>
@@ -9,7 +9,7 @@
         <span></span>
       </div>
     <% end %>
-  <% elsif post.has_visible_children? %>
+  <% elsif post.has_visible_children?(CurrentUser.user) %>
     <div class="ribbon left has-children" title="Has Children">
       <span></span>
     </div>

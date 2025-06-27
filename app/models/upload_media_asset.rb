@@ -9,6 +9,7 @@ class UploadMediaAsset < MediaAssetWithVariants
   # this is really ugly and it sucks, but it seems to work
   after_finalize(:create_post, if: :file_later?)
   after_finalize(:regenerate_image_variants_and_data!, if: :file_later?)
+  # noinspection RubyArgCount
   after_finalize(:regenerate_video_variants, if: -> { file_later? && is_video? })
   after_create(:create_post, if: :file_now?)
   after_create(-> {
@@ -145,7 +146,7 @@ class UploadMediaAsset < MediaAssetWithVariants
   end
 
   module SearchMethods
-    def search(params)
+    def search(params, user)
       q = super
       q = q.joins(:post).where("posts.id": params[:post_id]) if params[:post_id].present?
       q = q.joins(:upload).where("uploads.id": params[:upload_id]) if params[:upload_id].present?
@@ -223,38 +224,6 @@ class UploadMediaAsset < MediaAssetWithVariants
     return true if is_video?
     return false if is_gif? || is_animated_png?
     is_image? && image_width.present? && image_width > FemboyFans.config.large_image_width
-  end
-
-  # reset to an empty shell, for use with replacements
-  def reset
-    self.status = "pending"
-    self.checksum = nil
-    self.md5 = nil
-    self.file_ext = nil
-    self.file_size = nil
-    self.image_width = nil
-    self.image_height = nil
-    self.duration = nil
-    self.framecount = nil
-    self.pixel_hash = nil
-    self.last_chunk_id = 0
-    self.generated_variants = []
-    self.variants_data = []
-  end
-
-  def replace_file(file, checksum)
-    reset
-    self.checksum = checksum
-    self.is_replacement = true
-    append_all!(file, save: false)
-    regenerate_image_variants!
-    update_variants_partial_data(image_variants.without(original))
-    save!
-    post&.update_iqdb_async
-    post&.update_index
-    self.is_replacement = false
-    regenerate_video_variants if is_video?
-    md5 == checksum
   end
 
   def self.available_includes

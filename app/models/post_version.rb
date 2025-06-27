@@ -4,7 +4,7 @@ class PostVersion < ApplicationRecord
   class UndoError < StandardError; end
   class MergeError < StandardError; end
   belongs_to(:post)
-  belongs_to_updater(counter_cache: "post_update_count")
+  belongs_to_user(:updater, ip: true, counter_cache: "post_update_count")
 
   before_validation(:fill_version, on: :create)
   before_validation(:fill_changes, on: :create)
@@ -18,8 +18,8 @@ class PostVersion < ApplicationRecord
       end
     end
 
-    def search(params)
-      ElasticPostVersionQueryBuilder.new(params).search
+    def search(params, user)
+      ElasticPostVersionQueryBuilder.new(params, user).search
     end
   end
 
@@ -27,23 +27,22 @@ class PostVersion < ApplicationRecord
   include(DocumentStore::Model)
   include(PostVersionIndex)
 
-  def self.queue(post)
+  def self.queue(post, updater)
     create({
-      post_id:         post.id,
-      rating:          post.rating,
-      parent_id:       post.parent_id,
-      source:          post.source,
-      updater_id:      CurrentUser.id,
-      updater_ip_addr: CurrentUser.ip_addr,
-      tags:            post.tag_string,
-      original_tags:   post.tag_string_before_parse || "",
-      locked_tags:     post.locked_tags,
-      description:     post.description,
-      reason:          post.edit_reason,
+      post_id:       post.id,
+      rating:        post.rating,
+      parent_id:     post.parent_id,
+      source:        post.source,
+      updater:       updater,
+      tags:          post.tag_string,
+      original_tags: post.tag_string_before_parse || "",
+      locked_tags:   post.locked_tags,
+      description:   post.description,
+      reason:        post.edit_reason,
     })
   end
 
-  def self.merge(version, post, updater = CurrentUser.user)
+  def self.merge(version, post, updater)
     raise(MergeError, "Attempted to merge post ##{post.id} into its first version (#{version.id})") if version.first?
     raise(MergeError, "Attempted to merge post ##{post.id} into non-basic post version ##{version.id}") unless version.basic?
     raise(MergeError, "Attempted to merge post ##{post.id} into post version ##{version.id} created by different updater (#{version.updater_id}/#{updater.id})") unless version.updater_id == updater.id
@@ -124,14 +123,14 @@ class PostVersion < ApplicationRecord
 
     # HACK: if all the post versions for this post have already been preloaded,
     # we can use that to avoid a SQL query.
-    if association(:post).loaded? && post && post.association(:versions).loaded?
+    if association(:post).loaded? && post&.association(:versions)&.loaded?
       @previous = post.versions.sort_by(&:version).reverse.find { |v| v.version < version }
     else
       @previous = PostVersion.where("post_id = ? and version < ?", post_id, version).order("version desc").first
     end
   end
 
-  def visible?(user = CurrentUser.user)
+  def visible?(user)
     post.try(:visible?, user) || false
   end
 
@@ -243,8 +242,10 @@ class PostVersion < ApplicationRecord
     @changes = delta
   end
 
-  def undo
+  def undo(user)
     raise(UndoError, "Version 1 is not undoable") unless undoable?
+
+    post.updater = user
 
     if description_changed
       post.description = previous.description
@@ -278,8 +279,8 @@ class PostVersion < ApplicationRecord
     post.edit_reason = "Undo of version #{version}"
   end
 
-  def undo!
-    undo
+  def undo!(user)
+    undo(user)
     post.save!
   end
 

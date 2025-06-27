@@ -13,7 +13,7 @@
 <% end %>
 
 <meta name="current-user-name" content="<%= CurrentUser.name %>">
-<meta name="current-user-id" content="<%= CurrentUser.id %>">
+<meta name="current-user-id" content="<%= CurrentUser.user.id %>">
 <meta name="current-user-can-approve-posts" content="<%= CurrentUser.can_approve_posts? %>">
 <meta name="user-comment-threshold" content="<%= CurrentUser.comment_threshold %>">
 <meta name="blacklisted-tags" content="<%= CurrentUser.user.blacklisted_tags.split(/(?:\r|\n)+/).to_json %>">

@@ -7,7 +7,6 @@ class RulesControllerTest < ActionDispatch::IntegrationTest
     setup do
       @admin = create(:admin_user)
       @user = create(:user)
-      CurrentUser.user = @admin
       @category = create(:rule_category)
       @rule = create(:rule, category: @category)
     end

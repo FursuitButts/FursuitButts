@@ -42,9 +42,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     context("show action") do
       setup do
         # flesh out profile to get more test coverage of user presenter.
-        as(@user) do
-          create(:post, uploader: @user, tag_string: "fav:#{@user.name}")
-        end
+        create(:post, uploader: @user, tag_string: "fav:#{@user.name}")
       end
 
       should("render") do
@@ -101,7 +99,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
       context("with sockpuppet validation enabled") do
         setup do
           FemboyFans.config.unstub(:enable_sock_puppet_validation?)
-          @user.update(last_ip_addr: "127.0.0.1")
+          @user.update_columns(last_ip_addr: "127.0.0.1")
         end
 
         should("not allow registering multiple accounts with the same IP") do
@@ -213,7 +211,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
 
     context("custom css") do
       should("return the correct styling") do
-        @user.update(custom_style: "body { display:none; }")
+        @user.update_columns(custom_style: "body { display:none; }")
         get_auth(custom_style_users_path(format: :css), @user)
         assert_response(:success)
         assert_equal("body { display:none !important; }", @response.body.strip)
@@ -227,7 +225,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     context("unban action") do
       should("work") do
         mod = create(:moderator_user)
-        as(mod) { @user.ban! }
+        @user.ban!(mod)
         assert_equal(true, @user.reload.is_banned?)
         assert_difference({ "Ban.count" => 0, "ModAction.count" => 1 }) do
           put_auth(unban_user_path(@user), mod)

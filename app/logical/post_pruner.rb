@@ -4,11 +4,10 @@ class PostPruner
   MODERATION_WINDOW = 7
 
   def prune!
+    @user = User.system
     Post.without_timeout do
-      CurrentUser.as_system do
-        prune_pending!
-        prune_appealed!
-      end
+      prune_pending!
+      prune_appealed!
     end
   end
 
@@ -16,11 +15,11 @@ class PostPruner
 
   def prune_pending!
     Post.pending.not_deleted.expired.find_each do |post|
-      post.delete!("Unapproved in #{MODERATION_WINDOW} days", force: true)
+      post.delete!(@user, "Unapproved in #{MODERATION_WINDOW} days", force: true)
     end
   end
 
   def prune_appealed!
-    PostAppeal.pending.expired.find_each(&:reject!)
+    PostAppeal.pending.expired.find_each { |pa| pa.reject!(@user) }
   end
 end

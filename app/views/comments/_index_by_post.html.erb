@@ -4,7 +4,7 @@
     <%= render("posts/blank") %>
   <% end %>
 
-  <% @posts.select(&:visible?).each do |post| %>
+  <% @posts.select { |p| p.visible?(CurrentUser.user) }.each do |post| %>
     <% if post.comments.visible(CurrentUser.user).exists? %>
       <div class="comment-post">
         <div class="post-container">

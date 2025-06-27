@@ -9,22 +9,13 @@ module Tags
         @user = create(:user)
         @user2 = create(:user)
         @user3 = create(:user)
-        CurrentUser.user = @user
       end
 
       context("index action") do
         setup do
-          as(@user) do
-            @tag = create(:tag)
-          end
-
-          as(@user2) do
-            @tag.update(category: TagCategory.copyright)
-          end
-
-          as(@user3) do
-            @tag.update(category: TagCategory.artist)
-          end
+          @tag = create(:tag, creator: @user)
+          @tag.update_with(@user2, category: TagCategory.copyright)
+          @tag.update_with(@user3, category: TagCategory.artist)
 
           @versions = @tag.versions
         end

@@ -14,7 +14,7 @@ class ArtistsController < ApplicationController
       redirect_to(artist_path(@artist))
     end
     @artists = authorize(Artist).includes(:urls)
-                                .search(search_params(Artist))
+                                .search_current(search_params(Artist))
                                 .paginate(params[:page], limit: params[:limit])
     respond_with(@artists) do |format|
       format.json do
@@ -42,12 +42,12 @@ class ArtistsController < ApplicationController
       end
     end
     authorize(@artist)
-    @post_set = PostSets::Post.new(@artist.name, 1, limit: 10)
+    @post_set = PostSets::Post.new(@artist.name, 1, limit: 10, current_user: CurrentUser.user)
     respond_with(@artist, methods: %i[domains], include: %i[urls])
   end
 
   def new
-    @artist = authorize(Artist.new(permitted_attributes(Artist)))
+    @artist = authorize(Artist.new_with_current(:creator, permitted_attributes(Artist)))
     respond_with(@artist)
   end
 
@@ -57,19 +57,23 @@ class ArtistsController < ApplicationController
   end
 
   def create
-    @artist = authorize(Artist.new(permitted_attributes(Artist)))
+    pparams = permitted_attributes(Artist)
+    url_string = pparams.delete(:url_string)
+    @artist = authorize(Artist.new_with_current(:creator, pparams))
+    # FIXME: This is a hack on top of a hack to ensure all of the other attributes are set before url_string to ensure there are no race conditions
+    @artist.url_string = url_string unless url_string.nil?
     @artist.save
     respond_with(@artist)
   end
 
   def update
-    authorize(@artist).update(permitted_attributes(@artist))
+    authorize(@artist).update_with_current(:updater, permitted_attributes(@artist))
     notice(@artist.valid? ? "Artist updated" : @artist.errors.full_messages.join("; "))
     respond_with(@artist)
   end
 
   def destroy
-    authorize(@artist).destroy
+    authorize(@artist).destroy_with_current(:destroyer)
     respond_with(@artist) do |format|
       format.html do
         redirect_to(artists_path, notice: @artist.destroyed? ? "Artist deleted" : @artist.errors.full_messages.join("; "))
@@ -80,7 +84,7 @@ class ArtistsController < ApplicationController
   def revert
     authorize(@artist)
     @version = @artist.versions.find(params[:version_id])
-    @artist.revert_to!(@version)
+    @artist.revert_to!(@version, CurrentUser.user)
     respond_with(@artist)
   end
 
@@ -90,7 +94,7 @@ class ArtistsController < ApplicationController
       redirect_to(artist_path(@artist))
     else
       @artist = Artist.new(name: Artist.normalize_name(params[:name] || ""))
-      @post_set = PostSets::Post.new(@artist.name, 1, limit: 10)
+      @post_set = PostSets::Post.new(@artist.name, 1, limit: 10, current_user: CurrentUser.user)
       respond_with(@artist)
     end
   end

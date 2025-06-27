@@ -75,5 +75,20 @@ FactoryBot.define do
       mfa_secret { MFA.generate_secret }
       backup_codes { generate_backup_codes }
     end
+
+    factory(:old_user) do
+      created_at { 2.weeks.ago }
+    end
+
+    transient do
+      resolvable { true }
+      ip_addr { "127.0.0.1" }
+    end
+
+    initialize_with do
+      user = new
+      next user unless resolvable
+      user.resolvable(ip_addr)
+    end
   end
 end

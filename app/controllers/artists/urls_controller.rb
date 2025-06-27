@@ -6,7 +6,7 @@ module Artists
 
     def index
       @artist_urls = authorize(ArtistUrl).includes(:artist)
-                                         .search(search_params(ArtistUrl))
+                                         .search_current(search_params(ArtistUrl))
                                          .paginate(params[:page], limit: params[:limit])
       respond_with(@artist_urls) do |format|
         # FIXME: this makes the only parameter not work

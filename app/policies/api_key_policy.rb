@@ -32,4 +32,10 @@ class ApiKeyPolicy < ApplicationPolicy
   def api_attributes
     super - %i[key]
   end
+
+  def visible_for_search(relation)
+    q = super
+    return q if user.is_owner?
+    q.for_user(user)
+  end
 end

@@ -6,8 +6,7 @@ class ForumTopicTest < ActiveSupport::TestCase
   context("A forum topic") do
     setup do
       @user = create(:user)
-      CurrentUser.user = @user
-      @topic = create(:forum_topic, title: "xxx", original_post_attributes: { body: "aaa" })
+      @topic = create(:forum_topic, title: "xxx", original_post_attributes: { body: "aaa" }, creator: @user)
     end
 
     context("#read_by?") do
@@ -142,8 +141,8 @@ class ForumTopicTest < ActiveSupport::TestCase
     end
 
     should("be searchable by category id") do
-      assert_equal(0, ForumTopic.search(category_id: 0).count)
-      assert_equal(1, ForumTopic.search(category_id: FemboyFans.config.alias_implication_forum_category).count)
+      assert_equal(0, ForumTopic.search_current(category_id: 0).count)
+      assert_equal(1, ForumTopic.search_current(category_id: FemboyFans.config.alias_implication_forum_category).count)
     end
 
     should("initialize its creator") do
@@ -153,11 +152,10 @@ class ForumTopicTest < ActiveSupport::TestCase
     context("updated by a second user") do
       setup do
         @second_user = create(:user)
-        CurrentUser.user = @second_user
       end
 
       should("record its updater") do
-        @topic.update(title: "abc")
+        @topic.update_with(@second_user, title: "abc")
         assert_equal(@second_user.id, @topic.updater_id)
       end
     end
@@ -169,7 +167,7 @@ class ForumTopicTest < ActiveSupport::TestCase
 
       should("delete any associated posts") do
         assert_difference("ForumPost.count", -6) do
-          @topic.destroy
+          @topic.destroy_with(@user)
         end
       end
     end
@@ -182,14 +180,12 @@ class ForumTopicTest < ActiveSupport::TestCase
       end
 
       should("only be hidable by moderators") do
-        @topic.hide!
+        @topic.hide!(@user)
 
         assert_equal(["Topic is for an alias, implication, or bulk update request. It cannot be hidden"], @topic.errors.full_messages)
         assert_equal(@topic.reload.is_hidden, false)
 
-        as(@mod) do
-          @topic.hide!
-        end
+        @topic.hide!(@mod)
 
         assert_equal([], @topic.errors.full_messages)
         assert_equal(@topic.reload.is_hidden, true)
@@ -201,7 +197,7 @@ class ForumTopicTest < ActiveSupport::TestCase
         @target = create(:forum_topic)
         @post = @topic.original_post
         assert_difference(%w[EditHistory.merged.count ModAction.count], 1) do
-          @topic.merge_into!(@target)
+          @topic.merge_into!(@target, @user)
         end
         assert_equal(@target.id, @topic.merge_target_id)
         assert_equal(@target.id, @post.reload.topic_id)
@@ -214,12 +210,12 @@ class ForumTopicTest < ActiveSupport::TestCase
       setup do
         @target = create(:forum_topic)
         @post = @topic.original_post
-        @topic.merge_into!(@target)
+        @topic.merge_into!(@target, @user)
       end
 
       should("undo the topic merge") do
         assert_difference(%w[EditHistory.unmerged.count ModAction.count], 1) do
-          @topic.undo_merge!
+          @topic.undo_merge!(@user)
         end
         assert_nil(@topic.merge_target_id)
         assert_nil(@topic.merged_at)
@@ -229,8 +225,8 @@ class ForumTopicTest < ActiveSupport::TestCase
       end
 
       should("fail if the target no longer exists") do
-        @target.destroy!
-        assert_raises(ForumTopic::MergeError, "Merge target does not exist") { @topic.reload.undo_merge! }
+        @target.destroy_with!(@user)
+        assert_raises(ForumTopic::MergeError, "Merge target does not exist") { @topic.reload.undo_merge!(@user) }
       end
     end
   end

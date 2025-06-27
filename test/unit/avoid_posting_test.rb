@@ -6,7 +6,6 @@ class AvoidPostingTest < ActiveSupport::TestCase
   context("An avoid posting entry") do
     setup do
       @owner_user = create(:owner_user)
-      CurrentUser.user = @owner_user
       @avoid_posting = create(:avoid_posting)
     end
 
@@ -18,52 +17,64 @@ class AvoidPostingTest < ActiveSupport::TestCase
 
     should("create a create modaction") do
       assert_difference("ModAction.count", 1) do
-        create(:avoid_posting)
+        create(:avoid_posting, creator: @owner_user)
       end
 
-      assert_equal("avoid_posting_create", ModAction.last.action)
+      @mod = ModAction.last
+      assert_equal("avoid_posting_create", @mod.action)
+      assert_equal(@owner_user.id, @mod.creator_id)
     end
 
     should("create an update modaction") do
       assert_difference("ModAction.count", 1) do
-        @avoid_posting.update(details: "test")
+        @avoid_posting.update_with(@owner_user, details: "test")
       end
 
-      assert_equal("avoid_posting_update", ModAction.last.action)
+      @mod = ModAction.last
+      assert_equal("avoid_posting_update", @mod.action)
+      assert_equal(@owner_user.id, @mod.creator_id)
     end
 
     should("create a delete modaction") do
       assert_difference("ModAction.count", 1) do
-        @avoid_posting.update(is_active: false)
+        @avoid_posting.update_with(@owner_user, is_active: false)
       end
 
-      assert_equal("avoid_posting_delete", ModAction.last.action)
+      @mod = ModAction.last
+      assert_equal("avoid_posting_delete", @mod.action)
+      assert_equal(@owner_user.id, @mod.creator_id)
     end
 
     should("create an undelete modaction") do
       @avoid_posting.update_column(:is_active, false)
 
       assert_difference("ModAction.count", 1) do
-        @avoid_posting.update(is_active: true)
+        @avoid_posting.update_with(@owner_user, is_active: true)
       end
 
-      assert_equal("avoid_posting_undelete", ModAction.last.action)
+      @mod = ModAction.last
+      assert_equal("avoid_posting_undelete", @mod.action)
+      assert_equal(@owner_user.id, @mod.creator_id)
     end
 
     should("create a destroy modaction") do
       assert_difference("ModAction.count", 1) do
-        @avoid_posting.destroy
+        @avoid_posting.destroy_with(@owner_user)
       end
 
-      assert_equal("avoid_posting_destroy", ModAction.last.action)
+      @mod = ModAction.last
+      assert_equal("avoid_posting_destroy", @mod.action)
+      assert_equal(@owner_user.id, @mod.creator_id)
     end
 
     should("create a version when updated") do
       assert_difference("AvoidPostingVersion.count", 1) do
-        @avoid_posting.update(details: "test")
+        @avoid_posting.update_with(@owner_user, details: "test")
       end
 
-      assert_equal("test", AvoidPostingVersion.last.details)
+      @apv = AvoidPostingVersion.last
+      assert_equal("test", @apv.details)
+      assert_equal(@owner_user.id, @apv.updater_id)
     end
   end
 end

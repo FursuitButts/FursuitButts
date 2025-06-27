@@ -2,8 +2,8 @@
 
 FactoryBot.define do
   factory(:comment) do
-    post { create(:post) }
+    association(:creator, factory: :old_user)
+    post { create(:post, creator: creator) } # fails when using association or build
     sequence(:body) { |n| "comment_body_#{n}" }
-    creator_ip_addr { "127.0.0.1" }
   end
 end

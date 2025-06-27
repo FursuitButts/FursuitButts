@@ -7,8 +7,8 @@ class ElasticPostQueryBuilder < ElasticQueryBuilder
     status: :status_locked,
   }.freeze
 
-  def initialize(query_string, resolve_aliases: true, free_tags_count: 0, enable_safe_mode: CurrentUser.safe_mode?, always_show_deleted: false)
-    super(TagQuery.new(query_string, resolve_aliases: resolve_aliases, free_tags_count: free_tags_count))
+  def initialize(query_string, user, resolve_aliases: true, free_tags_count: 0, enable_safe_mode: user.enable_safe_mode?, always_show_deleted: false)
+    super(TagQuery.new(query_string, user, resolve_aliases: resolve_aliases, free_tags_count: free_tags_count), user)
     @enable_safe_mode = enable_safe_mode
     @always_show_deleted = always_show_deleted
   end
@@ -82,7 +82,7 @@ class ElasticPostQueryBuilder < ElasticQueryBuilder
       must.push({ term: { pending: false } },
                 { term: { deleted: false } },
                 { term: { flagged: false } })
-    elsif q[:status] == "all" || q[:status] == "any"
+    elsif %w[all any].include?(q[:status])
       # do nothing
     elsif q[:status_must_not] == "pending"
       must_not.push({ term: { pending: true } })
@@ -285,12 +285,12 @@ class ElasticPostQueryBuilder < ElasticQueryBuilder
       order.push({ "tag_count_#{TagCategory.short_name_mapping[$1]}" => :asc })
 
     when "disapprovals", "disapprovals_desc"
-      if CurrentUser.user.can_approve_posts?
+      if user.can_approve_posts?
         order.push({ disapproval_count: { order: :desc, missing: :_last } })
       end
 
     when "disapprovals_asc"
-      if CurrentUser.user.can_approve_posts?
+      if user.can_approve_posts?
         order.push({ disapproval_count: { order: :asc, missing: :_last } })
       end
 
@@ -326,7 +326,7 @@ class ElasticPostQueryBuilder < ElasticQueryBuilder
       order.push({ id: :desc })
     end
 
-    if !CurrentUser.user.nil? && !CurrentUser.user.is_staff? && Security::Lockdown.hide_pending_posts_for > 0
+    if !user.is_staff? && Security::Lockdown.hide_pending_posts_for > 0
       should = [
         {
           range: {
@@ -342,10 +342,10 @@ class ElasticPostQueryBuilder < ElasticQueryBuilder
         },
       ]
 
-      unless CurrentUser.user.id.nil?
+      unless user.id.nil?
         should.push({
           term: {
-            uploader: CurrentUser.user.id,
+            uploader: user.id,
           },
         })
       end

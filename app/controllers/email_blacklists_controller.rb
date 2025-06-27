@@ -5,24 +5,24 @@ class EmailBlacklistsController < ApplicationController
 
   def index
     @blacklists = authorize(EmailBlacklist).html_includes(request, :creator)
-                                           .search(search_params(EmailBlacklist))
+                                           .search_current(search_params(EmailBlacklist))
                                            .paginate(params[:page], limit: params[:limit])
     respond_with(@blacklists)
   end
 
   def new
-    @blacklist = authorize(EmailBlacklist.new)
+    @blacklist = authorize(EmailBlacklist.new_with_current(:creator))
   end
 
   def create
-    @blacklist = authorize(EmailBlacklist.new(permitted_attributes(EmailBlacklist)))
+    @blacklist = authorize(EmailBlacklist.new_with_current(:creator, permitted_attributes(EmailBlacklist)))
     @blacklist.save
     respond_with(@blacklist, location: email_blacklists_path)
   end
 
   def destroy
     @blacklist = authorize(EmailBlacklist.find(params[:id]))
-    @blacklist.destroy
+    @blacklist.destroy_with_current(:destroyer)
     respond_with(@blacklist)
   end
 end

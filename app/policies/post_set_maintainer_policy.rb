@@ -20,4 +20,8 @@ class PostSetMaintainerPolicy < ApplicationPolicy
   def deny?
     record.user_id == user.id
   end
+
+  def visible_for_search(relation)
+    super.where(user_id: user.id)
+  end
 end

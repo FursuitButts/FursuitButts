@@ -6,7 +6,7 @@ module FemboyFans
       include(BaseExtension)
 
       def paginate(page, options)
-        super(page, options)
+        super
 
         new_opts = {
           pagination_mode:    pagination_mode,

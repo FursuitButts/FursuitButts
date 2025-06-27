@@ -2,6 +2,7 @@
 
 FactoryBot.define do
   factory(:mascot) do
+    association(:creator, factory: :admin_user)
     sequence(:display_name) { |n| "mascot_#{n}" }
     background_color { "FFFFFF" }
     artist_url { "http://localhost" }

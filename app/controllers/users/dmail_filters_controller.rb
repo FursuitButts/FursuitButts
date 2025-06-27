@@ -36,7 +36,7 @@ module Users
     end
 
     def load_dmail_filter
-      @dmail_filter = CurrentUser.dmail_filter || DmailFilter.new
+      @dmail_filter = CurrentUser.dmail_filter || CurrentUser.build_dmail_filter
     end
   end
 end

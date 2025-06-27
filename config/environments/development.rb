@@ -67,14 +67,4 @@ Rails.application.configure do
 
   # Allow any hosts
   config.hosts.clear
-
-  set_user = -> do
-    CurrentUser.user = User.system
-    CurrentUser.ip_addr = "127.0.0.1"
-  end
-
-  console do
-    set_user.call
-    ActiveSupport::Reloader.to_complete(&set_user)
-  end
 end

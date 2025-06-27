@@ -12,18 +12,16 @@ class TagMover
   end
 
   def move!
-    CurrentUser.scoped(user) do
-      update_tag_category!
-      move_artist!
-      move_wiki!
-      move_posts!
-      update_locked_tags!
-      move_aliases!
-      move_implications!
-      update_blacklists!
-      rewrite_wiki_links!
-      update_followers!
-    end
+    update_tag_category!
+    move_artist!
+    move_wiki!
+    move_posts!
+    update_locked_tags!
+    move_aliases!
+    move_implications!
+    update_blacklists!
+    rewrite_wiki_links!
+    update_followers!
   end
 
   def update_tag_category!
@@ -42,7 +40,7 @@ class TagMover
         reason = "tag move (#{old_tag.name} -> #{new_tag.name})"
       end
       old = tag.category
-      tag.update!(category: category, reason: reason)
+      tag.update!(category: category, reason: reason, updater: user)
       undos << [:update_tag_category, { id: tag.id, old: old, new: category }]
     end
   end
@@ -63,6 +61,7 @@ class TagMover
       undos << [:update_artist_name, { id: old_artist.id, old: old_tag.name, new: new_tag.name }]
       old_artist.name = new_tag.name
       old_artist.other_names += [old_tag.name]
+      old_artist.updater = user
       old_artist.save!
     else
       # we consider merging undoable
@@ -79,11 +78,13 @@ class TagMover
       new_artist.is_locked = old_artist.is_locked?
       new_artist.linked_user_id ||= old_artist.linked_user_id
       new_artist.notes ||= old_artist.notes
+      new_artist.updater = user
       new_artist.save!
 
       old_artist.other_names = [new_artist.name]
       old_artist.url_string = ""
       old_artist.linked_user_id = nil
+      old_artist.updater = user
       old_artist.save!
     end
   end
@@ -93,7 +94,7 @@ class TagMover
 
     if new_wiki.nil?
       undos << [:update_wiki_page_title, { id: old_wiki.id, old: old_tag.name, new: new_tag.name }]
-      old_wiki.update!(title: new_tag.name)
+      old_wiki.update!(title: new_tag.name, updater: user)
     else
       # we consider merging undoable
       merge_wikis!
@@ -107,51 +108,54 @@ class TagMover
       new_wiki.body = old_wiki.body if new_wiki.body.blank?
       new_wiki.parent = old_wiki.parent if old_wiki.parent.present?
       new_wiki.protection_level = old_wiki.protection_level
+      new_wiki.updater = user
       new_wiki.save!
 
       old_wiki.parent = new_wiki if old_wiki.parent.blank?
+      old_wiki.updater = user
       old_wiki.save!
     end
   end
 
   def move_posts!
-    CurrentUser.as_system do
-      Post.without_timeout do
-        post_ids = []
-        Post.sql_raw_tag_match(old_tag.name).find_each do |post|
-          post_ids << post.id
-          post.with_lock do
-            post.automated_edit = true
-            post.remove_tag(old_tag.name)
-            post.add_tag(new_tag.name)
-            post.save!
-          end
+    user = User.system
+    Post.without_timeout do
+      post_ids = []
+      Post.sql_raw_tag_match(old_tag.name).find_each do |post|
+        post_ids << post.id
+        post.with_lock do
+          post.automated_edit = true
+          post.updater = user
+          post.remove_tag(old_tag.name)
+          post.add_tag(new_tag.name)
+          post.save!
         end
-        undos << [:update_post_tags, { ids: post_ids, old: old_tag.name, new: new_tag.name }] if post_ids.present?
       end
+      undos << [:update_post_tags, { ids: post_ids, old: old_tag.name, new: new_tag.name }] if post_ids.present?
     end
   end
 
   def update_locked_tags!
-    CurrentUser.as_system do
-      Post.without_timeout do
-        post_ids = []
-        Post.where_ilike(:locked_tags, "*#{old_tag.name}*").find_each(batch_size: 50) do |post|
-          post_ids << post.id
-          post.with_lock do
-            fixed_tags = TagAlias.to_aliased_query(post.locked_tags)
-            post.automated_edit = true
-            post.locked_tags = fixed_tags
-            post.save!
-          end
+    user = User.system
+    Post.without_timeout do
+      post_ids = []
+      Post.where_ilike(:locked_tags, "*#{old_tag.name}*").find_each(batch_size: 50) do |post|
+        post_ids << post.id
+        post.with_lock do
+          fixed_tags = TagAlias.to_aliased_query(post.locked_tags)
+          post.automated_edit = true
+          post.updater = user
+          post.locked_tags = fixed_tags
+          post.save!
         end
-        undos << [:update_post_locked_tags, { ids: post_ids, old: old_tag.name, new: new_tag.name }] if post_ids.present?
       end
+      undos << [:update_post_locked_tags, { ids: post_ids, old: old_tag.name, new: new_tag.name }] if post_ids.present?
     end
   end
 
   def move_aliases!
     old_tag.consequent_aliases.find_each do |tag_alias|
+      tag_alias.updater = user
       tag_alias.consequent_name = new_tag.name
       success = tag_alias.save
       if success
@@ -165,6 +169,7 @@ class TagMover
 
   def move_implications!
     old_tag.antecedent_implications.find_each do |tag_implication|
+      tag_implication.updater = user
       tag_implication.antecedent_name = new_tag.name
       success = tag_implication.save
       if success
@@ -176,6 +181,7 @@ class TagMover
     end
 
     old_tag.consequent_implications.find_each do |tag_implication|
+      tag_implication.updater = user
       tag_implication.consequent_name = new_tag.name
       success = tag_implication.save
       if success
@@ -197,7 +203,7 @@ class TagMover
       field = { WikiPage => :body, Pool => :description }[model]
       model.linked_to(old_tag.name).find_each do |linked|
         undos << [:"update_#{model.name.underscore}_#{field}", { id: linked.id, old: old_tag.name, new: new_tag.name }]
-        linked.update!(field => DTextHelper.rewrite_wiki_links(linked.public_send(field), old_tag.name, new_tag.name))
+        linked.update!(field => DTextHelper.rewrite_wiki_links(linked.public_send(field), old_tag.name, new_tag.name), :updater => user)
       end
     end
   end
@@ -210,8 +216,8 @@ class TagMover
       undos << [:update_tag_follower, { id: follower.id, old: old_tag.name, new: new_tag.name }]
       follower.update!(tag: new_tag)
     end
-    new_tag.update!(follower_count: count)
-    old_tag.update!(follower_count: 0)
+    new_tag.update!(follower_count: count, updater: user)
+    old_tag.update!(follower_count: 0, updater: user)
   end
 
   def old_wiki

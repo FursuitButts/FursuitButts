@@ -8,8 +8,6 @@ class FavoriteTest < ActiveSupport::TestCase
     @user2 = create(:user)
     @p1 = create(:post)
     @p2 = create(:post)
-
-    CurrentUser.user = @user1
   end
 
   context("A favorite") do

@@ -36,13 +36,16 @@ class ExceptionLog < ApplicationRecord
       version:      GitHelper.instance.local.short_commit,
       extra_params: extra_params,
     )
+  rescue ActiveRecord::StatementInvalid => e
+    TraceLogger.error("ExceptionLog", "Failed to log exception: #{e.message}")
+    TraceLogger.error(exception)
   end
 
   def user
     User.find_by(id: extra_params["user_id"])
   end
 
-  def self.search(params)
+  def self.search(params, user)
     q = super
 
     if params[:commit].present?

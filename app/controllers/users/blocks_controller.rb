@@ -15,7 +15,7 @@ module Users
 
     def new
       authorize(@user, policy_class: UserBlockPolicy)
-      @block = UserBlock.new(permitted_attributes(UserBlock))
+      @block = UserBlock.new_with_current(:user, permitted_attributes(UserBlock))
     end
 
     def edit
@@ -25,7 +25,7 @@ module Users
 
     def create
       authorize(@user, policy_class: UserBlockPolicy)
-      @block = @user.blocks.create(permitted_attributes(UserBlock))
+      @block = @user.blocks.create_with_current(:user, permitted_attributes(UserBlock))
       respond_with(@block, location: user_blocks_path(@user)) do |format|
         format.html do
           flash[:notice] = @block.errors.any? ? "Failed to block user: #{@block.errors.full_messages.join('; ')}" : "Successfully blocked @#{@block.target_name}"
@@ -37,7 +37,7 @@ module Users
     def update
       authorize(@user, policy_class: UserBlockPolicy)
       @block = UserBlock.find(params[:id])
-      @block.update(permitted_attributes(@block))
+      @block.update_with_current(:updater, permitted_attributes(@block))
       respond_with(@block, location: user_blocks_path(@user)) do |format|
         format.html do
           flash[:notice] = @block.errors.any? ? "Failed to update block: #{@block.errors.full_messages.join('; ')}" : "Block for @#{@block.target_name} updated"
@@ -49,7 +49,7 @@ module Users
     def destroy
       authorize(@user, policy_class: UserBlockPolicy)
       @block = UserBlock.find(params[:id])
-      @block.destroy
+      @block.destroy_with_current(:destroyer)
       respond_with(@block) do |format|
         format.html do
           flash[:notice] = "Unblocked @#{@block.target_name}"

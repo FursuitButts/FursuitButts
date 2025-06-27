@@ -2,6 +2,12 @@
 
 module PostSets
   class Base
+    attr_reader(:current_user)
+
+    def initialize(current_user)
+      @current_user = current_user
+    end
+
     def tag_string
       ""
     end
@@ -24,8 +30,8 @@ module PostSets
     end
 
     def load_view_counts!
-      daily = Reports.get_bulk_post_views(posts.map(&:id), date: Time.now, unique: CurrentUser.user.unique_views?)
-      total = Reports.get_bulk_post_views(posts.map(&:id), unique: CurrentUser.user.unique_views?)
+      daily = Reports.get_bulk_post_views(posts.map(&:id), date: Time.now, unique: current_user.unique_views?)
+      total = Reports.get_bulk_post_views(posts.map(&:id), unique: current_user.unique_views?)
       ViewCountCache.add_all!(daily, :daily)
       ViewCountCache.add_all!(total, :total)
     end

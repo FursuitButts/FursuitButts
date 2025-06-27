@@ -23,7 +23,7 @@ class BulkUpdateRequestCommandsTest < ActiveSupport::TestCase
 
   def approve!(bur, approver, status: true)
     assert_enqueued_jobs(1, only: ProcessBulkUpdateRequestJob) do
-      as(approver) { bur.approve!(approver) }
+      bur.approve!(approver)
     end
     assert_equal("queued", bur.reload.status)
     perform_enqueued_jobs(only: ProcessBulkUpdateRequestJob)
@@ -54,7 +54,6 @@ class BulkUpdateRequestCommandsTest < ActiveSupport::TestCase
     setup do
       @user = create(:user)
       @admin = create(:admin_user)
-      CurrentUser.user = @user
       @tag, @tag2 = create_list(:tag, 2)
     end
 
@@ -347,7 +346,7 @@ class BulkUpdateRequestCommandsTest < ActiveSupport::TestCase
 
     context("unalias") do
       setup do
-        @ta = as(@admin) { create(:tag_alias, antecedent_name: @tag.name, consequent_name: @tag2.name, status: "active") }
+        @ta = create(:tag_alias, antecedent_name: @tag.name, consequent_name: @tag2.name, status: "active")
         @bur = create(:bulk_update_request, script: "unalias #{@tag.name} -> #{@tag2.name}", skip_forum: true, title: random)
       end
 
@@ -383,7 +382,7 @@ class BulkUpdateRequestCommandsTest < ActiveSupport::TestCase
 
     context("unimply") do
       setup do
-        @ti = as(@admin) { create(:tag_implication, antecedent_name: @tag.name, consequent_name: @tag2.name, status: "active") }
+        @ti = create(:tag_implication, antecedent_name: @tag.name, consequent_name: @tag2.name, status: "active")
         @bur = create(:bulk_update_request, script: "unimply #{@tag.name} -> #{@tag2.name}", skip_forum: true, title: random)
       end
 

@@ -21,7 +21,7 @@ module Admin
       @error = e
       notice("Import failed")
       respond_to do |format|
-        format.html { render(:new, status: 400) }
+        format.html { render(:new, status: :bad_request) }
         format.json { render_expected_error(400, e.message) }
       end
     end

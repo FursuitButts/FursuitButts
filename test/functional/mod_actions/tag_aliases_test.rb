@@ -10,7 +10,7 @@ module ModActions
 
     context("mod actions for tag aliases") do
       should("format tag_alias_create correctly") do
-        @alias = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb")
+        @alias = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", creator: @admin)
         assert_matches(
           actions:    %w[tag_alias_create],
           text:       "Created \"tag alias ##{@alias.id}\":[#{tag_alias_path(@alias)}]: [[aaa]] -> [[bbb]]",
@@ -20,9 +20,9 @@ module ModActions
       end
 
       should("format tag_alias_update correctly") do
-        @alias = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb")
+        @alias = create(:tag_alias, antecedent_name: "aaa", consequent_name: "bbb", creator: @admin)
         set_count!
-        @alias.update!(status: "pending")
+        @alias.update_with!(@admin, status: "pending")
         assert_matches(
           actions:     %w[tag_alias_update],
           text:        "Updated \"tag alias ##{@alias.id}\":[#{tag_alias_path(@alias)}]: [[aaa]] -> [[bbb]]\nchanged status from \"active\" to \"pending\"",

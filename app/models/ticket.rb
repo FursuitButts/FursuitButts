@@ -1,11 +1,12 @@
 # frozen_string_literal: true
 
 class Ticket < ApplicationRecord
-  belongs_to_creator(counter_cache: "ticket_count")
+  belongs_to_user(:creator, ip: true, clones: :updater, counter_cache: "ticket_count")
+  belongs_to_user(:claimant, optional: true)
+  belongs_to_user(:handler, ip: true, optional: true)
+  belongs_to_user(:accused, optional: true)
+  resolvable(:updater)
   belongs_to(:model, polymorphic: true)
-  belongs_to(:claimant, class_name: "User", optional: true)
-  belongs_to(:handler, class_name: "User", optional: true)
-  belongs_to(:accused, class_name: "User", optional: true)
   after_initialize(:classify)
   before_validation(:initialize_fields, on: :create)
   normalizes(:reason, with: ->(reason) { reason.gsub("\r\n", "\n") })
@@ -22,9 +23,12 @@ class Ticket < ApplicationRecord
   validate(:validate_model_exists, on: :create)
   validate(:validate_creator_is_not_limited, on: :create)
 
-  scope(:for_creator, ->(uid) { where(creator_id: uid) })
-  scope(:automated, -> { for_creator(User.system.id) })
+  scope(:for_creator, ->(user) { where(creator_id: u2id(user)) })
+  scope(:automated, -> { for_creator(User.system) })
   scope(:spam, -> { automated.where(reason: "Spam.") })
+  scope(:for_model, ->(type) { where(model_type: Array(type).map(&:to_s)) })
+  scope(:for_accused, ->(user) { where(accused_id: u2id(user)) })
+  scope(:active, -> { pending.or(partial) })
 
   attr_accessor(:record_type, :send_update_dmail)
 
@@ -193,26 +197,12 @@ class Ticket < ApplicationRecord
       where(accused_id: user_id)
     end
 
-    def active
-      where(status: %w[pending partial])
-    end
-
-    def visible(user)
-      if user.is_moderator?
-        all
-      elsif user.is_janitor?
-        for_creator(user.id).or(where(model_type: %w[Post]))
-      else
-        for_creator(user.id)
-      end
-    end
-
-    def search(params)
+    def search(params, user)
       q = super.includes(:creator).includes(:claimant)
 
       if params[:creator_id].present? || params[:creator_name].present?
         # FIXME: This is more complicated than it needs to be
-        if CurrentUser.is_moderator? || params[:creator_id].to_i == CurrentUser.user.id || params[:creator_name]&.downcase == CurrentUser.user.name.downcase
+        if user.is_moderator? || params[:creator_id].to_i == user.id || params[:creator_name]&.downcase == user.name.downcase
           q = q.where_user(:creator_id, :creator, params)
         else
           q = q.none
@@ -272,15 +262,15 @@ class Ticket < ApplicationRecord
   def bot_target_name
     case model
     when Dmail
-      model&.from&.name
+      model&.from_name
     when WikiPage
       model&.title
     when Pool, User
       model&.name
     when Post
-      model&.uploader&.name
+      model&.uploader_name
     else
-      model&.creator&.name
+      model&.creator_name
     end
   end
 
@@ -332,18 +322,18 @@ class Ticket < ApplicationRecord
   end
 
   module ClaimMethods
-    def claim!(user = CurrentUser)
+    def claim!(user)
       transaction do
-        ModAction.log!(:ticket_claim, self)
-        update_attribute(:claimant_id, user.id)
+        ModAction.log!(user, :ticket_claim, self)
+        update(claimant: user, updater: user)
         push_pubsub("claim")
       end
     end
 
-    def unclaim!(_user = CurrentUser)
+    def unclaim!(user)
       transaction do
-        ModAction.log!(:ticket_unclaim, self)
-        update_attribute(:claimant_id, nil)
+        ModAction.log!(user, :ticket_unclaim, self)
+        update(claimant: nil, updater: user)
         push_pubsub("unclaim")
       end
     end
@@ -369,9 +359,9 @@ class Ticket < ApplicationRecord
           title += " to #{pretty_status.downcase}"
         end
       end
-      Dmail.create_split(
-        from_id:       CurrentUser.id,
-        to_id:         creator.id,
+      Dmail.create_split!(
+        from:          handler,
+        to:            creator,
         title:         title,
         body:          msg,
         bypass_limits: true,
@@ -381,7 +371,7 @@ class Ticket < ApplicationRecord
     def log_update
       return unless saved_change_to_response? || saved_change_to_status?
 
-      ModAction.log!(:ticket_update, self)
+      ModAction.log!(updater, :ticket_update, self)
     end
   end
 
@@ -422,7 +412,7 @@ class Ticket < ApplicationRecord
     %i[handler]
   end
 
-  def visible?(user = CurrentUser.user)
+  def visible?(user)
     can_view?(user)
   end
 end

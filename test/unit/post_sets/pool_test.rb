@@ -7,15 +7,14 @@ module PostSets
     context("In all cases") do
       setup do
         @user = create(:user)
-        CurrentUser.user = @user
 
         @post1 = create(:post)
         @post2 = create(:post)
         @post3 = create(:post)
         @pool = create(:pool)
-        @pool.add!(@post2)
-        @pool.add!(@post1)
-        @pool.add!(@post3)
+        @pool.add!(@post2, @user)
+        @pool.add!(@post1, @user)
+        @pool.add!(@post3, @user)
       end
 
       context("a post pool set for page 2") do

@@ -7,9 +7,7 @@ class PostsControllerTest < ActionDispatch::IntegrationTest
     setup do
       @admin = create(:admin_user)
       @user = create(:user, created_at: 1.month.ago)
-      as(@user) do
-        @post = create(:post, tag_string: "aaaa")
-      end
+      @post = create(:post, tag_string: "aaaa")
     end
 
     context("index action") do
@@ -33,7 +31,7 @@ class PostsControllerTest < ActionDispatch::IntegrationTest
 
         should("return error on nonexistent md5") do
           get(posts_path(md5: "foo"))
-          assert_response(404)
+          assert_response(:not_found)
         end
       end
 
@@ -151,9 +149,7 @@ class PostsControllerTest < ActionDispatch::IntegrationTest
 
     context("revert action") do
       setup do
-        as(@user) do
-          @post.update(tag_string: "zzz")
-        end
+        @post.update_with(@user, tag_string: "zzz")
       end
 
       should("work") do
@@ -166,9 +162,7 @@ class PostsControllerTest < ActionDispatch::IntegrationTest
       end
 
       should("not allow reverting to a previous version of another post") do
-        as(@user) do
-          @post2 = create(:post, uploader_id: @user.id, tag_string: "herp")
-        end
+        @post2 = create(:post, tag_string: "herp")
 
         put_auth(revert_post_path(@post), @user, params: { version_id: @post2.versions.first.id })
         @post.reload
@@ -216,10 +210,9 @@ class PostsControllerTest < ActionDispatch::IntegrationTest
       end
 
       should("work even if the deleter has flagged the post previously") do
-        as(@user) do
-          PostFlag.create(post: @post, reason: "aaa", is_resolved: false)
-        end
+        create(:post_flag, post: @post, reason: "aaa", creator: @user)
         delete_auth(post_path(@post), @admin, params: { reason: "xxx" })
+        assert_redirected_to(post_path(@post))
         assert(@post.reload.is_deleted?)
       end
 
@@ -230,14 +223,12 @@ class PostsControllerTest < ActionDispatch::IntegrationTest
 
     context("undelete action") do
       should("work") do
-        as(@user) do
-          @post.delete!("test delete")
-        end
+        @post.delete!(@user, "test delete")
         assert_difference(-> { PostEvent.count }, 1) do
           put_auth(undelete_post_path(@post), @admin, params: { format: :json })
+          assert_response(:success)
         end
 
-        assert_response(:success)
         assert_not(@post.reload.is_deleted?)
         assert_equal(true, @post.uploader.notifications.post_undelete.exists?)
       end
@@ -271,9 +262,7 @@ class PostsControllerTest < ActionDispatch::IntegrationTest
 
     context("add_to_pool action") do
       setup do
-        as(@user) do
-          @pool = create(:pool, name: "abc")
-        end
+        @pool = create(:pool, name: "abc")
       end
 
       should("add a post to a pool") do
@@ -283,14 +272,14 @@ class PostsControllerTest < ActionDispatch::IntegrationTest
       end
 
       should("add a post to a pool once and only once") do
-        as(@user) { @pool.add!(@post) }
+        @pool.add!(@post, @user)
         post_auth(add_to_pool_post_path(@post), @user, params: { pool_id: @pool.id, format: :json })
         @pool.reload
         assert_equal([@post.id], @pool.post_ids)
       end
 
       should("update the pool's artists") do
-        as(@user) { @post.update(tag_string: "artist:foo") }
+        @post.update_with(@user, tag_string: "artist:foo")
         perform_enqueued_jobs(only: UpdatePoolArtistsJob)
         assert_equal([], @pool.artist_names)
         post_auth(add_to_pool_post_path(@post), @user, params: { pool_id: @pool.id, format: :json })
@@ -321,10 +310,8 @@ class PostsControllerTest < ActionDispatch::IntegrationTest
 
     context("remove_from_pool action") do
       setup do
-        as(@user) do
-          @pool = create(:pool, name: "abc")
-          @pool.add!(@post)
-        end
+        @pool = create(:pool, name: "abc")
+        @pool.add!(@post, @user)
       end
 
       should("remove a post from a pool") do
@@ -335,16 +322,14 @@ class PostsControllerTest < ActionDispatch::IntegrationTest
 
       should("do nothing if the post is not a member of the pool") do
         @pool.reload
-        as(@user) do
-          @pool.remove!(@post)
-        end
+        @pool.remove!(@post, @user)
         post_auth(remove_from_pool_post_path(@post), @user, params: { pool_id: @pool.id, format: :json })
         @pool.reload
         assert_equal([], @pool.post_ids)
       end
 
       should("update the pool's artists") do
-        as(@user) { @post.update(tag_string: "artist:foo") }
+        @post.update_with(@user, tag_string: "artist:foo")
         perform_enqueued_jobs(only: UpdatePoolArtistsJob)
         assert_same_elements(%w[foo], @pool.reload.artist_names)
         post_auth(remove_from_pool_post_path(@post), @user, params: { pool_id: @pool.id, format: :json })

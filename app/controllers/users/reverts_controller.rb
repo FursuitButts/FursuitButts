@@ -9,7 +9,7 @@ module Users
 
     def create
       user = User.find(params[:user_id])
-      revert = authorize(UserRevert.new(user.id))
+      revert = authorize(UserRevert.new(user.id, CurrentUser.user))
       revert.process
       respond_to do |format|
         format.html { redirect_to(user_path(user.id)) }

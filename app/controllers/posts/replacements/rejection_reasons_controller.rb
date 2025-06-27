@@ -13,7 +13,7 @@ module Posts
       end
 
       def new
-        @reason = authorize(PostReplacementRejectionReason).new
+        @reason = authorize(PostReplacementRejectionReason.new_with_current(:creator))
       end
 
       def edit
@@ -21,7 +21,7 @@ module Posts
       end
 
       def create
-        @reason = authorize(PostReplacementRejectionReason.new(permitted_attributes(PostReplacementRejectionReason)))
+        @reason = authorize(PostReplacementRejectionReason.new_with_current(:creator, permitted_attributes(PostReplacementRejectionReason)))
         @reason.save
         flash[:notice] = @reason.valid? ? "Post replacement rejection reason created" : @reason.errors.full_messages.join("; ")
         respond_with(@reason) do |fmt|
@@ -31,7 +31,7 @@ module Posts
 
       def update
         authorize(@reason)
-        @reason.update(permitted_attributes(@reason))
+        @reason.update_with_current(:updater, permitted_attributes(@reason))
         flash[:notice] = @reason.valid? ? "Post replacement rejection reason updated" : @reason.errors.full_messages.join("; ")
         respond_with(@reason) do |fmt|
           fmt.html { redirect_to(post_replacement_rejection_reasons_path) }
@@ -40,7 +40,7 @@ module Posts
 
       def destroy
         authorize(@reason)
-        @reason.destroy
+        @reason.destroy_with_current(:destroyer)
         flash[:notice] = "Post replacement rejection reason deleted"
         respond_with(@reason) do |format|
           format.html { redirect_to(post_replacement_rejection_reasons_path) }
@@ -69,7 +69,7 @@ module Posts
           end
         end
 
-        PostReplacementRejectionReason.log_reorder(changes) if changes != 0
+        PostReplacementRejectionReason.log_reorder(changes, CurrentUser.user) if changes != 0
 
         respond_to do |format|
           format.html { redirect_back(fallback_location: post_replacement_rejection_reasons_path) }

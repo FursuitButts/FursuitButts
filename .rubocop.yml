@@ -3,7 +3,13 @@ inherit_mode:
     - Exclude
     - Include
 
+inherit_from:
+  - ./lib/rubocop/cop/local/default.yml
+
 require:
+  - ./lib/rubocop/cop/local/rules.rb
+
+plugins:
   - rubocop-erb
   - rubocop-rails
 
@@ -69,7 +75,10 @@ Metrics/ModuleLength:
 Metrics/PerceivedComplexity:
   Enabled: false
 
-Naming/PredicateName:
+Naming/PredicatePrefix:
+  Enabled: false
+
+Naming/PredicateMethod:
   Enabled: false
 
 Rails/BulkChangeTable:
@@ -79,7 +88,7 @@ Rails/HasManyOrHasOneDependent:
   Enabled: false
 
 Rails/HttpStatus:
-  EnforcedStyle: numeric
+  EnforcedStyle: symbolic
 
 Rails/I18nLocaleTexts:
   Enabled: false
@@ -224,3 +233,14 @@ Security/Open:
   Enabled: true
   Exclude:
     - app/logical/storage_manager/ftp.rb
+
+Local/CurrentUserOutsideOfRequests:
+  Enabled: true
+  Exclude:
+    - db/fixes/1*.rb
+    - db/fixes/204*.rb
+    - db/fixes/205*.rb
+    - config/environments/development.rb
+    - app/logical/session_loader.rb
+    - test/unit/current_user_test.rb
+

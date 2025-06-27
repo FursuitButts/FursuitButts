@@ -8,7 +8,7 @@ module Tags
 
     def index
       @tag_aliases = authorize(TagAlias).html_includes(request, :antecedent_tag, :consequent_tag, :creator, :approver)
-                                        .search(search_params(TagAlias))
+                                        .search_current(search_params(TagAlias))
                                         .paginate(params[:page], limit: params[:limit])
       respond_with(@tag_aliases)
     end
@@ -19,7 +19,7 @@ module Tags
     end
 
     def new
-      @tag_alias = authorize(TagAlias.new)
+      @tag_alias = authorize(TagAlias.new_with_current(:creator))
     end
 
     def edit
@@ -27,7 +27,7 @@ module Tags
     end
 
     def create
-      @tag_alias_request = authorize(TagAliasRequest.new(**permitted_attributes(TagAlias).to_h.symbolize_keys), policy_class: TagAliasPolicy)
+      @tag_alias_request = authorize(TagAliasRequest.new(**permitted_attributes(TagAlias).to_h.symbolize_keys, user: CurrentUser.user), policy_class: TagAliasPolicy)
       @tag_alias_request.create
 
       if @tag_alias_request.invalid?
@@ -45,7 +45,7 @@ module Tags
       @tag_alias = authorize(TagAlias.find(params[:id]))
 
       if @tag_alias.is_pending? && @tag_alias.editable_by?(CurrentUser.user)
-        @tag_alias.update(permitted_attributes(@tag_alias))
+        @tag_alias.update_with_current(:updater, permitted_attributes(@tag_alias))
       end
 
       respond_with(@tag_alias)
@@ -53,18 +53,18 @@ module Tags
 
     def destroy
       @tag_alias = authorize(TagAlias.find(params[:id]))
-      @tag_alias.reject!
+      @tag_alias.reject!(CurrentUser.user)
       respond_with(@tag_alias, location: tag_aliases_path)
     end
 
     def approve
       @tag_alias = authorize(TagAlias.find(params[:id]))
-      @tag_alias.approve!(approver: CurrentUser.user)
+      @tag_alias.approve!(CurrentUser.user)
       respond_with(@tag_alias, location: tag_alias_path(@tag_alias))
     end
 
     def ensure_lockdown_disabled
-      access_denied if Security::Lockdown.aiburs_disabled? && !CurrentUser.is_staff?
+      access_denied if Security::Lockdown.aiburs_disabled? && !CurrentUser.user.is_staff?
     end
   end
 end

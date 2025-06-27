@@ -4,7 +4,7 @@
 
 <div class="comment-form">
   <div class="comment-avatar">
-    <%= comment_avatar(comment.creator.nil? ? CurrentUser : comment.creator) %>
+    <%= comment_avatar(comment.creator.nil? ? CurrentUser.user : comment.creator) %>
   </div>
 
   <div class="comment-edit">

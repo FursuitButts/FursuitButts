@@ -19,10 +19,10 @@
         <% end %>
       <% end %>
       <% t.column(th: { width: "2%" }) do |text_version, i| %>
-        <%= radio_button_tag("otherversion", text_version.id, (i == 1), title: "Other Version") %>
+        <%= radio_button_tag("otherversion", text_version.id, i == 1, title: "Other Version") %>
       <% end %>
       <% t.column(th: { width: "2%" }) do |text_version, i| %>
-        <%= radio_button_tag("thisversion", text_version.id, (i == 0), title: "This Version") %>
+        <%= radio_button_tag("thisversion", text_version.id, i == 0, title: "This Version") %>
       <% end %>
       <% t.column do |text_version| %>
         <%= link_to("Show", action: :show, id: text_version.id) %>

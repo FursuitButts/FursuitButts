@@ -15,7 +15,7 @@ class PostSetsController < ApplicationController
     end
 
     @post_sets = @post_sets.html_includes(request, :creator)
-                           .search(sp)
+                           .search_current(sp)
                            .paginate(params[:page], limit: params[:limit])
 
     respond_with(@post_sets)
@@ -28,7 +28,7 @@ class PostSetsController < ApplicationController
   end
 
   def new
-    @post_set = authorize(PostSet.new(permitted_attributes(PostSet)))
+    @post_set = authorize(PostSet.new_with_current(:creator, permitted_attributes(PostSet)))
   end
 
   def edit
@@ -37,7 +37,7 @@ class PostSetsController < ApplicationController
   end
 
   def create
-    @post_set = authorize(PostSet.new(permitted_attributes(PostSet)))
+    @post_set = authorize(PostSet.new_with_current(:creator, permitted_attributes(PostSet)))
     @post_set.save
     notice(@post_set.valid? ? "Set created" : @post_set.errors.full_messages.join("; "))
     respond_with(@post_set)
@@ -45,7 +45,7 @@ class PostSetsController < ApplicationController
 
   def update
     @post_set = authorize(PostSet.find(params[:id]))
-    @post_set.update(permitted_attributes(@post_set))
+    @post_set.update_with_current(:updater, permitted_attributes(@post_set))
     notice(@post_set.valid? ? "Set updated" : @post_set.errors.full_messages.join("; "))
     respond_with(@post_set)
   end
@@ -60,7 +60,7 @@ class PostSetsController < ApplicationController
 
   def update_posts
     @post_set = authorize(PostSet.find(params[:id]))
-    @post_set.update(update_posts_params)
+    @post_set.update_with_current(:updater, update_posts_params)
     notice(@post_set.valid? ? "Set posts updated" : @post_set.errors.full_messages.join("; "))
     respond_with(@post_set, status: 200) do |format|
       format.html { redirect_back(fallback_location: post_list_post_set_path(@post_set)) }
@@ -69,12 +69,12 @@ class PostSetsController < ApplicationController
 
   def destroy
     @post_set = authorize(PostSet.find(params[:id]))
-    @post_set.destroy
+    @post_set.destroy_with_current(:destroyer)
     respond_with(@post_set)
   end
 
   def for_select
-    owned = authorize(PostSet).owned(CurrentUser.user).order(:name)
+    owned = authorize(PostSet).owned_by(CurrentUser.user).order(:name)
     maintained = PostSet.active_maintainer(CurrentUser.user).order(:name)
 
     @for_select = {
@@ -110,6 +110,6 @@ class PostSetsController < ApplicationController
   end
 
   def ensure_lockdown_disabled
-    access_denied if Security::Lockdown.post_sets_disabled? && !CurrentUser.is_staff?
+    access_denied if Security::Lockdown.post_sets_disabled? && !CurrentUser.user.is_staff?
   end
 end

@@ -12,7 +12,7 @@ module Users
       notice("Your counts will soon be refreshed")
       respond_to do |format|
         format.html { redirect_to(user_path(CurrentUser.user)) }
-        format.json { head(202) }
+        format.json { head(:accepted) }
       end
     end
   end

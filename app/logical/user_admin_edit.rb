@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class UserAdminEdit
-  attr_reader(:user, :promoter, :options)
+  attr_reader(:user, :promoter, :ip_addr, :options)
 
   delegate(:errors, to: :user)
 
@@ -17,9 +17,10 @@ class UserAdminEdit
     [:email_verified, nil, :is_owner?],
   ].freeze
 
-  def initialize(user, promoter, options)
+  def initialize(user, promoter, ip_addr, options)
     @user = user
-    @promoter = promoter
+    @promoter = promoter.resolvable(ip_addr)
+    @ip_addr = ip_addr
     @options = options
   end
 
@@ -49,12 +50,13 @@ class UserAdminEdit
       desired_name:            options[:name],
       change_reason:           "Administrative change",
       skip_limited_validation: true,
+      creator:                 promoter,
     )
     if change_request.valid?
       change_request.approve!
-      user.log_name_change
+      user.log_name_change(promoter)
     else
-      errors.add(:name, change_request.errors[:desired_name].join("; "))
+      errors.add(:name, change_request.errors.full_messages.join("; "))
     end
   end
 
@@ -75,19 +77,18 @@ class UserAdminEdit
 
   def apply
     User.transaction do
-      CurrentUser.scoped(promoter, CurrentUser.ip_addr) do
-        apply_preferences
-        apply_level
-        apply_name
-        apply_misc
-        apply_email
-        raise(ActiveRecord::Rollback) if invalid?
+      apply_preferences
+      apply_level
+      apply_name
+      apply_misc
+      apply_email
+      raise(ActiveRecord::Rollback) if invalid?
 
-        user.is_admin_edit = true
-        user.validate_email_format = true
-        user.save
-        raise(ActiveRecord::Rollback) if invalid?
-      end
+      user.updater = promoter.resolvable(ip_addr)
+      user.is_admin_edit = true
+      user.validate_email_format = true
+      user.save
+      raise(ActiveRecord::Rollback) if invalid?
     end
     valid?
   end

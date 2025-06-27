@@ -1,11 +1,11 @@
 <%= custom_form_for(@artist) do |f| %>
   <% if @artist.new_record? %>
     <%= f.input(:name, as: :string, autocomplete: "tag") %>
-  <% elsif !@artist.dnp_restricted? && can_use_attribute?(@artist, :name) %>
+  <% elsif !@artist.dnp_restricted?(CurrentUser.user) && can_use_attribute?(@artist, :name) %>
     <%= f.input(:name, autocomplete: "tag", hint: "Change to rename this artist entry and its wiki page.") %>
   <% else %>
     <p><%= @artist.name %></p>
-    <% if @artist.dnp_restricted? %>
+    <% if @artist.dnp_restricted?(CurrentUser.user) %>
       <p>Name, other names, and group name cannot be edited for artists on the <%= link_to("Avoid Posting", avoid_posting_static_path) %> list.</p>
     <% end %>
   <% end %>
@@ -13,14 +13,14 @@
     <%= f.input(:linked_user_id, label: "Linked User ID") %>
     <%= f.input(:is_locked, label: "Locked") %>
   <% end %>
-  <% if @artist.new_record? || !@artist.dnp_restricted? %>
+  <% if @artist.new_record? || !@artist.dnp_restricted?(CurrentUser.user) %>
     <%= f.input(:other_names_string, label: "Other names", hint: "Separate names with spaces, not commas. Use underscores for spaces inside names. Limit 25.", input_html: { size: "80" }) %>
   <% end %>
   <%= f.input(:url_string, label: "URLs", as: :text, input_html: { size: "80x10", value: params.dig(:artist, :url_string) || @artist.urls.join("\n") }, hint: "You can prefix a URL with - to mark it as dead.") %>
 
-  <% if @artist.is_note_locked? %>
+  <% if @artist.is_note_locked?(CurrentUser.user) %>
     <p>Artist is note locked. Notes cannot be edited.</p>
   <% end %>
-  <%= f.input(:notes, as: :dtext, limit: FemboyFans.config.wiki_page_max_size, disabled: @artist.is_note_locked?, allow_color: true) %>
+  <%= f.input(:notes, as: :dtext, limit: FemboyFans.config.wiki_page_max_size, disabled: @artist.is_note_locked?(CurrentUser.user), allow_color: true) %>
   <%= f.button(:submit, "Submit") %>
 <% end %>

@@ -5,8 +5,7 @@ module Users
     respond_to(:html, :json)
 
     def index
-      @user_sessions = authorize(UserSession).visible(CurrentUser.user)
-                                             .search(search_params(UserSession))
+      @user_sessions = authorize(UserSession).search_current(search_params(UserSession))
                                              .paginate(params[:page], limit: params[:limit])
       respond_with(@user_sessions)
     end

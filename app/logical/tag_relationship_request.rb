@@ -3,15 +3,16 @@
 class TagRelationshipRequest
   include(ActiveModel::Validations)
 
-  attr_reader(:antecedent_name, :consequent_name, :tag_relationship, :reason, :forum_topic, :forum_topic_id, :skip_forum)
+  attr_reader(:antecedent_name, :consequent_name, :user, :tag_relationship, :reason, :forum_topic, :forum_topic_id, :skip_forum)
 
   validates(:reason, length: { minimum: 5 }, unless: :skip_forum)
   validate(:validate_tag_relationship)
   validate(:validate_forum_topic)
 
-  def initialize(antecedent_name:, consequent_name:, reason: nil, skip_forum: false, forum_topic: nil, forum_topic_id: nil)
+  def initialize(antecedent_name:, consequent_name:, user:, reason: nil, skip_forum: false, forum_topic: nil, forum_topic_id: nil)
     @antecedent_name = antecedent_name&.strip&.tr(" ", "_")
     @consequent_name = consequent_name&.strip&.tr(" ", "_")
+    @user = user
     @reason = reason
     @skip_forum = skip_forum.to_s.truthy?
     if forum_topic.present?
@@ -36,12 +37,12 @@ class TagRelationshipRequest
 
       unless skip_forum
         if forum_topic.present?
-          forum_post = @forum_topic.posts.create(tag_change_request: @tag_relationship, body: "Reason: #{reason}", allow_voting: true)
+          forum_post = @forum_topic.posts.create(tag_change_request: @tag_relationship, body: "Reason: #{reason}", allow_voting: true, creator: user)
         else
           @forum_topic = build_forum_topic
           @forum_topic.save
           forum_post = @forum_topic.posts.first
-          forum_post.update(tag_change_request: @tag_relationship, allow_voting: true)
+          forum_post.update(tag_change_request: @tag_relationship, allow_voting: true, updater: user)
         end
 
         @tag_relationship.forum_topic_id = @forum_topic.id
@@ -54,17 +55,18 @@ class TagRelationshipRequest
   end
 
   def build_tag_relationship
-    x = tag_relationship_class.new(
+    tag_relationship_class.new(
       antecedent_name: antecedent_name,
       consequent_name: consequent_name,
+      creator:         user,
+      status:          "pending",
     )
-    x.status = "pending"
-    x
   end
 
   def build_forum_topic
     ForumTopic.new(
       title:                    self.class.topic_title(antecedent_name, consequent_name),
+      creator:                  user,
       original_post_attributes: {
         body: "Reason: #{reason}",
       },

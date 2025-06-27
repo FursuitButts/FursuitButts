@@ -7,7 +7,7 @@ class BulkUpdateRequestsController < ApplicationController
 
   def index
     @bulk_update_requests = authorize(BulkUpdateRequest).html_includes(request, :forum_post, :creator, :approver)
-                                                        .search(search_params(BulkUpdateRequest))
+                                                        .search_current(search_params(BulkUpdateRequest))
                                                         .paginate(params[:page], limit: params[:limit])
     respond_with(@bulk_update_requests)
   end
@@ -18,7 +18,7 @@ class BulkUpdateRequestsController < ApplicationController
   end
 
   def new
-    @bulk_update_request = authorize(BulkUpdateRequest.new)
+    @bulk_update_request = authorize(BulkUpdateRequest.new_with_current(:creator))
     respond_with(@bulk_update_request)
   end
 
@@ -27,7 +27,7 @@ class BulkUpdateRequestsController < ApplicationController
   end
 
   def create
-    @bulk_update_request = authorize(BulkUpdateRequest.new(permitted_attributes(BulkUpdateRequest)))
+    @bulk_update_request = authorize(BulkUpdateRequest.new_with_current(:creator, permitted_attributes(BulkUpdateRequest)))
     @bulk_update_request.save
     respond_with(@bulk_update_request)
   end
@@ -35,7 +35,7 @@ class BulkUpdateRequestsController < ApplicationController
   def update
     authorize(@bulk_update_request)
     @bulk_update_request.should_validate = true
-    @bulk_update_request.update(permitted_attributes(@bulk_update_request))
+    @bulk_update_request.update_with_current(:updater, permitted_attributes(@bulk_update_request))
     notice("Bulk update request updated")
     respond_with(@bulk_update_request)
   end
@@ -59,6 +59,6 @@ class BulkUpdateRequestsController < ApplicationController
   end
 
   def ensure_lockdown_disabled
-    access_denied if Security::Lockdown.aiburs_disabled? && !CurrentUser.is_staff?
+    access_denied if Security::Lockdown.aiburs_disabled? && !CurrentUser.user.is_staff?
   end
 end

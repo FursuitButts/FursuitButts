@@ -7,7 +7,6 @@ module PostEvents
     def self.included(mod)
       mod.setup do
         @admin = create(:admin_user)
-        CurrentUser.user = @admin
         @user = create(:user)
         set_count!
       end
@@ -17,7 +16,7 @@ module PostEvents
       })
     end
 
-    def assert_matches(post_id:, actions:, text:, creator: CurrentUser.user, **attributes)
+    def assert_matches(post_id:, actions:, text:, creator: @admin, **attributes)
       diff = PostEvent.count - @count
       assert_equal(actions.length, diff, "post event count diff (#{PostEvent.last(diff).map(&:action).join(', ')})")
       assert_same_elements(actions, PostEvent.last(actions.length).map(&:action), "actions")

@@ -8,7 +8,6 @@ module Rules
       setup do
         @admin = create(:admin_user)
         @user = create(:user)
-        CurrentUser.user = @admin
         @category = create(:rule_category)
       end
 
@@ -106,6 +105,8 @@ module Rules
           end
 
           should("delete the category and rules") do
+            # RuleCategory.any_instance.expects(:destroyer=).with(@admin).once
+            # Rule.any_instance.expects(:destroyer=).with(@admin).once
             delete_auth(rule_category_path(@category), @admin)
             assert_redirected_to(rules_path)
             assert_raise(ActiveRecord::RecordNotFound) { @category.reload }
@@ -115,6 +116,7 @@ module Rules
           should("create modactions") do
             assert_difference("ModAction.count", 2) do
               delete_auth(rule_category_path(@category), @admin)
+              assert_redirected_to(rules_path)
             end
 
             rule_action, category_action = ModAction.last(2)

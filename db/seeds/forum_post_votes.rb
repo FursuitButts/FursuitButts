@@ -20,7 +20,7 @@ ApplicationRecord.transaction do
               else
                 r.in?(66..85) ? 0 : -1
               end
-      user.scoped { post.votes.create!(user: user, score: score) }
+      post.votes.create!(user: user.resolvable, score: score)
     end
   end
 end

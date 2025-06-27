@@ -5,7 +5,6 @@ require("test_helper")
 class TagTest < ActiveSupport::TestCase
   setup do
     @janitor = create(:janitor_user)
-    CurrentUser.user = @janitor
   end
 
   context("A tag category fetcher") do
@@ -102,6 +101,10 @@ class TagTest < ActiveSupport::TestCase
     end
 
     context("not be settable to an invalid category") do
+      subject do
+        Tag.new(creator: create(:owner_user))
+      end
+
       should(validate_inclusion_of(:category).in_array(TagCategory.ids))
     end
 
@@ -114,14 +117,14 @@ class TagTest < ActiveSupport::TestCase
     should("create a version when category is changed") do
       tag = create(:tag)
       assert_difference("TagVersion.count", 1) do
-        tag.update(category: TagCategory.artist)
+        tag.update_with!(@janitor, category: TagCategory.artist)
       end
     end
 
     should("create a version when is_locked is changed") do
       tag = create(:tag)
       assert_difference("TagVersion.count", 1) do
-        tag.update(is_locked: true)
+        tag.update_with!(@janitor, is_locked: true)
       end
     end
   end
@@ -130,7 +133,7 @@ class TagTest < ActiveSupport::TestCase
     should("be found when one exists") do
       tag = create(:tag)
       assert_difference("Tag.count", 0) do
-        Tag.find_or_create_by_name(tag.name)
+        Tag.find_or_create_by_name(tag.name, user: @janitor)
       end
     end
 
@@ -138,7 +141,7 @@ class TagTest < ActiveSupport::TestCase
       tag = create(:tag)
       assert_difference("Tag.count", 0) do
         assert_equal(TagCategory.general, tag.category)
-        Tag.find_or_create_by_name("artist:#{tag.name}")
+        Tag.find_or_create_by_name("artist:#{tag.name}", user: @janitor)
         tag.reload
         assert_equal(TagCategory.artist, tag.category)
       end
@@ -147,7 +150,7 @@ class TagTest < ActiveSupport::TestCase
     should("not change the category is the tag is locked") do
       tag = create(:tag, is_locked: true)
       assert_equal(true, tag.is_locked?)
-      Tag.find_or_create_by_name("artist:#{tag.name}")
+      Tag.find_or_create_by_name("artist:#{tag.name}", user: @janitor)
       tag.reload
       assert_equal(0, tag.category)
     end
@@ -181,7 +184,7 @@ class TagTest < ActiveSupport::TestCase
 
     should("be created when one doesn't exist") do
       assert_difference("Tag.count", 1) do
-        tag = Tag.find_or_create_by_name("hoge")
+        tag = Tag.find_or_create_by_name("hoge", user: @janitor)
         assert_equal("hoge", tag.name)
         assert_equal(TagCategory.general, tag.category)
       end
@@ -189,7 +192,7 @@ class TagTest < ActiveSupport::TestCase
 
     should("be created with the type when one doesn't exist") do
       assert_difference("Tag.count", 1) do
-        tag = Tag.find_or_create_by_name("artist:hoge")
+        tag = Tag.find_or_create_by_name("artist:hoge", user: @janitor)
         assert_equal("hoge", tag.name)
         assert_equal(TagCategory.artist, tag.category)
       end
@@ -249,7 +252,7 @@ class TagTest < ActiveSupport::TestCase
       create(:post, tag_string: "foo")
       assert_equal(2, tag.reload.post_count)
       ta = create(:tag_alias, antecedent_name: "foo", consequent_name: "bar")
-      with_inline_jobs { ta.approve! }
+      with_inline_jobs { ta.approve!(@janitor) }
       tag.update_column(:post_count, 1)
       assert_equal(1, tag.reload.post_count)
 
@@ -263,9 +266,9 @@ class TagTest < ActiveSupport::TestCase
       create(:post, tag_string: "foo")
       assert_equal(2, tag.reload.post_count)
       ta = create(:tag_alias, antecedent_name: "foo", consequent_name: "bar")
-      with_inline_jobs { ta.approve! }
+      with_inline_jobs { ta.approve!(@janitor) }
       tag.update_column(:post_count, 1)
-      with_inline_jobs { ta.reject! }
+      with_inline_jobs { ta.reject!(@janitor) }
       assert_equal(1, tag.reload.post_count)
 
       TagAlias.fix_nonzero_post_counts!

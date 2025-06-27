@@ -7,7 +7,7 @@ module Posts
 
     def index
       @post_approvals = authorize(PostApproval).html_includes(request, :post, :user)
-                                               .search(search_params(PostApproval))
+                                               .search_current(search_params(PostApproval))
                                                .paginate(params[:page], limit: params[:limit])
       respond_with(@post_approvals)
     end
@@ -15,7 +15,7 @@ module Posts
     def create
       @post = authorize(Post.find(params[:post_id]), policy_class: PostApprovalPolicy)
       if @post.is_approvable?
-        @post.approve!
+        @post.approve!(CurrentUser.user)
         respond_to do |format|
           format.json
         end
@@ -31,7 +31,7 @@ module Posts
     def destroy
       @post = authorize(Post.find(params[:id]), policy_class: PostApprovalPolicy)
       if @post.is_unapprovable?(CurrentUser.user)
-        @post.unapprove!
+        @post.unapprove!(CurrentUser.user)
         respond_with(nil)
       else
         flash[:notice] = "You can't unapprove this post"

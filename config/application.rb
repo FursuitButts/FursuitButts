@@ -35,7 +35,7 @@ module FemboyFans
     # Please, add to the `ignore` list any other `lib` subdirectories that do
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
     # Common ones are `templates`, `generators`, or `middleware`, for example.
-    # config.autoload_lib(ignore: %w[assets tasks dtext_rb generators templates])
+    config.autoload_lib(ignore: %w[dtext_rb generators rubocop tasks templates])
 
     config.active_record.schema_format = :sql
     config.log_tags = [->(_req) { "PID:#{Process.pid}" }]
@@ -72,6 +72,6 @@ module FemboyFans
     config.generators.assets = false
     config.generators.helper = false
     config.generators.test_framework = nil
-    config.middleware.insert_before(Rails::Rack::Logger, SilenceHealthcheckLogging)
+    config.middleware.insert_before(Rails::Rack::Logger, Middleware::SilenceHealthcheckLogging)
   end
 end

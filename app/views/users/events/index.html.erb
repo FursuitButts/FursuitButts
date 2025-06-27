@@ -17,7 +17,7 @@
     <%= link_to(user_event.session_id, user_events_path(search: { session_id: user_event.session_id })) %>
   <% end %>
   <% t.column("IP Address") do |user_event| %>
-    <%= link_to(user_event.ip_addr, user_events_path(search: { ip_addr: user_event.ip_addr })) %>
+    <%= link_to(user_event.user_ip_addr, user_events_path(search: { ip_addr: user_event.user_ip_addr })) %>
   <% end %>
 <% end %>
 

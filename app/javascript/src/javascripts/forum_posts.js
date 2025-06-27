@@ -54,7 +54,7 @@ ForumPost.vote = function (evt, score) {
     };
 
     const icon = $("<a>").attr("href", "#").attr("data-forum-id", new_vote.forum_post_id).addClass("forum-vote-remove").append($("<i>").addClass("fa-regular").addClass(score_map[new_vote.score.toString()].fa_class));
-    const username = $("<a>").attr("href", `/users/${CurrentUser.id}`).addClass(`user-${CurrentUser.levelString}`).text(CurrentUser.name);
+    const username = $("<a>").attr("href", `/users/${CurrentUser.user.id}`).addClass(`user-${CurrentUser.levelString}`).text(CurrentUser.name);
     if (CurrentUser.styleUsernames) {
       username.addClass("with-style");
     }

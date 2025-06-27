@@ -5,15 +5,14 @@ class UserVote < ApplicationRecord
 
   self.abstract_class = true
 
-  after_initialize(:initialize_attributes, if: :new_record?)
-  scope(:for_user, ->(uid) { where("user_id = ?", uid) })
+  scope(:for_user, ->(user) { where(user_id: u2id(user)) })
 
   def self.inherited(child_class)
     super
     return if child_class.name.starts_with?("Lockable") # We can't check for abstract here, it hasn't been set yet
     child_class.class_eval do
       belongs_to(model_type)
-      belongs_to(:user, counter_cache: "#{child_class.name.underscore}_count")
+      belongs_to_user(:user, ip: true, counter_cache: "#{child_class.name.underscore}_count")
     end
   end
 
@@ -28,18 +27,6 @@ class UserVote < ApplicationRecord
 
   def self.vote_types
     [%w[Downvote -1 text-red], %w[Upvote 1 text-green]]
-  end
-
-  def initialize_attributes
-    self.user_id ||= CurrentUser.user.id
-    self.user_ip_addr ||= CurrentUser.ip_addr
-  end
-
-  def user_name
-    if association(:user).loaded?
-      return user&.name || "Anonymous"
-    end
-    User.id_to_name(user_id)
   end
 
   def is_positive?
@@ -66,15 +53,7 @@ class UserVote < ApplicationRecord
   end
 
   module SearchMethods
-    def visible(user)
-      if user.is_moderator?
-        all
-      else
-        where(user: user)
-      end
-    end
-
-    def search(params)
+    def search(params, user)
       q = super
 
       if params["#{model_type}_id"].present?
@@ -103,7 +82,7 @@ class UserVote < ApplicationRecord
         end
 
         if params[:duplicates_only].to_s.truthy?
-          subselect = search(params.except("duplicates_only")).select(:user_ip_addr).group(:user_ip_addr).having("count(user_ip_addr) > 1").reorder("")
+          subselect = search(user, params.except("duplicates_only")).select(:user_ip_addr).group(:user_ip_addr).having("count(user_ip_addr) > 1").reorder("")
           q = q.where(user_ip_addr: subselect)
         end
       end
@@ -119,7 +98,7 @@ class UserVote < ApplicationRecord
 
   extend(SearchMethods)
 
-  def visible?(user = CurrentUser.user)
+  def visible?(user)
     user.is_moderator? || user_id == user.id
   end
 

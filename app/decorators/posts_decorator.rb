@@ -15,7 +15,7 @@ class PostsDecorator < ApplicationDecorator
     klass << "post-status-flagged" if post.is_flagged?
     klass << "post-status-deleted" if post.is_deleted?
     klass << "post-status-has-parent" if post.parent_id
-    klass << "post-status-has-children" if post.has_visible_children?
+    klass << "post-status-has-children" if post.has_visible_children?(CurrentUser.user)
     klass << "post-rating-safe" if post.rating == "s"
     klass << "post-rating-questionable" if post.rating == "q"
     klass << "post-rating-explicit" if post.rating == "e"
@@ -24,17 +24,17 @@ class PostsDecorator < ApplicationDecorator
   end
 
   def data_attributes
-    { data: object.thumbnail_attributes }
+    { data: object.thumbnail_attributes(CurrentUser.user) }
   end
 
   def cropped_url(options)
     cropped_url = if FemboyFans.config.enable_image_cropping? && options[:show_cropped] && object.has_crop? && !CurrentUser.user.disable_cropped_thumbnails?
-                    object.crop_file_url
+                    object.crop_file_url(CurrentUser.user)
                   else
-                    object.preview_file_url
+                    object.preview_file_url(CurrentUser.user)
                   end
 
-    cropped_url = FemboyFans.config.deleted_preview_url if object.deleteblocked?
+    cropped_url = FemboyFans.config.deleted_preview_url if object.deleteblocked?(CurrentUser.user)
     cropped_url
   end
 
@@ -50,7 +50,7 @@ class PostsDecorator < ApplicationDecorator
       return ""
     end
 
-    if post.loginblocked? || post.safeblocked?
+    if post.loginblocked?(CurrentUser.user) || post.safeblocked?(CurrentUser.user)
       return ""
     end
 
@@ -82,20 +82,20 @@ class PostsDecorator < ApplicationDecorator
     tooltip += "\n\n#{post.tag_string}"
 
     cropped_url = if FemboyFans.config.enable_image_cropping? && options[:show_cropped] && post.has_crop? && !CurrentUser.user.disable_cropped_thumbnails?
-                    post.crop_file_url
+                    post.crop_file_url(CurrentUser.user)
                   elsif post.has_preview?
-                    post.preview_file_url
+                    post.preview_file_url(CurrentUser.user)
                   else
-                    post.file_url
+                    post.file_url(CurrentUser.user)
                   end
 
-    cropped_url = FemboyFans.config.deleted_preview_url if post.deleteblocked?
-    preview_url = if post.deleteblocked?
+    cropped_url = FemboyFans.config.deleted_preview_url if post.deleteblocked?(CurrentUser.user)
+    preview_url = if post.deleteblocked?(CurrentUser.user)
                     FemboyFans.config.deleted_preview_url
                   elsif post.has_preview?
-                    post.preview_file_url
+                    post.preview_file_url(CurrentUser.user)
                   else
-                    post.file_url
+                    post.file_url(CurrentUser.user)
                   end
 
     alt_text = post.tag_string
@@ -133,7 +133,7 @@ class PostsDecorator < ApplicationDecorator
   def ribbons(template)
     template.tag.div(class: "ribbons") do # rubocop:disable Metrics/BlockLength
       [if post.parent_id.present?
-         if post.has_visible_children?
+         if post.has_visible_children?(CurrentUser.user)
            template.tag.div(class: "ribbon left has-parent has-children", title: "Has Parent\nHas Children") do
              template.tag.span
            end
@@ -142,7 +142,7 @@ class PostsDecorator < ApplicationDecorator
              template.tag.span
            end
          end
-       elsif post.has_visible_children?
+       elsif post.has_visible_children?(CurrentUser.user)
          template.tag.div(class: "ribbon left has-children", title: "Has Children") do
            template.tag.span
          end
@@ -167,14 +167,14 @@ class PostsDecorator < ApplicationDecorator
 
   def vote_buttons(template)
     template.tag.div(id: "vote-buttons") do
-      template.tag.button("", class: "button vote-button vote score-neutral", disabled: post.is_vote_locked?, data: { action: "up" }) do
-        template.tag.span(class: "post-vote-up-#{post.id} score-#{post.is_voted_up? ? 'positive' : 'neutral'}")
+      template.tag.button("", class: "button vote-button vote score-neutral", disabled: post.is_vote_locked?(CurrentUser.user), data: { action: "up" }) do
+        template.tag.span(class: "post-vote-up-#{post.id} score-#{post.is_voted_up?(CurrentUser.user) ? 'positive' : 'neutral'}")
       end +
-        template.tag.button("", class: "button vote-button vote score-neutral", disabled: post.is_vote_locked?, data: { action: "down" }) do
-          template.tag.span(class: "post-vote-down-#{post.id} score-#{post.is_voted_down? ? 'negative' : 'neutral'}")
+        template.tag.button("", class: "button vote-button vote score-neutral", disabled: post.is_vote_locked?(CurrentUser.user), data: { action: "down" }) do
+          template.tag.span(class: "post-vote-down-#{post.id} score-#{post.is_voted_down?(CurrentUser.user) ? 'negative' : 'neutral'}")
         end +
-        template.tag.button("", class: "button vote-button fav score-neutral", data: { action: "fav", state: post.is_favorited? }) do
-          template.tag.span(class: "post-favorite-#{post.id} score-neutral#{post.is_favorited? ? ' is-favorited' : ''}")
+        template.tag.button("", class: "button vote-button fav score-neutral", data: { action: "fav", state: post.is_favorited?(CurrentUser.user) }) do
+          template.tag.span(class: "post-favorite-#{post.id} score-neutral#{' is-favorited' if post.is_favorited?(CurrentUser.user)}")
         end
     end
   end

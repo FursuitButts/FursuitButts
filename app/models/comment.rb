@@ -5,8 +5,10 @@ class Comment < ApplicationRecord
   include(UserWarnable)
   simple_versioning
   mentionable
-  belongs_to_creator(counter_cache: "comment_count")
-  belongs_to_updater
+  belongs_to_user(:creator, ip: true, clones: :updater, counter_cache: "comment_count")
+  belongs_to_user(:updater, ip: true)
+  belongs_to_user(:warning_user, optional: true)
+  resolvable(:destroyer)
   normalizes(:body, with: ->(body) { body.gsub("\r\n", "\n") })
   validate(:validate_post_exists, on: :create)
   validate(:validate_creator_is_not_limited, on: :create)
@@ -16,21 +18,20 @@ class Comment < ApplicationRecord
 
   before_create(:auto_report_spam)
   after_create(:update_last_commented_at_on_create)
-  after_update(if: ->(rec) { !rec.saved_change_to_is_hidden? && CurrentUser.id != rec.creator_id }) do |rec|
-    ModAction.log!(:comment_update, rec, user_id: rec.creator_id)
+  after_update(if: ->(rec) { !rec.saved_change_to_is_hidden? && updater_id != rec.creator_id }) do |rec|
+    ModAction.log!(updater, :comment_update, rec, user_id: rec.creator_id)
   end
   after_destroy(:update_last_commented_at_on_destroy)
   after_destroy do |rec|
-    ModAction.log!(:comment_delete, rec, user_id: rec.creator_id, post_id: rec.post_id)
+    ModAction.log!(destroyer, :comment_delete, rec, user_id: rec.creator_id, post_id: rec.post_id)
   end
   after_save(:update_last_commented_at_on_destroy, if: ->(rec) { rec.is_hidden? && rec.saved_change_to_is_hidden? })
-  after_save(if: ->(rec) { rec.saved_change_to_is_hidden? && CurrentUser.id != rec.creator_id }) do |rec|
+  after_save(if: ->(rec) { rec.saved_change_to_is_hidden? && updater_id != rec.creator_id }) do |rec|
     action = rec.is_hidden? ? :comment_hide : :comment_unhide
-    ModAction.log!(action, rec, user_id: rec.creator_id)
+    ModAction.log!(updater, action, rec, user_id: rec.creator_id)
   end
 
   belongs_to(:post, counter_cache: :comment_count)
-  belongs_to(:warning_user, class_name: "User", optional: true)
   has_many(:votes, class_name: "CommentVote", dependent: :destroy)
   has_many(:tickets, as: :model)
   has_many(:versions, class_name: "EditHistory", as: :versionable, dependent: :destroy)
@@ -39,6 +40,7 @@ class Comment < ApplicationRecord
   scope(:deleted, -> { where(is_hidden: true) })
   scope(:not_deleted, -> { where(is_hidden: false) })
   scope(:stickied, -> { where(is_sticky: true) })
+  scope(:for_creator, ->(user) { where(creator_id: u2id(user)) })
 
   module SearchMethods
     def recent
@@ -53,28 +55,11 @@ class Comment < ApplicationRecord
       end
     end
 
-    def visible(user)
-      q = where("comments.score >= ? or comments.is_sticky = true", user.comment_threshold)
-      unless user.is_moderator?
-        q = q.joins(:post).where("comments.is_sticky = true or posts.is_comment_disabled = false or comments.creator_id = ?", user.id)
-        if user.is_janitor?
-          q = q.where("comments.is_sticky = true or comments.is_hidden = false or comments.creator_id = ?", user.id)
-        else
-          q = q.where("comments.is_hidden = false or comments.creator_id = ?", user.id)
-        end
-      end
-      q
+    def post_tags_match(query, user)
+      where(post_id: Post.tag_match_sql(query, user).order(id: :desc).limit(300))
     end
 
-    def post_tags_match(query)
-      where(post_id: Post.tag_match_sql(query).order(id: :desc).limit(300))
-    end
-
-    def for_creator(user_id)
-      user_id.present? ? where("creator_id = ?", user_id) : none
-    end
-
-    def search(params)
+    def search(params, user)
       q = super.includes(:creator).includes(:updater).includes(:post)
 
       q = q.attribute_matches(:body, params[:body_matches])
@@ -84,7 +69,7 @@ class Comment < ApplicationRecord
       end
 
       if params[:post_tags_match].present?
-        q = q.post_tags_match(params[:post_tags_match])
+        q = q.post_tags_match(params[:post_tags_match], user)
       end
 
       with_resolved_user_ids(:post_note_updater, params) do |user_ids|
@@ -140,8 +125,8 @@ class Comment < ApplicationRecord
   end
 
   def post_not_comment_restricted
-    errors.add(:base, "Post has comments disabled") if !CurrentUser.is_moderator? && Post.find_by(id: post_id)&.is_comment_disabled?
-    return if CurrentUser.is_moderator?
+    errors.add(:base, "Post has comments disabled") if !updater.is_moderator? && Post.find_by(id: post_id)&.is_comment_disabled?
+    return if updater.is_moderator?
     post = Post.find_by(id: post_id)
     return if post.blank?
     errors.add(:base, "Post has comments locked") if post.is_comment_locked?
@@ -163,13 +148,13 @@ class Comment < ApplicationRecord
     post = Post.find(post_id)
     return unless post
     other_comments = Comment.where("post_id = ? and id <> ?", post_id, id).order("id DESC")
-    if other_comments.count == 0
+    if other_comments.none?
       post.update_columns(last_commented_at: nil)
     else
       post.update_columns(last_commented_at: other_comments.first.created_at)
     end
 
-    if other_comments.count == 0
+    if other_comments.none?
       post.update_columns(last_comment_bumped_at: nil)
     else
       post.update_columns(last_comment_bumped_at: other_comments.first.created_at)
@@ -178,7 +163,7 @@ class Comment < ApplicationRecord
     true
   end
 
-  def below_threshold?(user = CurrentUser.user)
+  def below_threshold?(user)
     score < user.comment_threshold
   end
 
@@ -203,7 +188,7 @@ class Comment < ApplicationRecord
 
   def visible_to?(user)
     return true if user.is_moderator?
-    return false if !is_sticky? && (post&.is_comment_disabled? && creator_id != user.id)
+    return false if !is_sticky? && post&.is_comment_disabled? && creator_id != user.id
     return false if post.is_comment_disabled?
     return true if is_hidden? == false
     creator_id == user.id # Can always see your own comments, even if hidden.
@@ -214,12 +199,12 @@ class Comment < ApplicationRecord
     visible_to?(user)
   end
 
-  def hide!
-    update(is_hidden: true)
+  def hide!(user)
+    update(is_hidden: true, updater: user)
   end
 
-  def unhide!
-    update(is_hidden: false)
+  def unhide!(user)
+    update(is_hidden: false, updater: user)
   end
 
   def hidden_at
@@ -247,16 +232,16 @@ class Comment < ApplicationRecord
     end
   end
 
-  def mark_spam!
+  def mark_spam!(user)
     return if is_spam?
-    update!(is_spam: true)
+    update!(is_spam: true, updater: user)
     return if spam_ticket.present?
     SpamDetector.new(self, user_ip: creator_ip_addr.to_s).spam!
   end
 
-  def mark_not_spam!
+  def mark_not_spam!(user)
     return unless is_spam?
-    update!(is_spam: false)
+    update!(is_spam: false, updater: user)
     return if spam_ticket.blank?
     SpamDetector.new(self, user_ip: creator_ip_addr.to_s).ham!
   end
@@ -265,7 +250,7 @@ class Comment < ApplicationRecord
     %i[creator post updater]
   end
 
-  def visible?(user = CurrentUser.user)
+  def visible?(user)
     user.is_moderator? || !is_hidden? || creator_id == user.id
   end
 end

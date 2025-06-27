@@ -6,7 +6,6 @@ class NoteTest < ActiveSupport::TestCase
   context("A note") do
     setup do
       @user = create(:user)
-      CurrentUser.user = @user
     end
 
     context("for a post that already has a note") do
@@ -17,7 +16,7 @@ class NoteTest < ActiveSupport::TestCase
 
       context("when the note is deleted the post") do
         setup do
-          @note.toggle!(:is_active)
+          @note.update_with(@user, is_active: false)
         end
 
         should("null out its last_noted_at_field") do
@@ -33,25 +32,25 @@ class NoteTest < ActiveSupport::TestCase
       end
 
       should("not validate if the note is outside the image") do
-        @note = build(:note, x: 1001, y: 500, post: @post)
+        @note = build(:note, x: 1001, y: 500, post: @post, creator: @user)
         @note.save
         assert_equal(["Note must be inside the image"], @note.errors.full_messages)
       end
 
       should("not validate if the note is larger than the image") do
-        @note = build(:note, x: 500, y: 500, height: 501, width: 500, post: @post)
+        @note = build(:note, x: 500, y: 500, height: 501, width: 500, post: @post, creator: @user)
         @note.save
         assert_equal(["Note must be inside the image"], @note.errors.full_messages)
       end
 
       should("not validate if the post does not exist") do
-        @note = build(:note, x: 500, y: 500, post_id: -1)
+        @note = build(:note, x: 500, y: 500, post_id: -1, creator: @user)
         @note.save
         assert_match(/Post must exist/, @note.errors.full_messages.join)
       end
 
       should("not validate if the body is blank") do
-        @note = build(:note, body: "   ")
+        @note = build(:note, body: "   ", creator: @user, post: @post)
 
         assert_equal(false, @note.valid?)
         assert_equal(["Body can't be blank"], @note.errors.full_messages)
@@ -59,7 +58,7 @@ class NoteTest < ActiveSupport::TestCase
 
       should("create a version") do
         assert_difference("NoteVersion.count", 1) do
-          @note = create(:note, post: @post)
+          @note = create(:note, post: @post, creator: @user)
         end
 
         assert_equal(1, @note.versions.count)
@@ -67,7 +66,7 @@ class NoteTest < ActiveSupport::TestCase
         assert_equal(1, @note.version)
         assert_equal(1, @note.versions.first.version)
         assert_equal(@user.id, @note.versions.first.updater_id)
-        assert_equal(CurrentUser.ip_addr, @note.versions.first.updater_ip_addr.to_s)
+        assert_equal(@user.ip_addr, @note.versions.first.updater_ip_addr.to_s)
       end
 
       should("update the post's last_noted_at field") do
@@ -84,7 +83,7 @@ class NoteTest < ActiveSupport::TestCase
 
         should("fail") do
           assert_difference("Note.count", 0) do
-            @note = build(:note, post: @post)
+            @note = build(:note, post: @post, creator: @user)
             @note.save
           end
           assert_equal(["Post is note locked"], @note.errors.full_messages)
@@ -101,28 +100,28 @@ class NoteTest < ActiveSupport::TestCase
       should("increment the updater's note_update_count") do
         @user.reload
         assert_difference("@user.note_update_count", 1) do
-          @note.update(body: "zzz")
+          @note.update_with(@user, body: "zzz")
           @user.reload
         end
       end
 
       should("update the post's last_noted_at field") do
         assert_equal(@post.last_noted_at, @note.updated_at)
-        @note.update(x: 500)
+        @note.update_with(@user, x: 500)
         @post.reload
         assert_equal(@post.last_noted_at, @note.updated_at)
       end
 
       should("create a version") do
         assert_difference("NoteVersion.count", 1) do
-          @note.update(body: "fafafa")
+          @note.update_with(@user, body: "fafafa")
         end
         assert_equal(2, @note.versions.count)
         assert_equal(2, @note.versions.last.version)
         assert_equal("fafafa", @note.versions.last.body)
         assert_equal(2, @note.version)
         assert_equal(@user.id, @note.versions.last.updater_id)
-        assert_equal(CurrentUser.ip_addr, @note.versions.last.updater_ip_addr.to_s)
+        assert_equal(@user.ip_addr, @note.versions.last.updater_ip_addr.to_s)
       end
 
       context("for a note-locked post") do
@@ -131,7 +130,7 @@ class NoteTest < ActiveSupport::TestCase
         end
 
         should("fail") do
-          @note.update(x: 500)
+          @note.update_with(@user, x: 500)
           assert_equal(["Post is note locked"], @note.errors.full_messages)
         end
       end
@@ -148,10 +147,8 @@ class NoteTest < ActiveSupport::TestCase
     context("when notes have been vandalized by one user") do
       setup do
         @vandal = create(:user)
-        @note = create(:note, x: 5, y: 5)
-        as(@vandal) do
-          @note.update(x: 10, y: 10)
-        end
+        @note = create(:note, x: 5, y: 5, creator: @user)
+        @note.update_with(@vandal, x: 10, y: 10)
       end
 
       context("the act of undoing all changes by that user") do
@@ -159,7 +156,7 @@ class NoteTest < ActiveSupport::TestCase
           assert_equal(2, NoteVersion.count)
           assert_equal([1, 2], @note.versions.map(&:version))
           assert_equal([@user.id, @vandal.id], @note.versions.map(&:updater_id))
-          Note.undo_changes_by_user(@vandal.id)
+          Note.undo_changes_by_user(@vandal.id, @user)
           @note.reload
           assert_equal([1, 3], @note.versions.map(&:version))
           assert_equal([@user.id, @user.id], @note.versions.map(&:updater_id))
@@ -176,13 +173,13 @@ class NoteTest < ActiveSupport::TestCase
 
       context("where the body contains the string 'aaa'") do
         should("return a hit") do
-          assert_equal(1, Note.search(body_matches: "aaa").count)
+          assert_equal(1, Note.search({ body_matches: "aaa" }, @user).count)
         end
       end
 
       context("where the body contains the string 'bbb'") do
         should("return no hits") do
-          assert_equal(0, Note.search(body_matches: "bbb").count)
+          assert_equal(0, Note.search({ body_matches: "bbb" }, @user).count)
         end
       end
     end

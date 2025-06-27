@@ -1,22 +1,13 @@
 # frozen_string_literal: true
 
 class UserBlock < ApplicationRecord
-  belongs_to(:user)
-  belongs_to(:target, class_name: "User")
+  belongs_to_user(:user)
+  belongs_to_user(:target)
+  resolvable(:updater)
+  resolvable(:destroyer)
   validates(:target_id, uniqueness: { scope: :user_id })
   validate(:validate_staff_user_not_blocking_messages)
   validate(:validate_target_valid)
-
-  def target_name=(value)
-    self.target_id = User.name_to_id(value)
-  end
-
-  def target_name
-    if association(:target).loaded?
-      return target&.name || "Anonymous"
-    end
-    User.id_to_name(target_id)
-  end
 
   def validate_target_valid
     return if target_id.blank?
@@ -42,7 +33,7 @@ class UserBlock < ApplicationRecord
     %i[target user]
   end
 
-  def visible?(user = CurrentUser.user)
+  def visible?(user)
     user.is_admin? || user_id == user.id
   end
 end

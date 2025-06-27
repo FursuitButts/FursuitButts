@@ -15,15 +15,15 @@
         <% end %>
       <% end %>
       <% t.column(th: { width: "2%" }) do |edit, i| %>
-        <%= radio_button_tag("otherversion", edit.id, (i == 0), disabled: !edit.is_contentful?, title: "Other Version") %>
+        <%= radio_button_tag("otherversion", edit.id, i == 0, disabled: !edit.is_contentful?, title: "Other Version") %>
       <% end %>
       <% t.column(th: { width: "2%" }) do |edit, i| %>
-        <%= radio_button_tag("thisversion", edit.id, (i == 1), disabled: !edit.is_contentful?, title: "This Version") %>
+        <%= radio_button_tag("thisversion", edit.id, i == 1, disabled: !edit.is_contentful?, title: "This Version") %>
       <% end %>
       <% t.column("Editor") do |edit| %>
-        <%= link_to_user(edit.user) %>
+        <%= link_to_user(edit.updater) %>
         <% if policy(edit).can_see_ip_addr? %>
-          (<%= link_to_ip(edit.ip_addr) %>)
+          (<%= link_to_ip(edit.updater_ip_addr) %>)
         <% end %>
         <p><%= link_to(time_ago_in_words_tagged(edit.created_at, compact: true), url_for(anchor: "edit-#{edit.id}")) %></p>
       <% end %>

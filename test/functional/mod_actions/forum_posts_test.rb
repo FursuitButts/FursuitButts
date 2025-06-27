@@ -10,15 +10,13 @@ module ModActions
 
     context("mod actions for forum posts") do
       setup do
-        as(@user) do
-          @topic = create(:forum_topic)
-          @post = create(:forum_post, topic: @topic)
-        end
+        @topic = create(:forum_topic, creator: @user)
+        @post = create(:forum_post, topic: @topic, creator: @user)
         set_count!
       end
 
       should("format forum_post_delete correctly") do
-        @post.destroy
+        @post.destroy_with(@admin)
 
         assert_matches(
           actions:        %w[forum_post_delete],
@@ -30,7 +28,7 @@ module ModActions
       end
 
       should("format forum_post_hide correctly") do
-        @post.hide!
+        @post.hide!(@admin)
 
         assert_matches(
           actions:        %w[forum_post_hide],
@@ -43,7 +41,7 @@ module ModActions
 
       should("format forum_post_unhide correctly") do
         @post.update_columns(is_hidden: true)
-        @post.unhide!
+        @post.unhide!(@admin)
 
         assert_matches(
           actions:        %w[forum_post_unhide],
@@ -56,7 +54,7 @@ module ModActions
 
       should("format forum_post_update correctly") do
         @original = @post.dup
-        @post.update!(body: "xxx")
+        @post.update_with!(@admin, body: "xxx")
 
         assert_matches(
           actions:        %w[forum_post_update],

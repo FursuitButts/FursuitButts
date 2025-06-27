@@ -7,7 +7,6 @@ class BanTest < ActiveSupport::TestCase
     context("created by an admin") do
       setup do
         @banner = create(:admin_user)
-        CurrentUser.user = @banner
       end
 
       should("set the is_banned flag on the user") do
@@ -43,7 +42,6 @@ class BanTest < ActiveSupport::TestCase
     context("created by a moderator") do
       setup do
         @banner = create(:moderator_user)
-        CurrentUser.user = @banner
       end
 
       should("not be valid against an admin or moderator") do
@@ -72,19 +70,15 @@ class BanTest < ActiveSupport::TestCase
     should("initialize the expiration date") do
       user = create(:user)
       admin = create(:admin_user)
-      as(admin) do
-        ban = create(:ban, user: user, banner: admin)
-        assert_not_nil(ban.expires_at)
-      end
+      ban = create(:ban, user: user, banner: admin)
+      assert_not_nil(ban.expires_at)
     end
 
     should("update the user's feedback") do
       user = create(:user)
       admin = create(:admin_user)
       assert(user.feedback.empty?)
-      as(admin) do
-        create(:ban, user: user, banner: admin)
-      end
+      create(:ban, user: user, banner: admin)
       assert_not(user.feedback.empty?)
       assert_equal("negative", user.feedback.last.category)
     end
@@ -92,8 +86,6 @@ class BanTest < ActiveSupport::TestCase
 
   context("Searching for a ban") do
     should("find a given ban") do
-      CurrentUser.user = create(:admin_user)
-
       user = create(:user)
       ban = create(:ban, user: user)
       params = {
@@ -104,7 +96,7 @@ class BanTest < ActiveSupport::TestCase
         order:       :id_desc,
       }
 
-      bans = Ban.search(params)
+      bans = Ban.search(params, create(:admin_user))
 
       assert_equal(1, bans.length)
       assert_equal(ban.id, bans.first.id)
@@ -113,7 +105,6 @@ class BanTest < ActiveSupport::TestCase
     context("by user id") do
       setup do
         @admin = create(:admin_user)
-        CurrentUser.user = @admin
         @user = create(:user)
       end
 

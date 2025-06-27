@@ -125,8 +125,8 @@ module DTextHelper
   end
 
   def dtext_links_differ?(old, new)
-    Set.new(parse_wiki_titles(old)) != Set.new(parse_wiki_titles(new)) ||
-      Set.new(parse_external_links(old)) != Set.new(parse_external_links(new))
+    parse_wiki_titles(old).sort != parse_wiki_titles(new).sort ||
+      parse_external_links(old).sort != parse_external_links(new).sort
   end
 
   def parse_html(html)

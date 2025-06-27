@@ -7,12 +7,9 @@ class AvoidPostingsControllerTest < ActionDispatch::IntegrationTest
     setup do
       @user = create(:user)
       @owner_user = create(:owner_user)
-      CurrentUser.user = @user
 
-      as(@owner_user) do
-        @avoid_posting = create(:avoid_posting)
-        @artist = @avoid_posting.artist
-      end
+      @avoid_posting = create(:avoid_posting)
+      @artist = @avoid_posting.artist
     end
 
     context("index action") do
@@ -118,6 +115,7 @@ class AvoidPostingsControllerTest < ActionDispatch::IntegrationTest
         @artist = create(:artist, other_names: %w[test1 test2], linked_user: @owner_user)
         assert_difference(%w[AvoidPosting.count AvoidPostingVersion.count], 1) do
           post_auth(avoid_postings_path, @owner_user, params: { avoid_posting: { artist_attributes: { name: @artist.name, other_names: [], other_names_string: "", linked_user_id: "" } } })
+          assert_response(:redirect)
         end
 
         @artist.reload

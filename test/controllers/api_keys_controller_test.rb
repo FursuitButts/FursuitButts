@@ -89,7 +89,7 @@ class ApiKeysControllerTest < ActionDispatch::IntegrationTest
 
       should("fail for someone else") do
         get_auth(edit_api_key_path(@api_key), create(:user))
-        assert_response(404)
+        assert_response(:not_found)
       end
 
       should("restrict access") do
@@ -107,7 +107,7 @@ class ApiKeysControllerTest < ActionDispatch::IntegrationTest
 
       should("fail for someone else") do
         put_auth(api_key_path(@api_key), create(:user))
-        assert_response(404)
+        assert_response(:not_found)
       end
 
       should("restrict access") do
@@ -126,7 +126,7 @@ class ApiKeysControllerTest < ActionDispatch::IntegrationTest
       should("not allow deleting another user's API key") do
         delete_auth(api_key_path(@api_key), create(:user))
 
-        assert_response(404)
+        assert_response(:not_found)
         assert_not_nil(@api_key.reload)
       end
 

@@ -88,7 +88,7 @@ class FavoritesControllerTest < ActionDispatch::IntegrationTest
         put_auth(clear_favorites_path, @user)
         assert_redirected_to(favorites_path)
         put_auth(clear_favorites_path, @user)
-        assert_response(429)
+        assert_response(:too_many_requests)
       end
 
       should("restrict access") do

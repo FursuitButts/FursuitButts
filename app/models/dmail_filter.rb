@@ -1,15 +1,8 @@
 # frozen_string_literal: true
 
 class DmailFilter < ApplicationRecord
-  belongs_to(:user)
-  before_validation(:initialize_user)
+  belongs_to_user(:user)
   validates(:words, length: { maximum: 1000 })
-
-  def initialize_user
-    unless user_id
-      self.user_id = CurrentUser.user.id
-    end
-  end
 
   def filtered?(dmail)
     !dmail.from.is_moderator? && has_filter? && (dmail.body =~ regexp || dmail.title =~ regexp || dmail.from.name =~ regexp)

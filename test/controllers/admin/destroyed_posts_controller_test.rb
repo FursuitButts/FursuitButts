@@ -10,7 +10,7 @@ module Admin
         @owner = create(:owner_user)
         @upload = create(:jpg_upload, uploader: @admin)
         @post = @upload.post
-        as(@admin) { @post.expunge! }
+        @post.expunge!(@admin)
         @destroyed_post = DestroyedPost.find_by!(post_id: @post.id)
       end
 

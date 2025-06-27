@@ -1,30 +1,22 @@
 # frozen_string_literal: true
 
 class UserNameChangeRequest < ApplicationRecord
-  after_initialize(:initialize_attributes, if: :new_record?)
   validates(:original_name, :desired_name, presence: true)
-  validates(:status, inclusion: { in: %w[pending approved rejected] })
   validates(:change_reason, length: { maximum: 250 })
   validate(:not_limited, on: :create)
   validates(:desired_name, user_name: true)
-  belongs_to(:user)
-  belongs_to(:approver, class_name: "User", optional: true)
+  before_validation(:set_original_name)
+  belongs_to_user(:user, clones: :creator)
+  belongs_to_user(:creator, ip: true)
+  belongs_to_user(:approver, optional: true)
+  enum(:status, %w[pending approved rejected].index_with(&:to_s))
   attr_accessor(:skip_limited_validation)
 
-  def initialize_attributes
-    self.user_id ||= CurrentUser.user.id
-    self.original_name ||= CurrentUser.user.name
+  def set_original_name
+    self.original_name = user&.name
   end
 
-  def self.pending
-    where(status: "pending")
-  end
-
-  def self.approved
-    where(status: "approved")
-  end
-
-  def self.search(params)
+  def self.search(params, user)
     q = super
 
     q = q.where_user(:user_id, :current, params)
@@ -40,20 +32,8 @@ class UserNameChangeRequest < ApplicationRecord
     q.apply_basic_order(params)
   end
 
-  def rejected?
-    status == "rejected"
-  end
-
-  def approved?
-    status == "approved"
-  end
-
-  def pending?
-    status == "pending"
-  end
-
-  def approve!(approver = CurrentUser.user)
-    update(status: "approved", approver_id: approver.id)
+  def approve!(approver = User.system)
+    update(status: "approved", approver: approver)
     user.update(name: desired_name, force_name_change: false)
     body = "Your name change request has been approved. Be sure to log in with your new user name."
     Dmail.create_automated(title: "Name change request approved", body: body, to_id: user_id)
@@ -61,7 +41,7 @@ class UserNameChangeRequest < ApplicationRecord
 
   def not_limited
     return true if skip_limited_validation == true
-    if UserNameChangeRequest.exists?(["user_id = ? and created_at >= ?", CurrentUser.user.id, 1.week.ago])
+    if UserNameChangeRequest.exists?(["user_id = ? and created_at >= ?", user_id, 1.week.ago])
       errors.add(:base, "You can only submit one name change request per week")
       false
     else
@@ -73,7 +53,7 @@ class UserNameChangeRequest < ApplicationRecord
     %i[approver user]
   end
 
-  def visible?(user = CurrentUser.user)
+  def visible?(user)
     user.is_moderator? || user_id == user.id
   end
 end

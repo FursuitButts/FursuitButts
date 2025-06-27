@@ -2,6 +2,6 @@
 
 FactoryBot.define do
   factory(:notification) do
-    user { create(:user) }
+    association(:user)
   end
 end

@@ -6,14 +6,14 @@ module BulkUpdateRequestCommands
     set_arguments(:antecedent_query, :consequent_query, :comment)
     set_regex(/\A(?:mass update|update) ([^#]+?) -> ([^#]*)(?: # ?(.*))?\z/i, %i[query query pass])
     set_untokenize { |antecedent_query, consequent_query, comment| "update #{antecedent_query} -> #{consequent_query}#{" # #{comment}" if comment}" }
-    set_to_dtext { |antecedent_query, consequent_query, comment| "update {{#{antecedent_query}}} (#{Post.fast_count(antecedent_query, enable_safe_mode: false, include_deleted: true)}) -> {{#{consequent_query}}}#{" # #{comment}" if comment}" }
+    set_to_dtext { |antecedent_query, consequent_query, comment| "update {{#{antecedent_query}}} (#{Post.system_count(antecedent_query, enable_safe_mode: false, include_deleted: true)}) -> {{#{consequent_query}}}#{" # #{comment}" if comment}" }
 
     validate(:antecedent_query_valid)
     validate(:consequent_query_valid)
 
     def antecedent_query_valid
       begin
-        TagQuery.new(antecedent_query)
+        TagQuery.new(antecedent_query, User.system)
       rescue TagQuery::CountExceededError
         errors.add(:base, "antecedent query exceeds the maximum tag count")
       end
@@ -22,7 +22,7 @@ module BulkUpdateRequestCommands
 
     def consequent_query_valid
       begin
-        TagQuery.new(consequent_query)
+        TagQuery.new(consequent_query, User.system)
       rescue TagQuery::CountExceededError
         errors.add(:base, "consequent query exceeds the maximum tag count")
       end
@@ -31,23 +31,22 @@ module BulkUpdateRequestCommands
 
     def estimate_update_count
       return 0 unless valid?
-      Post.fast_count(antecedent_query, enable_safe_mode: false, include_deleted: true)
+      Post.system_count(antecedent_query, enable_safe_mode: false, include_deleted: true)
     end
 
     def tags
       TagQuery.scan(antecedent_query)
     end
 
-    def process(_processor, approver)
+    def process(processor, approver)
       ensure_valid!
-      CurrentUser.scoped(approver) do
-        ModAction.log!(:mass_update, nil, antecedent: antecedent_query, consequent: consequent_query)
-        Post.tag_match_sql(antecedent_query).reorder(nil).parallel_find_each do |post|
-          post.with_lock do
-            post.automated_edit = true
-            post.tag_string += " #{consequent_query}"
-            post.save
-          end
+      ModAction.log!(approver, :mass_update, processor.request, antecedent: antecedent_query, consequent: consequent_query)
+      Post.tag_match_sql(antecedent_query, approver).reorder(nil).parallel_find_each do |post|
+        post.with_lock do
+          post.automated_edit = true
+          post.updater = approver
+          post.tag_string += " #{consequent_query}"
+          post.save
         end
       end
     end

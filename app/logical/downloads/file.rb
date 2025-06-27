@@ -5,11 +5,12 @@ module Downloads
     include(ActiveModel::Validations)
     class Error < StandardError; end
 
-    attr_reader(:url)
+    attr_reader(:user, :url)
 
     validate(:validate_url)
 
-    def initialize(url, exception: true)
+    def initialize(url, exception: true, user: User.anonymous)
+      @user = user
       begin
         unencoded = Addressable::URI.unencode(url)
         escaped = Addressable::URI.escape(unencoded)
@@ -70,17 +71,19 @@ module Downloads
     end
 
     def is_cloudflare?(url)
+      # noinspection RubyArgCount
       ip_addr = IPAddr.new(Resolv.getaddress(url.hostname))
       CloudflareService.ips.any? { |subnet| subnet.include?(ip_addr) }
     end
 
     def validate_uri_allowed!(uri)
+      # noinspection RubyArgCount
       ip_addr = IPAddr.new(Resolv.getaddress(uri.hostname))
       if ip_addr.private? || ip_addr.loopback? || ip_addr.link_local?
         raise(Downloads::File::Error, "Downloads from #{ip_addr} are not allowed")
       end
 
-      valid, _reason = UploadWhitelist.is_whitelisted?(uri)
+      valid, _reason = UploadWhitelist.is_whitelisted?(uri, user)
       unless valid
         raise(Downloads::File::Error, "'#{uri}' is not whitelisted and can't be direct downloaded")
       end

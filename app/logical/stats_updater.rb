@@ -4,8 +4,9 @@ module StatsUpdater
   module_function
 
   def run!
+    user = User.system
     stats = {}
-    stats[:started] = User.system.created_at
+    stats[:started] = user.created_at
 
     daily_average = ->(total) do
       (total / ((Time.now - stats[:started]) / (60 * 60 * 24))).round
@@ -14,8 +15,8 @@ module StatsUpdater
     ### Posts ###
 
     stats[:total_posts] = Post.maximum("id") || 0
-    stats[:active_posts] = Post.tag_match("status:active").count_only
-    stats[:deleted_posts] = Post.tag_match("status:deleted").count_only
+    stats[:active_posts] = Post.tag_match("status:active", user).count_only
+    stats[:deleted_posts] = Post.tag_match("status:deleted", user).count_only
     stats[:existing_posts] = stats[:active_posts] + stats[:deleted_posts]
     stats[:destroyed_posts] = stats[:total_posts] - stats[:existing_posts]
     stats[:total_votes] = PostVote.count
@@ -26,18 +27,18 @@ module StatsUpdater
     stats[:private_sets] = PostSet.where(is_public: false).count
     stats[:total_sets] = stats[:public_sets] + stats[:private_sets]
 
-    stats[:average_posts_per_pool] = Pool.average(Arel.sql("cardinality(post_ids)")) || 0
-    stats[:average_posts_per_set] = PostSet.average(Arel.sql("cardinality(post_ids)")) || 0
+    stats[:average_posts_per_pool] = Pool.average(Arel.sql("cardinality(post_ids)")).to_i
+    stats[:average_posts_per_set] = PostSet.average(Arel.sql("cardinality(post_ids)")).to_i
 
-    stats[:safe_posts] = Post.tag_match("status:any rating:s").count_only
-    stats[:questionable_posts] = Post.tag_match("status:any rating:q").count_only
-    stats[:explicit_posts] = Post.tag_match("status:any rating:e").count_only
-    stats[:jpg_posts] = Post.tag_match("status:any type:jpg").count_only
-    stats[:png_posts] = Post.tag_match("status:any type:png").count_only
-    stats[:gif_posts] = Post.tag_match("status:any type:gif").count_only
-    stats[:webp_posts] = Post.tag_match("status:any type:webp").count_only
-    stats[:webm_posts] = Post.tag_match("status:any type:webm").count_only
-    stats[:mp4_posts] = Post.tag_match("status:any type:mp4").count_only
+    stats[:safe_posts] = Post.tag_match("status:any rating:s", user).count_only
+    stats[:questionable_posts] = Post.tag_match("status:any rating:q", user).count_only
+    stats[:explicit_posts] = Post.tag_match("status:any rating:e", user).count_only
+    stats[:jpg_posts] = Post.tag_match("status:any type:jpg", user).count_only
+    stats[:png_posts] = Post.tag_match("status:any type:png", user).count_only
+    stats[:gif_posts] = Post.tag_match("status:any type:gif", user).count_only
+    stats[:webp_posts] = Post.tag_match("status:any type:webp", user).count_only
+    stats[:webm_posts] = Post.tag_match("status:any type:webm", user).count_only
+    stats[:mp4_posts] = Post.tag_match("status:any type:mp4", user).count_only
     sizes = Post.file_sizes
     stats[:total_file_size] = sizes[:total]
     stats[:posts_file_size] = sizes[:posts]

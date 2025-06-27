@@ -15,7 +15,7 @@ module ModActions
       end
 
       should("format wiki_page_delete correctly") do
-        @wiki.destroy
+        @wiki.destroy_with(@admin)
 
         assert_matches(
           actions:         %w[wiki_page_delete],
@@ -27,7 +27,7 @@ module ModActions
 
       should("format wiki_page_protect correctly") do
         level = User::Levels::ADMIN
-        @wiki.update!(protection_level: level)
+        @wiki.update_with!(@admin, protection_level: level)
 
         assert_matches(
           actions:          %w[wiki_page_protect],
@@ -40,7 +40,7 @@ module ModActions
 
       should("format wiki_page_merge correctly") do
         @target = create(:wiki_page)
-        @wiki.merge_into!(@target)
+        @wiki.merge_into!(@target, @admin)
 
         assert_matches(
           actions:                %w[wiki_page_merge wiki_page_delete],
@@ -54,7 +54,7 @@ module ModActions
 
       should("format wiki_page_rename correctly") do
         @original = @wiki.dup
-        @wiki.update!(title: "aaa")
+        @wiki.update_with!(@admin, title: "aaa")
 
         assert_matches(
           actions:         %w[wiki_page_rename],
@@ -67,7 +67,7 @@ module ModActions
 
       should("format wiki_page_unprotect correctly") do
         @wiki.update_columns(protection_level: User::Levels::ADMIN)
-        @wiki.update!(protection_level: nil)
+        @wiki.update_with!(@admin, protection_level: nil)
 
         assert_matches(
           actions:          %w[wiki_page_unprotect],

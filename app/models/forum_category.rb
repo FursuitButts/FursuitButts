@@ -8,6 +8,9 @@ class ForumCategory < ApplicationRecord
   has_one(:last_post, through: :last_topic)
   validates(:name, uniqueness: { case_sensitive: false }, length: { minimum: 3, maximum: 100 })
   validates(:description, length: { maximum: -> { FemboyFans.config.forum_category_description_max_size } })
+  belongs_to_user(:creator, ip: true, clones: :updater)
+  belongs_to_user(:updater, ip: true)
+  resolvable(:destroyer)
 
   after_create(:log_create)
   after_update(:log_update)
@@ -20,7 +23,10 @@ class ForumCategory < ApplicationRecord
 
   attr_accessor(:new_category_id) # technical bullshit
 
-  def can_create_within?(user = CurrentUser.user)
+  scope(:viewable, ->(user) { where(can_view: ..user.level) })
+  scope(:replyable, ->(user) { where(can_reply: ..user.level) })
+
+  def can_create_within?(user)
     user.level >= can_create
   end
 
@@ -41,14 +47,14 @@ class ForumCategory < ApplicationRecord
 
   module LogMethods
     def log_create
-      ModAction.log!(:forum_category_create, self,
+      ModAction.log!(creator, :forum_category_create, self,
                      forum_category_name: name,
                      can_view:            can_view,
                      can_create:          can_create)
     end
 
     def log_update
-      ModAction.log!(:forum_category_update, self,
+      ModAction.log!(updater, :forum_category_update, self,
                      forum_category_name:     name,
                      old_forum_category_name: name_before_last_save,
                      can_view:                can_view,
@@ -58,27 +64,20 @@ class ForumCategory < ApplicationRecord
     end
 
     def log_delete
-      ModAction.log!(:forum_category_delete, self,
+      ModAction.log!(destroyer, :forum_category_delete, self,
                      forum_category_name: name,
                      can_view:            can_view,
                      can_create:          can_create)
     end
   end
 
-  def self.log_reorder(total)
-    ModAction.log!(:forum_categories_reorder, nil, total: total)
-  end
-
-  module SearchMethods
-    def visible
-      where(can_view: ..CurrentUser.user.level)
-    end
-  end
-
   include(LogMethods)
-  extend(SearchMethods)
 
-  def visible?(user = CurrentUser.user)
+  def self.log_reorder(total, user)
+    ModAction.log!(user, :forum_categories_reorder, nil, total: total)
+  end
+
+  def visible?(user)
     user.level >= can_view
   end
 
@@ -86,7 +85,7 @@ class ForumCategory < ApplicationRecord
     topics.count <= ForumCategory::MAX_TOPIC_MOVE_COUNT
   end
 
-  def move_all_topics(new_category, user: CurrentUser.user)
+  def move_all_topics(new_category, user)
     return if topics.empty?
     MoveForumCategoryTopicsJob.perform_later(user, self, new_category)
   end

@@ -7,7 +7,6 @@ module PostSets
     context("In all cases") do
       setup do
         @user = create(:user)
-        CurrentUser.user = @user
 
         @post1 = create(:post)
         @post2 = create(:post)
@@ -20,7 +19,7 @@ module PostSets
       context("a favorite set for before the most recent post") do
         setup do
           id = ::Favorite.where(user_id: @user.id, post_id: @post3.id).first.id
-          @set = PostSets::Favorites.new(@user, "b#{id}", limit: 1)
+          @set = PostSets::Favorites.new(@user, "b#{id}", limit: 1, current_user: @user)
         end
 
         context("a sequential paginator") do
@@ -40,7 +39,7 @@ module PostSets
       context("a favorite set for after the third most recent post") do
         setup do
           id = ::Favorite.where(user_id: @user.id, post_id: @post2.id).first.id
-          @set = PostSets::Favorites.new(@user, "a#{id}", limit: 1)
+          @set = PostSets::Favorites.new(@user, "a#{id}", limit: 1, current_user: @user)
         end
 
         context("a sequential paginator") do
@@ -53,7 +52,7 @@ module PostSets
       context("a favorite set for before the second most recent post") do
         setup do
           id = ::Favorite.where(user_id: @user.id, post_id: @post1.id).first.id
-          @set = PostSets::Favorites.new(@user, "b#{id}", limit: 1)
+          @set = PostSets::Favorites.new(@user, "b#{id}", limit: 1, current_user: @user)
         end
 
         context("a sequential paginator") do
@@ -66,7 +65,7 @@ module PostSets
       context("a favorite set for after the second most recent post") do
         setup do
           id = ::Favorite.where(user_id: @user.id, post_id: @post1.id).first.id
-          @set = PostSets::Favorites.new(@user, "a#{id}", limit: 1)
+          @set = PostSets::Favorites.new(@user, "a#{id}", limit: 1, current_user: @user)
         end
 
         context("a sequential paginator") do
@@ -78,7 +77,7 @@ module PostSets
 
       context("a favorite set for page 2") do
         setup do
-          @set = PostSets::Favorites.new(@user, 2, limit: 1)
+          @set = PostSets::Favorites.new(@user, 2, limit: 1, current_user: @user)
         end
 
         context("a numbered paginator") do
@@ -90,7 +89,7 @@ module PostSets
 
       context("a favorite set with no page specified") do
         setup do
-          @set = PostSets::Favorites.new(@user, nil, limit: 1)
+          @set = PostSets::Favorites.new(@user, nil, limit: 1, current_user: @user)
         end
 
         should("return the most recent element") do

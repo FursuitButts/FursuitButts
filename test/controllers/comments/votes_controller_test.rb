@@ -8,13 +8,10 @@ module Comments
       setup do
         @user = create(:user)
         @post = create(:post, uploader: @user)
-        as(@user) do
-          @comment = create(:comment, post: @post)
-        end
+        @comment = create(:comment, post: @post)
 
         @user2 = create(:user)
         @admin = create(:admin_user)
-        CurrentUser.user = @user2
       end
 
       context("index action") do
@@ -47,22 +44,22 @@ module Comments
 
       context("create action") do
         should("create a vote") do
-          assert_difference(-> { CommentVote.count }, 1) do
-            post_auth(comment_votes_path(@comment), @user2, params: { score: -1, format: :json })
+          assert_difference("CommentVote.count", 1) do
+            post_auth(comment_votes_path(@comment), @user, params: { score: -1, format: :json })
             assert_response(:success)
           end
         end
 
         should("unvote when the vote already exists") do
-          create(:comment_vote, comment: @comment, user: @user2, score: -1)
-          assert_difference(-> { CommentVote.count }, -1) do
-            post_auth(comment_votes_path(@comment), @user2, params: { score: -1, format: :json })
+          create(:comment_vote, comment: @comment, user: @user, score: -1)
+          assert_difference("CommentVote.count", -1) do
+            post_auth(comment_votes_path(@comment), @user, params: { score: -1, format: :json })
             assert_response(:success)
           end
         end
 
         should("prevent voting on comment locked posts") do
-          @post.update(is_comment_locked: true)
+          @post.update(is_comment_locked: true, updater: @admin)
           assert_no_difference("CommentVote.count") do
             post_auth(comment_votes_path(@comment), @user, params: { score: -1, format: :json })
             assert_response(:unprocessable_entity)
@@ -70,7 +67,7 @@ module Comments
         end
 
         should("prevent unvoting on comment locked posts") do
-          @post.update(is_comment_locked: true)
+          @post.update(is_comment_locked: true, updater: @admin)
           create(:comment_vote, comment: @comment, user: @user, score: -1)
           assert_no_difference("CommentVote.count") do
             post_auth(comment_votes_path(@comment), @user, params: { score: -1, format: :json })
@@ -79,7 +76,7 @@ module Comments
         end
 
         should("prevent voting on comment disabled posts") do
-          @post.update(is_comment_disabled: true)
+          @post.update(is_comment_disabled: true, updater: @admin)
           assert_no_difference("CommentVote.count") do
             post_auth(comment_votes_path(@comment), @user, params: { score: -1, format: :json })
             assert_response(:unprocessable_entity)
@@ -87,7 +84,7 @@ module Comments
         end
 
         should("prevent unvoting on comment disabled posts") do
-          @post.update(is_comment_disabled: true)
+          @post.update(is_comment_disabled: true, updater: @admin)
           create(:comment_vote, comment: @comment, user: @user, score: -1)
           assert_no_difference("CommentVote.count") do
             post_auth(comment_votes_path(@comment), @user, params: { score: -1, format: :json })
@@ -130,7 +127,7 @@ module Comments
         should("restrict access") do
           @votes = []
           User::Levels.constants.length.times do
-            @votes << create(:comment_vote, comment: @comment, user: create(:user), score: 1)
+            @votes << create(:comment_vote, comment: @comment, score: 1)
           end
           assert_access(User::Levels::MODERATOR) { |user| post_auth(lock_comment_votes_path, user, params: { ids: @votes.shift.id }) }
         end

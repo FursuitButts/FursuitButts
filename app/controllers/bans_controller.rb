@@ -6,7 +6,7 @@ class BansController < ApplicationController
 
   def index
     @bans = authorize(Ban).html_includes(request, :user, :banner)
-                          .search(search_params(Ban))
+                          .search_current(search_params(Ban))
                           .paginate(params[:page], limit: params[:limit])
   end
 
@@ -16,7 +16,7 @@ class BansController < ApplicationController
   end
 
   def new
-    @ban = authorize(Ban.new(permitted_attributes(Ban)))
+    @ban = authorize(Ban.new_with_current(:creator, permitted_attributes(Ban)))
   end
 
   def edit
@@ -24,18 +24,16 @@ class BansController < ApplicationController
   end
 
   def create
-    Ban.transaction do
-      @ban = authorize(Ban.new(permitted_attributes(Ban)))
-      @ban.save
+    @ban = authorize(Ban.new_with_current(:creator, permitted_attributes(Ban)))
+    @ban.save
 
-      notice("Ban created") if @ban.valid?
-      respond_with(@ban)
-    end
+    notice("Ban created") if @ban.valid?
+    respond_with(@ban)
   end
 
   def update
     @ban = authorize(Ban.find(params[:id]))
-    @ban.update(permitted_attributes(@ban))
+    @ban.update_with_current(:updater, permitted_attributes(@ban))
 
     notice("Ban updated") if @ban.valid?
     respond_with(@ban)
@@ -43,7 +41,7 @@ class BansController < ApplicationController
 
   def destroy
     @ban = authorize(Ban.find(params[:id]))
-    @ban.destroy
+    @ban.destroy_with_current(:destroyer)
 
     notice("Ban destroyed")
     respond_with(@ban)
@@ -55,7 +53,7 @@ class BansController < ApplicationController
     @ban = @user.recent_ban
     if params[:commit] == "Acknowledge"
       return render_expected_error(403, "Your ban has not expired") unless @ban.try(:expired?)
-      @user.unban!(ack: true)
+      @user.unban!(CurrentUser.user, ack: true)
       redirect_to(new_session_path, notice: "Your ban has been removed, please log in again")
     else
       @notice = view_context.safe_wiki(FemboyFans.config.ban_notice_wiki_page).body

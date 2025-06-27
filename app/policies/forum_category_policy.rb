@@ -44,4 +44,9 @@ class ForumCategoryPolicy < ApplicationPolicy
   def permitted_attributes_for_move_all_topics
     %i[new_category_id]
   end
+
+  def visible_for_search(relation)
+    q = super
+    q.viewable(user)
+  end
 end

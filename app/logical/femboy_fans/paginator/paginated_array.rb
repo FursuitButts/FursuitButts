@@ -14,16 +14,20 @@ module FemboyFans
         real_array = orig_array || []
         @orig_size = real_array.size
 
+        # noinspection RubyCaseWithoutElseBlockInspection
         case @pagination_mode
         when :sequential_before, :sequential_after
           real_array = orig_array.first(records_per_page)
 
           if @pagination_mode == :sequential_before
+            # noinspection RubyArgCount
             super(real_array)
           else
+            # noinspection RubyArgCount
             super(real_array.reverse)
           end
         when :numbered
+          # noinspection RubyArgCount
           super(real_array)
         end
       end

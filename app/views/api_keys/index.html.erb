@@ -17,9 +17,9 @@
     <p>Example usage:
       <code>
         <% if @api_keys.present? %>
-          <%= posts_path(CurrentUser.id, format: "json", login: CurrentUser.user.name, api_key: @api_keys.first.key) %>
+          <%= posts_path(CurrentUser.user.id, format: "json", login: CurrentUser.user.name, api_key: @api_keys.first.key) %>
         <% else %>
-          <%= posts_path(CurrentUser.id, format: "json", login: CurrentUser.user.name, api_key: "your_api_key_goes_here") %>
+          <%= posts_path(CurrentUser.user.id, format: "json", login: CurrentUser.user.name, api_key: "your_api_key_goes_here") %>
         <% end %>
       </code>
     </p>

@@ -15,7 +15,7 @@ module ModActions
       end
 
       should("format help_create correctly") do
-        @help = create(:help_page)
+        @help = create(:help_page, creator: @admin)
 
         assert_matches(
           actions:         %w[help_create],
@@ -28,7 +28,7 @@ module ModActions
       end
 
       should("format help_delete correctly") do
-        @help.destroy
+        @help.destroy_with(@admin)
 
         assert_matches(
           actions:         %w[help_delete],
@@ -42,7 +42,7 @@ module ModActions
 
       should("format help_update correctly") do
         @original = @help.dup
-        @help.update!(title: "xxx")
+        @help.update_with!(@admin, title: "xxx")
 
         assert_matches(
           actions:         %w[help_update],

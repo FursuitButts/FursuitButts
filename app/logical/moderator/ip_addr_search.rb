@@ -16,7 +16,8 @@ module Moderator
         search_by_user_name(params[:user_name].split(",").map(&:strip), with_history)
       elsif params[:ip_addr].present?
         ip_addrs = params[:ip_addr].split(",").map(&:strip)
-        if params[:add_ip_mask].to_s.truthy? && ip_addrs.count == 1 && ip_addrs[0].exclude?("/")
+        if params[:add_ip_mask].to_s.truthy? && ip_addrs.one? && ip_addrs[0].exclude?("/")
+          # noinspection RubyArgCount
           mask = IPAddr.new(ip_addrs[0]).ipv4? ? 24 : 64
           ip_addrs[0] = "#{ip_addrs[0]}/#{mask}"
         end
@@ -31,7 +32,7 @@ module Moderator
     def search_by_ip_addr(ip_addrs, with_history)
       sums = {}
       add_by_ip_addr(sums, :comment, ip_addrs, ::Comment, :creator_ip_addr, :creator_id)
-      add_by_ip_addr(sums, :dmail, ip_addrs, ::Dmail, :creator_ip_addr, :from_id)
+      add_by_ip_addr(sums, :dmail, ip_addrs, ::Dmail, :from_ip_addr, :from_id)
       add_by_ip_addr(sums, :post_flag, ip_addrs, ::PostFlag, :creator_ip_addr, :creator_id)
       add_by_ip_addr(sums, :posts, ip_addrs, ::Post, :uploader_ip_addr, :uploader_id)
       add_by_ip_addr(sums, :last_login, ip_addrs, ::User, :last_ip_addr, :id)
@@ -57,7 +58,7 @@ module Moderator
     def search_by_user_id(user_ids, with_history)
       sums = {}
       add_by_user_id(sums, :comment, user_ids, ::Comment, :creator_ip_addr, :creator_id)
-      add_by_user_id(sums, :dmail, user_ids, ::Dmail, :creator_ip_addr, :from_id)
+      add_by_user_id(sums, :dmail, user_ids, ::Dmail, :from_ip_addr, :from_id)
       add_by_user_id(sums, :post_flag, user_ids, ::PostFlag, :creator_ip_addr, :creator_id)
       add_by_user_id(sums, :posts, user_ids, ::Post, :uploader_ip_addr, :uploader_id)
       add_by_user_id(sums, :users, user_ids, ::User, :last_ip_addr, :id)

@@ -42,9 +42,7 @@ class UploadsControllerTest < ActionDispatch::IntegrationTest
 
     context("index action") do
       setup do
-        as(@user) do
-          @upload = create(:upload, tag_string: "foo bar")
-        end
+        @upload = create(:upload, tag_string: "foo bar")
       end
 
       should("render") do
@@ -59,10 +57,8 @@ class UploadsControllerTest < ActionDispatch::IntegrationTest
 
     context("show action") do
       setup do
-        as(@user) do
-          @pending = create(:upload)
-          @upload = create(:jpg_upload)
-        end
+        @pending = create(:upload)
+        @upload = create(:jpg_upload)
       end
 
       should("render") do
@@ -103,7 +99,7 @@ class UploadsControllerTest < ActionDispatch::IntegrationTest
         setup do
           @admin = create(:admin_user)
           @upload = create(:jpg_upload)
-          as(@admin) { @upload.media_asset.expunge! }
+          @upload.media_asset.expunge!(@admin)
         end
 
         should("fail and create ticket") do
@@ -133,9 +129,7 @@ class UploadsControllerTest < ActionDispatch::IntegrationTest
         file = fixture_file_upload("test.jpg")
         FemboyFans.config.stubs(:disable_age_checks?).returns(true)
         assert_access(User::Levels::MEMBER, anonymous_response: :forbidden) do |user|
-          Post.destroy_all
-          Upload.destroy_all
-          UploadMediaAsset.destroy_all
+          [Upload, PostVersion, Post, UploadMediaAsset].each(&:delete_all)
           post_auth(uploads_path, user, params: { upload: { file: file, tag_string: "aaa", rating: "q", source: "aaa" }, format: :json })
         end
       end

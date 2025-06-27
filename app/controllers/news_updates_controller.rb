@@ -11,7 +11,7 @@ class NewsUpdatesController < ApplicationController
   end
 
   def new
-    @news_update = authorize(NewsUpdate.new)
+    @news_update = authorize(NewsUpdate.new_with_current(:creator))
     respond_with(@news_update)
   end
 
@@ -21,20 +21,20 @@ class NewsUpdatesController < ApplicationController
   end
 
   def create
-    @news_update = authorize(NewsUpdate.new(permitted_attributes(NewsUpdate)))
+    @news_update = authorize(NewsUpdate.new_with_current(:creator, permitted_attributes(NewsUpdate)))
     @news_update.save
     respond_with(@news_update, location: news_updates_path)
   end
 
   def update
     @news_update = authorize(NewsUpdate.find(params[:id]))
-    @news_update.update(permitted_attributes(@news_update))
+    @news_update.update_with_current(:updater, permitted_attributes(@news_update))
     respond_with(@news_update, location: news_updates_path)
   end
 
   def destroy
     @news_update = authorize(NewsUpdate.find(params[:id]))
-    @news_update.destroy
+    @news_update.destroy_with_current(:destroyer)
     respond_with(@news_update, &:js)
   end
 end

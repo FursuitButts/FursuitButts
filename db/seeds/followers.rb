@@ -12,16 +12,14 @@ users.each_with_index do |user, i|
   count = rand(MIN_FOLLOWS..MAX_FOLLOWS)
   puts("Creating #{count} follows for #{user.name} (#{i + 1}/#{total})")
   documents = []
-  CurrentUser.scoped(user) do
-    Tag.where("post_count > 0").order("RANDOM()").limit(count).each do |tag|
-      posts = Post.sql_raw_tag_match(tag.name).limit(50).pluck(:id)
-      next if posts.empty?
-      offset = rand(0..posts.length - 1)
-      # user.followed_tags.create!(tag: tag, last_post_id: posts[offset].id)
-      documents << { tag_id: tag.id, last_post_id: posts[offset], user_id: user.id }
-    end
-    TagFollower.insert_all(documents)
-    CurrentUser.user.update_columns(followed_tag_count: TagFollower.for_user(CurrentUser.user.id).count)
+  Tag.where("post_count > 0").order("RANDOM()").limit(count).each do |tag|
+    posts = Post.sql_raw_tag_match(tag.name).limit(50).pluck(:id)
+    next if posts.empty?
+    offset = rand(0..(posts.length - 1))
+    # user.followed_tags.create!(tag: tag, last_post_id: posts[offset].id)
+    documents << { tag_id: tag.id, last_post_id: posts[offset], user_id: user.id }
   end
+  TagFollower.insert_all(documents)
+  user.update_columns(followed_tag_count: TagFollower.for_user(user.id).count)
 end
 TagFollower.recount_all!

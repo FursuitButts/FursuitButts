@@ -6,9 +6,7 @@ class TagsControllerTest < ActionDispatch::IntegrationTest
   context("The tags controller") do
     setup do
       @user = create(:janitor_user)
-      as(@user) do
-        @tag = create(:tag, name: "touhou", category: TagCategory.copyright, post_count: 1)
-      end
+      @tag = create(:tag, name: "touhou", category: TagCategory.copyright, post_count: 1)
     end
 
     context("edit action") do
@@ -84,9 +82,7 @@ class TagsControllerTest < ActionDispatch::IntegrationTest
 
       context("for a tag with >1000 posts") do
         setup do
-          as(@user) do
-            @tag.update(post_count: 1000)
-          end
+          @tag.update_columns(post_count: 1000)
         end
 
         should("not update the category for a janitor") do
@@ -105,9 +101,7 @@ class TagsControllerTest < ActionDispatch::IntegrationTest
       end
 
       should("not change category when the tag is too large to be changed by a builder") do
-        as(@user) do
-          @tag.update(category: TagCategory.general, post_count: 1001)
-        end
+        @tag.update_with(@user, category: TagCategory.general, post_count: 1001)
         put_auth(tag_path(@tag), @user, params: { tag: { category: TagCategory.artist } })
 
         assert_response(:forbidden)
@@ -130,12 +124,10 @@ class TagsControllerTest < ActionDispatch::IntegrationTest
 
       should("not allow following aliased tags") do
         @tag2 = create(:tag)
-        as(@user) do
-          @ta = create(:tag_alias, antecedent_name: @tag.name, consequent_name: @tag2.name)
-          with_inline_jobs { @ta.approve! }
-        end
+        @ta = create(:tag_alias, antecedent_name: @tag.name, consequent_name: @tag2.name)
+        with_inline_jobs { @ta.approve!(@user) }
         put_auth(follow_tag_path(@tag), @user, params: { format: :json })
-        assert_response(400)
+        assert_response(:bad_request)
         assert_equal(0, @tag.reload.follower_count)
         assert_equal(false, @user.followed_tags.exists?(tag: @tag))
         assert_equal("You cannot follow aliased tags.", response.parsed_body["message"])
@@ -144,7 +136,7 @@ class TagsControllerTest < ActionDispatch::IntegrationTest
       should("not allow following more than the user's limit") do
         FemboyFans.config.stubs(:followed_tag_limit).returns(0)
         put_auth(follow_tag_path(@tag), @user, params: { format: :json })
-        assert_response(422)
+        assert_response(:unprocessable_entity)
         assert_equal(0, @tag.reload.follower_count)
         assert_equal(false, @user.followed_tags.exists?(tag: @tag))
         assert_equal("cannot follow more than 0 tags", response.parsed_body.dig("errors", "user").first)
@@ -157,7 +149,7 @@ class TagsControllerTest < ActionDispatch::IntegrationTest
 
     context("unfollow action") do
       should("work") do
-        as(@user) { @tag.follow! }
+        @tag.follow!(@user)
         assert_equal(1, @tag.reload.follower_count)
         put_auth(unfollow_tag_path(@tag), @user)
         assert_redirected_to(tag_path(@tag))
@@ -167,7 +159,7 @@ class TagsControllerTest < ActionDispatch::IntegrationTest
 
       should("restrict access") do
         assert_access(User::Levels::MEMBER, success_response: :redirect) do |user|
-          as(user) { @tag.follow! }
+          @tag.follow!(@user)
           put_auth(unfollow_tag_path(@tag), user)
         end
       end

@@ -11,8 +11,8 @@ module Posts
 
     def create
       @post = authorize(Post.find(params[:id]), :move_favorites?)
-      @post.give_favorites_to_parent
-      @post.give_votes_to_parent
+      @post.give_favorites_to_parent(CurrentUser.user)
+      @post.give_votes_to_parent(CurrentUser.user)
       respond_with(@post)
     end
   end

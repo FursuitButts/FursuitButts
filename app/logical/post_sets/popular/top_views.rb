@@ -5,7 +5,8 @@ module PostSets
     class TopViews < PostSets::Base
       attr_reader(:limit)
 
-      def initialize(limit: Reports::LIMIT)
+      def initialize(current_user:, limit: Reports::LIMIT)
+        super(current_user)
         @limit = limit
       end
 

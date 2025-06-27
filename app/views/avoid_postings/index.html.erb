@@ -12,7 +12,7 @@
   <% end %>
   <% t.column("Details", th: { class: "dnp-details" }, td: { class: "dnp-details" }) do |avoid_posting| %>
     <span class="avoid-posting-details"><%= format_text(avoid_posting.details, inline: true) %></span>
-    <% if CurrentUser.is_staff? && avoid_posting.staff_notes.present? %>
+    <% if CurrentUser.user.is_staff? && avoid_posting.staff_notes.present? %>
       <span class="avoid-posting-staff-notes">
             <b>Staff Notes</b>
             <span><%= format_text(avoid_posting.staff_notes, inline: true) %></span>

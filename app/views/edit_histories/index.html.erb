@@ -4,9 +4,9 @@
 
 <%= table_for(@edit_histories) do |t| %>
   <% t.column("Editor") do |edit| %>
-    <%= link_to_user(edit.user) %>
+    <%= link_to_user(edit.updater) %>
     <% if policy(edit).can_see_ip_addr? %>
-      (<%= link_to_ip(edit.ip_addr) %>)
+      (<%= link_to_ip(edit.updater_ip_addr) %>)
     <% end %>
     <p><%= compact_time(edit.updated_at) %></p>
   <% end %>

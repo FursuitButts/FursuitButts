@@ -7,11 +7,8 @@ class HelpControllerTest < ActionDispatch::IntegrationTest
     setup do
       @user = create(:user)
       @admin = create(:admin_user)
-      CurrentUser.user = @user
-      as(@admin) do
-        @wiki = create(:wiki_page, title: "help")
-        @help = create(:help_page, wiki_page: @wiki, name: "very_important")
-      end
+      @wiki = create(:wiki_page, title: "help")
+      @help = create(:help_page, wiki_page: @wiki, name: "very_important")
     end
 
     context("index action") do

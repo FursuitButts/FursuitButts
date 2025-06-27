@@ -8,8 +8,7 @@ module Forums
     skip_before_action(:api_check)
 
     def index
-      @query = authorize(ForumPost).visible(CurrentUser.user)
-                                   .search(search_params(ForumPost))
+      @query = authorize(ForumPost).search_current(search_params(ForumPost))
       @forum_posts = @query.paginate(params[:page], limit: params[:limit])
       respond_with(@forum_posts) do |format|
         format.html do
@@ -29,7 +28,7 @@ module Forums
     end
 
     def new
-      @forum_post = authorize(ForumPost.new(permitted_attributes(ForumPost)))
+      @forum_post = authorize(ForumPost.new_with_current(:creator, permitted_attributes(ForumPost)))
       respond_with(@forum_post)
     end
 
@@ -39,7 +38,7 @@ module Forums
     end
 
     def create
-      @forum_post = authorize(ForumPost.new(permitted_attributes(ForumPost)))
+      @forum_post = authorize(ForumPost.new_with_current(:creator, permitted_attributes(ForumPost)))
       if @forum_post.valid?
         @forum_post.save
         respond_with(@forum_post, location: forum_topic_path(@forum_post.topic, page: @forum_post.forum_topic_page, anchor: "forum_post_#{@forum_post.id}"))
@@ -50,32 +49,32 @@ module Forums
 
     def update
       authorize(@forum_post)
-      @forum_post.update(permitted_attributes(@forum_post))
+      @forum_post.update_with_current(:updater, permitted_attributes(@forum_post))
       respond_with(@forum_post, location: forum_topic_path(@forum_post.topic, page: @forum_post.forum_topic_page, anchor: "forum_post_#{@forum_post.id}"))
     end
 
     def destroy
       authorize(@forum_post)
-      @forum_post.destroy
+      @forum_post.destroy_with_current(:destroyer)
       respond_with(@forum_post)
     end
 
     def hide
       authorize(@forum_post)
-      @forum_post.hide!
+      @forum_post.hide!(CurrentUser.user)
       respond_with(@forum_post)
     end
 
     def unhide
       authorize(@forum_post)
-      @forum_post.unhide!
+      @forum_post.unhide!(CurrentUser.user)
       respond_with(@forum_post)
     end
 
     def warning
       authorize(@forum_post)
       if params[:record_type] == "unmark"
-        @forum_post.remove_user_warning!
+        @forum_post.remove_user_warning!(CurrentUser.user)
       else
         @forum_post.user_warned!(params[:record_type], CurrentUser.user)
       end
@@ -84,13 +83,13 @@ module Forums
 
     def mark_spam
       authorize(@forum_post)
-      @forum_post.mark_spam!
+      @forum_post.mark_spam!(CurrentUser.user)
       respond_with_html_after_update
     end
 
     def mark_not_spam
       authorize(@forum_post)
-      @forum_post.mark_not_spam!
+      @forum_post.mark_not_spam!(CurrentUser.user)
       respond_with_html_after_update
     end
 
@@ -107,7 +106,7 @@ module Forums
     end
 
     def ensure_lockdown_disabled
-      access_denied if Security::Lockdown.forums_disabled? && !CurrentUser.is_staff?
+      access_denied if Security::Lockdown.forums_disabled? && !CurrentUser.user.is_staff?
     end
   end
 end

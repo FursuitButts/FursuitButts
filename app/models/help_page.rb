@@ -9,6 +9,9 @@ class HelpPage < ApplicationRecord
   after_save(:invalidate_cache)
   belongs_to(:wiki_page)
   delegate(:title, to: :wiki_page, prefix: true, allow_nil: true)
+  belongs_to_user(:creator, ip: true, clones: :updater)
+  belongs_to_user(:updater, ip: true)
+  resolvable(:destroyer)
 
   def wiki_page_title=(name)
     self.wiki_page = WikiPage.titled(name)
@@ -41,15 +44,15 @@ class HelpPage < ApplicationRecord
 
   module LogMethods
     def log_create
-      ModAction.log!(:help_create, self, name: name, wiki_page_title: wiki_page_title, wiki_page_id: wiki_page_id)
+      ModAction.log!(creator, :help_create, self, name: name, wiki_page_title: wiki_page_title, wiki_page_id: wiki_page_id)
     end
 
     def log_update
-      ModAction.log!(:help_update, self, name: name, wiki_page_title: wiki_page_title, wiki_page_id: wiki_page_id)
+      ModAction.log!(updater, :help_update, self, name: name, wiki_page_title: wiki_page_title, wiki_page_id: wiki_page_id)
     end
 
     def log_delete
-      ModAction.log!(:help_delete, self, name: name, wiki_page_title: wiki_page_title, wiki_page_id: wiki_page_id)
+      ModAction.log!(destroyer, :help_delete, self, name: name, wiki_page_title: wiki_page_title, wiki_page_id: wiki_page_id)
     end
   end
 

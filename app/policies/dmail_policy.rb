@@ -55,7 +55,13 @@ class DmailPolicy < ApplicationPolicy
 
   def html_data_attributes
     attr = super
-    attr += %i[is_owner?] if user.is_owner?
+    attr += %i[apionly_is_owner?] if user.is_owner?
     attr
+  end
+
+  def visible_for_search(relation)
+    q = super
+    return q if user.is_owner?
+    q.owned_by(user)
   end
 end

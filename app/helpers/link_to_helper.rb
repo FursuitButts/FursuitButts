@@ -7,7 +7,7 @@ module LinkToHelper
     format = options.delete(:format)
     li = options.delete(:li)
     return "".html_safe if ifopt == false || unlessopt == true
-    content = super(*, **options)
+    content = super
     content = format.gsub("%s", content) if format
     content = %(<li>#{content}</li>) if li
     content.html_safe

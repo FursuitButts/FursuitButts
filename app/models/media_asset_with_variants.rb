@@ -119,22 +119,22 @@ class MediaAssetWithVariants < MediaAsset
       store(file, variants: false)
     end
 
-    def store(file = self.file, variants: true)
-      super(file)
+    def store(user, file = self.file, variants: true)
+      super(user, file)
       regenerate_variants! if variants
     end
 
-    def delete
+    def delete(user)
       super
       variants.each(&:delete!)
     end
 
-    def undelete
+    def undelete(user)
       super
       variants.each(&:undelete!)
     end
 
-    def expunge(status: true)
+    def expunge(user, status: true)
       super
       variants.each(&:expunge!)
     end
@@ -201,8 +201,8 @@ class MediaAssetWithVariants < MediaAsset
       backup_storage_manager.file_path(md5, ext, type, protected: protected, prefix: path_prefix, protected_prefix: protected_path_prefix, hierarchical: hierarchical?)
     end
 
-    def file_url(protected: is_protected?)
-      storage_manager.url(md5, ext, type, protected: protected, prefix: path_prefix, protected_prefix: protected_path_prefix, hierarchical: hierarchical?, secret: protected_secret)
+    def file_url(user:, protected: is_protected?)
+      storage_manager.url(md5, ext, type, protected: protected, prefix: path_prefix, protected_prefix: protected_path_prefix, hierarchical: hierarchical?, secret: protected_secret, user: user)
     end
 
     def store!(original_file)

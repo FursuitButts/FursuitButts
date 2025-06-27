@@ -12,7 +12,7 @@ module Posts
     end
 
     def new
-      @reason = authorize(PostDeletionReason).new
+      @reason = authorize(PostDeletionReason.new_with_current(:creator))
     end
 
     def edit
@@ -20,7 +20,7 @@ module Posts
     end
 
     def create
-      @reason = authorize(PostDeletionReason.new(permitted_attributes(PostDeletionReason)))
+      @reason = authorize(PostDeletionReason.new_with_current(:creator, permitted_attributes(PostDeletionReason)))
       @reason.save
       flash[:notice] = @reason.valid? ? "Post deletion reason created" : @reason.errors.full_messages.join("; ")
       respond_with(@reason) do |fmt|
@@ -30,7 +30,7 @@ module Posts
 
     def update
       authorize(@reason)
-      @reason.update(permitted_attributes(@reason))
+      @reason.update_with_current(:updater, permitted_attributes(@reason))
       flash[:notice] = @reason.valid? ? "Post deletion reason updated" : @reason.errors.full_messages.join("; ")
       respond_with(@reason) do |fmt|
         fmt.html { redirect_to(post_deletion_reasons_path) }
@@ -39,7 +39,7 @@ module Posts
 
     def destroy
       authorize(@reason)
-      @reason.destroy
+      @reason.destroy_with_current(:destroyer)
       flash[:notice] = "Post deletion reason deleted"
       respond_with(@reason) do |format|
         format.html { redirect_to(post_deletion_reasons_path) }
@@ -68,7 +68,7 @@ module Posts
         end
       end
 
-      PostDeletionReason.log_reorder(changes) if changes != 0
+      PostDeletionReason.log_reorder(changes, CurrentUser.user) if changes != 0
 
       respond_to do |format|
         format.html { redirect_back(fallback_location: post_deletion_reasons_path) }

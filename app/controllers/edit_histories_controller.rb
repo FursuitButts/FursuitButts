@@ -5,7 +5,7 @@ class EditHistoriesController < ApplicationController
 
   def index
     @edit_histories = authorize(EditHistory).html_includes(request, :user)
-                                            .search(search_params(EditHistory))
+                                            .search_current(search_params(EditHistory))
                                             .paginate(params[:page], limit: params[:limit])
     respond_with(@edit_histories)
   end

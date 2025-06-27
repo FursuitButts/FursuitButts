@@ -1,17 +1,18 @@
 # frozen_string_literal: true
 
 class DestroyedPost < ApplicationRecord
-  belongs_to(:destroyer, class_name: "User")
-  belongs_to(:uploader, class_name: "User", optional: true)
+  belongs_to_user(:destroyer, ip: true, clones: :updater)
+  belongs_to_user(:uploader, ip: true, optional: true)
+  resolvable(:updater)
   after_update(:log_notify_change, if: :saved_change_to_notify?)
 
   def log_notify_change
     action = notify? ? :enable_post_notifications : :disable_post_notifications
-    StaffAuditLog.log!(action, CurrentUser.user, destroyed_post_id: id, post_id: post_id)
+    StaffAuditLog.log!(updater, action, destroyed_post_id: id, post_id: post_id)
   end
 
   module SearchMethods
-    def search(params)
+    def search(params, user)
       q = super
 
       q = q.where_user(:destroyer_id, :destroyer, params)
@@ -60,7 +61,7 @@ class DestroyedPost < ApplicationRecord
     %i[destroyer uploader]
   end
 
-  def visible?(user = CurrentUser.user)
+  def visible?(user)
     user.is_admin?
   end
 end

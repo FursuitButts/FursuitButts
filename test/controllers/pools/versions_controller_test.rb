@@ -11,19 +11,13 @@ module Pools
 
       context("index action") do
         setup do
-          as(@user) do
-            @pool = create(:pool)
-          end
+          @pool = create(:pool, creator: @user)
           @user2 = create(:user)
           @user3 = create(:user)
 
-          as(@user2, "1.2.3.4") do
-            @pool.update(post_ids: "1 2")
-          end
+          @pool.update_with(@user2, post_ids: "1 2")
 
-          as(@user3, "5.6.7.8") do
-            @pool.update(post_ids: "1 2 3 4")
-          end
+          @pool.update_with(@user3, post_ids: "1 2 3 4")
 
           @versions = @pool.versions
         end

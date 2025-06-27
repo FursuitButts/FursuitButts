@@ -15,14 +15,14 @@ class StaffAuditLog < ApplicationRecord
   ].freeze
 
   store_accessor(:values, *VALUES)
-  belongs_to(:user, class_name: "User")
+  belongs_to_user(:user, ip: true)
 
   def self.log(...)
-    Rails.logger.warn("StaffAuditLog: use StaffAuditLog.log! instead of StaffAuditLog.log")
+    TraceLogger.warn("StaffAuditLog", "use StaffAuditLog.log! instead of StaffAuditLog.log", ignore: %r{/models/staff_audit_log\.rb})
     log!(...)
   end
 
-  def self.log!(category, user, **details)
+  def self.log!(user, category, **details)
     create!(user: user, action: category.to_s, values: details)
   end
 
@@ -30,6 +30,7 @@ class StaffAuditLog < ApplicationRecord
     Rails.application.routes.url_helpers
   end
 
+  # rubocop:disable Local/CurrentUserOutsideOfRequests
   FORMATTERS = {
     force_name_change:          {
       text: ->(log) { "Forced a name change for #{link_to_user(log.target_id)}" },
@@ -149,7 +150,7 @@ class StaffAuditLog < ApplicationRecord
   end
 
   def format_unknown(log)
-    CurrentUser.is_admin? ? "Unknown action #{log.action}: #{log.values.inspect}" : "Unknown action #{log.action}"
+    CurrentUser.user.is_admin? ? "Unknown action #{log.action}: #{log.values.inspect}" : "Unknown action #{log.action}"
   end
 
   def format_text
@@ -157,17 +158,17 @@ class StaffAuditLog < ApplicationRecord
   end
 
   def json_keys
-    FORMATTERS[action.to_sym]&.[](:json) || (CurrentUser.is_admin? ? values.keys : [])
+    FORMATTERS[action.to_sym]&.[](:json) || (CurrentUser.user.is_admin? ? values.keys : [])
   end
 
   def format_json
-    FORMATTERS[action.to_sym]&.[](:json)&.index_with { |k| send(k) } || (CurrentUser.is_admin? ? values : {})
+    FORMATTERS[action.to_sym]&.[](:json)&.index_with { |k| send(k) } || (CurrentUser.user.is_admin? ? values : {})
   end
-
   KNOWN_ACTIONS = FORMATTERS.keys.freeze
+  # rubocop:enable Local/CurrentUserOutsideOfRequests
 
   module SearchMethods
-    def search(params)
+    def search(params, user)
       q = super
 
       q = q.where_user(:user_id, :user, params)

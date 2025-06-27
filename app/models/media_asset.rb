@@ -8,7 +8,8 @@ class MediaAsset < ApplicationRecord
   include(ChunkedUpload) # must be near the top due to callbacks
   self.abstract_class = true
 
-  belongs_to_creator
+  belongs_to_user(:creator, ip: true, clones: :updater)
+  resolvable(:updater)
   belongs_to(:media_metadata, dependent: :destroy)
 
   after_initialize(:build_media_metadata, unless: -> { association(:media_metadata).loaded? || media_metadata_id.present? })
@@ -22,8 +23,10 @@ class MediaAsset < ApplicationRecord
   validates(:md5, :file_ext, presence: true, if: :active?)
   validates(:is_animated_png, :is_animated_gif, inclusion: { in: [true, false] }, if: :active?)
   validates(:file_size, :image_width, :image_height, presence: true, comparison: { greater_than: 0 }, if: :active?)
+  # noinspection RubyArgCount
   validates(:duration, presence: true, comparison: { greater_than: 0 }, if: -> { active? && is_video? })
   validates(:checksum, length: { is: 32 }, if: -> { checksum.present? })
+  # noinspection RubyArgCount
   validates(:pixel_hash, presence: true, if: -> { active? && is_image? && !is_animated_png? })
   validates(:checksum, presence: true, if: -> { in_progress? && file.present? })
 
@@ -35,6 +38,7 @@ class MediaAsset < ApplicationRecord
   scope(:with_metadata, -> { includes(:media_metadata) })
   scope(:images_only, -> { where(file_ext: ::FileMethods::IMAGE_EXTENSIONS) })
   scope(:videos_only, -> { where(file_ext: ::FileMethods::VIDEO_EXTENSIONS) })
+  scope(:for_creator, ->(user) { where(creator_id: u2id(user)) })
 
   enum(:status, %i[pending uploading active deleted cancelled expunged replaced failed duplicate].index_with(&:to_s))
 
@@ -67,8 +71,7 @@ class MediaAsset < ApplicationRecord
   def check_expunged_duplicates
     assets = PostReplacementMediaAsset.expunged_duplicates_of(md5) + UploadMediaAsset.expunged_duplicates_of(md5)
     return if assets.empty?
-    CurrentUser.as_system { expunge }
-    __set_creator__
+    expunge(User.system)
     # if self.class.connection.transaction_open?
     # CreateExpungedTicketJob.perform_later(self.class.name, id, assets.map(&:id))
     # else
@@ -211,7 +214,7 @@ class MediaAsset < ApplicationRecord
     end
 
     def delete_all_files
-      expunge(status: false)
+      expunge(nil, status: false)
     end
 
     def storage_manager
@@ -242,16 +245,17 @@ class MediaAsset < ApplicationRecord
       backup_storage_manager.file_path(md5, file_ext, :original, protected: protected, prefix: path_prefix, hierarchical: hierarchical?)
     end
 
-    def file_url(protected: is_protected?)
-      storage_manager.url(md5, file_ext, :original, protected: protected, prefix: path_prefix, hierarchical: hierarchical?, secret: protected_secret)
+    def file_url(user:, protected: is_protected?)
+      storage_manager.url(md5, file_ext, :original, protected: protected, prefix: path_prefix, hierarchical: hierarchical?, secret: protected_secret, user: user)
     end
 
-    def store(file = self.file)
+    def store(user, file = self.file)
       self.file = file
       validate_file
       if errors.any?
         self.status = "failed"
         self.status_message = errors.full_messages.join("; ")
+        self.updater = user
         return
       end
       set_file_attributes
@@ -264,9 +268,10 @@ class MediaAsset < ApplicationRecord
       save!
     end
 
-    def delete
+    def delete(user)
       raise(MediaAsset::DeletionNotSupportedError, "deletion of #{self.class.name} is not supported") unless self.class.deletion_supported
       self.status = "deleted"
+      self.updater = user
       storage_manager.move_file_delete(md5, file_ext, :original, prefix: path_prefix, protected_prefix: protected_path_prefix, hierarchical: hierarchical?)
       backup_storage_manager.move_file_delete(md5, file_ext, :original, prefix: path_prefix, protected_prefix: protected_path_prefix, hierarchical: hierarchical?)
     end
@@ -276,9 +281,10 @@ class MediaAsset < ApplicationRecord
       save!
     end
 
-    def undelete
+    def undelete(user)
       raise(MediaAsset::DeletionNotSupportedError, "deletion of #{self.class.name} is not supported") unless self.class.deletion_supported
       self.status = "active"
+      self.updater = user
       storage_manager.move_file_undelete(md5, file_ext, :original, prefix: path_prefix, protected_prefix: protected_path_prefix, hierarchical: hierarchical?)
       backup_storage_manager.move_file_undelete(md5, file_ext, :original, prefix: path_prefix, protected_prefix: protected_path_prefix, hierarchical: hierarchical?)
     end
@@ -288,10 +294,11 @@ class MediaAsset < ApplicationRecord
       save!
     end
 
-    def expunge(status: true)
+    def expunge(user, status: true)
       if status && !destroyed?
         self.status = "expunged"
         self.status_message = "has been deleted and cannot be reuploaded"
+        self.updater = user
       end
       storage_manager.delete(file_path(protected: false))
       storage_manager.delete(file_path(protected: true))
@@ -306,12 +313,7 @@ class MediaAsset < ApplicationRecord
   end
 
   module SearchMethods
-    def visible(user)
-      return all if user.is_staff?
-      where(creator_id: user.id)
-    end
-
-    def search(params)
+    def search(params, user)
       q = super
       q = q.attribute_matches(:checksum, params[:checksum])
       q = q.attribute_matches(:md5, params[:md5])
@@ -330,11 +332,11 @@ class MediaAsset < ApplicationRecord
   include(::FileMethods)
   extend(SearchMethods)
 
-  def visible?(user = CurrentUser.user)
+  def visible?(user)
     user.is_staff? || creator_id == user.id
   end
 
-  def file_visible?(user = CurrentUser.user)
+  def file_visible?(user)
     visible?(user) && (user.is_staff? || !is_protected?)
   end
 
@@ -351,9 +353,9 @@ class MediaAsset < ApplicationRecord
                  file_path file_url md5 file_ext file_size image_width image_height duration framecount pixel_hash checksum].freeze
   module DelegateProperties
     delegate(*DELEGATED, to: :media_asset)
-  end
 
-  module NullableDelegateProperties
-    delegate(*DELEGATED, to: :media_asset, allow_nil: true)
+    module Nullable
+      delegate(*DELEGATED, to: :media_asset, allow_nil: true)
+    end
   end
 end

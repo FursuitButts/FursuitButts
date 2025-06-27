@@ -6,7 +6,6 @@ class TagImplicationTest < ActiveSupport::TestCase
   context("A tag implication") do
     setup do
       @admin = create(:admin_user)
-      CurrentUser.user = @admin
       @user = create(:user, created_at: 1.month.ago)
     end
 
@@ -61,10 +60,10 @@ class TagImplicationTest < ActiveSupport::TestCase
       setup do
         @mod = create(:moderator_user)
         @owner = create(:owner_user)
-        @ti = as(@user) { create(:tag_implication, status: "pending") }
-        @dnp = as(@owner) { create(:avoid_posting) }
-        @ti2 = as(@user) { create(:tag_implication, antecedent_name: @dnp.artist_name, consequent_name: "ccc", status: "pending") }
-        @ti3 = as(@user) { create(:tag_implication, antecedent_name: "ddd", consequent_name: @dnp.artist_name, status: "pending") }
+        @ti = create(:tag_implication, status: "pending", creator: @user)
+        @dnp = create(:avoid_posting, creator: @owner)
+        @ti2 = create(:tag_implication, antecedent_name: @dnp.artist_name, consequent_name: "ccc", status: "pending", creator: @user)
+        @ti3 = create(:tag_implication, antecedent_name: "ddd", consequent_name: @dnp.artist_name, status: "pending", creator: @user)
       end
 
       should("not allow creator") do
@@ -93,7 +92,7 @@ class TagImplicationTest < ActiveSupport::TestCase
     context("#rejectable_by?") do
       setup do
         @mod = create(:moderator_user)
-        @ti = as(@user) { create(:tag_implication, status: "pending") }
+        @ti = create(:tag_implication, status: "pending", creator: @user)
       end
 
       should("allow creator") do
@@ -117,8 +116,8 @@ class TagImplicationTest < ActiveSupport::TestCase
     end
 
     should("populate the creator information") do
-      ti = create(:tag_implication, antecedent_name: "aaa", consequent_name: "bbb")
-      assert_equal(CurrentUser.user.id, ti.creator_id)
+      ti = create(:tag_implication, antecedent_name: "aaa", consequent_name: "bbb", creator: @admin)
+      assert_equal(@admin.id, ti.creator_id)
     end
 
     should("ensure both tags exist") do
@@ -138,7 +137,7 @@ class TagImplicationTest < ActiveSupport::TestCase
     should("not validate when a circular relation is created") do
       ti1 = create(:tag_implication, antecedent_name: "aaa", consequent_name: "bbb")
       ti2 = create(:tag_implication, antecedent_name: "bbb", consequent_name: "ccc")
-      ti3 = build(:tag_implication, antecedent_name: "bbb", consequent_name: "aaa")
+      ti3 = build(:tag_implication, antecedent_name: "bbb", consequent_name: "aaa", creator: @user)
 
       assert(ti1.valid?)
       assert(ti2.valid?)
@@ -149,7 +148,7 @@ class TagImplicationTest < ActiveSupport::TestCase
     should("not validate when a transitive relation is created") do
       create(:tag_implication, antecedent_name: "a", consequent_name: "b")
       create(:tag_implication, antecedent_name: "b", consequent_name: "c")
-      ti_ac = build(:tag_implication, antecedent_name: "a", consequent_name: "c")
+      ti_ac = build(:tag_implication, antecedent_name: "a", consequent_name: "c", creator: @user)
       ti_ac.save
 
       assert_equal("a already implies c through another implication", ti_ac.errors.full_messages.join)
@@ -178,7 +177,7 @@ class TagImplicationTest < ActiveSupport::TestCase
       ti = build(:tag_implication, antecedent_name: "aaa", consequent_name: "bbb", status: "pending", creator: @user)
       ti.save(validate: false)
 
-      ti.reject!
+      ti.reject!(@admin)
       assert_equal("deleted", ti.reload.status)
     end
 
@@ -277,8 +276,8 @@ class TagImplicationTest < ActiveSupport::TestCase
       ti2 = create(:tag_implication, antecedent_name: "aaa", consequent_name: "yyy")
       assert_difference("PostVersion.count", 1) do
         with_inline_jobs do
-          ti1.approve!
-          ti2.approve!
+          ti1.approve!(@admin)
+          ti2.approve!(@admin)
         end
       end
 
@@ -287,9 +286,9 @@ class TagImplicationTest < ActiveSupport::TestCase
 
     should("error on approve if its not valid anymore") do
       create(:tag_implication, antecedent_name: "aaa", consequent_name: "bbb", status: "active")
-      ti = build(:tag_implication, antecedent_name: "aaa", consequent_name: "bbb", creator: @user)
+      ti = build(:tag_implication, antecedent_name: "aaa", consequent_name: "bbb", status: "pending", creator: @user)
       ti.save(validate: false)
-      with_inline_jobs { ti.approve!(approver: @user) }
+      with_inline_jobs { ti.approve!(@admin) }
 
       assert_match("error", ti.reload.status)
     end
@@ -298,7 +297,7 @@ class TagImplicationTest < ActiveSupport::TestCase
       FemboyFans.config.stubs(:max_tags_per_post).returns(5)
       ti = create(:tag_implication, antecedent_name: "5", consequent_name: "6", status: "pending")
       post = create(:post, tag_string: "1 2 3 4 5")
-      with_inline_jobs { ti.approve!(approver: @user) }
+      with_inline_jobs { ti.approve!(@admin) }
       assert_equal("1 2 3 4 5 6", post.reload.tag_string)
     end
 
@@ -312,7 +311,7 @@ class TagImplicationTest < ActiveSupport::TestCase
 
       should("update the topic when processed") do
         assert_difference("ForumPost.count") do
-          with_inline_jobs { @implication.approve! }
+          with_inline_jobs { @implication.approve!(@admin) }
         end
         @post.reload
         @topic.reload
@@ -322,7 +321,7 @@ class TagImplicationTest < ActiveSupport::TestCase
 
       should("update the topic when rejected") do
         assert_difference("ForumPost.count") do
-          @implication.reject!
+          @implication.reject!(@user)
         end
         @post.reload
         @topic.reload

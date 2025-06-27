@@ -10,7 +10,7 @@ module Posts
       sp = search_params
       sp[:post_id] = params[:post_id] if params[:post_id].present?
       sp[:user_id] = params[:user_id] if params[:user_id].present?
-      @recs = Recommender.search(sp).take(limit)
+      @recs = Recommender.search(sp, CurrentUser.user).take(limit)
       @posts = @recs.pluck(:post)
 
       respond_with(@recs)

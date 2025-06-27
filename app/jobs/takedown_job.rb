@@ -10,23 +10,19 @@ class TakedownJob < ApplicationJob
 
   def perform(id, approver, del_reason)
     @takedown = Takedown.find(id)
-    @approver = User.find(approver)
-    @takedown.approver_id = @approver.id
-    CurrentUser.scoped(@approver) do
-      ModAction.log!(:takedown_process, @takedown)
-    end
+    @takedown.approver = approver
+    ModAction.log!(approver, :takedown_process, @takedown)
 
-    CurrentUser.as_system do
-      @takedown.status = @takedown.calculated_status
-      @takedown.save!
-      @takedown.actual_posts.find_each do |p|
-        if @takedown.should_delete(p.id)
-          next if p.is_deleted?
-          p.delete!("takedown ##{@takedown.id}: #{del_reason}", { force: true })
-        else
-          next unless p.is_deleted?
-          p.undelete!({ force: true })
-        end
+    user = User.system
+    @takedown.status = @takedown.calculated_status
+    @takedown.save!
+    @takedown.actual_posts.find_each do |p|
+      if @takedown.should_delete(p.id)
+        next if p.is_deleted?
+        p.delete!(user, "takedown ##{@takedown.id}: #{del_reason}", force: true)
+      else
+        next unless p.is_deleted?
+        p.undelete!(user, force: true)
       end
     end
   end

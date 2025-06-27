@@ -20,7 +20,7 @@ class MascotMediaAsset < MediaAsset
   end
 
   module SearchMethods
-    def search(params)
+    def search(params, user)
       q = super
       q = q.joins(:mascot).where("mascots.id": params[:mascot_id]) if params[:mascot_id].present?
       q

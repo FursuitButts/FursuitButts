@@ -1,13 +1,14 @@
 # frozen_string_literal: true
 
 class BulkUpdateRequest < ApplicationRecord
-  belongs_to_creator
+  belongs_to_user(:creator, ip: true, clones: :updater)
+  belongs_to_user(:updater, ip: true)
+  belongs_to_user(:approver, optional: true)
   attr_accessor(:reason, :skip_forum, :should_validate)
   attr_writer(:context)
 
   belongs_to(:forum_topic, optional: true)
   belongs_to(:forum_post, optional: true)
-  belongs_to(:approver, optional: true, class_name: "User")
 
   validates(:script, presence: true)
   validates(:title, presence: { if: ->(rec) { rec.forum_topic_id.blank? } })
@@ -32,7 +33,7 @@ class BulkUpdateRequest < ApplicationRecord
       pending_first.order(id: :desc)
     end
 
-    def search(params)
+    def search(params, user)
       q = super
 
       q = q.where_user(:creator_id, :creator, params)
@@ -85,44 +86,36 @@ class BulkUpdateRequest < ApplicationRecord
     end
 
     def approve!(approver, update_topic: true)
-      CurrentUser.scoped(approver) do
-        update(status: "queued", approver: approver)
-        ProcessBulkUpdateRequestJob.perform_later(self, approver, update_topic)
-        # forum_updater.update("The #{bulk_update_request_link} (forum ##{forum_post&.id}) has been approved by @#{approver.name}.", "APPROVED")
-      end
+      update(status: "queued", approver: approver)
+      ProcessBulkUpdateRequestJob.perform_later(self, approver, update_topic)
+      # forum_updater.update("The #{bulk_update_request_link} (forum ##{forum_post&.id}) has been approved by @#{approver.name}.", "APPROVED")
     rescue BulkUpdateRequestProcessor::Error, BulkUpdateRequestCommands::ProcessingError => e
       self.approver = approver
-      CurrentUser.scoped(approver) do
-        forum_updater.update("The #{bulk_update_request_link} (forum ##{forum_post&.id}) has failed: #{e}", "FAILED") if update_topic
-      end
+      forum_updater.update("The #{bulk_update_request_link} (forum ##{forum_post&.id}) has failed: #{e}", "FAILED") if update_topic
       errors.add(:base, e.to_s)
     end
 
     def process!(approver, update_topic: true)
-      CurrentUser.scoped(approver) do
-        update(status: "processing", approver: approver)
-        processor.process!(approver)
-        forum_updater.update("The #{bulk_update_request_link} (forum ##{forum_post&.id}) has been approved by @#{approver.name}.", "APPROVED") if update_topic
-        update(status: "approved", approver: approver)
-      end
+      update(status: "processing", approver: approver)
+      processor.process!(approver)
+      forum_updater.update("The #{bulk_update_request_link} (forum ##{forum_post&.id}) has been approved by @#{approver.name}.", "APPROVED") if update_topic
+      update(status: "approved", approver: approver)
     rescue BulkUpdateRequestProcessor::Error, BulkUpdateRequestCommands::ProcessingError => e
-      CurrentUser.scoped(approver) do
-        forum_updater.update("The #{bulk_update_request_link} (forum ##{forum_post&.id}) has failed: #{e}", "FAILED") if update_topic
-        update_columns(status: "error: #{e}")
-      end
+      forum_updater.update("The #{bulk_update_request_link} (forum ##{forum_post&.id}) has failed: #{e}", "FAILED") if update_topic
+      update_columns(status: "error: #{e}")
     end
 
     def create_forum_topic
       return if skip_forum
       if forum_topic_id
-        forum_post = forum_topic.posts.create(body: "Reason: #{reason}")
-        update(forum_post_id: forum_post.id)
+        forum_post = forum_topic.posts.create(body: "Reason: #{reason}", creator: creator)
+        update(forum_post_id: forum_post.id, updater: creator)
       else
-        forum_topic = ForumTopic.create(title: title, category_id: FemboyFans.config.alias_implication_forum_category, original_post_attributes: { body: "Reason: #{reason}" })
+        forum_topic = ForumTopic.create(title: title, category_id: FemboyFans.config.alias_implication_forum_category, original_post_attributes: { body: "Reason: #{reason}" }, creator: creator)
         forum_post = forum_topic.posts.first
-        update(forum_topic_id: forum_topic.id, forum_post_id: forum_post.id)
+        update(forum_topic_id: forum_topic.id, forum_post_id: forum_post.id, updater: creator)
       end
-      forum_post.update(tag_change_request: self, allow_voting: true)
+      forum_post.update(tag_change_request: self, allow_voting: true, updater: creator)
     end
 
     def reject!(rejector = User.system)
@@ -222,7 +215,7 @@ class BulkUpdateRequest < ApplicationRecord
   end
 
   def processor(context = self.context)
-    BulkUpdateRequestProcessor.new(script, forum_topic_id, context: context, creator: creator, ip_addr: creator_ip_addr)
+    BulkUpdateRequestProcessor.new(script, forum_topic_id, context: context, creator: creator, ip_addr: creator_ip_addr, request: self)
   end
 
   delegate(:estimate_update_count, to: :processor)

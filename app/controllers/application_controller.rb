@@ -44,7 +44,7 @@ class ApplicationController < ActionController::Base
   protected
 
   def api_check
-    if !CurrentUser.is_anonymous? && !request.get? && !request.head?
+    if !CurrentUser.user.is_anonymous? && !request.get? && !request.head?
       throttled = CurrentUser.user.token_bucket.throttled?
       headers["X-Api-Limit"] = CurrentUser.user.token_bucket.cached_count.to_s
       raise(APIThrottled) if throttled
@@ -117,10 +117,10 @@ class ApplicationController < ActionController::Base
   def render404
     respond_to do |fmt|
       fmt.html do
-        render("static/404", formats: %i[html atom], status: 404)
+        render("static/404", formats: %i[html atom], status: :not_found)
       end
       fmt.json do
-        render(json: { success: false, reason: "not found" }, status: 404)
+        render(json: { success: false, reason: "not found" }, status: :not_found)
       end
       fmt.any do
         render_unsupported_format
@@ -150,7 +150,7 @@ class ApplicationController < ActionController::Base
     end
 
     FemboyFans::Logger.log(@exception, expected: @expected)
-    log = ExceptionLog.add!(exception, user_id: CurrentUser.id, request: request) unless @expected
+    log = ExceptionLog.add!(exception, user_id: CurrentUser.user.id, request: request) unless @expected
     @log_code = log&.code
     render("static/error", status: status, formats: format)
   end
@@ -162,22 +162,22 @@ class ApplicationController < ActionController::Base
 
     respond_to do |format|
       format.html do
-        if CurrentUser.is_anonymous?
+        if CurrentUser.user.is_anonymous?
           if request.get?
             redirect_to(new_session_path(url: previous_url), notice: @message)
           else
             redirect_to(new_session_path, notice: @message)
           end
         else
-          render(template: "static/access_denied", status: 403)
+          render(template: "static/access_denied", status: :forbidden)
         end
       end
       format.json do
-        render(json: { success: false, reason: @message }.to_json, status: 403)
+        render(json: { success: false, reason: @message }.to_json, status: :forbidden)
       end
     end
   rescue ActionController::UnknownFormat
-    render(plain: @message, status: 403)
+    render(plain: @message, status: :forbidden)
   end
 
   def set_current_user
@@ -187,10 +187,7 @@ class ApplicationController < ActionController::Base
   end
 
   def reset_current_user
-    CurrentUser.request = nil
-    CurrentUser.user = nil
-    CurrentUser.ip_addr = nil
-    CurrentUser.safe_mode = FemboyFans.config.safe_mode?
+    CurrentUser.reset
   end
 
   def requires_reauthentication
@@ -221,7 +218,7 @@ class ApplicationController < ActionController::Base
   end
 
   def logged_in_only
-    if CurrentUser.is_anonymous?
+    if CurrentUser.user.is_anonymous?
       access_denied("Must be logged in")
     end
   end

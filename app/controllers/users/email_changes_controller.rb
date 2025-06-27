@@ -6,13 +6,14 @@ module Users
     end
 
     def create
-      email_change = UserEmailChange.new(CurrentUser.user, params[:email_change][:email], params[:email_change][:password])
+      user = CurrentUser.user
+      email_change = UserEmailChange.new(user, params[:email_change][:email], params[:email_change][:password])
       email_change.process
-      if CurrentUser.user.errors.any?
-        flash[:notice] = CurrentUser.user.errors.full_messages.join("; ")
+      if user.errors.any?
+        flash[:notice] = user.errors.full_messages.join("; ")
         redirect_to(new_users_email_change_path)
       else
-        UserEvent.create_from_request!(CurrentUser.user, :email_change, request)
+        UserEvent.create_from_request!(user, :email_change, request)
         redirect_to(home_users_path, notice: "Email was updated")
       end
     end

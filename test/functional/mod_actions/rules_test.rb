@@ -10,13 +10,13 @@ module ModActions
 
     context("mod actions for rules") do
       setup do
-        @category = create(:rule_category)
-        @rule = create(:rule, category: @category)
+        @category = create(:rule_category, creator: @admin)
+        @rule = create(:rule, category: @category, creator: @admin)
         set_count!
       end
 
       should("format rule_create correctly") do
-        @rule = create(:rule, category: @category)
+        @rule = create(:rule, category: @category, creator: @admin)
 
         assert_matches(
           actions:       %w[rule_create],
@@ -32,7 +32,7 @@ module ModActions
       end
 
       should("format rule_delete correctly") do
-        @rule.destroy
+        @rule.destroy_with(@admin)
 
         assert_matches(
           actions:       %w[rule_delete],
@@ -44,7 +44,7 @@ module ModActions
       end
 
       should("format rules_reorder correctly") do
-        Rule.log_reorder(2)
+        Rule.log_reorder(2, @admin)
 
         assert_matches(
           actions: %w[rules_reorder],
@@ -60,7 +60,7 @@ module ModActions
         end
 
         should("format name changes correctly") do
-          @rule.update!(name: "aaa")
+          @rule.update_with!(@admin, name: "aaa")
 
           assert_matches(
             actions:           %w[rule_update],
@@ -79,7 +79,7 @@ module ModActions
         end
 
         should("format description changes correctly") do
-          @rule.update!(description: "aaa")
+          @rule.update_with!(@admin, description: "aaa")
 
           assert_matches(
             actions:           %w[rule_update],
@@ -98,9 +98,9 @@ module ModActions
         end
 
         should("format category changes correctly") do
-          @category = create(:rule_category)
+          @category = create(:rule_category, creator: @admin)
           set_count!
-          @rule.update!(category: @category)
+          @rule.update_with!(@admin, category: @category)
 
           assert_matches(
             actions:           %w[rule_update],
@@ -119,9 +119,9 @@ module ModActions
         end
 
         should("format all changes correctly") do
-          @category = create(:rule_category)
+          @category = create(:rule_category, creator: @admin)
           set_count!
-          @rule.update!(name: "aaa", description: "bbb", category: @category)
+          @rule.update_with!(@admin, name: "aaa", description: "bbb", category: @category)
 
           assert_matches(
             actions:           %w[rule_update],

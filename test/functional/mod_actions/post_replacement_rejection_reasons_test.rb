@@ -10,12 +10,12 @@ module ModActions
 
     context("mod actions for post replacement rejection reasons") do
       setup do
-        @reason = create(:post_replacement_rejection_reason)
+        @reason = create(:post_replacement_rejection_reason, creator: @admin)
         set_count!
       end
 
       should("format post_replacement_rejection_reason_create correctly") do
-        @reason = create(:post_replacement_rejection_reason)
+        @reason = create(:post_replacement_rejection_reason, creator: @admin)
 
         assert_matches(
           actions: %w[post_replacement_rejection_reason_create],
@@ -26,7 +26,7 @@ module ModActions
       end
 
       should("format post_replacement_rejection_reason_delete correctly") do
-        @reason.destroy
+        @reason.destroy_with(@admin)
 
         assert_matches(
           actions: %w[post_replacement_rejection_reason_delete],
@@ -38,7 +38,7 @@ module ModActions
       end
 
       should("format post_replacement_rejection_reasons_reorder correctly") do
-        PostReplacementRejectionReason.log_reorder(2)
+        PostReplacementRejectionReason.log_reorder(2, @admin)
 
         assert_matches(
           actions: %w[post_replacement_rejection_reasons_reorder],
@@ -54,6 +54,7 @@ module ModActions
         end
 
         should("format no changes correctly") do
+          @reason.updater = @admin
           @reason.save
 
           assert_matches(
@@ -66,7 +67,7 @@ module ModActions
         end
 
         should("format reason changes correctly") do
-          @reason.update!(reason: "xxx")
+          @reason.update_with!(@admin, reason: "xxx")
 
           assert_matches(
             actions:    %w[post_replacement_rejection_reason_update],

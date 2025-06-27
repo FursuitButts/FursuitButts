@@ -5,7 +5,7 @@ class PostSet < ApplicationRecord
 
   has_many(:post_set_maintainers, dependent: :destroy) do
     def in_cooldown(user)
-      where(creator_id: user.id, status: "cooldown").where("created_at < ?", 24.hours.ago)
+      where(creator_id: user.id, status: "cooldown").where(created_at: ...24.hours.ago)
     end
 
     def active
@@ -21,14 +21,16 @@ class PostSet < ApplicationRecord
     end
   end
   has_many(:maintainers, class_name: "User", through: :post_set_maintainers, source: :user)
-  belongs_to_creator(counter_cache: "set_count")
+  belongs_to_user(:creator, ip: true, clones: :updater, counter_cache: "set_count")
+  belongs_to_user(:updater, ip: true)
+  resolvable(:destroyer)
 
   before_validation(:normalize_shortname)
   validates(:name, length: { minimum: 3, maximum: 100, message: "must be between three and one hundred characters long" })
   validates(:name, :shortname, uniqueness: { case_sensitive: false, message: "is already taken" }, if: :if_names_changed?)
   validates(:shortname, length: { minimum: 3, maximum: 50, message: "must be between three and fifty characters long" })
-  validates(:shortname, format: { with: /\A[\w]+\z/, message: "must only contain numbers, lowercase letters, and underscores" })
-  validates(:shortname, format: { with: /\A\d*[a-z_][\w]*\z/, message: "must contain at least one lowercase letter or underscore" })
+  validates(:shortname, format: { with: /\A\w+\z/, message: "must only contain numbers, lowercase letters, and underscores" })
+  validates(:shortname, format: { with: /\A\d*[a-z_]\w*\z/, message: "must contain at least one lowercase letter or underscore" })
   validates(:description, length: { maximum: FemboyFans.config.pool_descr_max_size })
   validate(:validate_number_of_posts)
   validate(:can_make_public, if: :is_public_changed?)
@@ -44,6 +46,8 @@ class PostSet < ApplicationRecord
 
   attr_accessor(:skip_sync)
 
+  scope(:owned_by, ->(user) { where(creator_id: u2id(user)) })
+
   def self.name_to_id(name)
     if name =~ /\A\d+\z/
       name.to_i
@@ -52,17 +56,13 @@ class PostSet < ApplicationRecord
     end
   end
 
-  def self.visible(user = CurrentUser.user)
+  def self.visible(user)
     return where(is_public: true) if user.nil?
     return all if user.is_moderator?
-    where(is_public: true).or.where(creator_id: user.id)
+    where(is_public: true).or(where(creator_id: user.id))
   end
 
-  def self.owned(user = CurrentUser.user)
-    where("creator_id = ?", user.id)
-  end
-
-  def self.active_maintainer(user = CurrentUser.user)
+  def self.active_maintainer(user)
     joins(:post_set_maintainers).where(post_set_maintainers: { status: "approved", user_id: user.id })
   end
 
@@ -98,7 +98,7 @@ class PostSet < ApplicationRecord
         RateLimiter.hit("set.public.#{id}", 24.hours)
         PostSetMaintainer.active.where(post_set_id: id).find_each do |maintainer|
           Dmail.create_automated(to_id: maintainer.user_id, title: "A private set you had maintained was made public again",
-                                 body: "The set \"#{name}\":#{post_set_path(self)} by \"#{creaator.name}\":#{user_path(creator)} that you previously maintained was made public again. You are now able to view the set and add/remove posts.",
+                                 body: "The set \"#{name}\":#{post_set_path(self)} by \"#{creaatorname}\":#{user_path(creator)} that you previously maintained was made public again. You are now able to view the set and add/remove posts.",
                                  respond_to_id: creator_id)
         end
       end
@@ -108,7 +108,7 @@ class PostSet < ApplicationRecord
       PostSetMaintainer.active.where(post_set_id: id).find_each do |maintainer|
         Dmail.create_automated(to_id:         maintainer.user_id,
                                title:         "A set you maintain was deleted",
-                               body:          "The set #{name} by \"#{creator.name}\":#{user_path(creator)} that you maintain was deleted.",
+                               body:          "The set #{name} by \"#{creator_name}\":#{user_path(creator)} that you maintain was deleted.",
                                respond_to_id: creator_id)
       end
     end
@@ -128,7 +128,7 @@ class PostSet < ApplicationRecord
     end
 
     def can_create_new_set_limit
-      if PostSet.where(creator_id: creator.id).count >= 75
+      if PostSet.where(creator_id: creator_id).count >= 75
         errors.add(:base, "You can only create 75 sets.")
         return false
       end
@@ -136,7 +136,7 @@ class PostSet < ApplicationRecord
     end
 
     def set_per_hour_limit
-      if PostSet.where("created_at > ? AND creator_id = ?", 1.hour.ago, creator.id).count > 6 && !creator.is_janitor?
+      if PostSet.where("created_at > ? AND creator_id = ?", 1.hour.ago, creator_id).count > 6 && !creator.is_janitor?
         errors.add(:base, "You have already created 6 sets in the last hour.")
         false
       else
@@ -148,7 +148,7 @@ class PostSet < ApplicationRecord
       post_ids_before = post_ids_before_last_save || post_ids_was
       added = post_ids - post_ids_before
       return if added.empty?
-      max = FemboyFans.config.set_post_limit(CurrentUser.user)
+      max = FemboyFans.config.set_post_limit(updater)
       if post_ids.size > max
         errors.add(:base, "Sets can only have up to #{ActiveSupport::NumberHelper.number_to_delimited(max)} posts each")
         false
@@ -173,15 +173,15 @@ class PostSet < ApplicationRecord
 
     def is_maintainer?(user)
       return false if user.is_banned?
-      post_set_maintainers.where(user_id: user.id, status: "approved").count > 0
+      post_set_maintainers.where(user_id: user.id, status: "approved").any?
     end
 
     def is_invited?(user)
-      post_set_maintainers.where(user_id: user.id, status: "pending").count > 0
+      post_set_maintainers.where(user_id: user.id, status: "pending").any?
     end
 
     def is_blocked?(user)
-      post_set_maintainers.where(user_id: user.id, status: "blocked").count > 0
+      post_set_maintainers.where(user_id: user.id, status: "blocked").any?
     end
 
     def is_owner?(user)
@@ -207,7 +207,7 @@ class PostSet < ApplicationRecord
       end
     end
 
-    def add!(post)
+    def add!(post, user)
       return if post.nil?
       return if post.id.nil?
       return if contains?(post.id)
@@ -215,9 +215,10 @@ class PostSet < ApplicationRecord
       with_lock do
         reload
         self.skip_sync = true
+        self.updater = user
         update(post_ids: post_ids + [post.id])
         raise(ActiveRecord::Rollback) unless valid?
-        post.add_set!(self, force: true)
+        post.add_set!(self, user, force: true)
         post.save
       end
     end
@@ -226,15 +227,16 @@ class PostSet < ApplicationRecord
       self.post_ids = post_ids - ids
     end
 
-    def remove!(post)
+    def remove!(post, user)
       return unless contains?(post.id)
 
       with_lock do
         reload
         self.skip_sync = true
+        self.updater = user
         update(post_ids: post_ids - [post.id])
         raise(ActiveRecord::Rollback) unless valid?
-        post.remove_set!(self)
+        post.remove_set!(self, user)
         post.save
       end
     end
@@ -273,13 +275,13 @@ class PostSet < ApplicationRecord
 
       added_posts = Post.where(id: added)
       added_posts.find_each do |post|
-        post.add_set!(self, force: true)
+        post.add_set!(self, updater, force: true)
         post.save
       end
 
       removed_posts = Post.where(id: removed)
       removed_posts.find_each do |post|
-        post.remove_set!(self)
+        post.remove_set!(self, updater)
         post.save
       end
     end
@@ -301,20 +303,20 @@ class PostSet < ApplicationRecord
 
   module LogMethods
     def log_update
-      return if is_owner?(CurrentUser.user)
+      return if is_owner?(updater)
 
       if saved_change_to_is_public?
-        ModAction.log!(:set_change_visibility, self, user_id: creator_id, is_public: is_public)
+        ModAction.log!(updater, :set_change_visibility, self, user_id: creator_id, is_public: is_public)
       end
 
       if saved_change_to_watched_attributes?
-        ModAction.log!(:set_update, self, user_id: creator_id)
+        ModAction.log!(updater, :set_update, self, user_id: creator_id)
       end
     end
 
     def log_delete
-      return if is_owner?(CurrentUser.user)
-      ModAction.log!(:set_delete, self, user_id: creator_id)
+      return if is_owner?(destroyer)
+      ModAction.log!(destroyer, :set_delete, self, user_id: creator_id)
     end
   end
 
@@ -333,7 +335,7 @@ class PostSet < ApplicationRecord
       joins(:maintainers).where("(post_set_maintainers.user_id = ? AND post_set_maintainers.status = ?) OR creator_id = ?", user_id, "approved", user_id)
     end
 
-    def search(params)
+    def search(params, user)
       q = super
 
       q = q.where_user(:creator_id, :creator, params)
@@ -377,7 +379,7 @@ class PostSet < ApplicationRecord
     %i[creator]
   end
 
-  def visible?(user = CurrentUser.user)
+  def visible?(user)
     can_view?(user)
   end
 end

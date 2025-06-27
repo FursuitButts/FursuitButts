@@ -2,8 +2,7 @@
 
 FactoryBot.define do
   factory(:mascot_media_asset) do
-    creator { create(:user, created_at: 2.weeks.ago) }
-    creator_ip_addr { "127.0.0.1" }
+    creator { association(:user, created_at: 2.weeks.ago) }
     checksum { SecureRandom.hex(16) }
 
     factory(:jpg_mascot_media_asset) do

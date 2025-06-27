@@ -104,4 +104,11 @@ class ForumTopicPolicy < ApplicationPolicy
   def html_data_attributes
     super + [:is_read?, { category: %i[id name] }]
   end
+
+  def visible_for_search(relation)
+    q = super
+    q = q.joins(:category).merge(ForumCategory.viewable(user))
+    q = q.where("forum_topics.is_hidden": false).or(q.where("forum_topics.creator_id": user.id)) unless user.is_moderator?
+    q
+  end
 end

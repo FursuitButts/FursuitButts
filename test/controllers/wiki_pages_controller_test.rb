@@ -8,17 +8,13 @@ class WikiPagesControllerTest < ActionDispatch::IntegrationTest
       @user = create(:user)
       @mod = create(:moderator_user)
       @owner = create(:owner_user)
-      as(@user) do
-        @wiki_page = create(:wiki_page)
-      end
+      @wiki_page = create(:wiki_page)
     end
 
     context("index action") do
       setup do
-        as(@user) do
-          @wiki_page_abc = create(:wiki_page, title: "abc")
-          @wiki_page_def = create(:wiki_page, title: "def")
-        end
+        @wiki_page_abc = create(:wiki_page, title: "abc")
+        @wiki_page_def = create(:wiki_page, title: "def")
       end
 
       should("list all wiki_pages") do
@@ -49,13 +45,11 @@ class WikiPagesControllerTest < ActionDispatch::IntegrationTest
 
       should("return 404 to api requests for a nonexistent title") do
         get(wiki_page_path("what"), as: :json)
-        assert_response(404)
+        assert_response(:not_found)
       end
 
       should("render for a negated tag") do
-        as(@user) do
-          @wiki_page.update(title: "-aaa")
-        end
+        @wiki_page.update_columns(title: "-aaa")
         get(wiki_page_path(@wiki_page))
         assert_response(:success)
       end
@@ -99,7 +93,7 @@ class WikiPagesControllerTest < ActionDispatch::IntegrationTest
       end
 
       should("respect protections") do
-        @wiki_page.update_column(:protection_level, User::Levels::ADMIN)
+        @wiki_page.update_columns(protection_level: User::Levels::ADMIN)
         assert_access(User::Levels::ADMIN) { |user| get_auth(edit_wiki_page_path(@wiki_page), user) }
       end
 
@@ -122,9 +116,7 @@ class WikiPagesControllerTest < ActionDispatch::IntegrationTest
 
     context("update action") do
       setup do
-        as(@user) do
-          @tag = create(:tag, name: @wiki_page.title, post_count: 42)
-        end
+        @tag = create(:tag, name: @wiki_page.title, post_count: 42)
       end
 
       should("update a wiki_page") do
@@ -151,8 +143,9 @@ class WikiPagesControllerTest < ActionDispatch::IntegrationTest
       end
 
       should("set protection level on internal page") do
-        as(@owner) { @wiki_page = create(:wiki_page, title: "internal:test") }
+        @wiki_page = create(:wiki_page, title: "internal:test", creator: @owner)
         put_auth(wiki_page_path(@wiki_page), @owner, params: { wiki_page: { protection_level: User::Levels::ADMIN } })
+        assert_redirected_to(wiki_page_path(@wiki_page))
         assert_equal(User::Levels::ADMIN, @wiki_page.reload.protection_level)
       end
 
@@ -162,7 +155,7 @@ class WikiPagesControllerTest < ActionDispatch::IntegrationTest
       end
 
       should("respect protections") do
-        @wiki_page.update_column(:protection_level, User::Levels::ADMIN)
+        @wiki_page.update_columns(protection_level: User::Levels::ADMIN)
         assert_access(User::Levels::ADMIN, success_response: :redirect) { |user| put_auth(wiki_page_path(@wiki_page), user, params: { wiki_page: { body: SecureRandom.hex(6) } }) }
       end
 
@@ -173,9 +166,7 @@ class WikiPagesControllerTest < ActionDispatch::IntegrationTest
 
     context("destroy action") do
       setup do
-        as(@user) do
-          @wiki_page = create(:wiki_page)
-        end
+        @wiki_page = create(:wiki_page)
       end
 
       should("destroy a wiki_page") do
@@ -184,26 +175,24 @@ class WikiPagesControllerTest < ActionDispatch::IntegrationTest
       end
 
       should("respect protections") do
-        as(create(:owner_user)) { @wiki_pages = create_list(:wiki_page, User::Levels.constants.length, protection_level: User::Levels::OWNER) }
+        @wiki_pages = create_list(:wiki_page, User::Levels.constants.length, protection_level: User::Levels::OWNER, creator: @owner)
         assert_access(User::Levels::OWNER, success_response: :redirect) { |user| delete_auth(wiki_page_path(@wiki_pages.shift), user) }
       end
 
       should("restrict access") do
-        as(@user) { @wiki_pages = create_list(:wiki_page, User::Levels.constants.length) }
+        @wiki_pages = create_list(:wiki_page, User::Levels.constants.length)
         assert_access(User::Levels::ADMIN, success_response: :redirect) { |user| delete_auth(wiki_page_path(@wiki_pages.shift), user) }
       end
     end
 
     context("revert action") do
       setup do
-        as(@user) do
-          @wiki_page = create(:wiki_page, body: "1")
-          travel_to(1.day.from_now) do
-            @wiki_page.update(body: "1 2")
-          end
-          travel_to(2.days.from_now) do
-            @wiki_page.update(body: "1 2 3")
-          end
+        @wiki_page = create(:wiki_page, body: "1")
+        travel_to(1.day.from_now) do
+          @wiki_page.update_with(@user, body: "1 2")
+        end
+        travel_to(2.days.from_now) do
+          @wiki_page.update_with(@user, body: "1 2 3")
         end
       end
 
@@ -216,9 +205,7 @@ class WikiPagesControllerTest < ActionDispatch::IntegrationTest
       end
 
       should("not allow reverting to a previous version of another wiki page") do
-        as(@user) do
-          @wiki_page2 = create(:wiki_page)
-        end
+        @wiki_page2 = create(:wiki_page)
 
         put_auth(revert_wiki_page_path(@wiki_page), @user, params: { version_id: @wiki_page2.versions.first.id })
         @wiki_page.reload

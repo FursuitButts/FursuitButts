@@ -5,8 +5,7 @@ require("test_helper")
 class ModActionsControllerTest < ActionDispatch::IntegrationTest
   context("The mod actions controller") do
     setup do
-      @admin = create(:admin_user)
-      as(@admin) { @mod_action = create(:mod_action) }
+      @mod_action = create(:mod_action)
     end
 
     context("index action") do

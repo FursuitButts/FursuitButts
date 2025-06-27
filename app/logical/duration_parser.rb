@@ -15,7 +15,7 @@ module DurationParser
     else
       raise(NotImplementedError)
     end
-  rescue # rubocop:disable Style/ RescueStandardError
+  rescue # rubocop:disable Style/RescueStandardError
     raise(ArgumentError, "'#{string}' is not a valid duration")
   end
 end

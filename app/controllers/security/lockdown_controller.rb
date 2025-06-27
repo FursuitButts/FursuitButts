@@ -15,7 +15,7 @@ module Security
         Security::Lockdown.public_send("#{type}_disabled=", true)
       end
 
-      StaffAuditLog.log!(:lockdown_panic, CurrentUser.user)
+      StaffAuditLog.log!(CurrentUser.user, :lockdown_panic)
       redirect_to(security_root_path)
     end
 
@@ -33,7 +33,7 @@ module Security
         Security::Lockdown.public_send("#{type}_disabled=", params[type])
       end
 
-      StaffAuditLog.log!(:lockdown, CurrentUser.user, params: logparams.transform_values { |v| v.to_s.truthy? })
+      StaffAuditLog.log!(CurrentUser.user, :lockdown, params: logparams.transform_values { |v| v.to_s.truthy? })
       redirect_to(security_root_path)
     end
 
@@ -44,7 +44,7 @@ module Security
       return render_expected_error(422, "#{new_level} is not valid") unless User::VALID_LEVELS.include?(new_level)
       if new_level != old_level
         Security::Lockdown.uploads_min_level = new_level
-        StaffAuditLog.log!(:min_upload_level_change, CurrentUser.user, old_level: old_level, new_level: new_level)
+        StaffAuditLog.log!(CurrentUser.user, :min_upload_level_change, old_level: old_level, new_level: new_level)
       end
       redirect_to(security_root_path)
     end
@@ -54,7 +54,7 @@ module Security
       duration = params[:uploads_hide_pending][:duration].to_f
       if duration >= 0 && duration != Security::Lockdown.hide_pending_posts_for
         Security::Lockdown.hide_pending_posts_for = duration
-        StaffAuditLog.log!(:hide_pending_posts_for, CurrentUser.user, duration: duration)
+        StaffAuditLog.log!(CurrentUser.user, :hide_pending_posts_for, duration: duration)
       end
       redirect_to(security_root_path)
     end

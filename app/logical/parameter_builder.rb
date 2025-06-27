@@ -1,17 +1,17 @@
 # frozen_string_literal: true
 
 class ParameterBuilder
-  def self.serial_parameters(only_string, object)
+  def self.serial_parameters(only_string, object, options = {})
     only_array = split_only_string(only_string)
-    get_only_hash(only_array, object)
+    get_only_hash(only_array, object, options)
   end
 
-  def self.get_only_hash(only_array, object, seen_objects = [])
+  def self.get_only_hash(only_array, object, options = {}, seen_objects = [])
     return {} if object.nil?
     is_root = seen_objects.empty?
     only_hash = { only: [], include: [], methods: [] }
     available_includes = object.available_includes
-    attributes, methods = object.api_attributes.partition { |attr| object.has_attribute?(attr) }
+    attributes, methods = object.api_attributes(options[:user]).partition { |attr| object.has_attribute?(attr) }
     methods -= available_includes
     # Attributes and/or methods may be included in the final pass, but not includes
     seen_objects << object.class.name
@@ -30,7 +30,7 @@ class ParameterBuilder
         next if item_object.nil?
         item_object = item_object[0] if item_object.is_a?(ActiveRecord::Relation)
         item_array = split_only_string(match[2])
-        item_hash = get_only_hash(item_array, item_object, seen_objects.clone)
+        item_hash = get_only_hash(item_array, item_object, options, seen_objects.clone)
         only_hash[:include] << { item_sym => item_hash }
       elsif available_includes.include?(item_sym) && (!was_seen || is_root)
         only_hash[:include] << item_sym

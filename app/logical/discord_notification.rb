@@ -274,7 +274,7 @@ class DiscordNotification
   def a(user)
     return nil if user.nil?
     a = { url: r.user_url(user), name: user.name }
-    a[:icon_url] = user.avatar.avatar_image_url if user.avatar.present?
+    a[:icon_url] = user.avatar.avatar_image_url(User.anonymous) if user.avatar.present?
     a
   end
 end

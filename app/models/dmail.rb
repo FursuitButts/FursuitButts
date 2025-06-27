@@ -10,14 +10,14 @@ class Dmail < ApplicationRecord
   validate(:user_can_send_to, on: :create)
   has_secure_token(:key)
 
-  belongs_to(:owner, class_name: "User")
-  belongs_to(:to, class_name: "User")
-  belongs_to(:from, class_name: "User")
-  belongs_to(:respond_to, class_name: "User", optional: true)
+  belongs_to_user(:owner)
+  belongs_to_user(:to)
+  belongs_to_user(:from, ip: true)
+  belongs_to_user(:respond_to, optional: true)
+  resolvable(:updater)
   has_many(:tickets, as: :model)
   has_one(:spam_ticket, -> { spam }, class_name: "Ticket", as: :model)
 
-  after_initialize(:initialize_attributes, if: :new_record?)
   before_create(:auto_report_spam)
   before_create(:auto_read_if_filtered)
   after_create(:update_recipient)
@@ -25,15 +25,24 @@ class Dmail < ApplicationRecord
 
   attr_accessor(:bypass_limits, :no_email_notification, :original)
 
-  module AddressMethods
-    def to_name=(name)
-      self.to_id = User.name_to_id(name)
-    end
+  scope(:from_user, ->(user) { where(from_id: u2id(user)) })
+  scope(:to_user, ->(user) { where(to_id: u2id(user)) })
+  scope(:owned_by, ->(user) { where(owner_id: u2id(user)) })
+  scope(:not_owned_by, ->(user) { where.not(owner_id: u2id(user)) })
+  scope(:sent_by, ->(user) { from_user(user).and(not_owned_by(user)) })
+  scope(:received_by, ->(user) { to_user(user).and(owned_by(user)) })
+  scope(:active, -> { where(is_deleted: false) })
+  scope(:deleted, -> { where(is_deleted: true) })
+  scope(:read, -> { where(is_read: true) })
+  scope(:unread, -> { where(is_read: false).and(active) })
 
-    def initialize_attributes
-      self.from_id ||= CurrentUser.id
-      self.creator_ip_addr ||= CurrentUser.ip_addr
-    end
+  singleton_class.class_eval do
+    alias_method(:from_user_id, :from_user)
+    alias_method(:to_user_id, :to_user)
+    alias_method(:owned_by_id, :owned_by)
+    alias_method(:not_owned_by_id, :not_owned_by)
+    alias_method(:sent_by_id, :sent_by)
+    alias_method(:received_by_id, :received_by)
   end
 
   module FactoryMethods
@@ -46,14 +55,14 @@ class Dmail < ApplicationRecord
         Dmail.transaction do
           # recipient's copy
           copy = Dmail.new(params)
-          copy.owner_id = copy.to_id
+          copy.owner = copy.to
           copy.save unless copy.to_id == copy.from_id
           raise(ActiveRecord::Rollback) if copy.errors.any?
 
           # sender's copy
           copy = Dmail.new(params)
           copy.bypass_limits = true
-          copy.owner_id = copy.from_id
+          copy.owner = copy.from
           copy.is_read = true
           copy.save
         end
@@ -61,12 +70,22 @@ class Dmail < ApplicationRecord
         copy
       end
 
+      def create_split!(...)
+        create_split(...).tap do |dmail|
+          raise(ActiveRecord::RecordInvalid, dmail) if dmail.errors.any?
+        end
+      end
+
       def create_automated(params)
-        CurrentUser.as_system do
-          dmail = Dmail.new(from: User.system, **params)
+        Dmail.new(from: User.system, **params).tap do |dmail|
           dmail.owner = dmail.to
           dmail.save
-          dmail
+        end
+      end
+
+      def create_automated!(...)
+        create_automated(...).tap do |dmail|
+          raise(ActiveRecord::RecordInvalid, dmail) if dmail.errors.any?
         end
       end
     end
@@ -88,64 +107,19 @@ class Dmail < ApplicationRecord
   end
 
   module SearchMethods
-    def sent_by_id(user_id)
-      where(from_id: user_id).and(where.not(owner_id: user_id))
-    end
-
-    def sent_by(user)
-      where(from_id: user.id).and(where.not(owner_id: user.id))
-    end
-
-    def owned_by_id(user_id)
-      where(owner_id: user_id)
-    end
-
-    def owned_by(user)
-      where(owner: user)
-    end
-
-    def not_owned_by_id(user_id)
-      where.not(owner_id: user_id)
-    end
-
-    def not_owned_by(user)
-      where.not(owner: user)
-    end
-
-    def active
-      where(is_deleted: false)
-    end
-
-    def deleted
-      where(is_deleted: true)
-    end
-
-    def read
-      where(is_read: true)
-    end
-
-    def unread
-      where(is_read: false, is_deleted: false)
-    end
-
-    def visible
-      return all if CurrentUser.is_owner?
-      where(owner_id: CurrentUser.id)
-    end
-
-    def for_folder(folder)
+    def for_folder(folder, user)
       return all if folder.nil?
       case folder
       when "all"
-        where(owner_id: CurrentUser.id)
+        owned_by(user)
       when "sent"
-        where(from_id: CurrentUser.id, owner_id: CurrentUser.id)
+        sent_by(user)
       when "received"
-        where(to_id: CurrentUser.id, owner_id: CurrentUser.id)
+        received_by(user)
       end
     end
 
-    def search(params)
+    def search(params, user)
       q = super
 
       q = q.attribute_matches(:title, params[:title_matches])
@@ -165,31 +139,30 @@ class Dmail < ApplicationRecord
     end
   end
 
-  include(AddressMethods)
   include(FactoryMethods)
   extend(SearchMethods)
 
   def user_not_limited
     return true if bypass_limits == true
-    return true if from_id == User.system.id
+    return true if User.system.is?(from_id)
     return true if from.is_janitor?
 
     # different throttle for restricted users, no newbie restriction & much more restrictive total limit
     if from.is_pending?
-      allowed = CurrentUser.can_dmail_restricted_with_reason
+      allowed = from.can_dmail_restricted_with_reason
       errors.add(:base, "You #{User.throttle_reason(allowed, 'daily')}.") if allowed != true
     else
-      allowed = CurrentUser.can_dmail_with_reason
+      allowed = from.can_dmail_with_reason
       if allowed != true
         errors.add(:base, "Sender #{User.throttle_reason(allowed)}")
         return
       end
-      minute_allowed = CurrentUser.can_dmail_minute_with_reason
+      minute_allowed = from.can_dmail_minute_with_reason
       if minute_allowed != true
         errors.add(:base, "Please wait a bit before trying to send again")
         return
       end
-      day_allowed = CurrentUser.can_dmail_day_with_reason
+      day_allowed = from.can_dmail_day_with_reason
       if day_allowed != true
         errors.add(:base, "Sender #{User.throttle_reason(day_allowed, 'daily')}")
         nil
@@ -211,13 +184,13 @@ class Dmail < ApplicationRecord
       errors.add(:to_name, "not found")
       return false
     end
-    return true if from_id == User.system.id
+    return true if User.system.is?(from_id)
     return true if from.is_janitor?
-    if to.disable_user_dmails
+    if to.disable_user_dmails?
       errors.add(:to_name, "has disabled DMails")
       return false
     end
-    if from.disable_user_dmails && !to.is_janitor?
+    if from.disable_user_dmails? && !to.is_janitor?
       errors.add(:to_name, "is not a valid recipient while blocking DMails from others. You may only message janitors and above")
       return false
     end
@@ -228,41 +201,41 @@ class Dmail < ApplicationRecord
   end
 
   def quoted_body
-    "[quote]\n@#{from.name} said:\n\n#{body}\n[/quote]\n\n"
+    "[quote]\n@#{from_name} said:\n\n#{body}\n[/quote]\n\n"
   end
 
   def send_email
-    if to.receive_email_notifications? && to.email =~ /@/ && owner_id == to.id
+    if to.receive_email_notifications? && to.email =~ /@/ && is_owner?(to)
       UserMailer.dmail_notice(self).deliver_now
     end
   end
 
-  def mark_as_read!
-    update_column(:is_read, true)
+  def mark_as_read!(user)
+    update(is_read: true, updater: user)
     owner.update(unread_dmail_count: owner.dmails.unread.count)
-    owner.notifications.unread.where(category: "dmail").and(owner.notifications.where("data->>'dmail_id' = ?", id.to_s)).each(&:mark_as_read!)
+    owner.notifications.unread.where(category: "dmail").and(owner.notifications.where("data->>'dmail_id' = ?", id.to_s)).each { |n| n.mark_as_read!(user) }
   end
 
-  def mark_as_unread!
-    update_column(:is_read, false)
+  def mark_as_unread!(user)
+    update(is_read: false, updater: user)
     owner.update(unread_dmail_count: owner.dmails.unread.count)
-    owner.notifications.read.where(category: "dmail").and(owner.notifications.where("data->>'dmail_id' = ?", id.to_s)).each(&:mark_as_unread!)
+    owner.notifications.read.where(category: "dmail").and(owner.notifications.where("data->>'dmail_id' = ?", id.to_s)).each { |n| n.mark_as_unread!(user) }
   end
 
   def is_automated?
-    from == User.system
+    User.system.is?(from_id)
   end
 
   def is_sender?
-    owner == from
+    owner.is?(from_id)
   end
 
   def is_recipient?
-    owner == to
+    owner.is?(to_id)
   end
 
   def filtered?
-    CurrentUser.dmail_filter.try(:filtered?, self) || false
+    owner.dmail_filter.try(:filtered?, self) || false
   end
 
   def auto_read_if_filtered
@@ -272,25 +245,25 @@ class Dmail < ApplicationRecord
   end
 
   def auto_report_spam
-    if is_recipient? && !is_sender? && SpamDetector.new(self, user_ip: creator_ip_addr.to_s).spam?
+    if is_recipient? && !is_sender? && SpamDetector.new(self, user_ip: from_ip_addr.to_s).spam?
       self.is_deleted = true
       self.is_spam = true
-      tickets << Ticket.new(creator: User.system, creator_ip_addr: "127.0.0.1", reason: "Spam.")
+      tickets << Ticket.new(creator: User.system, reason: "Spam.")
     end
   end
 
-  def mark_spam!
+  def mark_spam!(user)
     return if is_spam?
-    update!(is_spam: true)
+    update!(is_spam: true, updater: user)
     return if spam_ticket.present?
-    SpamDetector.new(self, user_ip: creator_ip_addr.to_s).spam!
+    SpamDetector.new(self, user_ip: from_ip_addr.to_s).spam!
   end
 
-  def mark_not_spam!
+  def mark_not_spam!(user)
     return unless is_spam?
-    update!(is_spam: false)
+    update!(is_spam: false, updater: user)
     return if spam_ticket.blank?
-    SpamDetector.new(self, user_ip: creator_ip_addr.to_s).ham!
+    SpamDetector.new(self, user_ip: from_ip_addr.to_s).ham!
   end
 
   def update_recipient
@@ -302,20 +275,24 @@ class Dmail < ApplicationRecord
 
   def visible_to?(user, key = nil)
     return true if user.is_owner?
-    return true if user.is_moderator? && (from_id == User.system.id || Ticket.exists?(model: self) || key == self.key)
+    return true if user.is_moderator? && (User.system.is?(from_id) || Ticket.exists?(model: self) || key == self.key)
     return true if user.is_admin? && (to.is_admin? || from.is_admin?)
-    owner_id == user.id
+    is_owner?(user)
   end
 
-  def is_owner?
-    owner_id == CurrentUser.id
+  def is_owner?(user)
+    u2id(user) == owner_id
+  end
+
+  def apionly_is_owner?
+    is_owner?(CurrentUser.user)
   end
 
   def self.available_includes
     %i[from to owner]
   end
 
-  def visible?(user = CurrentUser.user)
+  def visible?(user)
     visible_to?(user)
   end
 end

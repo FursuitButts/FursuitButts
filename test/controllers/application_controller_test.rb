@@ -6,31 +6,31 @@ class ApplicationControllerTest < ActionDispatch::IntegrationTest
   context("The application controller") do
     should("return 406 Not Acceptable for a bad file extension") do
       get(posts_path, params: { format: :jpg })
-      assert_response(406)
+      assert_response(:not_acceptable)
 
       get(posts_path, params: { format: :blah })
-      assert_response(406)
+      assert_response(:not_acceptable)
 
       get(post_path("bad.json"))
-      assert_response(404)
+      assert_response(:not_found)
 
       get(post_path("bad.jpg"))
-      assert_response(406)
+      assert_response(:not_acceptable)
 
       get(post_path("bad.blah"))
-      assert_response(406)
+      assert_response(:not_acceptable)
     end
 
     context("on a PaginationError") do
       should("return 410 Gone even with a bad file extension") do
         get(posts_path, params: { page: 999_999_999 }, as: :json)
-        assert_response(410)
+        assert_response(:gone)
 
         get(posts_path, params: { page: 999_999_999 }, as: :jpg)
-        assert_response(410)
+        assert_response(:gone)
 
         get(posts_path, params: { page: 999_999_999 }, as: :blah)
-        assert_response(410)
+        assert_response(:gone)
       end
     end
 
@@ -56,7 +56,7 @@ class ApplicationControllerTest < ActionDispatch::IntegrationTest
         should("fail for api key mismatches") do
           basic_auth_string = "Basic #{::Base64.encode64("#{@user.name}:badpassword")}"
           get(edit_users_path, headers: { HTTP_AUTHORIZATION: basic_auth_string })
-          assert_response(401)
+          assert_response(:unauthorized)
         end
 
         should("succeed for non-GET requests without a CSRF token") do
@@ -76,13 +76,13 @@ class ApplicationControllerTest < ActionDispatch::IntegrationTest
 
         should("fail for api key mismatches") do
           get(edit_users_path, params: { login: @user.name })
-          assert_response(401)
+          assert_response(:unauthorized)
 
           get(edit_users_path, params: { api_key: @api_key.key })
-          assert_response(401)
+          assert_response(:unauthorized)
 
           get(edit_users_path, params: { login: @user.name, api_key: "bad" })
-          assert_response(401)
+          assert_response(:unauthorized)
         end
 
         should("succeed for non-GET requests without a CSRF token") do
@@ -113,7 +113,7 @@ class ApplicationControllerTest < ActionDispatch::IntegrationTest
 
           # try to submit a form with cookies but without the csrf token
           post(update_users_path, headers: { HTTP_COOKIE: headers["Set-Cookie"] }, params: { user: { enable_safe_mode: "true" } })
-          assert_response(403)
+          assert_response(:forbidden)
           assert_match(/ActionController::InvalidAuthenticityToken/, css_select("p").first.content)
           assert_equal(false, @user.reload.enable_safe_mode)
         end
@@ -139,7 +139,7 @@ class ApplicationControllerTest < ActionDispatch::IntegrationTest
 
         put_auth(post_path(post), user, params: { post: { rating: "e" } })
 
-        assert_response(429)
+        assert_response(:too_many_requests)
         assert_equal("s", post.reload.rating)
       end
     end
@@ -165,28 +165,26 @@ class ApplicationControllerTest < ActionDispatch::IntegrationTest
       setup do
         @user = create(:user)
         @user2 = create(:user)
-        as(create(:admin_user)) do
-          @user.bans.create!(duration: -1, reason: "Test")
-          @user2.bans.create!(duration: 3, reason: "Test")
-        end
+        create(:ban, user: @user, duration: -1, reason: "Test")
+        create(:ban, user: @user2, duration: 3, reason: "Test")
       end
 
       context("permanently") do
         should("return a 403 for html") do
           get_auth(posts_path, @user)
-          assert_response(403)
+          assert_response(:forbidden)
         end
 
         should("return a 403 and the ban for json") do
           get_auth(posts_path, @user, params: { format: :json })
-          assert_response(403)
+          assert_response(:forbidden)
           assert_equal("Account is permanently banned", @response.parsed_body["message"])
           assert_equal(@user.recent_ban.as_json, @response.parsed_body["ban"])
         end
 
         should("not allow acknowledging the ban") do
           get(acknowledge_bans_path(user_id: @user.signed_id(purpose: :acknowledge_ban), commit: "Acknowledge"))
-          assert_response(403)
+          assert_response(:forbidden)
           assert_equal(true, @user.reload.is_banned?)
         end
       end
@@ -194,19 +192,19 @@ class ApplicationControllerTest < ActionDispatch::IntegrationTest
       context("temporarily") do
         should("return a 403 for html") do
           get_auth(posts_path, @user2)
-          assert_response(403)
+          assert_response(:forbidden)
         end
 
         should("return a 403 and the ban for json") do
           get_auth(posts_path, @user2, params: { format: :json })
-          assert_response(403)
+          assert_response(:forbidden)
           assert_equal("Account is banned for 3 days", @response.parsed_body["message"])
           assert_equal(@user2.recent_ban.as_json, @response.parsed_body["ban"])
         end
 
         should("not allow acknowledging the ban before it expires") do
           get(acknowledge_bans_path(user_id: @user2.signed_id(purpose: :acknowledge_ban), commit: "Acknowledge"))
-          assert_response(403)
+          assert_response(:forbidden)
           assert_equal(true, @user2.reload.is_banned?)
         end
 
@@ -230,7 +228,7 @@ class ApplicationControllerTest < ActionDispatch::IntegrationTest
       should("not allow acknowledging the ban if it no longer exists") do
         @user2.recent_ban.delete
         get(acknowledge_bans_path(user_id: @user2.signed_id(purpose: :acknowledge_ban), commit: "Acknowledge"))
-        assert_response(403)
+        assert_response(:forbidden)
         assert_equal(true, @user2.reload.is_banned?)
       end
     end
@@ -239,7 +237,6 @@ class ApplicationControllerTest < ActionDispatch::IntegrationTest
       setup do
         @user = create(:user)
         @mod = create(:moderator_user)
-        CurrentUser.user = @user
       end
 
       should("work") do
@@ -263,17 +260,15 @@ class ApplicationControllerTest < ActionDispatch::IntegrationTest
 
       should("work with multiple nested attributes") do
         @artist = create(:artist, linked_user: @user)
-        @ban = as(@mod) { create(:ban, user: @user, banner: @mod) }
+        @ban = create(:ban, user: @user)
         get(user_path(@user), params: { only: "artists[id,name],bans[id]", format: :json })
         assert_response(:success)
         assert_equal({ "artists" => [{ "id" => @artist.id, "name" => @artist.name }], "bans" => [{ "id" => @ban.id }] }, @response.parsed_body)
       end
 
       should("not reveal hidden relations") do
-        as(@mod) do
-          @forum = create(:forum_topic, is_hidden: true)
-          @bur = create(:bulk_update_request, forum_topic: @forum)
-        end
+        @forum = create(:forum_topic, is_hidden: true, creator: @mod)
+        @bur = create(:bulk_update_request, forum_topic: @forum, creator: @mod)
         get_auth(bulk_update_request_path(@bur), @user, params: { only: "forum_topic[id],creator[id]", format: :json })
         assert_response(:success)
         assert_equal({ "creator" => { "id" => @mod.id } }, @response.parsed_body)
@@ -289,7 +284,7 @@ class ApplicationControllerTest < ActionDispatch::IntegrationTest
       should("allow underscore") do
         get_auth(user_path(@user), @user, params: { only: "_", format: :json })
         assert_response(:success)
-        assert_equal(as(@user) { @user.reload.as_json }, @response.parsed_body)
+        assert_equal(@user.reload.as_json(user: @user), @response.parsed_body)
       end
 
       should("allow underscore and other includes") do
@@ -297,7 +292,7 @@ class ApplicationControllerTest < ActionDispatch::IntegrationTest
         get_auth(user_path(@user), @user, params: { only: "_,artists", format: :json })
         assert_response(:success)
         @user.reload
-        assert_equal(as(@user) { @user.as_json.merge({ "artists" => [@artist.as_json] }) }, @response.parsed_body)
+        assert_equal(@user.as_json(user: @user).merge({ "artists" => [@artist.as_json(user: @user)] }), @response.parsed_body)
       end
     end
   end

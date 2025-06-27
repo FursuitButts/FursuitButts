@@ -6,7 +6,7 @@ class ApplicationResponder < ActionController::Responder
   # this is called by respond_with for non-html, non-js responses.
   def to_format
     params = request.params
-    if get? && (params["expires_in"])
+    if get? && params["expires_in"]
       controller.expires_in(DurationParser.parse(params["expires_in"]))
     end
 

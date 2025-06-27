@@ -7,7 +7,7 @@ module Moderator
         def self.all(min_date, max_level)
           ::NoteVersion.joins(:updater)
                        .where("note_versions.created_at > ?", min_date)
-                       .where("users.level <= ?", max_level)
+                       .where(users: { level: ..max_level })
                        .group(:updater)
                        .order(Arel.sql("count(*) desc"))
                        .limit(10)

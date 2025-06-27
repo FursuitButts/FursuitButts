@@ -7,7 +7,7 @@ module PostSets
 
     def index
       @invites = authorize(PostSetMaintainer).html_includes(request, :post_set)
-                                             .where(user_id: CurrentUser.id)
+                                             .visible(CurrentUser.user)
                                              .order(updated_at: :desc)
     end
 
@@ -32,7 +32,7 @@ module PostSets
         return
       end
 
-      if RateLimiter.check_limit("set.invite.#{CurrentUser.id}", 5, 1.hour)
+      if RateLimiter.check_limit("set.invite.#{CurrentUser.user.id}", 5, 1.hour)
         notice("You must wait an hour before inviting more set maintainers")
       end
 
@@ -40,7 +40,7 @@ module PostSets
       @invite.save
 
       if @invite.valid?
-        RateLimiter.hit("set.invite.#{CurrentUser.id}", 1.hour)
+        RateLimiter.hit("set.invite.#{CurrentUser.user.id}", 1.hour)
         notice("#{@user.pretty_name} invited to be a maintainer")
       else
         notice(@invite.errors.full_messages.join("; "))
@@ -51,18 +51,15 @@ module PostSets
     end
 
     def destroy
-      @maintainer = PostSetMaintainer.find(params[:id] || params[:post_set_maintainer][:id])
-      @set = @maintainer.post_set
-      authorize(@set, :add_maintainer?)
-      authorize(@maintainer, :cancel?)
+      @maintainer = authorize(PostSetMaintainer.find(params[:id] || params[:post_set_maintainer][:id]), :cancel?)
+      @set = authorize(@maintainer.post_set, :add_maintainer?)
 
       @maintainer.cancel!
       respond_with(@set)
     end
 
     def approve
-      @maintainer = PostSetMaintainer.find(params[:id])
-      authorize(@maintainer, :approve?)
+      @maintainer = authorize(PostSetMaintainer.find(params[:id]))
 
       @maintainer.approve!
       notice("You are now a maintainer for the set")
@@ -72,8 +69,7 @@ module PostSets
     end
 
     def deny
-      @maintainer = PostSetMaintainer.find(params[:id])
-      authorize(@maintainer, :deny?)
+      @maintainer = authorize(PostSetMaintainer.find(params[:id]))
 
       @maintainer.deny!
       notice("You have declined the set maintainer invite")
@@ -83,8 +79,7 @@ module PostSets
     end
 
     def block
-      @maintainer = PostSetMaintainer.find(params[:id])
-      authorize(@maintainer, :block?)
+      @maintainer = authorize(PostSetMaintainer.find(params[:id]))
 
       @maintainer.block!
       notice("You will not receive further invites for this set")

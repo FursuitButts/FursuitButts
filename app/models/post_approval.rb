@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class PostApproval < ApplicationRecord
-  belongs_to(:user)
+  belongs_to_user(:user, ip: true) # TODO: convert to creator
   belongs_to(:post, inverse_of: :approvals)
 
   validate(:validate_approval)
@@ -20,15 +20,15 @@ class PostApproval < ApplicationRecord
 
   concerning(:SearchMethods) do
     class_methods do
-      def post_tags_match(query)
-        where(post_id: Post.tag_match_sql(query))
+      def post_tags_match(query, user)
+        where(post_id: Post.tag_match_sql(query, user))
       end
 
-      def search(params)
+      def search(params, user)
         q = super
 
         if params[:post_tags_match].present?
-          q = q.post_tags_match(params[:post_tags_match])
+          q = q.post_tags_match(params[:post_tags_match], user)
         end
 
         q = q.where_user(:user_id, :user, params)
