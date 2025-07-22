@@ -12,6 +12,15 @@ class Post < ApplicationRecord
   VIDEO_EXTENSIONS = ::FileMethods::VIDEO_EXTENSIONS
   IMAGE_EXTENSIONS = ::FileMethods::IMAGE_EXTENSIONS
   EXTENSIONS = ::FileMethods::EXTENSIONS
+  CHANGE_SEQ_IGNORED = %i[id created_at updated_at up_score down_score score uploader_id uploader_ip_addr fav_string pool_string last_comment_bumped_at fav_count tag_count has_children bit_flags change_seq original_tag_string upload_url vote_string typed_tag_string upload_media_asset_id updater_id updater_ip_addr].freeze
+
+  def self.get_change_seq_tracked
+    Post.connection.select_one("SELECT prosrc FROM pg_proc WHERE proname = $1", nil, ["posts_trigger_change_seq"])["prosrc"].scan(/NEW\.([a-z_]+) IS DISTINCT FROM OLD\.([a-z_]+)/).flatten.uniq.map(&:to_sym)
+  end
+
+  def self.get_change_seq_missed
+    Post.column_names.map(&:to_sym) - Post.get_change_seq_tracked - Post::CHANGE_SEQ_IGNORED
+  end
 
   module Flags
     # HAS_CROPPED              = 1 << 0

@@ -227,6 +227,8 @@ class DiscordNotification
     when Pool
       embeds << { color: YELLOW, title: "Pool Updated", url: r.pool_url(record), author: a(record.updater) }
     when Post
+      changed = Post.get_change_seq_tracked.any? { |attr| record.saved_change_to_attribute?(attr) }
+      return unless changed
       embeds << { color: YELLOW, title: "Post Updated", url: r.post_url(record), author: a(record.updater) }
     when PostSet
       embeds << { color: YELLOW, title: "Post Set Updated", url: r.post_set_url(record), author: a(record.updater) }
