@@ -39,12 +39,13 @@ module BulkUpdateRequestCommands
     end
 
     def process(processor, approver)
+      user = User.system
       ensure_valid!
       ModAction.log!(approver, :mass_update, processor.request, antecedent: antecedent_query, consequent: consequent_query)
       Post.tag_match_sql(antecedent_query, approver).reorder(nil).parallel_find_each do |post|
         post.with_lock do
           post.automated_edit = true
-          post.updater = approver
+          post.updater = user
           post.tag_string += " #{consequent_query}"
           post.save
         end
