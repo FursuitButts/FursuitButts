@@ -19,7 +19,7 @@ module VideoResizer
     unless status == 0
       Rails.logger.warn("[FFMPEG FRAME STDOUT] #{stdout.chomp!}")
       Rails.logger.warn("[FFMPEG FRAME STDERR] #{stderr.chomp!}")
-      raise(CorruptFileError, "could not extract frame")
+      raise(StandardError, "could not extract frame")
     end
     output_file
   end
@@ -47,7 +47,7 @@ module VideoResizer
     unless status == 0
       Rails.logger.warn("[FFMPEG SAMPLE STDOUT] #{stdout.chomp!}")
       Rails.logger.warn("[FFMPEG SAMPLE STDERR] #{stderr.chomp!}")
-      raise(CorruptFileError, "could not generate sample")
+      raise(StandardError, "could not generate sample")
     end
     output_file
   end

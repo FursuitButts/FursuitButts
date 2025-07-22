@@ -248,7 +248,7 @@ class PostsController < ApplicationController
     if post.invalid?
       return render_expected_error(400, post.errors.full_messages.join("; "), format: :json)
     end
-    path = VideoResizer.extract_frame(post.file_path, frame)
+    path = post.file { |f| VideoResizer.extract_frame(f.path, frame) }
     File.open(path, "r") do |file|
       send_data(file.read, type: "image/webp", disposition: "inline")
     end
