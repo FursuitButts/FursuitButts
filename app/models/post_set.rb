@@ -328,11 +328,11 @@ class PostSet < ApplicationRecord
     end
 
     def where_has_post(post_id)
-      where("post_ids @> ARRAY[?]::integer[]", post_id)
+      where.contains(post_ids: [post_id])
     end
 
     def where_has_maintainer(user_id)
-      joins(:maintainers).where("(post_set_maintainers.user_id = ? AND post_set_maintainers.status = ?) OR creator_id = ?", user_id, "approved", user_id)
+      joins(:maintainers).where(post_set_maintainers: { user_id: user_id, status: "approved"} ).or(where(creator_id: user_id))
     end
 
     def search(params, user)
