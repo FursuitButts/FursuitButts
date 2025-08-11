@@ -149,6 +149,7 @@ services:
         soft: 262144
         hard: 262144
     volumes:
+      - ./config/clickhouse.xml:/etc/clickhouse-server/config.d/z_clickhouse.xml
       - clickhouse_data:/var/lib/clickhouse
     ports:
       - "${EXPOSED_CLICKHOUSE_PORT:-34520}:8123"
