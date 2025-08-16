@@ -1,0 +1,13 @@
+NOTICE
+
+This project includes code from the following sources:
+
+- Danbooru Project (https://github.com/danbooru/danbooru)
+  Licensed under the BSD 2-Clause License.
+
+- e621ng Project (https://github.com/e621ng/e621ng)
+  Licensed under the BSD 2-Clause License.
+
+- Additional modifications and original code
+  Copyright (c) 2025 Donovan Daniels
+  Licensed under the MIT License.
