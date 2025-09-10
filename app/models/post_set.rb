@@ -332,7 +332,7 @@ class PostSet < ApplicationRecord
     end
 
     def where_has_maintainer(user_id)
-      joins(:maintainers).where(post_set_maintainers: { user_id: user_id, status: "approved"} ).or(where(creator_id: user_id))
+      joins(:maintainers).where(post_set_maintainers: { user_id: user_id, status: "approved" }).or(where(creator_id: user_id))
     end
 
     def search(params, user)

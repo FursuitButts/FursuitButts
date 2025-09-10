@@ -70,7 +70,7 @@ module Recommender
     end
 
     if user.present?
-      raise(User::PrivacyModeError) if user.hide_favorites?(CurrentUser.user)
+      raise(User::PrivacyModeError) if user.hide_favorites?(current_user)
       max_recommendations = params.fetch(:max_recommendations, user.favorite_count + 500).to_i.clamp(0, 50_000)
       recs = recommend_for_user(user, tags: params[:post_tags_match], limit: max_recommendations, user: current_user)
     elsif post.present?
