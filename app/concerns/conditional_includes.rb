@@ -17,5 +17,19 @@ module ConditionalIncludes
       return all if condition
       includes(*)
     end
+
+    def html_preload(request, *)
+      preload_if(request.format.html?, *)
+    end
+
+    def preload_if(condition, *)
+      return all unless condition
+      preload(*)
+    end
+
+    def preload_unless(condition, *)
+      return all if condition
+      preload(*)
+    end
   end
 end
