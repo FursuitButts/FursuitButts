@@ -22,7 +22,7 @@
       <p class="info">
         This is an automated message.
         <% if @dmail.respond_to_id.present? %>
-          Responses will be sent to <%= link_to(User.id_to_name(@dmail.respond_to_id), @dmail.respond_to) %>.
+          Responses will be sent to <%= link_to(User.id_to_name(@dmail.respond_to_id), user_path(@dmail.respond_to)) %>.
         <% else %>
           Responses will not be seen.
         <% end %>

@@ -199,8 +199,8 @@ export default {
         this.setEmptyThumb();
       }
       this.whitelist.oldDomain = domain;
-      if(/^(https?\:\/\/|www).*?$/.test(this.uploadURL)) {
-        const isVideo = /^(https?\:\/\/|www).*?\.(webm)$/.test(this.uploadURL);
+      if(/^(https?:\/\/|www).*?$/.test(this.uploadURL)) {
+        const isVideo = /^(https?:\/\/|www).*?\.(webm|mp4)$/.test(this.uploadURL);
         this.previewChanged(this.uploadURL, isVideo);
       } else {
         this.setEmptyThumb();
