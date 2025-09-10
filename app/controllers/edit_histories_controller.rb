@@ -4,7 +4,7 @@ class EditHistoriesController < ApplicationController
   respond_to(:html)
 
   def index
-    @edit_histories = authorize(EditHistory).html_includes(request, :user)
+    @edit_histories = authorize(EditHistory).html_includes(request, :updater)
                                             .search_current(search_params(EditHistory))
                                             .paginate(params[:page], limit: params[:limit])
     respond_with(@edit_histories)
@@ -13,7 +13,7 @@ class EditHistoriesController < ApplicationController
   def show
     @edit_class = edit_class
     @id_param = id_param
-    @edit_histories = authorize(EditHistory).html_includes(request, :user)
+    @edit_histories = authorize(EditHistory).html_includes(request, :updater)
                                             .where(versionable_id: params[@id_param], versionable_type: @edit_class)
     @original = @edit_histories.original
     @edit_histories = @edit_histories.order(id: :asc).paginate(params[:page], limit: params[:limit])

@@ -141,7 +141,7 @@ class EditHistory < ApplicationRecord
         q = q.where.not(edit_type: "original")
       end
 
-      q = q.where_user(:user_id, :user, params)
+      q = q.where_user(:updater_id, :updater, params)
 
       if params[:ip_addr].present?
         q = q.where("ip_addr <<= ?", params[:ip_addr])
@@ -154,7 +154,7 @@ class EditHistory < ApplicationRecord
   extend(SearchMethods)
 
   def self.available_includes
-    %i[user versionable]
+    %i[updater versionable]
   end
 
   def visible?(user)
