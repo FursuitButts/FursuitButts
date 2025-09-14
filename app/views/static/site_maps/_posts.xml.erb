@@ -1,7 +1,6 @@
 <%# locals: (from:, to:) -%>
 <% posts = Post.where(id: from..to).includes(:media_asset).not_deleted %>
 <% ViewCountCache.add_all!(Reports.get_bulk_post_views(posts.map(&:id), unique: false), :total) %>
-
 <% xml = Builder::XmlMarkup.new(indent: 2) %>
 <% xml.instruct!(:xml, version: "1.0", encoding: "UTF-8") %>
 <% xml.urlset("xmlns": "http://www.sitemaps.org/schemas/sitemap/0.9", "xmlns:image": "http://www.google.com/schemas/sitemap-image/1.1", "xmlns:video": "http://www.google.com/schemas/sitemap-video/1.1") do %>
@@ -30,12 +29,13 @@
           <% xml.video(:family_friendly, "no") %>
           <% xml.video(:uploader, post.uploader_name, info: user_url(post.uploader_id)) %>
           <% xml.video(:live, "no") %>
-          <% post.artist_tags.select(:name).limit(32).each do |tag| %>
-            <% xml.video(:tag, tag.name) %>
+          <% post.artist_tag_array.first(32).each do |tag| %>
+            <% xml.video(:tag, tag) %>
           <% end %>
         <% end %>
       <% end %>
     <% end %>
   <% end %>
 <% end %>
+
 <%= xml.target!.html_safe %>
