@@ -1,0 +1,55 @@
+<% xml = Builder::XmlMarkup.new(indent: 2) %>
+<% xml.instruct!(:xml, version: "1.0", encoding: "UTF-8") %>
+<% xml.urlset(xmlns: "http://www.sitemaps.org/schemas/sitemap/0.9") do %>
+  <% xml.url do %>
+    <% xml.loc(root_url) %>
+  <% end %>
+  <% xml.url do %>
+    <% xml.loc(api_documentation_url) %>
+    <% xml.changefreq("daily") %>
+  <% end %>
+  <% xml.url do %>
+    <% xml.loc(posts_url) %>
+    <% xml.priority("1.0") %>
+    <% xml.changefreq("always") %>
+  <% end %>
+  <% xml.url do %>
+    <% xml.loc(forum_topics_url) %>
+    <% xml.priority("0.8") %>
+    <% xml.changefreq("always") %>
+  <% end %>
+  <% xml.url do %>
+    <% xml.loc(forum_posts_url) %>
+    <% xml.priority("0.4") %>
+    <% xml.changefreq("always") %>
+  <% end %>
+  <% xml.url do %>
+    <% xml.loc(artists_url) %>
+    <% xml.priority("0.7") %>
+    <% xml.changefreq("always") %>
+  <% end %>
+  <% xml.url do %>
+    <% xml.loc(help_pages_url) %>
+    <% xml.priority("0.9") %>
+    <% xml.changefreq("weekly") %>
+  <% end %>
+  <% xml.url do %>
+    <% xml.loc(news_updates_url) %>
+    <% xml.changefreq("daily") %>
+  <% end %>
+  <% xml.url do %>
+    <% xml.loc(pools_url) %>
+    <% xml.priority("0.7") %>
+    <% xml.changefreq("always") %>
+  <% end %>
+  <% xml.url do %>
+    <% xml.loc(stats_url) %>
+    <% xml.changefreq("daily") %>
+  <% end %>
+  <% xml.url do %>
+    <% xml.loc(wiki_pages_url) %>
+    <% xml.priority("0.7") %>
+    <% xml.changefreq("always") %>
+  <% end %>
+<% end %>
+<%= xml.target!.html_safe %>

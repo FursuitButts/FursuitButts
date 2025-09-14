@@ -422,6 +422,7 @@ DEPENDENCIES
   after_commit_everywhere (~> 1.6)
   bcrypt
   bootsnap
+  builder (~> 3.3)
   bullet
   click_house (~> 2.1)
   concurrent-ruby (~> 1.3)

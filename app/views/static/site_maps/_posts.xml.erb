@@ -1,0 +1,40 @@
+<%# locals: (from:, to:) -%>
+<% posts = Post.where(id: from..to).includes(:media_asset) %>
+<% ViewCountCache.add_all!(Reports.get_bulk_post_views(posts.map(&:id), unique: CurrentUser.user.unique_views?), :total) %>
+
+<% xml = Builder::XmlMarkup.new(indent: 2) %>
+<% xml.instruct!(:xml, version: "1.0", encoding: "UTF-8") %>
+<% xml.urlset("xmlns": "http://www.sitemaps.org/schemas/sitemap/0.9", "xmlns:image": "http://www.google.com/schemas/sitemap-image/1.1", "xmlns:video": "http://www.google.com/schemas/sitemap-video/1.1") do %>
+  <% posts.find_each do |post| %>
+    <% xml.url do %>
+      <% xml.loc(post_url(post)) %>
+      <% xml.changefreq("monthly") %>
+      <% if post.is_image? %>
+        <% xml.image(:image) do %>
+          <% xml.image(:loc, post.file_url(CurrentUser.user)) %>
+        <% end %>
+      <% elsif post.is_video? %>
+        <%# https://developers.google.com/search/docs/crawling-indexing/sitemaps/video-sitemaps %>
+        <% xml.video(:video) do %>
+          <% xml.video(:thumbnail_loc, post.preview_file_url(CurrentUser.user)) %>
+          <% xml.video(:title, post.presenter.humanized_essential_tag_string) %>
+          <% xml.video(:description, post.description[0..250]) %>
+          <% xml.video(:content_loc, post.file_url(CurrentUser.user)) %>
+          <%# xml.video(:player_loc, post_url(post)) %>
+          <% xml.video(:duration, post.duration.round) %>
+          <% total = post.up_score + -post.down_score %>
+          <% xml.video(:rating, total == 0 ? 0 : ((post.up_score.to_f / total) * 5).round(2)) %>
+          <% xml.video(:view_count, post.total_views) %>
+          <% xml.video(:publication_date, post.created_at.iso8601) %>
+          <% xml.video(:family_friendly, "no") %>
+          <% xml.video(:uploader, post.uploader_name, info: user_url(post.uploader_id)) %>
+          <% xml.video(:live, "no") %>
+          <% post.artist_tags.select(:name).limit(32).each do |tag| %>
+            <% xml.video(:tag, tag.name) %>
+          <% end %>
+        <% end %>
+      <% end %>
+    <% end %>
+  <% end %>
+<% end %>
+<%= xml.target!.html_safe %>

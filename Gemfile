@@ -87,3 +87,5 @@ gem("csv", "~> 3.3")
 gem("abbrev", "~> 0.1.2")
 
 gem("concurrent-ruby", "~> 1.3")
+
+gem("builder", "~> 3.3")

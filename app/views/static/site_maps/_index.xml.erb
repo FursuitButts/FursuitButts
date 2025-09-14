@@ -1,0 +1,15 @@
+<% max = Post.maximum(:id) %>
+<% xml = Builder::XmlMarkup.new(indent: 2) %>
+<% xml.instruct!(:xml, version: "1.0", encoding: "UTF-8") %>
+<% xml.sitemapindex(xmlns: "http://www.sitemaps.org/schemas/sitemap/0.9") do %>
+  <% xml.sitemap do %>
+    <% xml.loc(sitemap_type_url("main", format: "xml")) %>
+  <% end %>
+  <% ((max / 50_000) + 1).times do |i| %>
+    <% xml.sitemap do %>
+      <% xml.loc(sitemap_type_url("posts", format: "xml", from: [(i * 50_000), 1].min + 1, to: [(i + 1) * 50_000, max].min)) %>
+    <% end %>
+  <% end %>
+<% end %>
+
+<%= xml.target!.html_safe %>
