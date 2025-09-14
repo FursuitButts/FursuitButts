@@ -1,6 +1,6 @@
 <%# locals: (from:, to:) -%>
-<% posts = Post.where(id: from..to).includes(:media_asset) %>
-<% ViewCountCache.add_all!(Reports.get_bulk_post_views(posts.map(&:id), unique: CurrentUser.user.unique_views?), :total) %>
+<% posts = Post.where(id: from..to).includes(:media_asset).not_deleted %>
+<% ViewCountCache.add_all!(Reports.get_bulk_post_views(posts.map(&:id), unique: false), :total) %>
 
 <% xml = Builder::XmlMarkup.new(indent: 2) %>
 <% xml.instruct!(:xml, version: "1.0", encoding: "UTF-8") %>
@@ -8,6 +8,7 @@
   <% posts.find_each do |post| %>
     <% xml.url do %>
       <% xml.loc(post_url(post)) %>
+      <% xml.lastmod(post.updated_at.iso8601) %>
       <% xml.changefreq("monthly") %>
       <% if post.is_image? %>
         <% xml.image(:image) do %>

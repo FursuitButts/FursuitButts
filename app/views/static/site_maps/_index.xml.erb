@@ -4,10 +4,15 @@
 <% xml.sitemapindex(xmlns: "http://www.sitemaps.org/schemas/sitemap/0.9") do %>
   <% xml.sitemap do %>
     <% xml.loc(sitemap_type_url("main", format: "xml")) %>
+    <% xml.lastmod(Date.today.to_datetime.utc.iso8601) %>
   <% end %>
   <% ((max / 50_000) + 1).times do |i| %>
     <% xml.sitemap do %>
-      <% xml.loc(sitemap_type_url("posts", format: "xml", from: [(i * 50_000), 1].min + 1, to: [(i + 1) * 50_000, max].min)) %>
+      <% from = [(i * 50_000), 1].min + 1 %>
+      <% to = [(i + 1) * 50_000, max].min %>
+      <% xml.loc(sitemap_type_url("posts", format: "xml", from: from, to: to)) %>
+      <% updated = Post.where(id: from..to).maximum(:updated_at) %>
+      <% xml.lastmod(updated.utc.iso8601) %>
     <% end %>
   <% end %>
 <% end %>
