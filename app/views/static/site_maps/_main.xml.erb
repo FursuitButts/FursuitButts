@@ -1,7 +1,7 @@
 <% xml = Builder::XmlMarkup.new(indent: 2) %>
 <% xml.instruct!(:xml, version: "1.0", encoding: "UTF-8") %>
 <% xml.urlset(xmlns: "http://www.sitemaps.org/schemas/sitemap/0.9") do %>
-  <% now = Date.today.to_datetime %>
+  <% now = Time.zone.today.to_datetime %>
   <% xml.url do %>
     <% xml.loc(root_url) %>
   <% end %>
@@ -62,5 +62,4 @@
     <% xml.lastmod(now.utc.iso8601) %>
   <% end %>
 <% end %>
-
 <%= xml.target!.html_safe %>

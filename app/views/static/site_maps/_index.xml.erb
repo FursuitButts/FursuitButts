@@ -4,7 +4,7 @@
 <% xml.sitemapindex(xmlns: "http://www.sitemaps.org/schemas/sitemap/0.9") do %>
   <% xml.sitemap do %>
     <% xml.loc(sitemap_type_url("main", format: "xml")) %>
-    <% xml.lastmod(Date.today.to_datetime.utc.iso8601) %>
+    <% xml.lastmod(Time.zone.today.to_datetime.utc.iso8601) %>
   <% end %>
   <% ((max / 50_000) + 1).times do |i| %>
     <% xml.sitemap do %>
@@ -16,5 +16,4 @@
     <% end %>
   <% end %>
 <% end %>
-
-<%= xml.target!.html_safe %>
+<%= raw(xml.target!) %>

@@ -37,6 +37,14 @@ class StaticController < ApplicationController
 
   def site_map
     expires_in(1.day, public: true)
+    case params[:type]
+    when nil, ""
+      render(partial: "static/site_maps/index")
+    when "main"
+      render(partial: "static/site_maps/main")
+    when "posts"
+      render(partial: "static/site_maps/posts", locals: { from: params[:from].to_i, to: params[:to].to_i })
+    end
   end
 
   def home

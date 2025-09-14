@@ -108,12 +108,11 @@ class TagSetPresenter < Presenter
 
   def tags_by_category
     @tags_by_category ||= if post.nil?
-                              ordered_tags.group_by(&:category)
-                            else
-                              typed = post.typed_tags
-                              typed.map { |name| Tag.new(name: name.first).freeze }.group_by { |tag| typed[tag.name] }
-                            end
-
+                            ordered_tags.group_by(&:category)
+                          else
+                            typed = post.typed_tags
+                            typed.map { |name| Tag.new(name: name.first).freeze }.group_by { |tag| typed[tag.name] }
+                          end
   end
 
   def tags_for_category(category_name)
