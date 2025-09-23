@@ -8,14 +8,13 @@
 class TagSetPresenter < Presenter
   include(Rails.application.routes.url_helpers)
 
-  attr_reader(:tag_names, :post)
+  attr_reader(:tag_names)
 
   # @param [Array<String>] tag_names a list of tags to present. Tags will be presented in
   # the order given. The list should not contain duplicates. The list may
   # contain tags that do not exist in the tags table, such as metatags.
-  def initialize(tag_names, post = nil)
+  def initialize(tag_names)
     @tag_names = tag_names
-    @post = post
   end
 
   def post_index_sidebar_tag_list_html(followed_tags:, current_query: "")
@@ -107,12 +106,7 @@ class TagSetPresenter < Presenter
   end
 
   def tags_by_category
-    @tags_by_category ||= if post.nil?
-                            ordered_tags.group_by(&:category)
-                          else
-                            typed = post.typed_tags
-                            typed.map { |name| Tag.new(name: name.first).freeze }.group_by { |tag| typed[tag.name] }
-                          end
+    @tags_by_category ||= ordered_tags.group_by(&:category)
   end
 
   def tags_for_category(category_name)
