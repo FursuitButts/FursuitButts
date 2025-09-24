@@ -1160,7 +1160,7 @@ ALTER SEQUENCE public.mascots_id_seq OWNED BY public.mascots.id;
 
 CREATE TABLE public.media_metadata (
     id bigint NOT NULL,
-    meatadata jsonb DEFAULT '{}'::jsonb NOT NULL,
+    metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL
 );
@@ -7537,6 +7537,7 @@ ALTER TABLE ONLY public.help_pages
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20250923161649'),
 ('20250722120905'),
 ('20250620164659'),
 ('20250620164658'),

@@ -37,6 +37,7 @@ class MediaAsset < ApplicationRecord
   scope(:expunged_duplicates_of, ->(md5) { expunged.where(md5: md5) })
   scope(:with_metadata, -> { includes(:media_metadata) })
   scope(:images_only, -> { where(file_ext: ::FileMethods::IMAGE_EXTENSIONS) })
+  scope(:gifs_only, -> { where(file_ext: ::FileMethods::GIF_EXTENSIONS) })
   scope(:videos_only, -> { where(file_ext: ::FileMethods::VIDEO_EXTENSIONS) })
   scope(:for_creator, ->(user) { where(creator_id: u2id(user)) })
 
@@ -147,14 +148,33 @@ class MediaAsset < ApplicationRecord
       self.file_size = file.size
       self.md5 = file_md5
       self.pixel_hash = file_pixel_hash
-      self.duration = video_duration
-      self.framecount = video_framecount
       self.is_animated_png = MediaAsset.is_animated_png?(file.path)
       self.is_animated_gif = MediaAsset.is_animated_gif?(file.path)
+      update_metadata
 
-      width, height = calculate_dimensions
-      self.image_width = width
-      self.image_height = height
+      self.duration = media_metadata.duration
+      self.framecount = media_metadata.duration.present? ? media_metadata.duration * media_metadata.frame_rate : nil
+      self.image_width = media_metadata.width
+      self.image_height = media_metadata.height
+    end
+
+    def metadata(file = self.file)
+      if is_video?
+        file.present? ? self.class.video_metadata(file.path) : video_metadata
+      elsif is_gif?
+        file.present? ? self.class.gif_metadata(file.path) : gif_metadata
+      elsif is_image?
+        file.present? ? self.class.image_metadata(file.path) : image_metadata
+      end
+    end
+
+    def update_metadata
+      media_metadata.metadata = metadata
+    end
+
+    def update_metadata!
+      update_metadata
+      media_metadata.save!
     end
   end
 

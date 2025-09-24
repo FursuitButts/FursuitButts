@@ -32,3 +32,4 @@ FileUtils.mkdir_p(NEW_DIR)
 UploadMediaAsset.in_progress.delete_all
 Post.where(upload_media_asset_id: nil).where(file_ext: FileMethods::IMAGE_EXTENSIONS).find_each { |post| handle(post) }
 Post.where(upload_media_asset_id: nil).where(file_ext: FileMethods::VIDEO_EXTENSIONS).find_each { |post| handle(post) }
+Post.where(upload_media_asset_id: nil).where(file_ext: FileMethods::GIF_EXTENSIONS).find_each { |post| handle(post) }

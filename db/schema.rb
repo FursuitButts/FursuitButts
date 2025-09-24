@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_07_22_120905) do
+ActiveRecord::Schema[7.1].define(version: 2025_09_23_161649) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -463,7 +463,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_22_120905) do
   end
 
   create_table "media_metadata", force: :cascade do |t|
-    t.jsonb "meatadata", default: {}, null: false
+    t.jsonb "metadata", default: {}, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end

@@ -11,6 +11,7 @@ class Post < ApplicationRecord
   ASPECT_RATIO_REGEX = /^\d+:\d+$/
   VIDEO_EXTENSIONS = ::FileMethods::VIDEO_EXTENSIONS
   IMAGE_EXTENSIONS = ::FileMethods::IMAGE_EXTENSIONS
+  GIF_EXTENSIONS = ::FileMethods::GIF_EXTENSIONS
   EXTENSIONS = ::FileMethods::EXTENSIONS
   CHANGE_SEQ_IGNORED = %i[id created_at updated_at up_score down_score score uploader_id uploader_ip_addr fav_string pool_string last_comment_bumped_at fav_count tag_count has_children bit_flags change_seq original_tag_string upload_url vote_string typed_tag_string upload_media_asset_id updater_id updater_ip_addr].freeze
 

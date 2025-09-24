@@ -4,7 +4,8 @@ module FileMethods
   extend(ActiveSupport::Concern)
   VIDEO_EXTENSIONS = %w[webm mp4].freeze
   IMAGE_EXTENSIONS = %w[png jpg gif webp].freeze
-  EXTENSIONS = (IMAGE_EXTENSIONS + VIDEO_EXTENSIONS).freeze
+  GIF_EXTENSIONS = %w[gif].freeze
+  EXTENSIONS = (IMAGE_EXTENSIONS + VIDEO_EXTENSIONS + GIF_EXTENSIONS).uniq.freeze
 
   module ClassMethods
     def file_header_to_file_ext(file_path)
@@ -39,28 +40,72 @@ module FileMethods
       FFMPEG::Movie.new(file_path, ...)
     end
 
-    def video_duration(file_path)
-      video(file_path)&.duration
-    end
-
-    def video_framecount(file_path)
+    def video_metadata(file_path)
       video = self.video(file_path)
-      return nil unless video&.duration && video.frame_rate
-      (video.frame_rate * video.duration).ceil
+      hash = {}
+      return hash if video.nil?
+      %i[container duration time format_tags creation_time bitrate video_codec colorspace width height video_bitrate sar dar rotation].each do |p|
+        hash[p] = video.public_send(p)
+      end
+      hash[:frame_rate] = video.frame_rate.to_f # because it's a Rational for some reason
+      hash[:overview] = video.video_stream
+      hash[:raw] = video.metadata
+
+      hash[:audio_streams] = []
+      video.audio_streams.each do |audio|
+        audhash = {}
+        %i[index channels codec_name sample_rate bitrate channel_layout tags overview].each do |p|
+          audhash[p] = audio.public_send(:[], p)
+        end
+        hash[:audio_streams].push(audhash)
+      end
+
+      hash
     end
 
-    def image(file_path, **)
+    def gif(file_path, ...)
+      return unless is_file_gif?(file_path)
+      FFMPEG::Movie.new(file_path, ...)
+    end
+
+    def gif_metadata(file_path)
+      gif = self.gif(file_path)
+      hash = {}
+      return hash if gif.nil?
+      %i[container duration time format_tags creation_time bitrate video_codec colorspace width height video_bitrate sar dar rotation].each do |p|
+        hash[p] = gif.public_send(p)
+      end
+      hash[:frame_rate] = gif.frame_rate.to_f # because it's a Rational for some reason
+      hash[:overview] = gif.video_stream
+      hash[:raw] = gif.metadata
+      hash
+    end
+
+    def image(file_path, ...)
       return unless is_file_image?(file_path)
-      Vips::Image.new_from_file(file_path, **)
+      Vips::Image.new_from_file(file_path, ...)
+    end
+
+    def image_metadata(file_path, ...)
+      image = self.image(file_path, ...)
+      hash = {}
+      return hash if image.nil?
+      %w[width height bands format coding interpretation xoffset yoffset xres yres resolution-unit bits-per-sample].each do |field|
+        hash[field.to_sym] = image.get(field)
+      rescue Vips::Error
+        # Ignored
+      end
+      hash
     end
 
     def calculate_dimensions(file_path)
-      if is_file_image?(file_path) && (image = self.image(file_path))
-        return [image.width, image.height]
-      elsif is_file_video?(file_path) && (video = self.video(file_path))
-        return [video.width, video.height]
+      if (is_file_gif?(file_path) && (data = gif_metadata(file_path))) ||
+         (is_file_image?(file_path) && (data = image_metadata(file_path))) ||
+         (is_file_video?(file_path) && (data = video_metadata(file_path)))
+        [data[:width], data[:height]]
+      else
+        [0, 0]
       end
-      [0, 0]
     end
 
     def is_image?(file_ext)
@@ -69,6 +114,14 @@ module FileMethods
 
     def is_file_image?(file_path)
       is_image?(file_header_to_file_ext(file_path))
+    end
+
+    def is_gif?(file_ext)
+      GIF_EXTENSIONS.include?(file_ext)
+    end
+
+    def is_file_gif?(file_path)
+      is_gif?(file_header_to_file_ext(file_path))
     end
 
     def is_video?(file_ext)
@@ -133,7 +186,7 @@ module FileMethods
       return true if fetch.call("png-comment-0-parameters").present?
       return true if fetch.call("png-comment-0-Dream").present?
       return true if fetch.call("exif-ifd0-Software").include?("NovelAI") || fetch.call("png-comment-2-Software").include?("NovelAI")
-      return true if ["exif-ifd0-ImageDescription", "exif-ifd2-UserComment", "png-comment-4-Comment"].any? { |field| fetch.call(field).include?('"sampler": "') }
+      return true if %w[exif-ifd0-ImageDescription exif-ifd2-UserComment png-comment-4-Comment].any? { |field| fetch.call(field).include?('"sampler": "') }
       exif_data = fetch.call("exif-data")
       return true if ["Model hash", "OpenAI", "NovelAI"].any? { |marker| exif_data.include?(marker) }
       false
@@ -193,14 +246,26 @@ module FileMethods
       self.class.video(get_file.path)
     end
 
-    def video_duration
-      return unless is_video?
-      get_file { |file| self.class.video_duration(file.path) }
+    def video_metadata(&)
+      if block_given?
+        get_file { |file| yield(self.class.video_metadata(file.path)) }
+      end
+      self.class.video_metadata(get_file.path)
     end
 
-    def video_framecount
-      return unless is_video?
-      get_file { |file| self.class.video_framecount(file.path) }
+    def gif(&)
+      if block_given?
+        get_file { |file| yield(self.class.gif(file.path)) }
+        return
+      end
+      self.class.gif(get_file.path)
+    end
+
+    def gif_metadata(&)
+      if block_given?
+        get_file { |file| yield(self.class.gif_metadata(file.path)) }
+      end
+      self.class.gif_metadata(get_file.path)
     end
 
     def image(&)
@@ -209,6 +274,13 @@ module FileMethods
         return
       end
       self.class.image(get_file.path)
+    end
+
+    def image_metadata(&)
+      if block_given?
+        get_file { |file| yield(self.class.image_metadata(file.path)) }
+      end
+      self.class.image_metadata(get_file.path)
     end
 
     def calculate_dimensions
