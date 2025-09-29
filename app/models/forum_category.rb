@@ -23,8 +23,8 @@ class ForumCategory < ApplicationRecord
 
   attr_accessor(:new_category_id) # technical bullshit
 
-  scope(:viewable, ->(user) { where(can_view: ..user.level) })
-  scope(:replyable, ->(user) { where(can_reply: ..user.level) })
+  scope(:viewable, ->(user) { where.lteq(can_view: user.level) })
+  scope(:replyable, ->(user) { where.lteq(can_reply: user.level) })
 
   def can_create_within?(user)
     user.level >= can_create

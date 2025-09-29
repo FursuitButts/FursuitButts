@@ -9,4 +9,8 @@ class PostApprovalPolicy < ApplicationPolicy
   def destroy?
     approver?
   end
+
+  def permitted_search_params
+    super + nested_search_params(user: User, post: Post)
+  end
 end

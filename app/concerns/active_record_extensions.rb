@@ -26,5 +26,13 @@ module ActiveRecordExtensions
     def get_statement_timeout
       ApplicationRecord.connection.select_one("SELECT setting FROM pg_settings WHERE name = 'statement_timeout'")["setting"].to_i
     end
+
+    # CrossJoinLateral, LeftJoinLateral
+    def unnest(column, name = column.singularize, type = Arel::Nodes::LeftJoinLateral)
+      joins(type.new(
+              Arel::Nodes::NamedFunction.new("unnest", [arel(column)], name),
+              Arel::Nodes::On.new(Arel.sql("TRUE")),
+            ))
+    end
   end
 end

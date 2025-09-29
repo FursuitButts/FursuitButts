@@ -16,21 +16,19 @@ class UserNameChangeRequest < ApplicationRecord
     self.original_name = user&.name
   end
 
-  def self.search(params, user)
-    q = super
-
-    q = q.where_user(:user_id, :current, params)
-
-    if params[:original_name].present?
-      q = q.where_ilike(:original_name, User.normalize_name(params[:original_name]))
+  module SearchMethods
+    def query_dsl
+      super
+        .field(:original_name, ilike: true, normalize: User.method(:normalize_name).to_proc)
+        .field(:desired_name, ilike: true, normalize: User.method(:normalize_name).to_proc)
+        .user([nil, :current_name], :user)
+        .user(:user)
+        .user(:creator)
+        .user(:approver)
     end
-
-    if params[:desired_name].present?
-      q = q.where_ilike(:desired_name, User.normalize_name(params[:desired_name]))
-    end
-
-    q.apply_basic_order(params)
   end
+
+  extend(SearchMethods)
 
   def approve!(approver = User.system)
     update(status: "approved", approver: approver)

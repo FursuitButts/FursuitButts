@@ -116,38 +116,25 @@ class EditHistory < ApplicationRecord
   end
 
   def previous
-    EditHistory.where(versionable_id: versionable_id, versionable_type: versionable_type).where(version: ...version).order(version: :desc).first
+    EditHistory.where(versionable_id: versionable_id, versionable_type: versionable_type).where.lt(version: version).order(version: :desc).first
   end
 
   module SearchMethods
     def original
-      edit_type("original").and(where(version: 1)).first
+      edit_type("original").where(version: 1).first
     end
 
-    def search(params, user)
-      q = super
+    def search(params, user, visible: true)
+      super.if(params[:edit_type].blank?, -> { where.not(edit_type: "original") })
+    end
 
-      if params[:versionable_type].present?
-        q = q.where(versionable_type: params[:versionable_type])
-      end
-
-      if params[:versionable_id].present?
-        q = q.where(versionable_id: params[:versionable_id])
-      end
-
-      if params[:edit_type].present?
-        q = q.where(edit_type: params[:edit_type])
-      else
-        q = q.where.not(edit_type: "original")
-      end
-
-      q = q.where_user(:updater_id, :updater, params)
-
-      if params[:ip_addr].present?
-        q = q.where("ip_addr <<= ?", params[:ip_addr])
-      end
-
-      q.apply_basic_order(params)
+    def query_dsl
+      super
+        .field(:versionable_id)
+        .field(:versionable_type)
+        .field(:edit_type)
+        .field(:ip_addr, :updater_ip_addr)
+        .association(:updater)
     end
   end
 

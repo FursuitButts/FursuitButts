@@ -8,6 +8,7 @@ class UserTest < ActiveSupport::TestCase
       # stubbed to true in test_helper.rb
       FemboyFans.config.stubs(:disable_throttles?).returns(false)
       @user = create(:user)
+      @admin = create(:admin_user)
     end
 
     should("not validate if the originating ip address is banned") do
@@ -83,9 +84,9 @@ class UserTest < ActiveSupport::TestCase
     should("verify") do
       assert(@user.is_verified?)
       @user = create(:user)
-      @user.mark_unverified!
+      @user.mark_unverified!(@admin)
       assert_not(@user.is_verified?)
-      assert_nothing_raised { @user.mark_verified! }
+      assert_nothing_raised { @user.mark_verified!(@admin) }
       assert(@user.is_verified?)
     end
 

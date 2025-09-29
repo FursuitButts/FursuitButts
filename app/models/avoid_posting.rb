@@ -5,7 +5,7 @@ class AvoidPosting < ApplicationRecord
   belongs_to_user(:updater, ip: true)
   resolvable(:destroyer)
   belongs_to(:artist)
-  has_many(:versions, -> { order("avoid_posting_versions.id ASC") }, class_name: "AvoidPostingVersion", dependent: :destroy)
+  has_many(:versions, -> { order("avoid_posting_versions.id": :asc) }, class_name: "AvoidPostingVersion", dependent: :destroy)
   validates(:artist_id, uniqueness: { message: "already has an avoid posting entry" })
   validates(:details, length: { maximum: 1024 })
   validates(:staff_notes, length: { maximum: 4096 })
@@ -79,39 +79,29 @@ class AvoidPosting < ApplicationRecord
   end
 
   module SearchMethods
-    def artist_search(params, user)
-      Artist.search(user, params.slice(:any_name_matches, :any_other_name_matches).merge({ id: params[:artist_id], name: params[:artist_name] }))
+    def search(params, user, visible: true)
+      super.if(params[:is_active].nil?, -> { active })
     end
 
-    def search(params, user)
-      q = super
-      artist_keys = %i[artist_id artist_name any_name_matches any_other_name_matches]
-      q = q.joins(:artist).merge(artist_search(params, user)) if artist_keys.any? { |key| params.key?(key) }
+    def query_dsl
+      super
+        .field(:is_active)
+        .field(:artist_id)
+        .field(:artist_name, "artists.name") { |q| q.joins(:artist) }
+        .field(:details)
+        .field(:staff_notes)
+        .field(:ip_addr, :creator_ip_addr)
+        .field(:updater_ip_addr)
+        .association(:artist)
+    end
 
-      if params[:is_active].present?
-        q = q.active if params[:is_active].to_s.truthy?
-        q = q.deleted if params[:is_active].to_s.falsy?
-      else
-        q = q.active
-      end
-
-      q = q.attribute_matches(:details, params[:details])
-      q = q.attribute_matches(:staff_notes, params[:staff_notes])
-      q = q.where_user(:creator_id, :creator, params)
-      q = q.where("creator_ip_addr <<= ?", params[:ip_addr]) if params[:ip_addr].present?
-      case params[:order]
-      when "artist_name", "artist_name_asc"
-        q = q.joins(:artist).order("artists.name ASC")
-      when "artist_name_desc"
-        q = q.joins(:artist).order("artists.name DESC")
-      when "created_at"
-        q = q.order("created_at DESC")
-      when "updated_at"
-        q = q.order("updated_at DESC")
-      else
-        q = q.apply_basic_order(params)
-      end
-      q
+    def apply_order(params)
+      order_with({
+        artist_id:        { artist_id: :desc },
+        artist_name:      -> { joins(:artist).order("artists.name": :asc) },
+        artist_name_asc:  -> { joins(:artist).order("artists.name": :asc) },
+        artist_name_desc: -> { joins(:artist).order("artists.name": :desc) },
+      }, params[:order])
     end
   end
 

@@ -14,6 +14,6 @@ class UserApprovalPolicy < ApplicationPolicy
   end
 
   def permitted_search_params
-    super + %i[user_name user_id updater_name updater_id status]
+    super + %i[user_name user_id updater_name updater_id status] + nested_search_params(user: User, updater: User)
   end
 end

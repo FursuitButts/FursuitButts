@@ -11,6 +11,12 @@ class PostSetMaintainer < ApplicationRecord
 
   after_create(:notify_maintainer)
 
+  scope(:approved, -> { where(status: "approved") })
+  scope(:cooldown, -> { where(status: "cooldown") })
+  scope(:pending, -> { where(status: "pending") })
+  scope(:banned, -> { where(status: "banned") })
+  scope(:in_cooldown, ->(user) { for_user(user).cooldown.where.lt(created_at: 24.hours.ago) })
+
   def notify_maintainer
     r = Rails.application.routes.url_helpers
     body = <<~BODY.chomp
@@ -32,6 +38,7 @@ class PostSetMaintainer < ApplicationRecord
   end
 
   def cancel!
+    r = Rails.application.routes.url_helpers
     if status == "pending"
       self.status = "cooldown"
       save
@@ -39,7 +46,7 @@ class PostSetMaintainer < ApplicationRecord
     end
 
     if status == "approved"
-      body = "\"#{post_set.creator.name}\":/users/#{post_set.creator_id} removed you as a maintainer of the \"#{post_set.name}\":/post_sets/#{post_set.id} set."
+      body = "\"#{post_set.creator.name}\":#{r.users_path(post_set.creator_id)} removed you as a maintainer of the \"#{post_set.name}\":#{r.post_set_path(post_set)} set."
       Dmail.create_automated(
         to_id:         user_id,
         title:         "You were removed as a set maintainer of #{post_set.name}",
@@ -51,49 +58,52 @@ class PostSetMaintainer < ApplicationRecord
   end
 
   def approve!
+    r = Rails.application.routes.url_helpers
     self.status = "approved"
     save
     Dmail.create_automated(
       to_id:         post_set.creator_id,
-      title:         "#{user.name} accepted your invite to maintain #{post_set.name}",
-      body:          "\"#{user.name}\":/users/#{user_id} approved your invite to maintain \"#{post_set.name}\":/post_sets/#{post_set.id}.",
-      respond_to_id: user.id,
+      title:         "#{user_name} accepted your invite to maintain #{post_set.name}",
+      body:          "\"#{user_name}\":#{r.users_path(user_id)} approved your invite to maintain \"#{post_set.name}\":#{r.post_set_path(post_set)}.",
+      respond_to_id: user_id,
     )
   end
 
   def deny!
+    r = Rails.application.routes.url_helpers
     if status == "pending"
       Dmail.create_automated(
         to_id:         post_set.creator_id,
-        title:         "#{user.name} declined your invite to maintain #{post_set.name}",
-        body:          "\"#{user.name}\":/users/#{user.id} denied your invite to maintain \"#{post_set.name}\":/post_sets/#{post_set.id}.",
-        respond_to_id: user.id,
+        title:         "#{user_name} declined your invite to maintain #{post_set.name}",
+        body:          "\"#{user_name}\":#{r.users_path(user_id)} denied your invite to maintain \"#{post_set.name}\":#{r.post_set_path(post_set)}.",
+        respond_to_id: user_id,
       )
     elsif status == "approved"
       Dmail.create_automated(
         to_id:         post_set.creator_id,
-        title:         "#{user.name} removed themselves as a maintainer of #{post_set.name}",
-        body:          "\"#{user.name}\":/users/#{user.id} removed themselves as a maintainer of \"#{post_set.name}\":/post_sets/#{post_set.id}.",
-        respond_to_id: user.id,
+        title:         "#{user_name} removed themselves as a maintainer of #{post_set.name}",
+        body:          "\"#{user_name}\":#{r.users_path(user_id)} removed themselves as a maintainer of \"#{post_set.name}\":#{r.post_set_path(post_set)}.",
+        respond_to_id: user_id,
       )
     end
     destroy
   end
 
   def block!
+    r = Rails.application.routes.url_helpers
     if status == "approved"
       Dmail.create_automated(
         to_id:         post_set.creator_id,
-        title:         "#{user.name} removed themselves as a maintainer of #{post_set.name}",
-        body:          "\"#{user.name}\":/users/#{user.id} removed themselves as a maintainer of \"#{post_set.name}\":/post_sets/#{post_set.id} and blocked all future invites.",
-        respond_to_id: user.id,
+        title:         "#{user_name} removed themselves as a maintainer of #{post_set.name}",
+        body:          "\"#{user_name}\":#{r.users_path(user_id)} removed themselves as a maintainer of \"#{post_set.name}\":#{r.post_set_path(post_set)} and blocked all future invites.",
+        respond_to_id: user_id,
       )
     elsif status == "pending"
       Dmail.create_automated(
         to_id:         post_set.creator_id,
-        title:         "#{user.name} denied your invite to maintain #{post_set.name}",
-        body:          "\"#{user.name}\":/users/#{user.id} denied your invite to maintain \"#{post_set.name}\":/post_sets/#{post_set.id} and blocked all future invites.",
-        respond_to_id: user.id,
+        title:         "#{user_name} denied your invite to maintain #{post_set.name}",
+        body:          "\"#{user_name}\":#{r.users_path(user_id)} denied your invite to maintain \"#{post_set.name}\":#{r.post_set_path(post_set)} and blocked all future invites.",
+        respond_to_id: user_id,
       )
     end
     self.status = "blocked"
@@ -140,14 +150,6 @@ class PostSetMaintainer < ApplicationRecord
         false
       end
     end
-  end
-
-  def self.active
-    where(status: "approved")
-  end
-
-  def self.pending
-    where(status: "pending")
   end
 
   include(ValidaitonMethods)

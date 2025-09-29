@@ -8,9 +8,6 @@ class ArtistUrl < ApplicationRecord
   validate(:validate_url_format)
   belongs_to(:artist, touch: true)
 
-  scope(:url_matches, ->(url) { url_attribute_matches(:url, url) })
-  scope(:normalized_url_matches, ->(url) { url_attribute_matches(:normalized_url, url) })
-
   def self.parse_prefix(url)
     prefix, url = url.match(/\A(-)?(.*)/)[1, 2]
     is_active = prefix.nil?
@@ -31,47 +28,25 @@ class ArtistUrl < ApplicationRecord
     end
   end
 
-  def self.search(params, user)
-    q = super
-
-    q = q.attribute_matches(:artist_id, params[:artist_id])
-    q = q.attribute_matches(:is_active, params[:is_active])
-    q = q.attribute_matches(:url, params[:url])
-    q = q.attribute_matches(:normalized_url, params[:normalized_url])
-
-    if params[:artist_name].present?
-      q = q.joins(:artist).where("artists.name = ?", params[:artist_name])
+  module SearchMethods
+    def apply_order(params)
+      order_with(%i[artist_id url normalized_url], params[:order])
     end
 
-    # Legacy param?
-    q = q.artist_matches(params[:artist], user)
-    q = q.url_matches(params[:url_matches])
-    q = q.normalized_url_matches(params[:normalized_url_matches])
-
-    case params[:order]
-    when /\A(id|artist_id|url|normalized_url|is_active|created_at|updated_at)(?:_(asc|desc))?\z/i
-      dir = $2 || :desc
-      q = q.order($1 => dir).order(id: :desc)
-    else
-      q = q.apply_basic_order(params)
-    end
-
-    q
-  end
-
-  def self.artist_matches(params, user)
-    return all if params.blank?
-    where(artist_id: Artist.search(params, user).reorder(nil))
-  end
-
-  def self.url_attribute_matches(attr, url)
-    if url.blank?
-      all
-    else
-      url = "*#{url}*" if url.exclude?("*")
-      where_ilike(attr, url)
+    def query_dsl
+      super
+        .field(:artist_id)
+        .field(:is_active)
+        .field(:url)
+        .field(:normalized_url)
+        .field(:artist_name, "artists.name") { |q| q.joins(:artist) }
+        .field(:url_matches, :url, wildcard: true)
+        .field(:normalized_url_matches, :normalized_url, wildcard: true)
+        .association(:artist)
     end
   end
+
+  extend(SearchMethods)
 
   # sites apearing at the start have higher priority than those below
   SITES_PRIORITY_ORDER = [

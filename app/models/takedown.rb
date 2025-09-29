@@ -204,52 +204,28 @@ class Takedown < ApplicationRecord
   end
 
   module SearchMethods
-    def search(params, user)
-      q = super
+    def query_dsl
+      super
+        .field(:source)
+        .field(:reason)
+        .field(:instructions)
+        .field(:notes)
+        .field(:reason_hidden)
+        .field(:email)
+        .field(:vericode)
+        .field(:status)
+        .field(:ip_addr, :creator_ip_addr)
+        .custom(:post_id, ->(q, v) { q.where.regex(post_ids: "(^| )#{v.to_i}($| )") })
+        .association(:creator)
+        .association(:updater)
+        .association(:approver)
+    end
 
-      if params[:source].present?
-        q = q.where_ilike(:source, params[:source])
-      end
-      if params[:reason].present?
-        q = q.where_ilike(:reason, params[:reason])
-      end
-      if params[:post_id].present?
-        post_id = params[:post_id].to_i
-        q = q.where("post_ids ~ ?", "(^| )#{post_id}($| )")
-      end
-      if params[:instructions].present?
-        q = q.where_ilike(:instructions, params[:instructions])
-      end
-      if params[:notes].present?
-        q = q.where_ilike(:notes, params[:notes])
-      end
-      if params[:reason_hidden].present?
-        q = q.where("reason_hidden = ?", params[:reason_hidden])
-      end
-      if params[:ip_addr].present?
-        q = q.where("creator_ip_addr <<= ?", params[:ip_addr])
-      end
-      q = q.where_user(:creator_id, :creator, params)
-      if params[:email].present?
-        q = q.where_ilike(:email, params[:email])
-      end
-      if params[:vericode].present?
-        q = q.where("vericode = ?", params[:vericode])
-      end
-      if params[:status].present?
-        q = q.where("status = ?", params[:status])
-      end
-
-      case params[:order]
-      when "status"
-        q = q.order("status ASC")
-      when "post_count"
-        q = q.order("post_count DESC")
-      else
-        q = q.apply_basic_order(params)
-      end
-
-      q
+    def apply_order(params)
+      order_with({
+        status:     { "takedowns.status": :asc },
+        post_count: { "takedowns.post_count": :desc },
+      }, params[:order])
     end
   end
 

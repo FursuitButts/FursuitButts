@@ -84,28 +84,36 @@ class PostEvent < ApplicationRecord
   end
 
   module SearchMethods
-    def search(params, user)
-      q = super
+    def query_dsl
+      super
+        .field(:post_id)
+        .custom(:action, method(:action_query).to_proc)
+        .custom(:creator_id, method(:creator_id_query).to_proc)
+        .custom(:creator_name, method(:creator_name_query).to_proc)
+        # TODO: We need access control/blocks for associations
+        # .association(:creator)
+        .association(:post)
+    end
 
-      if params[:post_id].present?
-        q = q.where(post_id: params[:post_id])
-      end
+    def action_query(q, value, user)
+      value = value.to_s.split(",").map { |v| actions[v] }.compact
+      restricted = value.select { |v| MOD_ONLY_SEARCH_ACTIONS.include?(v) }.map { |v| actions.key(v) }.compact
+      raise(User::PrivilegeError, "#{restricted.join(', ')} cannot be used") if !user.is_moderator? && restricted.any?
+      q.where(action: value)
+    end
 
-      q = q.where_user(:creator_id, :creator, params) do |condition, user_ids|
-        condition.where.not(
-          action:     actions[:flag_created],
-          creator_id: user_ids.reject { |user_id| user.can_view_flagger?(user_id) },
-        )
-      end
+    def creator_id_query(q, value, user)
+      value = value.to_s.split(",").map(&:to_i)
+      return q.where(creator_id: value) if user.is_moderator?
+      q.where.not(
+        action:     actions[:flag_created],
+        creator_id: value.reject { |user_id| user.can_view_flagger?(user_id) },
+      ).where(creator_id: value)
+    end
 
-      if params[:action].present?
-        if !user.is_moderator? && MOD_ONLY_SEARCH_ACTIONS.include?(actions[params[:action]])
-          raise(User::PrivilegeError)
-        end
-        q = q.where(action: actions[params[:action]])
-      end
-
-      q.apply_basic_order(params)
+    def creator_name_query(q, value, user)
+      id = User.name_to_id(value)
+      creator_id_query(q, id.to_s, user)
     end
   end
 

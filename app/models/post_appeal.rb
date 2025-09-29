@@ -19,7 +19,6 @@ class PostAppeal < ApplicationRecord
   })
 
   scope(:expired, -> { pending.where(post_appeals: { created_at: ...PostPruner::MODERATION_WINDOW.days.ago }) })
-  scope(:for_user, ->(user_id) { where(creator_id: user_id) })
 
   def prune_disapprovals
     PostDisapproval.where(post: post).delete_all
@@ -58,25 +57,16 @@ class PostAppeal < ApplicationRecord
       where(post_id: Post.tag_match_sql(query, user))
     end
 
-    def search(params, user)
-      q = super
-      q = q.attribute_matches(:reason, params[:reason_matches])
-      q = q.where(status: params[:status]) if params[:status].present?
-      q = q.where_user(:creator_id, :creator, params)
-
-      if params[:post_id].present?
-        q = q.where(post_id: params[:post_id].split(",").map(&:to_i))
-      end
-
-      if params[:post_tags_match].present?
-        q = q.post_tags_match(params[:post_tags_match], user)
-      end
-
-      if params[:ip_addr].present?
-        q = q.where("creator_ip_addr <<= ?", params[:ip_addr])
-      end
-
-      q.apply_basic_order(params)
+    def query_dsl
+      super
+        .field(:reason_matches, :reason)
+        .field(:status)
+        .field(:post_id)
+        .field(:ip_addr, :creator_ip_addr)
+        .custom(:post_tags_match, ->(q, v, user) { q.post_tags_match(v, user) })
+        .association(:creator)
+        .association(:updater)
+        .association(:post)
     end
   end
 

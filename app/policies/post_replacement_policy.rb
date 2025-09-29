@@ -36,7 +36,7 @@ class PostReplacementPolicy < ApplicationPolicy
   end
 
   def permitted_search_params
-    super + %i[file_ext md5 status creator_id creator_name approver_id approver_name rejector_id rejector_name uploader_name_on_approve uploader_id_on_approve post_id]
+    super + %i[file_ext md5 status creator_id creator_name approver_id approver_name rejector_id rejector_name uploader_name_on_approve uploader_id_on_approve post_id] + nested_search_params(creator: User, approver: User, rejector: User, uploader_on_approve: User)
   end
 
   def api_attributes
@@ -47,6 +47,6 @@ class PostReplacementPolicy < ApplicationPolicy
     q = super
     return q.not_rejected if user.is_anonymous?
     return q if user.is_staff?
-    q.for_user(user).or(q.not_rejected)
+    q.for_creator(user).or(q.not_rejected)
   end
 end

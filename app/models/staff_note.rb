@@ -32,29 +32,20 @@ class StaffNote < ApplicationRecord
   end
 
   module SearchMethods
-    def search(params, user)
-      q = super
+    def search(params, user, visible: true)
+      super.if(!params[:include_deleted]&.truthy? && %i[id is_deleted].none? { |key| params.key?(key) }, -> { active })
+    end
 
-      q = q.attribute_matches(:body, params[:body_matches])
-      q = q.where_user(:user_id, :user, params)
-      q = q.where_user(:creator_id, :creator, params)
-      q = q.where_user(:updater_id, :updater, params)
-
-      if params[:without_system_user]&.truthy?
-        q = q.where.not(creator: User.system)
-      end
-
-      if params[:is_deleted].present?
-        q = q.attribute_matches(:is_deleted, params[:is_deleted])
-      elsif !params[:include_deleted]&.truthy? && params[:id].blank?
-        q = q.active
-      end
-
-      q.apply_basic_order(params)
+    def query_dsl
+      super
+        .field(:body_matches, :body)
+        .field(:is_deleted)
+        .custom(:without_system_user, ->(q, v) { q.where.not(creator_id: User.system.id) if v&.truthy? })
+        .association(:user)
     end
 
     def default_order
-      order("id desc")
+      order(id: :desc)
     end
   end
 

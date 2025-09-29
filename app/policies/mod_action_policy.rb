@@ -6,6 +6,6 @@ class ModActionPolicy < ApplicationPolicy
   end
 
   def api_attributes
-    super - %i[values] + record.json_keys
+    super - %i[values] + record.json_keys + nested_search_params(creator: User)
   end
 end

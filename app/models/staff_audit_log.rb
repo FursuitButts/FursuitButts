@@ -168,13 +168,10 @@ class StaffAuditLog < ApplicationRecord
   # rubocop:enable Local/CurrentUserOutsideOfRequests
 
   module SearchMethods
-    def search(params, user)
-      q = super
-
-      q = q.where_user(:user_id, :user, params)
-      q = q.where(action: params[:action].split(",")) if params[:action].present?
-
-      q.apply_basic_order(params)
+    def query_dsl
+      super
+        .field(:action, multi: true)
+        .association(:user)
     end
   end
 

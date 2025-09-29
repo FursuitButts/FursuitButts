@@ -60,69 +60,27 @@ class Upload < ApplicationRecord
     end
   end
 
-  module UploaderMethods
-    def uploader_name
-      User.id_to_name(uploader_id)
-    end
-  end
-
   module SearchMethods
     def post_tags_match(query, user)
       where(post_id: Post.tag_match_sql(query, user))
     end
 
-    def search(params, user)
-      q = super
-
-      q = q.where_user(:uploader_id, :uploader, params)
-
-      if params[:source].present?
-        q = q.where(source: params[:source])
-      end
-
-      if params[:source_matches].present?
-        q = q.where("uploads.source LIKE ? ESCAPE E'\\\\'", params[:source_matches].to_escaped_for_sql_like)
-      end
-
-      if params[:rating].present?
-        q = q.where(rating: params[:rating])
-      end
-
-      if params[:parent_id].present?
-        q = q.attribute_matches(:parent_id, params[:parent_id])
-      end
-
-      if params[:post_id].present?
-        q = q.attribute_matches(:post_id, params[:post_id])
-      end
-
-      if params[:has_post].to_s.truthy?
-        q = q.where.not(post_id: nil)
-      elsif params[:has_post].to_s.falsy?
-        q = q.where(post_id: nil)
-      end
-
-      if params[:post_tags_match].present?
-        q = q.post_tags_match(params[:post_tags_match], user)
-      end
-
-      if params[:status].present?
-        q = q.joins(:upload_media_asset).where("upload_media_asset.status": params[:status])
-      end
-
-      if params[:backtrace].present?
-        q = q.where("uploads.backtrace LIKE ? ESCAPE E'\\\\'", params[:backtrace].to_escaped_for_sql_like)
-      end
-
-      if params[:tag_string].present?
-        q = q.where("uploads.tag_string LIKE ? ESCAPE E'\\\\'", params[:tag_string].to_escaped_for_sql_like)
-      end
-
-      q.apply_basic_order(params)
+    def query_dsl
+      super
+        .field(:source)
+        .field(:source_matches, :source, like: true)
+        .field(:rating)
+        .field(:parent_id)
+        .field(:post_id)
+        .field(:status, "upload_media_assets.status") { |q| q.joins(:upload_media_asset) }
+        .present(:has_post, :post_id)
+        .custom(:post_tags_match, ->(q, v, user) { q.post_tags_match(v, user) })
+        .field(:backtrace, like: true)
+        .field(:tag_string, like: true)
+        .association(:uploader)
     end
   end
 
-  include(UploaderMethods)
   include(DirectURLMethods)
   extend(SearchMethods)
 

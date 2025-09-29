@@ -234,6 +234,30 @@ Security/Open:
   Exclude:
     - app/logical/storage_manager/ftp.rb
 
+Naming/MethodParameterName:
+  Enabled: true
+  # Adding overrides the defaults: https://docs.rubocop.org/rubocop/cops_naming.html#configurable-attributes-namingmethodparametername
+  AllowedNames:
+    - a
+    - b
+    - q
+    - o
+    - as
+    - at
+    - by
+    - cc
+    - db
+    - id
+    - if
+    - in
+    - io
+    - ip
+    - of
+    - on
+    - os
+    - pp
+    - to
+
 Local/CurrentUserOutsideOfRequests:
   Enabled: true
   Exclude:

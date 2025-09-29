@@ -202,8 +202,8 @@ class Artist < ApplicationRecord
         artists = []
         while artists.empty? && url.length > 10
           u = "#{url.sub(%r{/+$}, '')}/"
-          u = "#{u.to_escaped_for_sql_like.gsub('*', '%')}%"
-          artists += Artist.joins(:urls).where(["artist_urls.normalized_url ILIKE ? ESCAPE E'\\\\'", u]).limit(10).order("artists.name").all
+          u += "*" unless u.end_with?("*")
+          artists += Artist.joins(:urls).attribute_matches("artist_urls.normalized_url", u).limit(10).order(:name).all
           url = "#{File.dirname(url)}/"
 
           break if url =~ SITE_BLACKLIST_REGEXP
@@ -418,83 +418,60 @@ class Artist < ApplicationRecord
       find_by(name: normalize_name(name))
     end
 
-    def any_other_name_matches(regex)
-      where(id: Artist.from("unnest(other_names) AS other_name").where("other_name ~ ?", regex))
-    end
-
     def any_other_name_like(name)
-      where(id: Artist.from("unnest(other_names) AS other_name").where("other_name LIKE ?", name.to_escaped_for_sql_like))
+      return all if name.nil?
+      # can't use where.like due to the alias
+      unnest("other_names").where("other_name LIKE ?", normalize_name(name).to_escaped_for_sql_like)
     end
 
-    def any_name_matches(query)
-      normalized_name = normalize_name(query)
+    def any_name_matches(value)
+      return all if value.nil?
+      normalized_name = normalize_name(value)
       normalized_name = "*#{normalized_name}*" unless normalized_name.include?("*")
-      where_like(:name, normalized_name).or(any_other_name_like(normalized_name))
+      # can't call any_other_name_like because it would make the OR structurally incompatible
+      q = unnest("other_names")
+      q.where("other_name LIKE ? ESCAPE E'\\\\'", normalized_name.to_escaped_for_sql_like).or(q.where.like(name: normalized_name))
     end
 
-    def url_matches(query, user)
+    def url_matches(query)
+      return all if query.nil?
       if query =~ %r{\Ahttps?://}i
         find_artists(query)
       else
-        where(id: ArtistUrl.search({ url_matches: query }, user).select(:artist_id))
+        joins(:urls).text_attribute_matches(:"artist_urls.url", query, convert_to_wildcard: true)
       end
     end
 
-    def any_name_or_url_matches(query, user)
+    def any_name_or_url_matches(query)
+      return all if query.nil?
       if query =~ %r{\Ahttps?://}i
-        url_matches(query, user)
+        text_attribute_matches(:url, query, convert_to_wildcard: true)
       else
         any_name_matches(query)
       end
     end
 
-    def search(params, user)
-      q = super
+    def apply_order(params)
+      order_with({
+        name:            { "artists.name": :asc },
+        post_count:      -> { left_outer_joins(:tag).order(Tag.arel(:post_count).desc.nulls_last, name: :asc) },
+        post_count_asc:  -> { left_outer_joins(:tag).order(Tag.arel(:post_count).asc.nulls_last, name: :asc) },
+        post_count_desc: -> { left_outer_joins(:tag).order(Tag.arel(:post_count).desc.nulls_last, name: :asc) },
+      }, params[:order])
+    end
 
-      q = q.attribute_matches(:name, params[:name])
-
-      if params[:any_other_name_like]
-        q = q.any_other_name_like(params[:any_other_name_like])
-      end
-
-      if params[:any_name_matches].present?
-        q = q.any_name_matches(params[:any_name_matches])
-      end
-
-      if params[:any_name_or_url_matches].present?
-        q = q.any_name_or_url_matches(params[:any_name_or_url_matches], user)
-      end
-
-      if params[:url_matches].present?
-        q = q.url_matches(params[:url_matches], user)
-      end
-
-      q = q.where_user(:creator_id, :creator, params)
-
-      if params[:has_tag].to_s.truthy?
-        q = q.joins(:tag).where("tags.post_count > 0")
-      elsif params[:has_tag].to_s.falsy?
-        q = q.includes(:tag).where("tags.name IS NULL OR tags.post_count <= 0").references(:tags)
-      end
-
-      if params[:is_linked].to_s.truthy?
-        q = q.where.not(linked_user_id: nil)
-      elsif params[:is_linked].to_s.falsy?
-        q = q.where(linked_user_id: nil)
-      end
-
-      case params[:order]
-      when "name"
-        q = q.order("artists.name")
-      when "updated_at"
-        q = q.order("artists.updated_at desc")
-      when "post_count"
-        q = q.includes(:tag).order("tags.post_count desc nulls last").order("artists.name").references(:tags)
-      else
-        q = q.apply_basic_order(params)
-      end
-
-      q
+    def query_dsl
+      super
+        .field(:name)
+        .custom(:any_other_name_matches, ->(q, v) { q.any_other_name_like(v) }) # TODO: remove this, the previous regex method was never used anywhere
+        .custom(:any_other_name_like, ->(q, v) { q.any_other_name_like(v) })
+        .custom(:any_name_matches, ->(q, v) { q.any_name_matches(v) })
+        .custom(:any_name_or_url_matches, ->(q, v) { q.any_name_or_url_matches(v) })
+        .custom(:url_matches, ->(q, v) { q.url_matches(v) })
+        .present(:is_linked, :linked_user_id)
+        .custom(:has_tag, ->(q, v) { q.if(v, -> { q.joins(:tag).where.gt("tags.post_count": 0) }).else(-> { q.left_outer_joins(:tag).where("tags.name": nil).or(q.where.lteq("tags.post_count": 0)) }) })
+        .association(:creator)
+        .association(:linked_user)
     end
   end
 

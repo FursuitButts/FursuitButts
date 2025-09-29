@@ -15,6 +15,7 @@ class AvoidPostingsControllerTest < ActionDispatch::IntegrationTest
     context("index action") do
       should("render") do
         get_auth(avoid_postings_path, @user)
+
         assert_response(:success)
       end
 

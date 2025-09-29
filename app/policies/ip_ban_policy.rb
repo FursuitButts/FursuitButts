@@ -18,6 +18,6 @@ class IpBanPolicy < ApplicationPolicy
   end
 
   def permitted_search_params
-    super + %i[ip_addr banner_id banner_name reason]
+    super + %i[ip_addr banner_id banner_name reason] + nested_search_params(creator: User)
   end
 end

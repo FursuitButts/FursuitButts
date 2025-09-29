@@ -21,57 +21,38 @@ class BulkUpdateRequest < ApplicationRecord
   before_validation(:normalize_text)
   after_create(:create_forum_topic)
 
-  scope(:pending_first, -> { order(Arel.sql("array_position(array['queued', 'processing', 'pending', 'approved', 'rejected'], status::text) NULLS FIRST")) })
+  scope(:pending_first, -> { order(case_order(:status, [nil, "queued", "processing", "pending", "approved", "rejected"])) })
   scope(:pending, -> { where(status: "pending") })
 
   module SearchMethods
-    def for_creator(id)
-      where(creator_id: id)
-    end
-
     def default_order
       pending_first.order(id: :desc)
     end
 
-    def search(params, user)
-      q = super
+    def query_dsl
+      super
+        .field(:forum_topic_id)
+        .field(:forum_post_id)
+        .field(:status)
+        .field(:title_matches, :title)
+        .field(:script_matches, :script)
+        .field(:creator_ip_addr)
+        .field(:updater_ip_addr)
+        .association(:creator)
+        .association(:approver)
+    end
 
-      q = q.where_user(:creator_id, :creator, params)
-      q = q.where_user(:approver_id, :approver, params)
-
-      if params[:forum_topic_id].present?
-        q = q.where(forum_topic_id: params[:forum_topic_id].split(",").map(&:to_i))
-      end
-
-      if params[:forum_post_id].present?
-        q = q.where(forum_post_id: params[:forum_post_id].split(",").map(&:to_i))
-      end
-
-      if params[:status].present?
-        q = q.where(status: params[:status].split(","))
-      end
-
-      q = q.attribute_matches(:title, params[:title_matches])
-      q = q.attribute_matches(:script, params[:script_matches])
-
-      case params[:order]
-      when "updated_at_desc"
-        q = q.order(updated_at: :desc)
-      when "updated_at_asc"
-        q = q.order(updated_at: :asc)
-      when "rating_desc"
-        q = q.left_joins(:forum_post).order("forum_posts.percentage_score DESC, bulk_update_requests.id DESC")
-      when "rating_asc"
-        q = q.left_joins(:forum_post).order("forum_posts.percentage_score ASC, bulk_update_requests.id DESC")
-      when "score_desc"
-        q = q.left_joins(:forum_post).order("forum_posts.total_score DESC, bulk_update_requests.id DESC")
-      when "score_asc"
-        q = q.left_joins(:forum_post).order("forum_posts.total_score ASC, bulk_update_requests.id DESC")
-      else
-        q = q.apply_basic_order(params)
-      end
-
-      q
+    def apply_order(params)
+      order_with({
+        status:      { status: :desc },
+        title:       { title: :desc },
+        rating:      -> { left_joins(:forum_post).order("forum_posts.percentage_score": :desc, "id": :desc) },
+        rating_asc:  -> { left_joins(:forum_post).order("forum_posts.percentage_score": :asc, "id": :desc) },
+        rating_desc: -> { left_joins(:forum_post).order("forum_posts.percentage_score": :desc, "id": :desc) },
+        score:       -> { left_joins(:forum_post).order("forum_posts.total_score": :desc, "id": :desc) },
+        score_asc:   -> { left_joins(:forum_post).order("forum_posts.total_score": :asc, "id": :desc) },
+        score_desc:  -> { left_joins(:forum_post).order("forum_posts.total_score": :desc, "id": :desc) },
+      }, params[:order])
     end
   end
 

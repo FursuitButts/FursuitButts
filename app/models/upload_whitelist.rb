@@ -38,32 +38,22 @@ class UploadWhitelist < ApplicationRecord
 
   module SearchMethods
     def default_order
-      order("upload_whitelists.note")
+      order(:note)
     end
 
-    def search(params, user)
-      q = super
+    def query_dsl
+      super
+        .field(:pattern, ilike: true)
+        .field(:note, ilike: true)
+        .association(:creator)
+        .association(:updater)
+    end
 
-      if params[:pattern].present?
-        q = q.where("pattern ILIKE ?", params[:pattern].to_escaped_for_sql_like)
-      end
-
-      if params[:note].present?
-        q = q.where("note ILIKE ?", params[:note].to_escaped_for_sql_like)
-      end
-
-      case params[:order]
-      when "pattern"
-        q = q.order("upload_whitelists.pattern")
-      when "updated_at"
-        q = q.order("upload_whitelists.updated_at desc")
-      when "created_at"
-        q = q.order("id desc")
-      else
-        q = q.apply_basic_order(params)
-      end
-
-      q
+    def apply_order(params)
+      order_with({
+        pattern: { "upload_whitelists.pattern": :asc },
+        note:    { "upload_whitelists.note": :asc },
+      }, params[:order])
     end
   end
 

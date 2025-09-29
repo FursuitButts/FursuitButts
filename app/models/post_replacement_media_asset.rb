@@ -109,17 +109,8 @@ class PostReplacementMediaAsset < MediaAssetWithVariants
     end
   end
 
-  module SearchMethods
-    def search(params, user)
-      q = super
-      q = q.joins(:post_replacement).where("post_replacements.id": params[:post_replacement_id]) if params[:post_replacement_id].present?
-      q
-    end
-  end
-
   include(StorageMethods)
   include(VariantMethods)
-  extend(SearchMethods)
 
   def self.available_includes
     %i[creator post_replacement]

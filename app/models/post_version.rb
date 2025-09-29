@@ -10,14 +10,6 @@ class PostVersion < ApplicationRecord
   before_validation(:fill_changes, on: :create)
 
   module SearchMethods
-    def for_user(user_id)
-      if user_id
-        where("updater_id = ?", user_id)
-      else
-        none
-      end
-    end
-
     def search(params, user)
       ElasticPostVersionQueryBuilder.new(params, user).search
     end
@@ -61,7 +53,7 @@ class PostVersion < ApplicationRecord
   end
 
   def self.calculate_version(post_id)
-    1 + where("post_id = ?", post_id).maximum(:version).to_i
+    where(post_id: post_id).maximum(:version).to_i + 1
   end
 
   def fill_version
@@ -114,10 +106,8 @@ class PostVersion < ApplicationRecord
   end
 
   def previous
-    # HACK: If this if the first version we can avoid a lookup because we know there are no previous versions.
-    if version <= 1
-      return nil
-    end
+    # HACK: If this is the first version we can avoid a lookup because we know there are no previous versions.
+    return nil if version <= 1
 
     return @previous if defined?(@previous)
 
@@ -126,7 +116,7 @@ class PostVersion < ApplicationRecord
     if association(:post).loaded? && post&.association(:versions)&.loaded?
       @previous = post.versions.sort_by(&:version).reverse.find { |v| v.version < version }
     else
-      @previous = PostVersion.where("post_id = ? and version < ?", post_id, version).order("version desc").first
+      @previous = PostVersion.where(post_id: post_id).where.lt(version: version).order(version: :desc).first
     end
   end
 

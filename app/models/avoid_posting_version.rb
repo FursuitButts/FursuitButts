@@ -15,23 +15,31 @@ class AvoidPostingVersion < ApplicationRecord
   end
 
   def previous
-    AvoidPostingVersion.joins(:avoid_posting).where(avoid_posting_versions: { id: ...id }).order(id: :desc).first
+    AvoidPostingVersion.where(avoid_posting_id: avoid_posting_id).where(AvoidPostingVersion.arel(:updated_at).lt(updated_at)).order(updated_at: :desc).first
   end
 
   module SearchMethods
-    def artist_search(params, user)
-      Artist.search(user, params.slice(:any_name_matches, :any_other_name_matches).merge({ id: params[:artist_id], name: params[:artist_name] }))
+    def apply_order(params)
+      order_with({
+        avoid_posting_id: { avoid_posting_id: :desc },
+        artist_id:        -> { joins(:avoid_posting).order("avoid_postings.artist_id": :desc) },
+        artist_id_asc:    -> { joins(:avoid_posting).order("avoid_postings.artist_id": :asc) },
+        artist_id_desc:   -> { joins(:avoid_posting).order("avoid_postings.artist_id": :desc) },
+        artist_name:      -> { joins(:artist).order("artists.name": :asc) },
+        artist_name_asc:  -> { joins(:artist).order("artists.name": :asc) },
+        artist_name_desc: -> { joins(:artist).order("artists.name": :desc) },
+      }, params[:order])
     end
 
-    def search(params, user)
-      q = super
-      artist_keys = %i[artist_id artist_name any_name_matches any_other_name_matches]
-      q = q.joins(:artist).merge(artist_search(params, user)) if artist_keys.any? { |key| params.key?(key) }
-
-      q = q.attribute_matches(:is_active, params[:is_active])
-      q = q.where_user(:updater_id, :updater, params)
-      q = q.where("updater_ip_addr <<= ?", params[:ip_addr]) if params[:ip_addr].present?
-      q.apply_basic_order(params)
+    def query_dsl
+      super
+        .field(:is_active)
+        .field(:avoid_posting_id)
+        .field(:artist_id, "avoid_postings.artist_id") { |q| q.joins(:avoid_posting) }
+        .field(:artist_name, "artists.name") { |q| q.joins(avoid_posting: :artist) }
+        .association(:updater)
+        .association(:avoid_posting)
+        .association(avoid_posting: :artist)
     end
   end
 

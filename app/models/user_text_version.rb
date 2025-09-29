@@ -106,39 +106,22 @@ class UserTextVersion < ApplicationRecord
   end
 
   module SearchMethods
+    def query_dsl
+      super
+        .field(:ip_addr, :updater_ip_addr)
+        .custom(:about_matches, ->(q, v) { q.attribute_matches(about_text: v).where.any(text_changes: "About") })
+        .custom(:artinfo_matches, ->(q, v) { q.attribute_matches(artinfo_text: v).where.any(text_changes: "Artist Info") })
+        .custom(:blacklist_matches, ->(q, v) { q.attribute_matches(blacklist_text: v).where.any(text_changes: "Blacklist") })
+        .custom(:changes, ->(q, v) { q.where.any(text_changes: v) })
+        .association(:user)
+        .association(:updater)
+    end
+
     def search(params, user)
-      q = super
-
-      q = q.where_user(:updater_id, :updater, params)
-      q = q.where_user(:user_id, :user, params)
-
-      if params[:about_matches]
+      if %i[about_matches artinfo_matches blacklist_matches].any? { |key| params.key?(key) }
         params.delete(:changes)
-        q = q.attribute_matches(:about_text, params[:about_matches])
-             .where("? = ANY(text_changes)", "About")
       end
-
-      if params[:artinfo_matches]
-        params.delete(:changes)
-        q = q.attribute_matches(:artinfo_text, params[:artinfo_matches])
-             .where("? = ANY(text_changes)", "Artist Info")
-      end
-
-      if params[:blacklist_matches]
-        params.delete(:changes)
-        q = q.attribute_matches(:blacklist_text, params[:blacklist_matches])
-             .where("? = ANY(text_changes)", "Blacklist")
-      end
-
-      if params[:ip_addr].present?
-        q = q.where("updater_ip_addr <<= ?", params[:ip_addr])
-      end
-
-      if params[:changes]
-        q = q.where("? = ANY(text_changes)", params[:changes])
-      end
-
-      q.apply_basic_order(params)
+      super
     end
   end
 

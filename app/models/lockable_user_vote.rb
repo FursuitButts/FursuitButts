@@ -16,8 +16,8 @@ class LockableUserVote < UserVote
     end
   end
 
-  def self.search(params, user)
-    super.attribute_matches(:is_locked, params[:is_locked])
+  def self.query_dsl
+    super.field(:is_locked)
   end
 
   def vote_display

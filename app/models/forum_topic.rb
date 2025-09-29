@@ -106,7 +106,7 @@ class ForumTopic < ApplicationRecord
 
   module SearchMethods
     def unmuted(user)
-      left_outer_joins(:statuses).where("(forum_topic_statuses.mute = ? AND forum_topic_statuses.user_id = ?) OR forum_topic_statuses.id IS NULL", false, user.id)
+      left_outer_joins(:statuses).where("forum_topic_statuses.mute": false, "forum_topic_statuses.user_id": u2id(user)).or(left_outer_joins(:statuses).where("forum_topic_statuses.id": nil))
     end
 
     def sticky_first
@@ -117,36 +117,25 @@ class ForumTopic < ApplicationRecord
       order(last_post_created_at: :desc)
     end
 
-    def search(params, user)
-      q = super
+    def apply_order(params)
+      order_with({
+        sticky:               { is_sticky: :desc },
+        last_post_created_at: { last_post_created_at: :desc },
+      }, params[:order], secondary: { last_post_created_at: :desc })
+    end
 
-      q = q.attribute_matches(:title, params[:title_matches])
-      q = q.where_user(:creator_id, :creator, params)
-
-      if params[:category_id].present?
-        q = q.for_category_id(params[:category_id])
-      end
-
-      if params[:title].present?
-        q = q.where("title = ?", params[:title])
-      end
-
-      q = q.attribute_matches(:is_sticky, params[:is_sticky])
-      q = q.attribute_matches(:is_locked, params[:is_locked])
-      q = q.attribute_matches(:is_hidden, params[:is_hidden])
-
-      case params[:order]
-      when "sticky"
-        q = q.sticky_first
-      when "last_post_created_at"
-        q = q.order(last_post_created_at: :desc)
-      when "created_at"
-        q = q.order(created_at: :desc)
-      else
-        q = q.apply_basic_order(params)
-      end
-
-      q
+    def query_dsl
+      super
+        .field(:title_matches, :title)
+        .field(:title)
+        .field(:category_id)
+        .field(:is_sticky)
+        .field(:is_locked)
+        .field(:is_hidden)
+        .field(:creator_ip_addr)
+        .field(:updater_ip_addr)
+        .association(:creator)
+        .association(:updater)
     end
   end
 

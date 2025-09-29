@@ -85,10 +85,6 @@ class TagRelationship < ApplicationRecord
   end
 
   module SearchMethods
-    def name_matches(name)
-      where("(antecedent_name like ? escape E'\\\\' or consequent_name like ? escape E'\\\\')", name.downcase.to_escaped_for_sql_like, name.downcase.to_escaped_for_sql_like)
-    end
-
     def status_matches(status)
       status = status.downcase
 
@@ -99,83 +95,63 @@ class TagRelationship < ApplicationRecord
       end
     end
 
-    def for_creator(id)
-      where("creator_id = ?", id)
+    def name_matches(name)
+      where.like(antecedent_name: Tag.normalize_name(name)).or(
+        where.like(consequent_name: Tag.normalize_name(name)),
+      )
     end
 
     def pending_first
-      # unknown statuses return null and are sorted first
-      order(Arel.sql("array_position(array['queued', 'processing', 'pending', 'active', 'deleted', 'retired'], status::text) NULLS FIRST, #{table_name}.id desc"))
+      # unknown statuses are sorted first
+      order(case_order(:status, [nil, "queued", "processing", "pending", "active", "deleted", "retired"]), "#{table_name}.id": :desc)
     end
 
     # FIXME: Rails assigns different join aliases for joins(:antecedent_tag) and joins(:antecedent_tag, :consquent_tag)
     # This makes it impossible to use when ordering, at least from what I can tell.
     # There must be a different solution for this.
     def join_antecedent
-      joins("LEFT OUTER JOIN tags antecedent_tag on antecedent_tag.name = antecedent_name")
+      join_as(:antecedent_tag, "antecedent_tag", Arel::Nodes::OuterJoin)
     end
 
     def join_consequent
-      joins("LEFT OUTER JOIN tags consequent_tag on consequent_tag.name = consequent_name")
+      join_as(:consequent_name, "consequent_name", Arel::Nodes::OuterJoin)
     end
 
     def default_order
       pending_first
     end
 
-    def search(params, user)
-      q = super
+    def apply_order(params)
+      order_with({
+        created_at:      -> { order(arel(:created_at).desc.nulls_last, "#{table_name}.id": :desc) },
+        created_at_asc:  -> { order(arel(:created_at).asc.nulls_last, "#{table_name}.id": :desc) },
+        created_at_desc: -> { order(arel(:created_at).desc.nulls_last, "#{table_name}.id": :desc) },
+        updated_at:      -> { order(arel(:updated_at).desc.nulls_last, "#{table_name}.id": :desc) },
+        updated_at_asc:  -> { order(arel(:updated_at).asc.nulls_last, "#{table_name}.id": :desc) },
+        updated_at_desc: -> { order(arel(:updated_at).desc.nulls_last, "#{table_name}.id": :desc) },
+        name:            { "#{table_name}.antecedent_name": :asc, "#{table_name}.consequent_name": :asc },
+        tag_count:       -> { join_consequent.order("consequent_tag.post_count": :desc, "#{table_name}.id": :desc) },
+        tag_count_asc:   -> { join_consequent.order("consequent_tag.post_count": :asc, "#{table_name}.id": :desc) },
+        tag_count_desc:  -> { join_consequent.order("consequent_tag.post_count": :desc, "#{table_name}.id": :desc) },
+        rating:          -> { left_joins(:forum_post).order("forum_posts.percentage_score": :desc, "#{table_name}.id": :desc) },
+        rating_asc:      -> { left_joins(:forum_post).order("forum_posts.percentage_score": :asc, "#{table_name}.id": :desc) },
+        rating_desc:     -> { left_joins(:forum_post).order("forum_posts.percentage_score": :desc, "#{table_name}.id": :desc) },
+        score:           -> { left_joins(:forum_post).order("forum_posts.total_score": :desc, "#{table_name}.id": :desc) },
+        score_asc:       -> { left_joins(:forum_post).order("forum_posts.total_score": :asc, "#{table_name}.id": :desc) },
+        score_desc:      -> { left_joins(:forum_post).order("forum_posts.total_score": :desc, "#{table_name}.id": :desc) },
+      }, params[:order])
+    end
 
-      if params[:name_matches].present?
-        q = q.name_matches(params[:name_matches])
-      end
-
-      if params[:antecedent_name].present?
-        # Split at both space and , to preserve backwards compatibility
-        q = q.where(antecedent_name: params[:antecedent_name].split(/[ ,]/).first(100))
-      end
-
-      if params[:consequent_name].present?
-        q = q.where(consequent_name: params[:consequent_name].split(/[ ,]/).first(100))
-      end
-
-      if params[:status].present?
-        q = q.status_matches(params[:status])
-      end
-
-      if params[:antecedent_tag_category].present?
-        q = q.join_antecedent.where("antecedent_tag.category": params[:antecedent_tag_category].split(",").first(100))
-      end
-
-      if params[:consequent_tag_category].present?
-        q = q.join_consequent.where("consequent_tag.category": params[:consequent_tag_category].split(",").first(100))
-      end
-
-      q = q.where_user(:creator_id, :creator, params)
-      q = q.where_user(:approver_id, :approver, params)
-
-      case params[:order]
-      when "created_at"
-        q = q.order("#{table_name}.created_at desc nulls last, #{table_name}.id desc")
-      when "updated_at"
-        q = q.order("#{table_name}.updated_at desc nulls last, #{table_name}.id desc")
-      when "name"
-        q = q.order("antecedent_name asc, consequent_name asc")
-      when "tag_count"
-        q = q.join_consequent.order("consequent_tag.post_count desc, antecedent_name asc, consequent_name asc")
-      when "rating_desc"
-        q = q.left_joins(:forum_post).order("forum_posts.percentage_score DESC, #{table_name}.id DESC")
-      when "rating_asc"
-        q = q.left_joins(:forum_post).order("forum_posts.percentage_score ASC, #{table_name}.id DESC")
-      when "score_desc"
-        q = q.left_joins(:forum_post).order("forum_posts.total_score DESC, #{table_name}.id DESC")
-      when "score_asc"
-        q = q.left_joins(:forum_post).order("forum_posts.total_score ASC, #{table_name}.id DESC")
-      else
-        q = q.apply_basic_order(params)
-      end
-
-      q
+    def query_dsl
+      super
+        .field(:antecedent_name, multi: true)
+        .field(:consequent_name, multi: true)
+        .custom(:antecedent_tag_category, ->(q, v) { q.join_antecedent.where("antecedent_tag.category": v.split(",").map(&:to_i).compact_blank.first(FemboyFans.config.max_multi_count)) })
+        .custom(:consequent_tag_category, ->(q, v) { q.join_consequent.where("consequent_tag.category": v.split(",").map(&:to_i).compact_blank.first(FemboyFans.config.max_multi_count)) })
+        .custom(:name_matches, ->(q, v) { q.where.like(antecedent_name: v).or(q.where.like(consequent_name: v)) })
+        .custom(:status, ->(q, v) { q.status_matches(v) })
+        .association(:creator)
+        .association(:approver)
     end
   end
 

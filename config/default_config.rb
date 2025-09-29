@@ -1026,6 +1026,11 @@ module FemboyFans
     def max_concurrency
       Concurrent.available_processor_count.to_i.clamp(1..)
     end
+
+    # the maximum number of inputs for "multi" values ("in" ranges, comma separated names, etc.)
+    def max_multi_count
+      100
+    end
   end
 
   class EnvironmentConfiguration

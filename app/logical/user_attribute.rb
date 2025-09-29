@@ -180,6 +180,11 @@ class UserAttribute
         end
       end
     end
+    klass.instance_exec do
+      scope("for_#{ua.attribute}", ->(value) { where(ua.db && ua.ar_options.key?(:foreign_key) ? ua.ar_options[:foreign_key] : "#{ua.attribute}_id" => u2id(value)) }) unless respond_to?("for_#{ua.attribute}")
+      scope("for_#{ua.attribute}_id", ->(value) { where(ua.db && ua.ar_options.key?(:foreign_key) ? ua.ar_options[:foreign_key] : "#{ua.attribute}_id" => value) }) unless respond_to?("for_#{ua.attribute}_id")
+      scope("for_#{ua.attribute}_name", ->(value) { where(ua.db && ua.ar_options.key?(:foreign_key) ? ua.ar_options[:foreign_key] : "#{ua.attribute}_id" => User.name_to_id(value)) }) unless respond_to?("for_#{ua.attribute}_name")
+    end
 
     aliases.each do |alias_attr|
       create_alias(alias_attr)
@@ -238,8 +243,10 @@ class UserAttribute
       define_method("#{attr}_id=") { |value| send("#{ua.attribute}_id=", value) }
       define_method("#{attr}_name") { send("#{ua.attribute}_name") }
       define_method("#{attr}_name=") { |value| send("#{ua.attribute}_name=", value) }
-      define_method("#{attr}_ip_addr") { send(ua.ip) }
-      define_method("#{attr}_ip_addr=") { |value| send("#{ua.ip}=", value) }
+      if ua.ip
+        define_method("#{attr}_ip_addr") { send(ua.ip) }
+        define_method("#{attr}_ip_addr=") { |value| send("#{ua.ip}=", value) }
+      end
     end
   end
 

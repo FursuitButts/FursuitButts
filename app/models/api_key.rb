@@ -13,8 +13,6 @@ class ApiKey < ApplicationRecord
   validate(:validate_permissions, if: :permissions_changed?)
   has_secure_token(:key)
 
-  scope(:for_user, ->(user) { where(user_id: u2id(user)) })
-
   module PermissionMethods
     def has_permission?(ip, controller, action)
       ip_permitted?(ip) && action_permitted?(controller, action)
@@ -43,10 +41,13 @@ class ApiKey < ApplicationRecord
   end
 
   module SearchMethods
-    def search(params, user)
-      q = super
-      q = q.where_user(:user_id, :user, params)
-      q.apply_basic_order(params)
+    def apply_order(params)
+      order_with(%i[name uses], params[:order])
+    end
+
+    def query_dsl
+      super
+        .association(:user)
     end
   end
 

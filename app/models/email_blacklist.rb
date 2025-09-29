@@ -27,30 +27,22 @@ class EmailBlacklist < ApplicationRecord
     banned_domains.any? { |banned_domain| domain.end_with?(banned_domain) }
   end
 
-  def self.search(params, user)
-    q = super
-
-    q = q.includes(:creator)
-
-    if params[:domain].present?
-      q = q.where("domain ILIKE ?", params[:domain].to_escaped_for_sql_like)
+  module SearchMethods
+    def apply_order(params)
+      order_with({
+        reason: { reason: :asc },
+        domain: { domain: :asc },
+      }, params[:order])
     end
 
-    if params[:reason].present?
-      q = q.where("reason ILIKE ?", params[:reason].to_escaped_for_sql_like)
+    def query_dsl
+      super
+        .field(:domain)
+        .field(:reason)
+        .association(:creator)
     end
-
-    case params[:order]
-    when "reason"
-      q = q.order("email_blacklists.reason")
-    when "domain"
-      q = q.order("email_blacklists.domain")
-    else
-      q = q.apply_basic_order(params)
-    end
-
-    q
   end
+  extend(SearchMethods)
 
   def self.get_mx_records(domain)
     return [] if Rails.env.test?
@@ -68,7 +60,7 @@ class EmailBlacklist < ApplicationRecord
     matching_users = User.search({ email_matches: "*@#{domain}" }, creator)
     return if matching_users.count > UNVERIFY_COUNT_TRESHOLD
 
-    matching_users.each(&:mark_unverified!)
+    matching_users.each { |u| u.mark_unverified!(creator) }
   end
 
   def self.available_includes

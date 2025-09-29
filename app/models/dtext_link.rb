@@ -39,31 +39,16 @@ class DtextLink < ApplicationRecord
   end
 
   module SearchMethods
-    def search(params, user)
-      q = super
-
-      q = q.attribute_matches(:link_type, params[:link_type])
-      q = q.attribute_matches(:link_target, params[:link_target])
-      q = q.attribute_matches(:model_type, params[:model_type])
-      q = q.attribute_matches(:model_id, params[:model_id])
-      if params[:has_linked_wiki].present?
-        q = q.left_joins(:linked_wiki)
-        q = q.where.not(wiki_pages: { id: nil }) if params[:has_linked_wiki].to_s.truthy?
-        q = q.where("wiki_pages.id IS NULL") if params[:has_linked_wiki].to_s.falsy?
-      end
-      if params[:has_linked_tag].present?
-        q = q.left_joins(:linked_tag)
-        q = q.where.not(tags: { id: nil }) if params[:has_linked_tag].to_s.truthy?
-        q = q.where("tags.id IS NULL") if params[:has_linked_tag].to_s.falsy?
-      end
-      if params[:wiki_page_title].present?
-        q = q.joins(:linked_wiki).where("wiki_pages.title": params[:wiki_page_title])
-      end
-      if params[:tag_name].present?
-        q = q.joins(:linked_tag).where("tags.name": params[:tag_name])
-      end
-
-      q.apply_basic_order(params)
+    def query_dsl
+      super
+        .field(:link_type)
+        .field(:link_target)
+        .field(:model_type)
+        .field(:model_id)
+        .field(:wiki_page_title, "wiki_pages.title") { |q| q.joins(:linked_wiki) }
+        .field(:tag_name, "tags.name") { |q| q.joins(:linked_tag) }
+        .present(:has_linked_wiki, "wiki_pages.id") { |q| q.left_joins(:linked_wiki) }
+        .present(:has_linked_tag, "tags.id") { |q| q.left_joins(:linked_tag) }
     end
   end
 

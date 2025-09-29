@@ -64,7 +64,7 @@ class ForumPostPolicy < ApplicationPolicy
   end
 
   def permitted_search_params
-    super + %i[creator_id creator_name topic_id topic_title_matches body_matches topic_category_id is_hidden linked_to not_linked_to]
+    super + %i[creator_id creator_name topic_id topic_title_matches body_matches topic_category_id is_hidden linked_to not_linked_to] + nested_search_params(creator: User, topic: ForumTopic)
   end
 
   def api_attributes

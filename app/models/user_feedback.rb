@@ -19,7 +19,6 @@ class UserFeedback < ApplicationRecord
 
   scope(:active, -> { where(is_deleted: false) })
   scope(:deleted, -> { where(is_deleted: true) })
-  scope(:for_user, ->(user) { where(user_id: u2id(user)) })
 
   module LogMethods
     def log_create
@@ -55,22 +54,22 @@ class UserFeedback < ApplicationRecord
       order(created_at: :desc)
     end
 
+    def query_dsl
+      super
+        .field(:body_matches, :body)
+        .field(:category)
+        .association(:user)
+        .association(:creator)
+        .association(:updater)
+    end
+
     def search(params, user)
       q = super
 
       deleted = (params[:deleted].presence || "excluded").downcase
       q = q.active if deleted == "excluded"
       q = q.deleted if deleted == "only"
-
-      q = q.attribute_matches(:body, params[:body_matches])
-      q = q.where_user(:user_id, :user, params)
-      q = q.where_user(:creator_id, :creator, params)
-
-      if params[:category].present?
-        q = q.where("category = ?", params[:category])
-      end
-
-      q.apply_basic_order(params)
+      q
     end
   end
 

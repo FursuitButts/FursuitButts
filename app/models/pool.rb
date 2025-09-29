@@ -34,7 +34,6 @@ class Pool < ApplicationRecord
   after_save(:create_version)
   after_save(:synchronize, if: :saved_change_to_post_ids?)
   has_one(:cover_post, class_name: "Post", foreign_key: :id, primary_key: :cover_post_id)
-
   has_many(:versions, -> { order("id asc") }, class_name: "PoolVersion", dependent: :destroy)
 
   attr_accessor(:skip_sync)
@@ -46,61 +45,43 @@ class Pool < ApplicationRecord
   end
 
   module SearchMethods
-    def for_user(id)
-      where("pools.creator_id = ?", id)
-    end
-
     def any_artist_name_matches(regex)
-      where(id: Pool.from("unnest(artist_names) AS artist_name").where("artist_name ~ ?", regex))
+      unnest("artist_names").where("artist_name ~ ?", regex)
     end
 
     def any_artist_name_like(name)
-      where(id: Pool.from("unnest(artist_names) AS artist_name").where("artist_name LIKE ?", name.to_escaped_for_sql_like))
+      unnest("artist_names").where("artist_name LIKE ?", name.to_escaped_for_sql_like)
     end
 
     def selected_first(current_pool_id)
-      return where("true") if current_pool_id.blank?
+      return all if current_pool_id.blank?
       current_pool_id = current_pool_id.to_i
-      reorder(Arel.sql("(case pools.id when #{current_pool_id} then 0 else 1 end), pools.name"))
+      reorder(case_order(:id, [nil, current_pool_id])).order(:name)
     end
 
     def default_order
       order(updated_at: :desc)
     end
 
-    def search(params, user)
-      q = super
+    def apply_order(params)
+      order_with({
+        name:            { name: :asc },
+        post_count:      -> { order(Arel.sql("cardinality(post_ids) desc")).default_order },
+        post_count_asc:  -> { order(Arel.sql("cardinality(post_ids) asc")).default_order },
+        post_count_desc: -> { order(Arel.sql("cardinality(post_ids) desc")).default_order },
+      }, params[:order])
+    end
 
-      if params[:name_matches].present?
-        q = q.attribute_matches(:name, normalize_name(params[:name_matches]), convert_to_wildcard: true)
-      end
-
-      q = q.any_artist_name_matches(params[:any_artist_name_matches]) if params[:any_artist_name_matches].present?
-      q = q.any_artist_name_like(params[:any_artist_name_like]) if params[:any_artist_name_like].present?
-      q = q.attribute_matches(:description, params[:description_matches])
-      q = q.where_user(:creator_id, :creator, params)
-      q = q.attribute_matches(:is_active, params[:is_active])
-
-      if params[:linked_to].present?
-        q = q.linked_to(params[:linked_to])
-      end
-
-      if params[:not_linked_to].present?
-        q = q.not_linked_to(params[:not_linked_to])
-      end
-
-      case params[:order]
-      when "name"
-        q = q.order("pools.name")
-      when "created_at"
-        q = q.order("pools.created_at desc")
-      when "post_count"
-        q = q.order(Arel.sql("cardinality(post_ids) desc")).default_order
-      else
-        q = q.apply_basic_order(params)
-      end
-
-      q
+    def query_dsl
+      super
+        .field(:is_active)
+        .custom(:name_matches, ->(q, v) { q.attribute_matches(:name, Pool.normalize_name(v), convert_to_wildcard: true) })
+        .custom(:any_artist_name_matches, ->(q, v) { q.any_artist_name_matches(v) })
+        .custom(:any_artist_name_like, ->(q, v) { q.any_artist_name_like(v) })
+        .custom(:description_matches, ->(q, v) { q.attributes_match(description: v) })
+        .custom(:linked_to, ->(q, v) { q.linked_to(v) })
+        .custom(:not_linked_to, ->(q, v) { q.not_linked_to(v) })
+        .association(:creator)
     end
   end
 

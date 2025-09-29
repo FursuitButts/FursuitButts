@@ -19,23 +19,20 @@ class IpBan < ApplicationRecord
   def self.is_banned?(ip_addr)
     return false if ip_addr.blank?
     Cache.fetch("ipban:#{ip_addr}", expires_in: 6.hours) do
-      exists?(["ip_addr >>= ?", ip_addr.to_s])
+      where.inet_contains_or_equals(ip_addr: ip_addr).exists?
     end
   end
 
-  def self.search(params, user)
-    q = super
-
-    if params[:ip_addr].present?
-      q = q.where("ip_addr >>= ?", params[:ip_addr])
+  module SearchMethods
+    def query_dsl
+      super
+        .field(:reason)
+        .custom(:ip_addr, ->(q, v) { q.where.inet_contains_or_equals(ip_addr: v) }) # field would use contained_within_or_equals
+        .association(:creator)
     end
-
-    q = q.where_user(:creator_id, :banner, params)
-
-    q = q.attribute_matches(:reason, params[:reason])
-
-    q.apply_basic_order(params)
   end
+
+  extend(SearchMethods)
 
   def validate_ip_addr
     if ip_addr.blank?

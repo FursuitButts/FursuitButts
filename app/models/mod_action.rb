@@ -662,15 +662,12 @@ class ModAction < ApplicationRecord
   # rubocop:enable Local/CurrentUserOutsideOfRequests
 
   module SearchMethods
-    def search(params, user)
-      q = super
-
-      q = q.where_user(:creator_id, :creator, params)
-      q = q.where(action: params[:action].split(",")) if params[:action].present?
-      q = q.attribute_matches(:subject_type, params[:subject_type])
-      q = q.attribute_matches(:subject_id, params[:subject_id])
-
-      q.apply_basic_order(params)
+    def query_dsl
+      super
+        .field(:subject_id)
+        .field(:subject_type)
+        .custom(:action, ->(q, v) { q.where(action: v.split(",")) })
+        .association(:creator)
     end
   end
 

@@ -19,17 +19,8 @@ class MascotMediaAsset < MediaAsset
     end
   end
 
-  module SearchMethods
-    def search(params, user)
-      q = super
-      q = q.joins(:mascot).where("mascots.id": params[:mascot_id]) if params[:mascot_id].present?
-      q
-    end
-  end
-
   include(StorageMethods)
   include(FileMethods)
-  extend(SearchMethods)
 
   def self.available_includes
     %i[creator mascot]

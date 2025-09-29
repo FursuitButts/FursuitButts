@@ -12,7 +12,7 @@ class NewsUpdate < ApplicationRecord
 
   def self.recent
     Cache.fetch("recent_news", expires_in: 1.day) do
-      order("id desc").first
+      order(id: :desc).first
     end
   end
 

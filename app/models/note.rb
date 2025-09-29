@@ -6,7 +6,7 @@ class Note < ApplicationRecord
   belongs_to(:post)
   belongs_to_user(:creator, ip: true, clones: :updater)
   resolvable(:updater)
-  has_many(:versions, -> { order("note_versions.id ASC") }, class_name: "NoteVersion", dependent: :destroy)
+  has_many(:versions, -> { order("note_versions.id": :asc) }, class_name: "NoteVersion", dependent: :destroy)
   normalizes(:body, with: ->(body) { body.gsub("\r\n", "\n") })
   revertible do |version|
     self.x = version.x
@@ -32,35 +32,20 @@ class Note < ApplicationRecord
   scope(:for_creator, ->(user) { where(creator_id: u2id(user)) })
 
   module SearchMethods
-    def active
-      where("is_active = TRUE")
-    end
-
     def post_tags_match(query, user)
       where(post_id: Post.tag_match_sql(query, user))
     end
 
-    def search(params, user)
-      q = super
-
-      q = q.attribute_matches(:body, params[:body_matches])
-      q = q.attribute_matches(:is_active, params[:is_active])
-
-      if params[:post_id].present?
-        q = q.where(post_id: params[:post_id].split(",").map(&:to_i))
-      end
-
-      if params[:post_tags_match].present?
-        q = q.post_tags_match(params[:post_tags_match], user)
-      end
-
-      with_resolved_user_ids(:post_note_updater, params) do |user_ids|
-        q = q.where(post_id: NoteVersion.select(:post_id).where(updater_id: user_ids))
-      end
-
-      q = q.where_user(:creator_id, :creator, params)
-
-      q.apply_basic_order(params)
+    def query_dsl
+      super
+        .field(:body_matches, :body)
+        .field(:is_active)
+        .field(:post_id)
+        .custom(:post_tags_match, ->(q, v, user) { q.post_tags_match(v, user) })
+        .custom(:post_note_updater_id, ->(q, v) { q.where(post_id: NoteVersion.select(:post_id).where(updater_id: v.to_s.split(",").map(&:to_i))) })
+        .custom(:post_note_updater_name, ->(q, v) { q.where(post_id: NoteVersion.select(:post_id).user_name_matches(:updater, v)) })
+        .association(:creator)
+        .association(:post)
     end
   end
 

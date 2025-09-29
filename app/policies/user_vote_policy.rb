@@ -34,7 +34,7 @@ class UserVotePolicy < ApplicationPolicy
   end
 
   def permitted_search_params
-    params = super + %I[user_id user_name #{model.model_type}_id #{model.model_type}_creator_id #{model.model_type}_creator_name timeframe score]
+    params = super + %I[user_id user_name #{model.model_type}_id #{model.model_type}_creator_id #{model.model_type}_creator_name timeframe score] + nested_search_params(user: User, "#{model.model_type}": model.model)
     params += %i[ip_addr duplicates_only order] if can_search_ip_addr?
     params
   end

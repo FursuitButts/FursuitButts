@@ -18,6 +18,6 @@ class DestroyedPostPolicy < ApplicationPolicy
   end
 
   def permitted_search_params
-    super + %i[destroyer_id destroyer_name destroyer_ip_addr uploader_id uploader_name uploader_ip_addr post_id md5 reason_matches]
+    super + %i[destroyer_id destroyer_name destroyer_ip_addr uploader_id uploader_name uploader_ip_addr post_id md5 reason_matches] + nested_search_params(destroyer: User, uploader: User)
   end
 end

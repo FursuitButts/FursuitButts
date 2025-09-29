@@ -3,23 +3,7 @@
 class PostSet < ApplicationRecord
   array_attribute(:post_ids, parse: %r{(?:https://femboy\.fan/posts/)?(\d+)}i, cast: :to_i)
 
-  has_many(:post_set_maintainers, dependent: :destroy) do
-    def in_cooldown(user)
-      where(creator_id: user.id, status: "cooldown").where(created_at: ...24.hours.ago)
-    end
-
-    def active
-      where(status: "approved")
-    end
-
-    def pending
-      where(status: "pending")
-    end
-
-    def banned
-      where(status: "banned")
-    end
-  end
+  has_many(:post_set_maintainers, dependent: :destroy)
   has_many(:maintainers, class_name: "User", through: :post_set_maintainers, source: :user)
   belongs_to_user(:creator, ip: true, clones: :updater, counter_cache: "set_count")
   belongs_to_user(:updater, ip: true)
@@ -87,7 +71,7 @@ class PostSet < ApplicationRecord
       end
       if is_public_changed? && !is_public # If set was made private
         RateLimiter.hit("set.public.#{id}", 24.hours)
-        PostSetMaintainer.active.where(post_set_id: id).find_each do |maintainer|
+        PostSetMaintainer.approved.where(post_set_id: id).find_each do |maintainer|
           Dmail.create_automated(to_id: maintainer.user_id, title: "A set you maintain was made private",
                                  body: "The set \"#{name}\":#{post_set_path(self)} by \"#{creator.name}\":#{user_path(creator)} that you maintain was set to private. You will not be able to view, add posts, or remove posts from the set until the owner makes it public again.",
                                  respond_to_id: creator_id)
@@ -96,7 +80,7 @@ class PostSet < ApplicationRecord
         PostSetMaintainer.pending.where(post_set_id: id).delete
       elsif is_public_changed? && is_public # If set was made public
         RateLimiter.hit("set.public.#{id}", 24.hours)
-        PostSetMaintainer.active.where(post_set_id: id).find_each do |maintainer|
+        PostSetMaintainer.approved.where(post_set_id: id).find_each do |maintainer|
           Dmail.create_automated(to_id: maintainer.user_id, title: "A private set you had maintained was made public again",
                                  body: "The set \"#{name}\":#{post_set_path(self)} by \"#{creaatorname}\":#{user_path(creator)} that you previously maintained was made public again. You are now able to view the set and add/remove posts.",
                                  respond_to_id: creator_id)
@@ -105,7 +89,7 @@ class PostSet < ApplicationRecord
     end
 
     def send_maintainer_destroy_dmails
-      PostSetMaintainer.active.where(post_set_id: id).find_each do |maintainer|
+      PostSetMaintainer.approved.where(post_set_id: id).find_each do |maintainer|
         Dmail.create_automated(to_id:         maintainer.user_id,
                                title:         "A set you maintain was deleted",
                                body:          "The set #{name} by \"#{creator_name}\":#{user_path(creator)} that you maintain was deleted.",
@@ -135,8 +119,9 @@ class PostSet < ApplicationRecord
       true
     end
 
+    # TODO: convert to user throttle
     def set_per_hour_limit
-      if PostSet.where("created_at > ? AND creator_id = ?", 1.hour.ago, creator_id).count > 6 && !creator.is_janitor?
+      if PostSet.for_creator(creator_id).where.gt(created_at: 1.hour.ago).count > 6 && !creator.is_janitor?
         errors.add(:base, "You have already created 6 sets in the last hour.")
         false
       else
@@ -322,9 +307,9 @@ class PostSet < ApplicationRecord
 
   module SearchMethods
     def selected_first(current_set_id)
-      return where("true") if current_set_id.blank?
+      return all if current_set_id.blank?
       current_set_id = current_set_id.to_i
-      reorder(Arel.sql("(case post_sets.id when #{current_set_id} then 0 else 1 end), post_sets.name"))
+      reorder(case_order(:id, [nil, current_set_id])).order(:name)
     end
 
     def where_has_post(post_id)
@@ -332,40 +317,23 @@ class PostSet < ApplicationRecord
     end
 
     def where_has_maintainer(user_id)
-      joins(:maintainers).where(post_set_maintainers: { user_id: user_id, status: "approved" }).or(where(creator_id: user_id))
+      joins(:maintainers).where(post_set_maintainers: { user_id: user_id, status: "approved" }).or(for_creator(user_id))
     end
 
-    def search(params, user)
-      q = super
+    def query_dsl
+      super
+        .field(:name)
+        .field(:shortname)
+        .field(:post_count)
+        .field(:is_public)
+        .field(:creator_ip_addr)
+        .field(:updater_ip_addr)
+        .association(:creator)
+        .association(:updater)
+    end
 
-      q = q.where_user(:creator_id, :creator, params)
-
-      if params[:name].present?
-        q = q.attribute_matches(:name, params[:name], convert_to_wildcard: true)
-      end
-      if params[:shortname].present?
-        q = q.where_ilike(:shortname, params[:shortname])
-      end
-      if params[:is_public].present?
-        q = q.attribute_matches(:is_public, params[:is_public])
-      end
-
-      case params[:order]
-      when "name"
-        q = q.order(:name, id: :desc)
-      when "shortname"
-        q = q.order(:shortname, id: :desc)
-      when "postcount", "post_count"
-        q = q.order(post_count: :desc, id: :desc)
-      when "created_at"
-        q = q.order(:id)
-      when "update", "updated_at"
-        q = q.order(updated_at: :desc)
-      else
-        q = q.order(id: :desc)
-      end
-
-      q
+    def apply_order(params)
+      order_with(%w[name shortname post_count], params[:order])
     end
   end
 

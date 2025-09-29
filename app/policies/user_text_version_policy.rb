@@ -18,7 +18,7 @@ class UserTextVersionPolicy < ApplicationPolicy
   end
 
   def permitted_search_params
-    params = super + %i[changes updater_id updater_name user_id user_name about_matches artinfo_matches]
+    params = super + %i[changes updater_id updater_name user_id user_name about_matches artinfo_matches] + nested_search_params(user: User, updater: User)
     params += %i[ip_addr] if can_search_ip_addr?
     params += %i[blacklist_matches] if user.is_admin?
     params

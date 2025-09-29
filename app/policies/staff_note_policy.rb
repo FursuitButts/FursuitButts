@@ -37,6 +37,6 @@ class StaffNotePolicy < ApplicationPolicy
   end
 
   def permitted_search_params
-    super + %i[creator_id creator_name updater_id updater_name user_id user_name body_matches without_system_user include_deleted]
+    super + %i[creator_id creator_name updater_id updater_name user_id user_name body_matches without_system_user include_deleted] + nested_search_params(user: User)
   end
 end

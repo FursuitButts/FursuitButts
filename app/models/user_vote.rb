@@ -5,8 +5,6 @@ class UserVote < ApplicationRecord
 
   self.abstract_class = true
 
-  scope(:for_user, ->(user) { where(user_id: u2id(user)) })
-
   def self.inherited(child_class)
     super
     return if child_class.name.starts_with?("Lockable") # We can't check for abstract here, it hasn't been set yet
@@ -53,46 +51,28 @@ class UserVote < ApplicationRecord
   end
 
   module SearchMethods
-    def search(params, user)
-      q = super
+    def query_dsl
+      super
+        .field(:"#{model_type}_id", multi: true)
+        .field(:ip_addr, :user_ip_addr)
+        .field(:score)
+        .custom(:timeframe, ->(q, v) { q.where.gteq(updated_at: v.to_i.days.ago) })
+        .custom(:duplicates_only, method(:duplicates_only_query).to_proc)
+        .user(:"#{model_type}_creator", "#{model.table_name}.#{model_creator_column}_id") { |q| q.joins(model_type) }
+        .association(:user)
+        .association(model_type)
+    end
 
-      if params["#{model_type}_id"].present?
-        q = q.where("#{model_type}_id" => params["#{model_type}_id"].split(",").first(100))
-      end
+    def duplicates_only_query(q, value, user, params)
+      return unless value.to_s.truthy?
+      subselect = search(params.except("duplicates_only"), user).select(:user_ip_addr).group(:user_ip_addr).having("count(user_ip_addr) > 1").reorder("")
+      q.where(user_ip_addr: subselect)
+    end
 
-      q = q.where_user(:user_id, :user, params)
-
-      allow_complex_params = params.keys.intersect?(%W[#{model_type}_id user_name user_id])
-
-      if allow_complex_params
-        q = q.where_user({ model_type => :"#{model_creator_column}_id" }, :"#{model_type}_creator", params) do |q, _user_ids|
-          q.joins(model_type)
-        end
-
-        if params[:timeframe].present?
-          q = q.where("#{table_name}.updated_at >= ?", params[:timeframe].to_i.days.ago)
-        end
-
-        if params[:ip_addr].present?
-          q = q.where("user_ip_addr <<= ?", params[:ip_addr])
-        end
-
-        if params[:score].present?
-          q = q.where("#{table_name}.score = ?", params[:score])
-        end
-
-        if params[:duplicates_only].to_s.truthy?
-          subselect = search(user, params.except("duplicates_only")).select(:user_ip_addr).group(:user_ip_addr).having("count(user_ip_addr) > 1").reorder("")
-          q = q.where(user_ip_addr: subselect)
-        end
-      end
-
-      if params[:order] == "ip_addr" && allow_complex_params
-        q = q.order(:user_ip_addr)
-      else
-        q = q.apply_basic_order(params)
-      end
-      q
+    def apply_order(params)
+      order_with({
+        ip_addr: { "#{table_name}.user_ip_addr": :asc },
+      }, params[:order])
     end
   end
 

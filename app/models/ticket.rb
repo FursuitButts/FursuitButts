@@ -23,12 +23,12 @@ class Ticket < ApplicationRecord
   validate(:validate_model_exists, on: :create)
   validate(:validate_creator_is_not_limited, on: :create)
 
-  scope(:for_creator, ->(user) { where(creator_id: u2id(user)) })
   scope(:automated, -> { for_creator(User.system) })
   scope(:spam, -> { automated.where(reason: "Spam.") })
   scope(:for_model, ->(type) { where(model_type: Array(type).map(&:to_s)) })
-  scope(:for_accused, ->(user) { where(accused_id: u2id(user)) })
   scope(:active, -> { pending.or(partial) })
+  scope(:claimed, -> { where.not(claimant_id: nil) })
+  scope(:unclaimed, -> { where(claimant_id: nil) })
 
   attr_accessor(:record_type, :send_update_dmail)
 
@@ -193,52 +193,43 @@ class Ticket < ApplicationRecord
   end
 
   module SearchMethods
-    def for_accused(user_id)
-      where(accused_id: user_id)
+    def creator_id_query(q, value, user)
+      return none if !user.is_moderator? && value.to_i != user.id
+      q.for_creator_id(value)
     end
 
-    def search(params, user)
-      q = super.includes(:creator).includes(:claimant)
+    def creator_name_query(q, value, user)
+      return none if !user.is_moderator? && value.downcase == user.name.downcase
+      q.for_creator_name(value)
+    end
 
-      if params[:creator_id].present? || params[:creator_name].present?
-        # FIXME: This is more complicated than it needs to be
-        if user.is_moderator? || params[:creator_id].to_i == user.id || params[:creator_name]&.downcase == user.name.downcase
-          q = q.where_user(:creator_id, :creator, params)
-        else
-          q = q.none
-        end
-      end
-      q = q.where_user(:claimant_id, :claimant, params)
-      q = q.where_user(:accused_id, :accused, params)
-
-      if params[:model_type].present?
-        q = q.where(model_type: params[:model_type])
-      end
-
-      if params[:model_id].present?
-        q = q.where(model_id: params[:model_id])
-      end
-
-      if params[:reason].present?
-        q = q.attribute_matches(:reason, params[:reason])
-      end
-
-      if params[:status].present?
-        case params[:status]
-        when "pending_claimed"
-          q = q.where("status = ? and claimant_id is not null", "pending")
-        when "pending_unclaimed"
-          q = q.where("status = ? and claimant_id is null", "pending")
-        else
-          q = q.where("status = ?", params[:status])
-        end
-      end
-
-      if params[:order].present?
-        q.apply_basic_order(params)
+    def status_query(q, value)
+      case value
+      when "pending_claimed"
+        q.pending.claimed
+      when "pending_unclaimed"
+        q.pending.unclaimed
       else
-        q.order(Arel.sql("CASE status WHEN 'pending' THEN 0 WHEN 'partial' THEN 1 ELSE 2 END ASC, id DESC"))
+        q.where(status: value)
       end
+    end
+
+    def default_order
+      order(case_order(:status, ["pending", "partial", nil])).order(id: :desc)
+    end
+
+    def query_dsl
+      super
+        .field(:model_type)
+        .field(:model_id)
+        .field(:reason)
+        .custom(:status, method(:status_query).to_proc)
+        .custom(:creator_id, method(:creator_id_query).to_proc)
+        .custom(:creator_name, method(:creator_name_query).to_proc)
+        # TODO: We need access control/blocks for associations
+        .association(:creator)
+        .association(:claimant)
+        .association(:accused)
     end
   end
 

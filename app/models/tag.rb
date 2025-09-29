@@ -33,6 +33,8 @@ class Tag < ApplicationRecord
   end
 
   scope(:invalid, -> { where(category: TagCategory::INVALID) })
+  scope(:empty, -> { where.lteq(post_count: 0) })
+  scope(:nonempty, -> { where.gt(post_count: 0) })
 
   module CountMethods
     extend(ActiveSupport::Concern)
@@ -53,8 +55,8 @@ class Tag < ApplicationRecord
       end
 
       def clean_up_negative_post_counts!
-        Tag.where("post_count < 0").find_each do |tag|
-          tag_alias = TagAlias.where("status in ('active', 'processing') and antecedent_name = ?", tag.name).first
+        Tag.where.lt(post_count: 0).find_each do |tag|
+          tag_alias = TagAlias.where(status: %w[active processing], antecedent_name: tag.name).first
           tag.fix_post_count
           tag_alias&.consequent_tag&.fix_post_count
         end
@@ -294,12 +296,17 @@ class Tag < ApplicationRecord
   end
 
   module SearchMethods
-    def empty
-      where("tags.post_count <= 0")
-    end
-
-    def nonempty
-      where("tags.post_count > 0")
+    def query_dsl
+      super
+        .field(:is_locked)
+        .field(:category, multi: true)
+        .custom(:name, ->(q, v) { q.name_matches(v) })
+        .custom(:name_matches, ->(q, v) { q.where.like(name: normalize_name(v)) })
+        # ref: https://www.postgresql.org/docs/current/static/pgtrgm.html#idm46428634524336
+        .custom(:fuzzy_name_matches, ->(q, v) { q.where("tags.name % ?", v) })
+        .present(:has_wiki, "wiki_pages.id") { |q| q.left_outer_joins(:wiki_page) }
+        .present(:has_artist, "artists.id") { |q| q.left_outer_joins(:artist) }
+        .association(:creator)
     end
 
     # ref: https://www.postgresql.org/docs/current/static/pgtrgm.html#idm46428634524336
@@ -309,67 +316,38 @@ class Tag < ApplicationRecord
       order(Arel.sql("trunc(3 * similarity(name, #{connection.quote(name)})) DESC"), "post_count DESC", "name DESC")
     end
 
-    # ref: https://www.postgresql.org/docs/current/static/pgtrgm.html#idm46428634524336
-    def fuzzy_name_matches(name)
-      where("tags.name % ?", name)
+    def name_matches(name)
+      where.like(name: normalize_name(name))
     end
 
-    def name_matches(name)
-      where("tags.name LIKE ? ESCAPE E'\\\\'", normalize_name(name).to_escaped_for_sql_like)
+    def has_wiki_query(q, value)
+      if value.to_s.truthy?
+        q.joins(:wiki_page).where.not("wiki_pages.id": nil)
+      else
+        q.left_outer_joins(:wiki_page).where("wiki_pages.id": nil)
+      end
+    end
+
+    def has_artist_query(q, value)
+      if value.to_s.truthy?
+        q.joins(:artist).where.not("artists.id": nil)
+      else
+        q.left_outer_joins(:artist).where("artists.id": nil)
+      end
     end
 
     def search(params, user)
       q = super
-
-      if params[:fuzzy_name_matches].present?
-        q = q.fuzzy_name_matches(params[:fuzzy_name_matches])
-      end
-
-      if params[:name_matches].present?
-        q = q.name_matches(params[:name_matches])
-      end
-
-      if params[:name].present?
-        q = q.where("tags.name": normalize_name(params[:name]).split(","))
-      end
-
-      if params[:category].present?
-        category_ids = params[:category].split(",").first(100).grep(/^\d+$/)
-        q = q.where(category: category_ids)
-      end
-
-      if params[:hide_empty].blank? || params[:hide_empty].to_s.truthy?
-        q = q.where("post_count > 0")
-      end
-
-      if params[:has_wiki].to_s.truthy?
-        q = q.joins(:wiki_page).where("wiki_pages.is_deleted = false")
-      elsif params[:has_wiki].to_s.falsy?
-        q = q.joins("LEFT JOIN wiki_pages ON tags.name = wiki_pages.title").where("wiki_pages.title IS NULL OR wiki_pages.is_deleted = true")
-      end
-
-      if params[:has_artist].to_s.truthy?
-        q = q.joins("INNER JOIN artists ON tags.name = artists.name")
-      elsif params[:has_artist].to_s.falsy?
-        q = q.joins("LEFT JOIN artists ON tags.name = artists.name").where("artists.name IS NULL")
-      end
-
-      q = q.attribute_matches(:is_locked, params[:is_locked])
-
-      case params[:order]
-      when "name"
-        q = q.order("name")
-      when "date"
-        q = q.order("id desc")
-      when "count"
-        q = q.order("post_count desc")
-      when "similarity"
-        q = q.order_similarity(params[:fuzzy_name_matches]) if params[:fuzzy_name_matches].present?
-      else
-        q = q.apply_basic_order(params)
-      end
-
+      q = q.nonempty if params[:hide_empty].blank? || params[:hide_empty].to_s.truthy?
       q
+    end
+
+    def apply_order(params)
+      order_with({
+        name:       { "tags.name": :asc },
+        count:      { "tags.post_count": :desc },
+        similarity: -> { order_similarity(params[:fuzzy_name_matches]) if params[:fuzzy_name_matches].present? },
+      }, params[:order])
     end
   end
 

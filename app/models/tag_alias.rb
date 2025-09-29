@@ -231,6 +231,6 @@ class TagAlias < TagRelationship
   end
 
   def self.fix_nonzero_post_counts!
-    TagAlias.joins(:antecedent_tag).where("tag_aliases.status in ('active', 'processing') AND tags.post_count != 0").find_each { |ta| ta.antecedent_tag.fix_post_count }
+    TagAlias.joins(:antecedent_tag).where("tag_aliases.status": %w[active processing]).where.not("tags.post_count": 0).find_each { |ta| ta.antecedent_tag.fix_post_count }
   end
 end

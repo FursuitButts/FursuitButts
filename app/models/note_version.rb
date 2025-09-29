@@ -3,33 +3,25 @@
 class NoteVersion < ApplicationRecord
   belongs_to_user(:updater, ip: true, counter_cache: "note_update_count")
   belongs_to(:note)
-  scope(:for_user, ->(user_id) { where("updater_id = ?", user_id) })
 
-  def self.search(params, user)
-    q = super
-
-    q = q.where_user(:updater_id, :updater, params)
-
-    if params[:post_id]
-      q = q.where(post_id: params[:post_id].split(",").map(&:to_i))
+  module SearchMethods
+    def query_dsl
+      super
+        .field(:post_id)
+        .field(:note_id)
+        .field(:is_active)
+        .field(:body_matches, :body)
+        .field(:ip_addr, :updater_ip_addr)
+        .association(:updater)
+        .association(:note)
+        .association(note: :post)
     end
-
-    if params[:note_id]
-      q = q.where(note_id: params[:note_id].split(",").map(&:to_i))
-    end
-
-    q = q.attribute_matches(:is_active, params[:is_active])
-    q = q.attribute_matches(:body, params[:body_matches])
-
-    if params[:ip_addr].present?
-      q = q.where("updater_ip_addr <<= ?", params[:ip_addr])
-    end
-
-    q.apply_basic_order(params)
   end
 
+  extend(SearchMethods)
+
   def previous
-    NoteVersion.where("note_id = ? and updated_at < ?", note_id, updated_at).order("updated_at desc").first
+    NoteVersion.where(note_id: note_id).where.lt(updated_at: updated_at).order(updated_at: :desc).first
   end
 
   def self.available_includes

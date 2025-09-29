@@ -22,6 +22,6 @@ class UploadWhitelistPolicy < ApplicationPolicy
   end
 
   def permitted_search_params
-    super + %i[allowed pattern note reason]
+    super + %i[allowed pattern note reason creator_id creator_name updater_id updater_name] + nested_search_params(creator: User, updater: User)
   end
 end

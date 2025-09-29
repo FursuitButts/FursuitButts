@@ -83,6 +83,7 @@ class Post < ApplicationRecord
   has_many(:flags, class_name: "PostFlag", dependent: :destroy)
   has_many(:votes, class_name: "PostVote", dependent: :destroy)
   has_many(:notes, dependent: :destroy)
+  has_many(:note_versions)
   has_many(:appeals, class_name: "PostAppeal", dependent: :destroy)
   has_many(:comments, -> { includes(:creator, :updater).order("comments.is_sticky DESC, comments.id") }, dependent: :destroy)
   has_many(:children, -> { order("posts.id") }, class_name: "Post", foreign_key: "parent_id")
@@ -114,7 +115,6 @@ class Post < ApplicationRecord
   scope(:not_flagged, -> { where(is_flagged: false) })
   scope(:pending_or_flagged, -> { pending.or(flagged) })
   scope(:has_notes, -> { where.not(last_noted_at: nil) })
-  scope(:for_user, ->(user_id) { where(uploader_id: user_id) })
   scope(:expired, -> { pending.where(posts: { created_at: ...PostPruner::MODERATION_WINDOW.days.ago }) })
   scope(:with_assets, -> { includes(:media_asset) })
   scope(:with_assets_and_metadata, -> { with_assets.includes(media_asset: :media_metadata) })
@@ -1886,6 +1886,21 @@ class Post < ApplicationRecord
     def tag_match_sql(query, user)
       PostQueryBuilder.new(query, user).search
     end
+
+    def search_uploaders(params, user)
+      q = all
+      QueryBuilder.new(uploaders_query_dsl.build, self, q, user)
+                  .search(params)
+                  .apply_uploaders_order(params)
+    end
+
+    def uploaders_query_dsl
+      QueryDSL.new(self).user(:user, :uploader)
+    end
+
+    def apply_uploaders_order(_params)
+      default_order
+    end
   end
 
   module IqdbMethods
@@ -2222,11 +2237,6 @@ class Post < ApplicationRecord
     else
       comments.visible(user).count
     end
-  end
-
-  def self.search_uploaders(params)
-    q = all
-    q.where_user(:uploader_id, :user, params)
   end
 
   def self.available_includes

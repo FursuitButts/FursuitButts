@@ -17,34 +17,36 @@ class Ban < ApplicationRecord
   validates(:reason, :duration, presence: true)
   validates(:reason, length: { minimum: 1, maximum: FemboyFans.config.user_feedback_max_size })
 
-  scope(:unexpired, -> { where("bans.expires_at > ? OR bans.expires_at IS NULL", Time.now) })
-  scope(:expired, -> { where.not(bans: { expires_at: nil }).where(bans: { expires_at: ..Time.now }) })
-  scope(:for_user, ->(user) { where(user_id: u2id(user)) })
+  scope(:unexpired, -> { where(expires_at: nil).or(where.gt(expires_at: Time.now)) })
+  scope(:expired, -> { where.not(expires_at: nil).or(where.lte(expires_at: Time.now)) })
 
   def self.is_banned?(user)
     unexpired.for_user(user).exists?
   end
 
-  def self.search(params, user)
-    q = super
-
-    q = q.where_user(:banner_id, :banner, params)
-    q = q.where_user(:user_id, :user, params)
-
-    q = q.attribute_matches(:reason, params[:reason_matches])
-
-    q = q.expired if params[:expired].to_s.truthy?
-    q = q.unexpired if params[:expired].to_s.falsy?
-
-    case params[:order]
-    when "expires_at_desc"
-      q = q.order("bans.expires_at desc")
-    else
-      q = q.apply_basic_order(params)
+  module SearchMethods
+    def search(params, user, visible: true)
+      super.if(params[:expired], -> { expired }).else(-> { unexpired })
     end
 
-    q
+    def query_dsl
+      super
+        .field(:reason_matches, :reason)
+        .field(:ip_addr, :banner_ip_addr)
+        .association(:banner)
+        .association(:user)
+    end
+
+    def apply_order(params)
+      order_with({
+        expires_at:      -> { order(arel(:expires_at).desc.nulls_last) },
+        expires_at_asc:  -> { order(arel(:expires_at).asc.nulls_last) },
+        expires_at_desc: -> { order(arel(:expires_at).desc.nulls_last) },
+      }, params[:order])
+    end
   end
+
+  extend(SearchMethods)
 
   def initialize_permaban
     if is_permaban.to_s.truthy?

@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class PostDisapproval < ApplicationRecord
-  belongs_to(:post)
   belongs_to_user(:user, ip: true)
+  belongs_to(:post)
   validates(:post_id, uniqueness: { scope: %i[user_id], message: "have already hidden this post" })
   validates(:reason, inclusion: { in: %w[borderline_quality borderline_relevancy other] })
   validates(:message, length: { maximum: FemboyFans.config.disapproval_message_max_size })
@@ -18,28 +18,18 @@ class PostDisapproval < ApplicationRecord
       where(post_id: Post.tag_match_sql(query, user))
     end
 
-    def search(params, user)
-      q = super
+    def query_dsl
+      super
+        .field(:post_id)
+        .field(:message)
+        .field(:reason)
+        .custom(:post_tags_match, ->(q, v, user) { q.post_tags_match(v, user) })
+        .custom(:has_message, ->(q, v) { q.if(v, q.with_message).else(q.without_message) })
+        .association(:user, :creator)
+    end
 
-      q = q.where_user(:user_id, :creator, params)
-
-      q = q.attribute_matches(:post_id, params[:post_id])
-      q = q.attribute_matches(:message, params[:message])
-
-      q = q.post_tags_match(params[:post_tags_match], user) if params[:post_tags_match].present?
-      q = q.where(reason: params[:reason]) if params[:reason].present?
-
-      q = q.with_message if params[:has_message].to_s.truthy?
-      q = q.without_message if params[:has_message].to_s.falsy?
-
-      case params[:order]
-      when "post_id", "post_id_desc"
-        q = q.order(post_id: :desc, id: :desc)
-      else
-        q = q.apply_basic_order(params)
-      end
-
-      q
+    def apply_order(params)
+      order_with(%i[post_id], params[:order])
     end
   end
 

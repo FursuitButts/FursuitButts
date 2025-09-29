@@ -73,44 +73,33 @@ class WikiPage < ApplicationRecord
     end
 
     def recent
-      order("updated_at DESC").limit(25)
+      default_order.limit(25)
     end
 
     def default_order
       order(updated_at: :desc)
     end
 
-    def search(params, user)
-      q = super
+    def query_dsl
+      super
+        .field(:title, like: true, normalize: ->(value) { value.downcase.strip.tr(" ", "_") })
+        .field(:body_matches, :body)
+        .field(:title_matches, :title)
+        .field(:protection_level)
+        .field(:parent, normalize: ->(value) { value.tr(" ", "_") })
+        .custom(:linked_to, ->(q, v) { q.linked_to(v) })
+        .custom(:not_linked_to, ->(q, v) { q.not_linked_to(v) })
+        .association(:creator)
+        .association(:updater)
+    end
 
-      if params[:title].present?
-        q = q.where("title LIKE ? ESCAPE E'\\\\'", params[:title].downcase.strip.tr(" ", "_").to_escaped_for_sql_like)
-      end
-
-      q = q.attribute_matches(:body, params[:body_matches])
-      q = q.attribute_matches(:title, params[:title_matches])
-      q = q.where_user(:creator_id, :creator, params)
-      q = q.attribute_matches(:protection_level, params[:protection_level])
-      q = q.attribute_matches(:parent, params[:parent].try(:tr, " ", "_"))
-
-      if params[:linked_to].present?
-        q = q.linked_to(params[:linked_to])
-      end
-
-      if params[:not_linked_to].present?
-        q = q.not_linked_to(params[:not_linked_to])
-      end
-
-      case params[:order]
-      when "title"
-        q = q.order("title")
-      when "post_count"
-        q = q.includes(:tag).order("tags.post_count desc nulls last").references(:tags)
-      else
-        q = q.apply_basic_order(params)
-      end
-
-      q
+    def apply_order(params)
+      order_with({
+        title:           { "wiki_pages.title": :asc },
+        post_count:      -> { includes(:tag).order(Tag.arel(:post_count).desc.nulls_last).references(:tags) },
+        post_count_asc:  -> { includes(:tag).order(Tag.arel(:post_count).asc.nulls_last).references(:tags) },
+        post_count_desc: -> { includes(:tag).order(Tag.arel(:post_count).desc.nulls_last).references(:tags) },
+      }, params[:order])
     end
   end
 

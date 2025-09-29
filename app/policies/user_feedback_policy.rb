@@ -34,7 +34,7 @@ class UserFeedbackPolicy < ApplicationPolicy
   end
 
   def permitted_search_params
-    params = super + %i[body_matches user_id user_name creator_id creator_name category order]
+    params = super + %i[body_matches user_id user_name creator_id creator_name updater_id updater_name category order] + nested_search_params(user: User, creator: User, updater: User)
     params += %i[deleted] if user.is_moderator?
     params
   end

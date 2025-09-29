@@ -236,7 +236,7 @@ class User < ApplicationRecord
   has_many(:notifications)
   has_many(:user_events)
 
-  scope(:has_blacklisted_tag, ->(name) { where_regex(:blacklisted_tags, "(^| )[~-]?#{Regexp.escape(name)}( |$)", flags: "ni") })
+  scope(:has_blacklisted_tag, ->(name) { where.regex(blacklisted_tags: "(^| )[~-]?#{Regexp.escape(name)}( |$)", flags: "ni") })
 
   belongs_to(:avatar, class_name: "Post", optional: true)
   accepts_nested_attributes_for(:dmail_filter)
@@ -567,12 +567,12 @@ class User < ApplicationRecord
       id.present? && email_verified?
     end
 
-    def mark_unverified!
-      update!(email_verified: false)
+    def mark_unverified!(user)
+      update!(email_verified: false, updater: user)
     end
 
-    def mark_verified!
-      update!(email_verified: true)
+    def mark_verified!(user)
+      update!(email_verified: true, updater: user)
     end
 
     def enable_email_verification?
@@ -775,46 +775,46 @@ class User < ApplicationRecord
       is_trusted?
     end
 
-    create_user_throttle(:artist_edit, -> { FemboyFans.config.artist_edit_limit - ArtistVersion.for_user(id).where("updated_at > ?", 1.hour.ago).count },
+    create_user_throttle(:artist_edit, -> { FemboyFans.config.artist_edit_limit - ArtistVersion.for_updater(id).where.gt(updated_at: 1.hour.ago).count },
                          :general_bypass_throttle?, 3.days, Levels::MEMBER..)
-    create_user_throttle(:post_edit, -> { FemboyFans.config.post_edit_limit - PostVersion.for_user(id).where("updated_at > ?", 1.hour.ago).count },
+    create_user_throttle(:post_edit, -> { FemboyFans.config.post_edit_limit - PostVersion.for_updater(id).where.gt(updated_at: 1.hour.ago).count },
                          :general_bypass_throttle?, 3.days, Levels::MEMBER..)
-    create_user_throttle(:post_appeal, -> { FemboyFans.config.post_appeal_limit - PostAppeal.for_user(id).where("updated_at > ?", 1.hour.ago).count },
+    create_user_throttle(:post_appeal, -> { FemboyFans.config.post_appeal_limit - PostAppeal.for_creator(id).where.gt(updated_at: 1.hour.ago).count },
                          :general_bypass_throttle?, 3.days, Levels::MEMBER..)
-    create_user_throttle(:wiki_edit, -> { FemboyFans.config.wiki_edit_limit - WikiPageVersion.for_user(id).where("updated_at > ?", 1.hour.ago).count },
+    create_user_throttle(:wiki_edit, -> { FemboyFans.config.wiki_edit_limit - WikiPageVersion.for_updater(id).where.gt(updated_at: 1.hour.ago).count },
                          :general_bypass_throttle?, 3.days, Levels::MEMBER..)
-    create_user_throttle(:pool, -> { FemboyFans.config.pool_limit - Pool.for_user(id).where("created_at > ?", 1.hour.ago).count },
+    create_user_throttle(:pool, -> { FemboyFans.config.pool_limit - Pool.for_creator(id).where.gt(created_at: 1.hour.ago).count },
                          :is_janitor?, 3.days, Levels::MEMBER..)
-    create_user_throttle(:pool_edit, -> { FemboyFans.config.pool_edit_limit - PoolVersion.for_user(id).where("updated_at > ?", 1.hour.ago).count },
+    create_user_throttle(:pool_edit, -> { FemboyFans.config.pool_edit_limit - PoolVersion.for_updater(id).where.gt(updated_at: 1.hour.ago).count },
                          :is_janitor?, 3.days, Levels::MEMBER..)
-    create_user_throttle(:pool_post_edit, -> { FemboyFans.config.pool_post_edit_limit - PoolVersion.for_user(id).where("updated_at > ?", 1.hour.ago).group(:pool_id).count(:pool_id).length },
+    create_user_throttle(:pool_post_edit, -> { FemboyFans.config.pool_post_edit_limit - PoolVersion.for_updater(id).where.gt(updated_at: 1.hour.ago).group(:pool_id).count(:pool_id).length },
                          :general_bypass_throttle?, 3.days, Levels::MEMBER..)
-    create_user_throttle(:note_edit, -> { FemboyFans.config.note_edit_limit - NoteVersion.for_user(id).where("updated_at > ?", 1.hour.ago).count },
+    create_user_throttle(:note_edit, -> { FemboyFans.config.note_edit_limit - NoteVersion.for_updater(id).where.gt(updated_at: 1.hour.ago).count },
                          :general_bypass_throttle?, 3.days, Levels::MEMBER..)
-    create_user_throttle(:comment, -> { FemboyFans.config.member_comment_limit - Comment.for_creator(id).where("created_at > ?", 1.hour.ago).count },
+    create_user_throttle(:comment, -> { FemboyFans.config.member_comment_limit - Comment.for_creator(id).where.gt(created_at: 1.hour.ago).count },
                          :general_bypass_throttle?, 3.days, Levels::MEMBER..)
-    create_user_throttle(:forum_post, -> { FemboyFans.config.member_comment_limit - ForumPost.for_user(id).where("created_at > ?", 1.hour.ago).count },
+    create_user_throttle(:forum_post, -> { FemboyFans.config.member_comment_limit - ForumPost.for_creator(id).where.gt(created_at: 1.hour.ago).count },
                          :general_bypass_throttle?, 3.days, Levels::MEMBER..)
-    create_user_throttle(:dmail_minute, -> { FemboyFans.config.dmail_minute_limit - Dmail.sent_by_id(id).where("created_at > ?", 1.minute.ago).count },
+    create_user_throttle(:dmail_minute, -> { FemboyFans.config.dmail_minute_limit - Dmail.sent_by_id(id).where.gt(created_at: 1.minute.ago).count },
                          :is_janitor?, 3.days, Levels::MEMBER..)
-    create_user_throttle(:dmail, -> { FemboyFans.config.dmail_limit - Dmail.sent_by_id(id).where("created_at > ?", 1.hour.ago).count },
+    create_user_throttle(:dmail, -> { FemboyFans.config.dmail_limit - Dmail.sent_by_id(id).where.gt(created_at: 1.hour.ago).count },
                          :is_janitor?, 3.days, Levels::MEMBER..)
-    create_user_throttle(:dmail_day, -> { FemboyFans.config.dmail_day_limit - Dmail.sent_by_id(id).where("created_at > ?", 1.day.ago).count },
+    create_user_throttle(:dmail_day, -> { FemboyFans.config.dmail_day_limit - Dmail.sent_by_id(id).where.gt(created_at: 1.day.ago).count },
                          :is_janitor?, 3.days, Levels::MEMBER..)
     # dmails sent by a user of the "restricted" level
-    create_user_throttle(:dmail_restricted, -> { FemboyFans.config.dmail_restricted_day_limit - Dmail.sent_by_id(id).where("created_at > ?", 1.day.ago).count },
+    create_user_throttle(:dmail_restricted, -> { FemboyFans.config.dmail_restricted_day_limit - Dmail.sent_by_id(id).where.gt(created_at: 1.day.ago).count },
                          :general_bypass_throttle?, nil, Levels::RESTRICTED)
-    create_user_throttle(:comment_vote, -> { FemboyFans.config.comment_vote_limit - CommentVote.for_user(id).where("created_at > ?", 1.hour.ago).count },
+    create_user_throttle(:comment_vote, -> { FemboyFans.config.comment_vote_limit - CommentVote.for_user(id).where.gt(created_at: 1.hour.ago).count },
                          :general_bypass_throttle?, 3.days, Levels::MEMBER..)
-    create_user_throttle(:post_vote, -> { FemboyFans.config.post_vote_limit - PostVote.for_user(id).where("created_at > ?", 1.hour.ago).count },
+    create_user_throttle(:post_vote, -> { FemboyFans.config.post_vote_limit - PostVote.for_user(id).where.gt(created_at: 1.hour.ago).count },
                          :general_bypass_throttle?, nil, Levels::RESTRICTED..)
-    create_user_throttle(:post_flag, -> { FemboyFans.config.post_flag_limit - PostFlag.for_creator(id).where("created_at > ?", 1.hour.ago).count },
+    create_user_throttle(:post_flag, -> { FemboyFans.config.post_flag_limit - PostFlag.for_creator(id).where.gt(created_at: 1.hour.ago).count },
                          :can_approve_posts?, 3.days, Levels::MEMBER..)
-    create_user_throttle(:ticket, -> { FemboyFans.config.ticket_limit - Ticket.for_creator(id).where("created_at > ?", 1.hour.ago).count },
+    create_user_throttle(:ticket, -> { FemboyFans.config.ticket_limit - Ticket.for_creator(id).where.gt(created_at: 1.hour.ago).count },
                          :general_bypass_throttle?, 3.days, Levels::MEMBER..)
-    create_user_throttle(:suggest_tag, -> { FemboyFans.config.tag_suggestion_limit - (TagAlias.for_creator(id).where("created_at > ?", 1.hour.ago).count + TagImplication.for_creator(id).where("created_at > ?", 1.hour.ago).count + BulkUpdateRequest.for_creator(id).where("created_at > ?", 1.hour.ago).count) },
+    create_user_throttle(:suggest_tag, -> { FemboyFans.config.tag_suggestion_limit - (TagAlias.for_creator(id).where.gt(created_at: 1.hour.ago).count + TagImplication.for_creator(id).where.gt(created_at: 1.hour.ago).count + BulkUpdateRequest.for_creator(id).where.gt(created_at: 1.hour.ago).count) },
                          :is_janitor?, 3.days, Levels::MEMBER..)
-    create_user_throttle(:forum_vote, -> { FemboyFans.config.forum_vote_limit - ForumPostVote.by(id).where("created_at > ?", 1.hour.ago).count },
+    create_user_throttle(:forum_vote, -> { FemboyFans.config.forum_vote_limit - ForumPostVote.for_user(id).where.gt(created_at: 1.hour.ago).count },
                          :general_bypass_throttle?, 3.days, Levels::MEMBER..)
 
     def can_remove_from_pools?
@@ -878,12 +878,12 @@ class User < ApplicationRecord
 
     def upload_limit_pieces
       @upload_limit_pieces ||= begin
-        deleted_count = Post.deleted.for_user(id).count
+        deleted_count = Post.deleted.for_uploader(id).count
         rejected_replacement_count = post_replacement_rejected_count
         replaced_penalize_count = own_post_replaced_penalize_count
-        unapproved_count = Post.pending_or_flagged.for_user(id).count
+        unapproved_count = Post.pending_or_flagged.for_uploader(id).count
         unapproved_replacements_count = post_replacements.pending.count
-        approved_count = Post.for_user(id).where(is_flagged: false, is_deleted: false, is_pending: false).count
+        approved_count = Post.for_uploader(id).where(is_flagged: false, is_deleted: false, is_pending: false).count
 
         {
           deleted:        deleted_count + replaced_penalize_count + rejected_replacement_count,
@@ -896,10 +896,10 @@ class User < ApplicationRecord
 
     def uploaders_list_pieces
       @uploaders_list_pieces ||= {
-        pending:              Post.pending.for_user(id).count,
-        approved:             Post.for_user(id).where(is_flagged: false, is_deleted: false, is_pending: false).count,
-        deleted:              Post.deleted.for_user(id).count,
-        flagged:              Post.flagged.for_user(id).count,
+        pending:              Post.pending.for_uploader(id).count,
+        approved:             Post.for_uploader(id).where(is_flagged: false, is_deleted: false, is_pending: false).count,
+        deleted:              Post.deleted.for_uploader(id).count,
+        flagged:              Post.flagged.for_uploader(id).count,
         replaced:             own_post_replaced_count,
         replacement_pending:  post_replacements.pending.count,
         replacement_rejected: post_replacement_rejected_count,
@@ -1002,18 +1002,18 @@ class User < ApplicationRecord
     def refresh_counts!
       self.class.without_timeout do
         User.where(id: id).update_all(
-          post_count:                       Post.for_user(id).count,
-          post_deleted_count:               Post.for_user(id).deleted.count,
-          post_update_count:                PostVersion.for_user(id).count,
+          post_count:                       Post.for_uploader(id).count,
+          post_deleted_count:               Post.for_uploader(id).deleted.count,
+          post_update_count:                PostVersion.for_updater(id).count,
           post_flag_count:                  PostFlag.for_creator(id).count,
           favorite_count:                   Favorite.for_user(id).count,
-          wiki_update_count:                WikiPageVersion.for_user(id).count,
-          note_update_count:                NoteVersion.for_user(id).count,
-          forum_post_count:                 ForumPost.for_user(id).count,
+          wiki_update_count:                WikiPageVersion.for_updater(id).count,
+          note_update_count:                NoteVersion.for_updater(id).count,
+          forum_post_count:                 ForumPost.for_creator(id).count,
           comment_count:                    Comment.for_creator(id).count,
-          pool_update_count:                PoolVersion.for_user(id).count,
+          pool_update_count:                PoolVersion.for_updater(id).count,
           set_count:                        PostSet.owned_by(self).count,
-          artist_update_count:              ArtistVersion.for_user(id).count,
+          artist_update_count:              ArtistVersion.for_updater(id).count,
           own_post_replaced_count:          PostReplacement.for_uploader_on_approve(id).count,
           own_post_replaced_penalize_count: PostReplacement.penalized.for_uploader_on_approve(id).count,
           post_replacement_rejected_count:  post_replacements.rejected.count,
@@ -1028,60 +1028,43 @@ class User < ApplicationRecord
 
   module SearchMethods
     def admins
-      where("level = ?", Levels::ADMIN)
+      where(level: Levels::ADMIN)
     end
 
     def with_email(email)
       if email.blank?
-        where("FALSE")
+        none
       else
         where("lower(email) = lower(?)", email)
       end
     end
 
-    def search(params, user)
-      q = super
+    def query_dsl
+      super
+        .field(:level)
+        .field(:avatar_id)
+        .field(:email_matches, :email, ilike: true)
+        .field(:name_matches, :name, ilike: true, normalize: method(:normalize_name).to_proc)
+        .field(:ip_addr, :last_ip_addr)
+        .custom(:about_me, ->(q, v) { q.attribute_matches(:profile_about, v).or(q.attribute_matches(:profile_artinfo, v)) })
+        .custom(:min_level, ->(q, v) { q.where.gteq(level: v) })
+        .custom(:max_level, ->(q, v) { q.where.lteq(level: v) })
+        .custom(:can_approve_posts, ->(q, v) { bitprefs_query(q, v, :can_approve_posts) })
+        .custom(:unrestricted_uploads, ->(q, v) { bitprefs_query(q, v, :unrestricted_uploads) })
+    end
 
-      q = q.attribute_matches(:level, params[:level])
-
-      if params[:about_me].present?
-        q = q.attribute_matches(:profile_about, params[:about_me]).or(attribute_matches(:profile_artinfo, params[:about_me]))
-      end
-
-      if params[:avatar_id].present?
-        q = q.where(avatar_id: params[:avatar_id])
-      end
-
-      if params[:email_matches].present?
-        q = q.where_ilike(:email, params[:email_matches])
-      end
-
-      if params[:name_matches].present?
-        q = q.where_ilike(:name, normalize_name(params[:name_matches]))
-      end
-
-      if params[:min_level].present?
-        q = q.where(level: params[:min_level].to_i..)
-      end
-
-      if params[:max_level].present?
-        q = q.where(level: ..params[:max_level].to_i)
-      end
-
+    def bitprefs_query(q, value, pref)
       bitprefs_length = Preferences.constants.length
       bitprefs_include = nil
       bitprefs_exclude = nil
 
-      %i[can_approve_posts unrestricted_uploads].each do |x|
-        next if params[x].blank?
-        attr_idx = Preferences.index(x.upcase)
-        if params[x].to_s.truthy?
-          bitprefs_include ||= "0" * bitprefs_length
-          bitprefs_include[attr_idx] = "1"
-        elsif params[x].to_s.falsy?
-          bitprefs_exclude ||= "0" * bitprefs_length
-          bitprefs_exclude[attr_idx] = "1"
-        end
+      attr_idx = Preferences.index(pref.upcase)
+      if value.to_s.truthy?
+        bitprefs_include ||= "0" * bitprefs_length
+        bitprefs_include[attr_idx] = "1"
+      elsif value.to_s.falsy?
+        bitprefs_exclude ||= "0" * bitprefs_length
+        bitprefs_exclude[attr_idx] = "1"
       end
 
       if bitprefs_include
@@ -1095,25 +1078,16 @@ class User < ApplicationRecord
         q = q.where("bit_prefs::bit(:len) & :bits::bit(:len) = 0::bit(:len)",
                     { len: bitprefs_length, bits: bitprefs_exclude })
       end
-
-      if params[:ip_addr].present?
-        q = q.where("last_ip_addr <<= ?", params[:ip_addr])
-      end
-
-      case params[:order]
-      when "name"
-        q = q.order("name")
-      when "post_upload_count"
-        q = q.order("post_count desc")
-      when "note_count"
-        q = q.order("note_update_count desc")
-      when "post_update_count"
-        q = q.order("post_update_count desc")
-      else
-        q = q.apply_basic_order(params)
-      end
-
       q
+    end
+
+    def apply_order(params)
+      order_with({
+        name:              { "users.name": :asc },
+        post_upload_count: { "users.post_count": :desc },
+        note_count:        { "users.note_update_count": :desc },
+        post_update_count: { "users.post_update_count": :desc },
+      }, params[:order])
     end
   end
 
@@ -1371,20 +1345,6 @@ class User < ApplicationRecord
   def sanitize_upload_notifications
     self.upload_notifications = upload_notifications.compact_blank.uniq
   end
-
-  # rubocop:disable Local/CurrentUserOutsideOfRequests -- TODO
-  def use(ip_addr = nil, &)
-    if block_given?
-      CurrentUser.scoped(self, ip_addr || last_ip_addr || "127.0.0.1", &)
-    else
-      CurrentUser.user = self
-      CurrentUser.ip_addr = ip_addr || last_ip_addr || "127.0.0.1"
-    end
-  end
-  alias set_user use
-  alias scoped use
-  alias as use
-  # rubocop:enable Local/CurrentUserOutsideOfRequests
 
   def resolvable(ip_addr = nil)
     UserResolvable.new(self, ip_addr || last_ip_addr || "127.0.0.1")

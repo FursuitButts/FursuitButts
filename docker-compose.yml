@@ -195,7 +195,7 @@ services:
       - "${EXPOSED_ELASTICSEARCH_PORT:-49200}:9200"
 
   iqdb:
-    image: ghcr.io/e621ng/iqdb:ad5e363879d4e4b80a0821253ae610b7859c5d32
+    image: ghcr.io/earlopain/iqdb:d274d333c9067f19edd4e619b7bd89cf1c294d50
     command: iqdb http 0.0.0.0 5588 /iqdb/iqdb.db
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://127.0.0.1:5588/status || exit 1

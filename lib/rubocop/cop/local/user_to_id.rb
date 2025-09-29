@@ -34,7 +34,7 @@ module RuboCop
           node&.send_type? && node.method?(:id)
         end
 
-        def same_value?(a, b) # rubocop:disable Naming/MethodParameterName
+        def same_value?(a, b)
           a && b && a.source == b.source
         end
       end

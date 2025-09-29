@@ -134,6 +134,10 @@ class ApplicationPolicy
     %i[id created_at updated_at order]
   end
 
+  def nested_search_params(**kwargs)
+    [kwargs.transform_values { |v| policy(v).permitted_search_params }]
+  end
+
   def api_attributes
     attr = record.class.column_names.map(&:to_sym)
     attr -= %i[uploader_ip_addr updater_ip_addr creator_ip_addr user_ip_addr ip_addr] unless can_see_ip_addr?

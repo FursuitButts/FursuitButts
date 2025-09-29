@@ -119,7 +119,7 @@ class GitHelper
   class Comparison
     attr_accessor(:a, :b)
 
-    def initialize(a, b) # rubocop:disable Naming/MethodParameterName
+    def initialize(a, b)
       @a = a
       @b = b
     end

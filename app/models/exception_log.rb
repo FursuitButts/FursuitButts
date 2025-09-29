@@ -39,27 +39,32 @@ class ExceptionLog < ApplicationRecord
   rescue ActiveRecord::StatementInvalid => e
     TraceLogger.error("ExceptionLog", "Failed to log exception: #{e.message}")
     TraceLogger.error(exception)
+    nil
   end
 
   def user
     User.find_by(id: extra_params["user_id"])
   end
 
-  def self.search(params, user)
-    q = super
-
-    if params[:commit].present?
-      q = q.where(version: params[:commit])
+  module SearchMethods
+    def query_dsl
+      super
+        .field(:class_name)
+        .field(:message)
+        .field(:trace)
+        .field(:code)
+        .field(:commit, :version)
+        .field(:ip_addr)
     end
 
-    if params[:class_name].present?
-      q = q.where(class_name: params[:class_name])
+    def apply_order(params)
+      order_with({
+        class_name: :asc,
+        message:    :asc,
+        code:       :desc,
+      }, params[:order])
     end
-
-    if params[:without_class_name].present?
-      q = q.where.not(class_name: params[:without_class_name])
-    end
-
-    q.apply_basic_order(params)
   end
+
+  extend(SearchMethods)
 end

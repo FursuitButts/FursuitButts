@@ -30,7 +30,6 @@ class Notification < ApplicationRecord
 
   scope(:read, -> { where(is_read: true) })
   scope(:unread, -> { where(is_read: false) })
-  scope(:for_user, ->(user) { where(user_id: u2id(user)) })
 
   def h
     Rails.application.routes.url_helpers
@@ -111,15 +110,13 @@ class Notification < ApplicationRecord
   end
 
   module SearchMethods
-    def search(params, user)
-      q = super
-      q = q.attribute_matches(:category, Notification.categories.fetch(params[:category], params[:category]).to_s) if params[:category].present?
-      if params[:order].present?
-        q = q.apply_basic_order(params)
-      else
-        q = q.order(:is_read, id: :desc)
-      end
-      q
+    def default_order
+      order(is_read: :asc, id: :desc)
+    end
+
+    def query_dsl
+      super
+        .field(:category)
     end
   end
 

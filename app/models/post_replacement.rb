@@ -29,8 +29,6 @@ class PostReplacement < ApplicationRecord
   after_destroy(-> { post.update_index })
   after_commit(:delete_files, on: :destroy)
 
-  scope(:for_user, ->(user) { where(creator_id: u2id(user)) })
-  scope(:for_uploader_on_approve, ->(user) { where(uploader_id_on_approve: u2id(user)) })
   scope(:penalized, -> { where(penalize_uploader_on_approve: true) })
   scope(:not_penalized, -> { where(penalize_uploader_on_approve: false) })
 
@@ -87,11 +85,11 @@ class PostReplacement < ApplicationRecord
     # Janitor bypass replacement limits
     return true if creator.is_janitor?
 
-    if post.replacements.where(creator_id: creator.id).where("created_at > ?", 1.day.ago).count > FemboyFans.config.post_replacement_per_day_limit
+    if post.replacements.for_creator(creator_id).where.gt(created_at: 1.day.ago).count > FemboyFans.config.post_replacement_per_day_limit
       errors.add(:creator, "has already suggested too many replacements for this post today")
       throw(:abort)
     end
-    if post.replacements.pending.where(creator_id: creator.id).count > FemboyFans.config.post_replacement_per_post_limit
+    if post.replacements.pending.for_creator(creator_id).count > FemboyFans.config.post_replacement_per_post_limit
       errors.add(:creator, "already has too many pending replacements for this post")
       throw(:abort)
     end
@@ -321,27 +319,24 @@ class PostReplacement < ApplicationRecord
   end
 
   module SearchMethods
-    def search(params, user)
-      q = super
-
-      q = q.joins(:post_replacement_media_asset).where("post_replacement_media_assets.file_ext": params[:file_ext]) if params[:file_ext]
-      q = q.joins(:post_replacement_media_asset).where("post_replacement_media_assets.md5": params[:md5]) if params[:md5]
-      q = q.attribute_exact_matches(:status, params[:status])
-
-      q = q.where_user(:creator_id, :creator, params)
-      q = q.where_user(:approver_id, :approver, params)
-      q = q.where_user(:rejector_id, :rejector, params)
-      q = q.where_user(:uploader_id_on_approve, %i[uploader_name_on_approve uploader_id_on_approve], params)
-
-      if params[:post_id].present?
-        q = q.where("post_replacements.post_id in (?)", params[:post_id].split(",").first(100).map(&:to_i))
-      end
-
-      q.apply_basic_order(params)
+    def query_dsl
+      super
+        .field(:file_ext, "post_replacement_media_assets.file_ext") { |q| q.joins(:post_replacement_media_asset) }
+        .field(:md5, "post_replacement_media_assets.md5") { |q| q.joins(:post_replacement_media_asset) }
+        .field(:status)
+        .field(:post_id)
+        .user(%i[uploader_id_on_approve uploader_name_on_approve], :uploader_on_approve)
+        .association(:creator)
+        .association(:approver)
+        .association(:rejector)
+        .association(:uploader_on_approve) # no support for custom columns
     end
 
     def default_order
-      order(Arel.sql("CASE post_replacements.status WHEN 'pending' THEN 0 WHEN 'original' THEN 2 ELSE 1 END ASC, id DESC"))
+      order(arel_case(:status).when("pending").then(0)
+                              .when("original").then(2)
+                              .else(1)
+                              .asc, id: :desc)
     end
   end
 

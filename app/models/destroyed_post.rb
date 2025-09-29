@@ -12,33 +12,16 @@ class DestroyedPost < ApplicationRecord
   end
 
   module SearchMethods
-    def search(params, user)
-      q = super
-
-      q = q.where_user(:destroyer_id, :destroyer, params)
-      q = q.where_user(:uploader_id, :uploader, params)
-
-      if params[:destroyer_ip_addr].present?
-        q = q.where("destroyer_ip_addr <<= ?", params[:destroyer_ip_addr])
-      end
-
-      if params[:uploader_ip_addr].present?
-        q = q.where("uploader_ip_addr <<= ?", params[:uploader_ip_addr])
-      end
-
-      if params[:post_id].present?
-        q = q.attribute_matches(:post_id, params[:post_id])
-      end
-
-      if params[:md5].present?
-        q = q.attribute_matches(:md5, params[:md5])
-      end
-
-      if params[:reason_matches].present?
-        q = q.attribute_matches(:reason, params[:reason_matches])
-      end
-
-      q.apply_basic_order(params)
+    def query_dsl
+      super
+        .field(:post_id)
+        .field(:md5)
+        .field(:notify)
+        .field(:reason_matches, :reason)
+        .field(:destroyer_ip_addr)
+        .field(:uploader_ip_addr)
+        .association(:destroyer)
+        .association(:uploader)
     end
   end
 

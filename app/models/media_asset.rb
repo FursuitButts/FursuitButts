@@ -115,6 +115,10 @@ class MediaAsset < ApplicationRecord
     is_a?(MediaAssetWithVariants)
   end
 
+  def self.model
+    name.delete_suffix("MediaAsset").constantize
+  end
+
   def in_progress?
     %w[pending uploading].include?(status)
   end
@@ -333,17 +337,17 @@ class MediaAsset < ApplicationRecord
   end
 
   module SearchMethods
-    def search(params, user)
-      q = super
-      q = q.attribute_matches(:checksum, params[:checksum])
-      q = q.attribute_matches(:md5, params[:md5])
-      q = q.attribute_matches(:file_ext, params[:file_ext])
-      q = q.attribute_matches(:pixel_hash, params[:pixel_hash])
-      q = q.attribute_matches(:status, params[:status])
-      q = q.attribute_matches(:status_message, params[:status_message_matches])
-      q = q.where_user(:creator_id, :creator, params)
-
-      q.apply_basic_order(params)
+    def query_dsl
+      super
+        .field(:checksum)
+        .field(:md5)
+        .field(:file_ext)
+        .field(:pixel_hash)
+        .field(:status)
+        .field(:status_message_matches, :status_message)
+        .field(:"#{model.name.underscore}_id", "#{model.table_name}.id") { |q| q.joins(model.name.underscore.to_sym) }
+        .association(:creator)
+        .association(model.name.underscore.to_sym)
     end
   end
 

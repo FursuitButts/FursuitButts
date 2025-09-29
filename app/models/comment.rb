@@ -44,7 +44,7 @@ class Comment < ApplicationRecord
 
   module SearchMethods
     def recent
-      reorder("comments.id desc").limit(RECENT_COUNT)
+      reorder(id: :desc).limit(RECENT_COUNT)
     end
 
     def hidden(user)
@@ -56,56 +56,34 @@ class Comment < ApplicationRecord
     end
 
     def post_tags_match(query, user)
-      where(post_id: Post.tag_match_sql(query, user).order(id: :desc).limit(300))
+      return all if query.nil?
+      joins(:post).merge(Post.tag_match_sql(query, user))
     end
 
-    def search(params, user)
-      q = super.includes(:creator).includes(:updater).includes(:post)
-
-      q = q.attribute_matches(:body, params[:body_matches])
-
-      if params[:post_id].present?
-        q = q.where("post_id in (?)", params[:post_id].split(",").map(&:to_i))
-      end
-
-      if params[:post_tags_match].present?
-        q = q.post_tags_match(params[:post_tags_match], user)
-      end
-
-      with_resolved_user_ids(:post_note_updater, params) do |user_ids|
-        q = q.where(post_id: NoteVersion.select(:post_id).where(updater_id: user_ids))
-      end
-
-      q = q.where_user(:creator_id, :creator, params)
-
-      if params[:ip_addr].present?
-        q = q.where("creator_ip_addr <<= ?", params[:ip_addr])
-      end
-
-      q = q.attribute_matches(:is_hidden, params[:is_hidden])
-      q = q.attribute_matches(:is_sticky, params[:is_sticky])
-
-      case params[:order]
-      when "post_id", "post_id_desc"
-        q = q.order("comments.post_id DESC, comments.created_at DESC")
-      when "score", "score_desc"
-        q = q.order("comments.score DESC, comments.created_at DESC")
-      when "updated_at", "updated_at_desc"
-        q = q.order("comments.updated_at DESC")
+    def apply_order(params)
+      # Force a better query plan
+      if params[:order].blank? && %i[body_matches creator_name creator_id].any? { |key| params[key].present? }
+        order(created_at: :desc)
       else
-        # Force a better query plan
-        if %i[body_matches creator_name creator_id].any? { |key| params[key].present? }
-          q = q.order(created_at: :desc)
-        else
-          q = q.apply_basic_order(params)
-        end
+        order_with(%i[post_id score], params[:order])
       end
+    end
 
-      q.where_user(:"posts.uploader_id", :poster, params) do |condition, _ids|
-        condition = condition.joins(:post)
+    def query_dsl
+      super
+        .field(:body_matches, :body)
+        .field(:post_id)
+        .field(:ip_addr, :creator_ip_addr)
+        .field(:is_hidden)
+        .field(:is_sticky)
+        .field(:is_spam)
         # Force a better query plan by ordering by created_at
-        condition.reorder("comments.created_at desc")
-      end
+        # .user(:poster, "posts.uploader_id") { |q| q.joins(:post).reorder(created_at: :desc) }
+        .custom(:post_tags_match, ->(q, v) { q.post_tags_match(v) })
+        .custom(:post_note_updater_id, ->(q, v) { q.where(post_id: NoteVersion.select(:post_id).where(updater_id: v.to_s.split(",").map(&:to_i))) })
+        .custom(:post_note_updater_name, ->(q, v) { q.where(post_id: NoteVersion.select(:post_id).user_name_matches(:updater, v)) })
+        .association(:creator)
+        .association(post: :uploader, as: :poster)
     end
   end
 

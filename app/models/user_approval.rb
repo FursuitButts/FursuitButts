@@ -11,14 +11,11 @@ class UserApproval < ApplicationRecord
   })
 
   module SearchMethods
-    def search(params, user)
-      q = super
-
-      q = q.where_user(:user_id, :user, params)
-      q = q.where_user(:updater_id, :updater, params)
-      q = q.where(status: params[:status]) if params[:status].present?
-
-      q.apply_basic_order(params)
+    def query_dsl
+      super
+        .field(:status)
+        .association(:user)
+        .association(:updater)
     end
   end
 

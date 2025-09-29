@@ -193,7 +193,7 @@ class PostsController < ApplicationController
   end
 
   def uploaders
-    @relation = authorize(Post).where(is_pending: true).search_uploaders(search_params(Post)).group(:uploader_id).order("COUNT(uploader_id) DESC").paginate(params[:page], limit: params[:limit] || 20)
+    @relation = authorize(Post).pending.search_uploaders(search_params(Post), CurrentUser.user).group(:uploader_id).reorder("COUNT(posts.uploader_id) DESC").paginate(params[:page], limit: params[:limit] || 20)
     @counts = @relation.count
     @users = User.where(id: @counts.keys)
   end

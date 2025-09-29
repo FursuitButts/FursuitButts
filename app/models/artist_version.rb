@@ -9,41 +9,23 @@ class ArtistVersion < ApplicationRecord
   belongs_to_user(:linked_user, optional: true)
 
   module SearchMethods
-    def for_user(user_id)
-      where("updater_id = ?", user_id)
+    def apply_order(params)
+      order_with(%i[artist_id name], params[:order])
     end
 
-    def search(params, user)
-      q = super
-
-      if params[:artist_name].present?
-        q = q.where("name like ? escape E'\\\\'", params[:artist_name].to_escaped_for_sql_like)
-      end
-
-      q = q.where_user(:updater_id, :updater, params)
-
-      if params[:artist_id].present?
-        q = q.where(artist_id: params[:artist_id].split(",").map(&:to_i))
-      end
-
-      if params[:ip_addr].present?
-        q = q.where("updater_ip_addr <<= ?", params[:ip_addr])
-      end
-
-      if params[:order] == "name"
-        q = q.order("artist_versions.name").default_order
-      else
-        q = q.apply_basic_order(params)
-      end
-
-      q
+    def query_dsl
+      super
+        .field(:artist_name, :name)
+        .field(:artist_id)
+        .field(:ip_addr, :updater_ip_addr)
+        .association(:updater)
     end
   end
 
   extend(SearchMethods)
 
   def previous
-    ArtistVersion.where("artist_id = ? and created_at < ?", artist_id, created_at).order("created_at desc").first
+    ArtistVersion.where(artist_id: artist_id).where.lt(created_at: created_at).order(created_at: :desc).first
   end
 
   def self.available_includes

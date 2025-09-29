@@ -4,8 +4,6 @@ class UserEvent < ApplicationRecord
   belongs_to_user(:user, ip: true)
   belongs_to(:user_session)
 
-  scope(:for_user, ->(user) { where(user_id: u2id(user)) })
-
   enum(:category, {
     login:                                   0,
     reauthenticate:                          25,
@@ -46,16 +44,13 @@ class UserEvent < ApplicationRecord
   end
 
   module SearchMethods
-    def search(params, user)
-      q = super
-      q = q.where_user(:user_id, :user, params)
-      q = q.attribute_matches(:category, params[:category])
-      q = q.attribute_matches(:session_id, params[:session_id])
-      q = q.attribute_matches(:user_agent, params[:user_agent])
-      if params[:ip_addr].present?
-        q = q.where("user_ip_addr <<= ?", params[:ip_addr])
-      end
-      q.apply_basic_order(params)
+    def query_dsl
+      super
+        .field(:category)
+        .field(:session_id)
+        .field(:user_agent)
+        .field(:ip_addr, :user_ip_addr)
+        .association(:user)
     end
   end
 

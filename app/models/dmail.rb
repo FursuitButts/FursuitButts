@@ -119,23 +119,16 @@ class Dmail < ApplicationRecord
       end
     end
 
-    def search(params, user)
-      q = super
-
-      q = q.attribute_matches(:title, params[:title_matches])
-      q = q.attribute_matches(:body, params[:message_matches])
-
-      q = q.where_user(:to_id, :to, params)
-      q = q.where_user(:from_id, :from, params)
-      q = q.where_user(:owner_id, :owner, params)
-
-      q = q.attribute_matches(:is_read, params[:is_read])
-      q = q.attribute_matches(:is_deleted, params[:is_deleted])
-
-      q = q.read if params[:read].to_s.truthy?
-      q = q.unread if params[:read].to_s.falsy?
-
-      q.order(created_at: :desc)
+    def query_dsl
+      super
+        .field(:title_matches, :title)
+        .field(:message_matches, :body)
+        .field(:is_read)
+        .field(:is_deleted)
+        .custom(:read, ->(q, v) { q.if(v, q.read).else(q.unread) })
+        .association(:to)
+        .association(:from)
+        .association(:owner)
     end
   end
 

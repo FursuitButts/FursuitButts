@@ -63,7 +63,7 @@ class PostSetPolicy < ApplicationPolicy
   end
 
   def permitted_search_params
-    params = super + %i[name shortname creator_id creator_name post_id maintainer_id]
+    params = super + %i[name shortname creator_id creator_name post_id maintainer_id] + nested_search_params(creator: User, updater: User)
     params << :is_public if user.is_moderator?
     params
   end

@@ -22,7 +22,7 @@ class MediaAssetPolicy < ApplicationPolicy
   end
 
   def permitted_search_params
-    super + %i[checksum md5 file_ext pixel_hash status status_message_matches creator_id creator_name]
+    super + %I[checksum md5 file_ext pixel_hash status status_message_matches creator_id creator_name #{model.model.name.underscore}_id] + nested_search_params(creator: User, "#{model.model.name.underscore}": model.model)
   end
 
   def api_attributes
@@ -33,5 +33,9 @@ class MediaAssetPolicy < ApplicationPolicy
     q = super
     return q if user.is_staff?
     q.for_creator(user)
+  end
+
+  def model
+    self.class.name.delete_suffix("Policy").constantize
   end
 end

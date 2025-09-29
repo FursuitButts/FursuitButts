@@ -181,22 +181,22 @@ class ArtistTest < ActiveSupport::TestCase
     end
 
     should("search on its name should return results") do
-      create(:artist, name: "artist")
+      artist = create(:artist, name: "artist")
 
-      assert_not_nil(Artist.search({ name: "artist" }, @user).first)
-      assert_not_nil(Artist.search({ any_name_matches: "artist" }, @user).first)
-      assert_not_nil(Artist.search({ any_name_matches: "*art*" }, @user).first)
+      assert_equal(artist.id, Artist.search({ name: "artist" }, @user).first&.id)
+      assert_equal(artist.id, Artist.search({ any_name_matches: "artist" }, @user).first&.id)
+      assert_equal(artist.id, Artist.search({ any_name_matches: "*art*" }, @user).first&.id)
     end
 
     should("search on other names should return matches") do
-      create(:artist, name: "artist", other_names_string: "aaa ccc_ddd")
+      artist = create(:artist, name: "artist", other_names_string: "aaa ccc_ddd")
 
       assert_nil(Artist.search({ any_other_name_like: "*artist*" }, @user).first)
-      assert_not_nil(Artist.search({ any_other_name_like: "*aaa*" }, @user).first)
-      assert_not_nil(Artist.search({ any_other_name_like: "*ccc_ddd*" }, @user).first)
-      assert_not_nil(Artist.search({ name: "artist" }, @user).first)
-      assert_not_nil(Artist.search({ any_name_matches: "aaa" }, @user).first)
-      assert_not_nil(Artist.search({ any_name_matches: "*a*" }, @user).first)
+      assert_equal(artist.id, Artist.search({ any_other_name_like: "*aaa*" }, @user).first&.id)
+      assert_equal(artist.id, Artist.search({ any_other_name_like: "*ccc_ddd*" }, @user).first&.id)
+      assert_equal(artist.id, Artist.search({ name: "artist" }, @user).first&.id)
+      assert_equal(artist.id, Artist.search({ any_name_matches: "aaa" }, @user).first&.id)
+      assert_equal(artist.id, Artist.search({ any_name_matches: "*a*" }, @user).first&.id)
     end
 
     should("search on url and return matches") do

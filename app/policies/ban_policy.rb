@@ -22,7 +22,9 @@ class BanPolicy < ApplicationPolicy
   end
 
   def permitted_search_params
-    super + %i[banner_id banner_name user_id user_name reason_matches expired order]
+    params = super + %i[banner_id banner_name user_id user_name reason_matches expired order] + nested_search_params(banner: User, user: User)
+    params << :ip_addr if can_search_ip_addr?
+    params
   end
 
   def api_attributes

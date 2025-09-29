@@ -6,7 +6,7 @@ class StaffAuditLogPolicy < ApplicationPolicy
   end
 
   def permitted_search_params
-    super + %i[user_id user_name action]
+    super + %i[user_id user_name action] + nested_search_params(user: User)
   end
 
   def api_attributes

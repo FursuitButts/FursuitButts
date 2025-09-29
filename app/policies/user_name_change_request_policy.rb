@@ -18,6 +18,6 @@ class UserNameChangeRequestPolicy < ApplicationPolicy
   end
 
   def permitted_search_params
-    super + %i[user_id user_name original_name desired_name]
+    super + %i[user_id user_name creator_id creator_name approver_id approver_name original_name desired_name] + nested_search_params(user: User, creator: User, approver: User)
   end
 end

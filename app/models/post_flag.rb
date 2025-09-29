@@ -36,36 +36,32 @@ class PostFlag < ApplicationRecord
       where(post_id: Post.tag_match_sql(query, user))
     end
 
-    def search(params, user)
-      q = super
+    def query_dsl
+      super
+        .field(:reason_matches, :reason)
+        .field(:is_resolved)
+        .field(:post_id)
+        .field(:ip_addr, :creator_ip_addr)
+        .custom(:post_tags_match, ->(q, v, user) { q.post_tags_match(v, user) })
+        .custom(:type, ->(q, v) { { "flag" => q.flag, "deletion" => q.deletion }.fetch(v, q.none) })
+        .custom(:creator_id, method(:creator_id_query).to_proc)
+        .custom(:creator_name, method(:creator_name_query).to_proc)
+        # TODO: We need access control/blocks for associations
+        # .association(:creator)
+        .association(:post)
+    end
 
-      q = q.attribute_matches(:reason, params[:reason_matches])
-      q = q.attribute_matches(:is_resolved, params[:is_resolved])
+    def creator_id_query(q, value, user)
+      value = value.to_s.split(",").map(&:to_i)
+      return q.where(creator_id: value) if user.is_moderator?
+      q.where.not(
+        creator_id: value.reject { |user_id| user.can_view_flagger?(user_id) },
+      ).where(creator_id: value)
+    end
 
-      q = q.where_user(:creator_id, :creator, params) do |condition, user_ids|
-        condition.where.not(creator_id: user_ids.reject { |user_id| user.can_view_flagger?(user_id) })
-      end
-
-      if params[:post_id].present?
-        q = q.where(post_id: params[:post_id].split(",").map(&:to_i))
-      end
-
-      if params[:post_tags_match].present?
-        q = q.post_tags_match(params[:post_tags_match], user)
-      end
-
-      if params[:ip_addr].present?
-        q = q.where("creator_ip_addr <<= ?", params[:ip_addr])
-      end
-
-      case params[:type]
-      when "flag"
-        q = q.flag
-      when "deletion"
-        q = q.deletion
-      end
-
-      q.apply_basic_order(params)
+    def creator_name_query(q, value, user)
+      id = User.name_to_id(value)
+      creator_id_query(q, id.to_s, user)
     end
   end
 

@@ -48,6 +48,10 @@
   <%= link_to_user(event.user) %> logged in with a backup code.
 <% when "backup_code_reauthenticate" %>
   <%= link_to_user(event.user) %> reauthenticated with a backup code.
+<% when "user_creation" %>
+  <%= link_to_user(event.user) %> created their account.
+<% when "email_verify" %>
+  <%= link_to_user(event.user) %> verified their email.
 <% else %>
   <%= event.category %>
 <% end %>

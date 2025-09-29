@@ -18,6 +18,6 @@ class EmailBlacklistPolicy < ApplicationPolicy
   end
 
   def permitted_search_params
-    super + %i[domain reason]
+    super + %i[domain reason] + nested_search_params(creator: User)
   end
 end

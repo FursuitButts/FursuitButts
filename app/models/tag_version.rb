@@ -5,24 +5,18 @@ class TagVersion < ApplicationRecord
   belongs_to(:tag)
 
   module SearchMethods
-    def search(params, user)
-      q = super.includes(:updater, :tag)
-
-      if params[:tag].present?
-        tag = Tag.find_by_normalized_name(params[:tag])
-        q = q.where(tag: tag)
-      end
-
-      q = q.where_user(:updater_id, :updater, params)
-
-      q.apply_basic_order(params)
+    def query_dsl
+      super
+        .custom(:tag, ->(q, v) { q.where(tag: Tag.find_by_normalized_name(v)) })
+        .association(:updater)
+        .association(:tag)
     end
   end
 
   extend(SearchMethods)
 
   def previous
-    TagVersion.where(tag_id: tag_id, created_at: ...created_at).order("created_at desc").first
+    TagVersion.where(tag_id: tag_id).where.lt(created_at: created_at).order(created_at: :desc).first
   end
 
   def category_changed?

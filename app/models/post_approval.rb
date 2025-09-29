@@ -24,17 +24,12 @@ class PostApproval < ApplicationRecord
         where(post_id: Post.tag_match_sql(query, user))
       end
 
-      def search(params, user)
-        q = super
-
-        if params[:post_tags_match].present?
-          q = q.post_tags_match(params[:post_tags_match], user)
-        end
-
-        q = q.where_user(:user_id, :user, params)
-        q = q.attribute_matches(:post_id, params[:post_id])
-
-        q.apply_basic_order(params)
+      def query_dsl
+        super
+          .field(:post_id)
+          .custom(:post_tags_match, ->(q, v, user) { q.post_tags_match(v, user) })
+          .association(:user)
+          .association(:post)
       end
     end
   end

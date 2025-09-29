@@ -11,24 +11,12 @@ class PoolVersion < ApplicationRecord
       order(updated_at: :desc)
     end
 
-    def for_user(user_id)
-      where("updater_id = ?", user_id)
-    end
-
-    def search(params, user)
-      q = super
-
-      q = q.where_user(:updater_id, :updater, params)
-
-      if params[:pool_id].present?
-        q = q.where(pool_id: params[:pool_id].split(",").map(&:to_i))
-      end
-
-      if params[:ip_addr].present?
-        q = q.where("updater_ip_addr <<= ?", params[:ip_addr])
-      end
-
-      q.apply_basic_order(params)
+    def query_dsl
+      super
+        .field(:pool_id)
+        .field(:ip_addr, :updater_ip_addr)
+        .association(:updater)
+        .association(:pool)
     end
   end
 

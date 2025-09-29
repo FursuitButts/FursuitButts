@@ -206,14 +206,13 @@ class PostReplacementTest < ActiveSupport::TestCase
       assert_equal("original", new_replacement.status)
       assert_equal(old_md5, new_replacement.md5)
       assert_equal(old_source, new_replacement.source)
-      sleep(60)
       assert_equal(old_md5, MediaAsset.md5(new_replacement.replacement_file_path))
     end
 
     should("update users upload counts") do
       assert_difference({
-        -> { Post.for_user(@mod_user.id).not_flagged.not_deleted.not_pending.count } => -1,
-        -> { Post.for_user(@user.id).not_flagged.not_deleted.not_pending.count }     => 1,
+        -> { Post.for_uploader(@mod_user.id).not_flagged.not_deleted.not_pending.count } => -1,
+        -> { Post.for_uploader(@user.id).not_flagged.not_deleted.not_pending.count }     => 1,
       }) do
         @replacement.approve!(@user, penalize_current_uploader: true)
       end
@@ -356,8 +355,8 @@ class PostReplacementTest < ActiveSupport::TestCase
 
     should("credit replacer with new post") do
       assert_difference({
-        -> { Post.for_user(@mod_user.id).not_flagged.not_deleted.not_pending.count } => 0,
-        -> { Post.for_user(@user.id).not_flagged.not_deleted.count }                 => 1,
+        -> { Post.for_uploader(@mod_user.id).not_flagged.not_deleted.not_pending.count } => 0,
+        -> { Post.for_uploader(@user.id).not_flagged.not_deleted.count }                 => 1,
       }) do
         upload = @replacement.promote!(@user)
         assert(upload)

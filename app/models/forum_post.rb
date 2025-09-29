@@ -16,7 +16,7 @@ class ForumPost < ApplicationRecord
   has_many(:tickets, as: :model)
   has_many(:versions, class_name: "EditHistory", as: :versionable, dependent: :destroy)
   has_one(:spam_ticket, -> { spam }, class_name: "Ticket", as: :model)
-  has_one(:last_edit_version, -> { where(edit_type: "edit").order(created_at: :desc) }, class_name: "EditHistory", as: :versionable)
+  has_one(:last_edit_version, -> { edit_type("edit").order(created_at: :desc) }, class_name: "EditHistory", as: :versionable)
 
   belongs_to(:tag_change_request, polymorphic: true, optional: true)
   before_validation(:initialize_is_hidden, on: :create)
@@ -45,13 +45,8 @@ class ForumPost < ApplicationRecord
   attr_accessor(:bypass_limits, :is_merging)
 
   scope(:votable, -> { where(allow_voting: true) })
-  scope(:for_user, ->(user) { where(creator_id: u2id(user)) })
 
   module SearchMethods
-    def topic_title_matches(title, user)
-      joins(:topic).merge(ForumTopic.search(user, title_matches: title))
-    end
-
     def not_visible(user)
       where.not(id: visible(user))
     end
@@ -67,52 +62,24 @@ class ForumPost < ApplicationRecord
       where("forum_posts.is_hidden": false).or(where("forum_posts.creator_id": user.id))
     end
 
-    def search(params, user)
-      q = super
-      q = q.where_user(:creator_id, :creator, params)
+    def apply_order(params)
+      order_with({
+        rating: { percentage_score: :desc },
+        score:  { total_score: :desc },
+      }, params[:order])
+    end
 
-      if params[:topic_id].present?
-        q = q.where("forum_posts.topic_id": params[:topic_id])
-      end
-
-      if params[:topic_title_matches].present?
-        q = q.topic_title_matches(params[:topic_title_matches], user)
-      end
-
-      q = q.attribute_matches(:body, params[:body_matches])
-
-      if params[:topic_category_id].present?
-        q = q.joins(:topic).where("forum_topics.category_id": params[:topic_category_id])
-      end
-
-      if params[:linked_to].present?
-        q = q.linked_to(params[:linked_to])
-      end
-
-      if params[:not_linked_to].present?
-        q = q.not_linked_to(params[:not_linked_to])
-      end
-
-      q = q.attribute_matches(:is_hidden, params[:is_hidden])
-
-      case params[:order]
-      when "updated_at_desc"
-        q = q.order(updated_at: :desc)
-      when "updated_at_asc"
-        q = q.order(updated_at: :asc)
-      when "rating_desc"
-        q = q.order(percentage_score: :desc, id: :desc)
-      when "rating_asc"
-        q = q.order(percentage_score: :asc, id: :desc)
-      when "score_desc"
-        q = q.order(total_score: :desc, id: :desc)
-      when "score_asc"
-        q = q.order(total_score: :asc, id: :desc)
-      else
-        q.apply_basic_order(params)
-      end
-
-      q
+    def query_dsl
+      super
+        .field(:topic_id)
+        .field(:body_matches, :body)
+        .field(:is_hidden)
+        .field(:topic_title_matches, "forum_topics.title") { |q| q.joins(:topic) }
+        .field(:topic_category_id, "forum_topics.category_id") { |q| q.joins(:topic) }
+        .custom(:linked_to, ->(q, v) { q.linked_to(v) })
+        .custom(:not_linked_to, ->(q, v) { q.not_linked_to(v) })
+        .association(:creator)
+        .association(:topic)
     end
   end
 
