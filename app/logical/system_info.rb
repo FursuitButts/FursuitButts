@@ -10,6 +10,8 @@ class SystemInfo
     memcached
     elasticsearch
     git
+    main
+    gems
     self
   end
 
@@ -70,13 +72,20 @@ class SystemInfo
   end
 
   def memcached
-    @memcached ||= RecursiveOpenStruct.new(FemboyFans.config.memcached_servers.split.to_h do |server|
-                                             client = Dalli::Client.new(server)
-                                             version = client.version.values.first
-                                             connections = client.stats.values.first["curr_connections"].to_i
-                                             latency = time { client.version }
-                                             [server, { version: version, connections: connections, latency: latency }]
-                                           end)
+    @memcached ||= begin
+      client = Dalli::Client.new(FemboyFans.config.memcached_servers)
+      all_stats = client.stats
+      all_stats.keys.to_h do |server|
+        stats = all_stats[server]
+        latency = time { Dalli::Client.new(server).version }
+        [server, RecursiveOpenStruct.new(
+          version:     stats["version"],
+          connections: stats["curr_connections"].to_i,
+          date:        Time.zone.at(stats["time"].to_i).utc.iso8601,
+          latency:     latency,
+        ),]
+      end
+    end
   end
 
   def elasticsearch
@@ -96,8 +105,15 @@ class SystemInfo
     @git ||= GitHelper.instance
   end
 
-  def misc
-    @misc ||= RecursiveOpenStruct.new(ruby_version: RUBY_VERSION, rails_version: Rails.version, node_version: `node --version`.strip, alpine_version: File.read("/etc/alpine-release").strip, environment: Rails.env, hostname: FemboyFans.config.hostname, name: FemboyFans.config.app_name, url: FemboyFans.config.app_url, description: FemboyFans.config.description, safe_mode: FemboyFans.config.safe_mode?, version: FemboyFans.config.version, date: Time.now.utc.iso8601, timezone: Time.now.zone)
+  def main
+    @main ||= RecursiveOpenStruct.new(ruby_version: RUBY_VERSION, rails_version: Rails.version, node_version: `node --version`.strip, alpine_version: File.read("/etc/alpine-release").strip, environment: Rails.env, hostname: FemboyFans.config.hostname, name: FemboyFans.config.app_name, url: FemboyFans.config.app_url, description: FemboyFans.config.description, safe_mode: FemboyFans.config.safe_mode?, version: FemboyFans.config.version, date: Time.now.utc.iso8601, timezone: Time.zone.name, timezone_sys: `date +%Z`[..-1])
+  end
+
+  def gems
+    @gems ||= Bundler.load.dependencies.map do |dep|
+      spec = Bundler.load.specs.find { |s| s.name == dep.name }
+      [dep.name.downcase, dep.requirement, (spec.version.to_s if spec)]
+    end.sort_by(&:first)
   end
 
   private

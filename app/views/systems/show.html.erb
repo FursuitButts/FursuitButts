@@ -5,34 +5,101 @@
 
 <table class="striped">
   <thead>
-    <tr>
-      <th colspan="2" style="text-align: center">Reports</th>
-    </tr>
-    <tr>
-      <th>Data</th>
-      <th>Value</th>
-    </tr>
+  <tr>
+    <th colspan="3" style="text-align: center">Main</th>
+  </tr>
+  <tr>
+    <th>Data</th>
+    <th colspan="2">Value</th>
+  </tr>
   </thead>
   <tbody>
   <tr>
-    <td>Schema Version</td>
-    <td><%= @info.reports.version.schema %></td>
+    <td>Version</td>
+    <td colspan="2"><%= @info.main.version %></td>
   </tr>
   <tr>
-    <td>DB Version</td>
-    <td><%= @info.reports.version.db %></td>
+    <td>Date</td>
+    <td colspan="2"><%= @info.main.date %></td>
   </tr>
+  <tr>
+    <td>Environment</td>
+    <td colspan="2"><%= @info.main.environment %></td>
+  </tr>
+  <tr>
+    <td>Name</td>
+    <td colspan="2"><%= @info.main.name %></td>
+  </tr>
+  <tr>
+    <td>Description</td>
+    <td colspan="2"><%= @info.main.description %></td>
+  </tr>
+  <tr>
+    <td>URL</td>
+    <td colspan="2"><%= @info.main.url %></td>
+  </tr>
+  <tr>
+    <td>Safe Mode</td>
+    <td colspan="2"><%= @info.main.safe_mode %></td>
+  </tr>
+  <tr>
+    <td>Hostname</td>
+    <td colspan="2"><%= @info.main.hostname %>
+  </tr>
+  <tr>
+    <td>Current Timezone</td>
+    <td colspan="2"><%= @info.main.timezone %></td>
+  </tr>
+  <tr>
+    <td>System Timezone</td>
+    <td colspan="2"><%= @info.main.timezone_sys %></td>
+  </tr>
+  <tr>
+    <td>Ruby Version</td>
+    <td colspan="2"><%= @info.main.ruby_version %></td>
+  </tr>
+  <tr>
+    <td>Rails Version</td>
+    <td colspan="2"><%= @info.main.rails_version %></td>
+  </tr>
+  <tr>
+    <td>Node Version</td>
+    <td colspan="2"><%= @info.main.node_version %></td>
+  </tr>
+  <tr>
+    <td>Alpine Version</td>
+    <td colspan="2"><%= @info.main.alpine_version %></td>
+  </tr>
+  </tbody>
+  <thead>
+    <tr>
+      <th colspan="3" style="text-align: center">Reports</th>
+    </tr>
+    <tr>
+      <th>Data</th>
+      <th colspan="2">Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Schema Version</td>
+      <td colspan="2"><%= @info.reports.version.schema %></td>
+    </tr>
+    <tr>
+      <td>DB Version</td>
+      <td colspan="2"><%= @info.reports.version.db %></td>
+    </tr>
     <tr>
       <td>Code Date</td>
-      <td><%= @info.reports.date.code %></td>
+      <td colspan="2"><%= @info.reports.date.code %></td>
     </tr>
     <tr>
       <td>DB Date</td>
-      <td><%= @info.reports.date.db %></td>
+      <td colspan="2"><%= @info.reports.date.db %></td>
     </tr>
     <tr>
       <td>Healthy</td>
-      <td>
+      <td colspan="2">
         <% if @info.reports.health.healthy %>
           Yes
         <% else %>
@@ -42,50 +109,50 @@
     </tr>
     <tr>
       <td>Latency</td>
-      <td><%= @info.reports.latency %>ms</td>
+      <td colspan="2"><%= @info.reports.latency %>ms</td>
     </tr>
   </tbody>
   <thead>
     <tr>
       <% if @info.postgres.pending_migrations %>
-        <th colspan="2" style="text-align: center; background-color: #8d6e20">Postgres</th>
+        <th colspan="3" style="text-align: center; background-color: #8d6e20">Postgres</th>
       <% else %>
-        <th colspan="2" style="text-align: center">Postgres</th>
+        <th colspan="3" style="text-align: center">Postgres</th>
       <% end %>
     </tr>
     <tr>
       <th>Data</th>
-      <th>Value</th>
+      <th colspan="2">Value</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>Version</td>
-      <td><%= @info.postgres.version %></td>
+      <td colspan="2"><%= @info.postgres.version %></td>
     </tr>
     <tr>
       <td>Latency</td>
-      <td><%= @info.postgres.latency %>ms</td>
+      <td colspan="2"><%= @info.postgres.latency %>ms</td>
     </tr>
     <tr>
       <td>Database</td>
-      <td><%= @info.postgres.database %></td>
+      <td colspan="2"><%= @info.postgres.database %></td>
     </tr>
     <tr>
       <td>Date</td>
-      <td><%= @info.postgres.date %></td>
+      <td colspan="2"><%= @info.postgres.date %></td>
     </tr>
     <tr>
       <td>Connection Count</td>
-      <td><%= @info.postgres.connection_count %></td>
+      <td colspan="2"><%= @info.postgres.connection_count %></td>
     </tr>
     <tr>
       <td>Deadlocks</td>
-      <td><%= @info.postgres.deadlocks %></td>
+      <td colspan="2"><%= @info.postgres.deadlocks %></td>
     </tr>
     <tr>
       <td>Migrations</td>
-      <td>
+      <td colspan="2">
         <%= @info.postgres.latest_migration %> (<%= @info.postgres.migration_count %> Total)
         <% if @info.postgres.pending_migrations %>
           <p><b>Pending Migrations</b></p>
@@ -95,25 +162,25 @@
   </tbody>
   <thead>
     <tr>
-      <th colspan="2" style="text-align: center">Redis</th>
+      <th colspan="3" style="text-align: center">Redis</th>
     </tr>
     <tr>
       <th>Data</th>
-      <th>Value</th>
+      <th colspan="2">Value</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>Version</td>
-      <td><%= @info.redis.version %></td>
+      <td colspan="2"><%= @info.redis.version %></td>
     </tr>
     <tr>
       <td>Latency</td>
-      <td><%= @info.redis.latency %>ms</td>
+      <td colspan="2"><%= @info.redis.latency %>ms</td>
     </tr>
     <tr>
       <td>Databases</td>
-      <td>
+      <td colspan="2">
         <ul>
           <% @info.redis.databases.each do |db| %>
             <% clients = @info.redis.clients_per_db[db] || 0 %>
@@ -128,94 +195,98 @@
       </td>
     </tr>
   </tbody>
-  <% FemboyFans.config.memcached_servers.split.each do |server|  %>
+  <% @info.memcached.keys.each do |server|  %>
     <thead>
       <tr>
-        <% if FemboyFans.config.memcached_servers.split.size > 1 %>
-          <th colspan="2" style="text-align: center">Memcached (<%= server %>)</th>
+        <% if @info.memcached.keys.size > 1 %>
+          <th colspan="3" style="text-align: center">Memcached (<%= server %>)</th>
         <% else %>
-          <th colspan="2" style="text-align: center">Memcached</th>
+          <th colspan="3" style="text-align: center">Memcached</th>
         <% end %>
       </tr>
       <tr>
         <th>Data</th>
-        <th>Value</th>
+        <th colspan="2">Value</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td>Version</td>
-        <td><%= @info.memcached[server].version %></td>
+        <td colspan="2"><%= @info.memcached[server].version %></td>
       </tr>
       <tr>
         <td>Latency</td>
-        <td><%= @info.memcached[server].latency %>ms</td>
+        <td colspan="2"><%= @info.memcached[server].latency %>ms</td>
       </tr>
       <tr>
         <td>Connections</td>
-        <td><%= @info.memcached[server].connections %></td>
+        <td colspan="2"><%= @info.memcached[server].connections %></td>
+      </tr>
+      <tr>
+        <td>Date</td>
+        <td colspan="2"><%= @info.memcached[server].date %></td>
       </tr>
     </tbody>
   <% end %>
   <thead>
     <tr>
-      <th colspan="2" style="text-align: center">Elasticsearch</th>
+      <th colspan="3" style="text-align: center">Elasticsearch</th>
     </tr>
     <tr>
       <th>Data</th>
-      <th>Value</th>
+      <th colspan="2">Value</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>Version</td>
-      <td><%= @info.elasticsearch.version %></td>
+      <td colspan="2"><%= @info.elasticsearch.version %></td>
     </tr>
     <tr>
       <td>Latency</td>
-      <td><%= @info.elasticsearch.latency %>ms</td>
+      <td colspan="2"><%= @info.elasticsearch.latency %>ms</td>
     </tr>
     <tr>
       <td>Date</td>
-      <td><%= @info.elasticsearch.date %></td>
+      <td colspan="2"><%= @info.elasticsearch.date %></td>
     </tr>
     <tr>
       <td>Status</td>
-      <td><%= @info.elasticsearch.status %></td>
+      <td colspan="2"><%= @info.elasticsearch.status %></td>
     </tr>
     <tr>
       <td>Indexes</td>
-        <td>
-          <% @info.elasticsearch.indexes.each do |index| %>
-            <dl>
-              <dt><%= index %></dt>
-              <dd><%= @info.elasticsearch.docs_per_index[index] %><%= " document".pluralize(@info.elasticsearch.docs_per_index[index]) %></dd>
-            </dl>
-          <% end %>
-        </td>
+      <td colspan="2">
+        <% @info.elasticsearch.indexes.each do |index| %>
+          <dl>
+            <dt><%= index %></dt>
+            <dd><%= @info.elasticsearch.docs_per_index[index] %><%= " document".pluralize(@info.elasticsearch.docs_per_index[index]) %></dd>
+          </dl>
+        <% end %>
+      </td>
     </tr>
   </tbody>
   <thead>
     <tr>
-      <th colspan="2" style="text-align: center">Git (Local)</th>
+      <th colspan="3" style="text-align: center">Git (Local)</th>
     </tr>
     <tr>
       <th>Data</th>
-      <th>Value</th>
+      <th colspan="2">Value</th>
     </tr>
   </thead>
   <tbody>
       <tr>
         <td>Ref</td>
-        <td>HEAD</td>
+        <td colspan="2">HEAD</td>
       </tr>
       <tr>
         <td>Commit</td>
-        <td><%= @info.git.local.commit %></td>
+        <td colspan="2"><%= @info.git.local.commit %></td>
       </tr>
       <tr>
         <td>Tag</td>
-        <td>
+        <td colspan="2">
           <% if @info.git.local.tag.present? %>
             <%= @info.git.local.tag %>
           <% else %>
@@ -225,7 +296,7 @@
       </tr>
         <tr>
           <td>Diff (Origin)</td>
-          <td>
+          <td colspan="2">
             <ul>
               <% compare = @info.git.local.compare(@info.git.origin) %>
               <% if compare.behind? %>
@@ -241,25 +312,25 @@
     </tbody>
   <thead>
     <tr>
-      <th colspan="2" style="text-align: center">Git (Origin)</th>
+      <th colspan="3" style="text-align: center">Git (Origin)</th>
     </tr>
     <tr>
       <th>Data</th>
-      <th>Value</th>
+      <th colspan="2">Value</th>
     </tr>
   </thead>
   <tbody>
       <tr>
         <td>Ref</td>
-        <td><%= @info.git.origin.remote %>/<%= @info.git.origin.branch %></td>
+        <td colspan="2"><%= @info.git.origin.remote %>/<%= @info.git.origin.branch %></td>
       </tr>
       <tr>
         <td>Commit</td>
-        <td><%= link_to(@info.git.origin.short_commit, @info.git.origin.current_commit_url, target: "_blank", rel: "noopener") %> (<%= @info.git.origin.commit %>)</td>
+        <td colspan="2"><%= link_to(@info.git.origin.short_commit, @info.git.origin.current_commit_url, target: "_blank", rel: "noopener") %> (<%= @info.git.origin.commit %>)</td>
       </tr>
       <tr>
         <td>Tag</td>
-        <td>
+        <td colspan="2">
           <% if @info.git.origin.tag.present? %>
             <%= link_to(@info.git.origin.tag, @info.git.origin.current_tag_url, target: "_blank", rel: "noopener") %>
           <% else %>
@@ -270,7 +341,7 @@
       <% if @info.git.upstream.present? %>
         <tr>
           <td>Diff (Upstream)</td>
-          <td>
+          <td colspan="2">
             <ul>
               <% compare = @info.git.origin.compare(@info.git.upstream) %>
               <% if compare.behind? %>
@@ -288,25 +359,25 @@
   <% if @info.git.upstream.present? %>
     <thead>
       <tr>
-        <th colspan="2" style="text-align: center">Git (Upstream)</th>
+        <th colspan="3" style="text-align: center">Git (Upstream)</th>
       </tr>
       <tr>
         <th>Data</th>
-        <th>Value</th>
+        <th colspan="2">Value</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td>Ref</td>
-        <td><%= @info.git.upstream.remote %>/<%= @info.git.upstream.branch %></td>
+        <td colspan="2"><%= @info.git.upstream.remote %>/<%= @info.git.upstream.branch %></td>
       </tr>
       <tr>
         <td>Commit</td>
-        <td><%= link_to(@info.git.upstream.short_commit, @info.git.upstream.current_commit_url, target: "_blank", rel: "noopener") %> (<%= @info.git.upstream.commit %>)</td>
+        <td colspan="2"><%= link_to(@info.git.upstream.short_commit, @info.git.upstream.current_commit_url, target: "_blank", rel: "noopener") %> (<%= @info.git.upstream.commit %>)</td>
       </tr>
       <tr>
         <td>Tag</td>
-        <td>
+        <td colspan="2">
           <% if @info.git.upstream.tag.present? %>
             <%= link_to(@info.git.upstream.tag, @info.git.upstream.current_tag_url, target: "_blank", rel: "noopener") %>
           <% else %>
@@ -317,66 +388,22 @@
     </tbody>
   <% end %>
   <thead>
-    <tr>
-      <th colspan="2" style="text-align: center">Miscellaneous</th>
-    </tr>
-    <tr>
-      <th>Data</th>
-      <th>Value</th>
-    </tr>
+  <tr>
+    <th colspan="3" style="text-align: center">Gems</th>
+  </tr>
+  <tr>
+    <th>Name</th>
+    <th>Requirement</th>
+    <th>Version</th>
+  </tr>
   </thead>
   <tbody>
+  <% @info.gems.each do |name, requirement, version| %>
     <tr>
-      <td>Version</td>
-      <td><%= @info.misc.version %></td>
+      <td><%= name %></td>
+      <td><%= requirement %></td>
+      <td><%= version %></td>
     </tr>
-    <tr>
-      <td>Date</td>
-      <td><%= @info.misc.date %></td>
-    </tr>
-    <tr>
-      <td>Environment</td>
-      <td><%= @info.misc.environment %></td>
-    </tr>
-    <tr>
-      <td>Name</td>
-      <td><%= @info.misc.name %></td>
-    </tr>
-    <tr>
-      <td>Description</td>
-      <td><%= @info.misc.description %></td>
-    </tr>
-    <tr>
-      <td>URL</td>
-      <td><%= @info.misc.url %></td>
-    </tr>
-    <tr>
-      <td>Safe Mode</td>
-      <td><%= @info.misc.safe_mode %></td>
-    </tr>
-    <tr>
-      <td>Hostname</td>
-      <td><%= @info.misc.hostname %>
-    </tr>
-    <tr>
-      <td>Timezone</td>
-      <td><%= @info.misc.timezone %></td>
-    </tr>
-    <tr>
-      <td>Ruby Version</td>
-      <td><%= @info.misc.ruby_version %></td>
-    </tr>
-    <tr>
-      <td>Rails Version</td>
-      <td><%= @info.misc.rails_version %></td>
-    </tr>
-    <tr>
-      <td>Node Version</td>
-      <td><%= @info.misc.node_version %></td>
-    </tr>
-    <tr>
-      <td>Alpine Version</td>
-      <td><%= @info.misc.alpine_version %></td>
-    </tr>
+  <% end %>
   </tbody>
 </table>
