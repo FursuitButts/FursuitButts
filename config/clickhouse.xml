@@ -21,7 +21,5 @@
   <logger>
     <level>warning</level>
     <console>true</console>
-    <log remove="1"/>
-    <errorlog remove="1"/>
   </logger>
 </clickhouse>

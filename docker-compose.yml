@@ -136,7 +136,7 @@ services:
   clickhouse:
     image: clickhouse/clickhouse-server:24.8.2.3-alpine
     healthcheck:
-      test: curl -fsS http://127.0.0.1:8123/ping || exit 1
+      test: clickhouse-client --query "SELECT 1" || exit 1
       interval: 15s
       timeout: 2s
       retries: 5
