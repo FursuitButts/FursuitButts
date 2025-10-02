@@ -2,7 +2,7 @@
 
 class UpdateChangeSeqFunction < ExtendedMigration[7.1]
   def up
-    execute(<<~SQL, # rubocop:disable Rails/SquishedSQLHeredocs
+    execute(<<~SQL,
       CREATE OR REPLACE FUNCTION public.posts_trigger_change_seq() RETURNS trigger
           LANGUAGE plpgsql
       AS $$

@@ -78,7 +78,7 @@ services:
 
   # For this service to work properly, it must be accessible from /tags/autocomplete.json on the same url as the primary app
   autocompleted:
-    image: ghcr.io/femboyfans/autocompleted:413faed9e0371d14e350c8131f1300f1687f951a
+    image: ghcr.io/femboyfans/autocompleted:e0d4fcb099ae2d47888ab95d372cba46e02f717f
     command: /app/autocompleted
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://$$SERVER_ADDR/up || exit 1

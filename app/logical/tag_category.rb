@@ -44,6 +44,7 @@ module TagCategory
   META = AdminCategory.new(7, "meta")
   LORE = AdminCategory.new(8, "lore", %w[lor], suffix: "_(lore)")
   GENDER = AdminCategory.new(9, "gender")
+  IMPORTANT = AdminCategory.new(10, "important", %w[imp])
 
   def categories
     @categories ||= constants.map { |c| const_get(c) }.select { |c| c.is_a?(Category) }
@@ -100,7 +101,7 @@ module TagCategory
     end
   end
 
-  SPLIT_HEADER_LIST = %w[invalid artist contributor copyright character species gender general meta lore].freeze
-  CATEGORIZED_LIST = %w[invalid artist contributor copyright character species gender meta general lore].freeze
+  SPLIT_HEADER_LIST = %w[important invalid artist contributor copyright character species gender general meta lore].freeze
+  CATEGORIZED_LIST = %w[important invalid artist contributor copyright character species gender meta general lore].freeze
   HUMANIZED_LIST = %w[character copyright artist].freeze
 end

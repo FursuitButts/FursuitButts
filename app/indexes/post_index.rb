@@ -58,6 +58,7 @@ module PostIndex
           tag_count_lore:           { type: "integer" },
           tag_count_contributor:    { type: "integer" },
           tag_count_gender:         { type: "integer" },
+          tag_count_important:      { type: "integer" },
           comment_count:            { type: "integer" },
           disapproval_count:        { type: "integer" },
 
@@ -300,6 +301,7 @@ module PostIndex
       tag_count_invalid:        tag_count_invalid,
       tag_count_contributor:    tag_count_contributor,
       tag_count_gender:         tag_count_gender,
+      tag_count_important:      tag_count_important,
       comment_count:            options_or_get.call(:comment_count, -> { comment_count }),
       disapproval_count:        options_or_get.call(:disapproval_count, -> { ::PostDisapproval.where(post_id: id).pluck(:user_id).size }),
 

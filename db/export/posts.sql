@@ -45,6 +45,7 @@ SELECT posts.id,
        posts.original_tag_string,
        posts.tag_count_contributor,
        posts.tag_count_gender,
+       posts.tag_count_important,
        posts.qtags,
        posts.upload_url
   FROM public.posts

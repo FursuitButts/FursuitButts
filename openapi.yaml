@@ -206,6 +206,7 @@ x-constants:
     - 7 # meta
     - 8 # lore
     - 9 # gender
+    - 10 # important
   - &feedback-categories
     - negative
     - neutral
@@ -2028,6 +2029,7 @@ components:
             - meta
             - lore
             - gender
+            - important
           properties:
             general:
               type: array
@@ -2066,6 +2068,10 @@ components:
               items:
                 type: string
             gender:
+              type: array
+              items:
+                type: string
+            important:
               type: array
               items:
                 type: string
@@ -3095,6 +3101,7 @@ components:
         - meta_tags
         - lore_tags
         - gender_tags
+        - important_tags
       properties:
         started:
           type: string
@@ -3222,6 +3229,8 @@ components:
         lore_tags:
           type: number
         gender_tags:
+          type: number
+        important_tags:
           type: number
     Tag:
       type: object

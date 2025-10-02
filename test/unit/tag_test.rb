@@ -47,6 +47,8 @@ class TagTest < ActiveSupport::TestCase
       assert_equal(6, TagCategory.invalid)
       assert_equal(7, TagCategory.meta)
       assert_equal(8, TagCategory.lore)
+      assert_equal(9, TagCategory.gender)
+      assert_equal(10, TagCategory.important)
     end
 
     should("have a regular expression for matching category names and shortcuts") do
@@ -77,6 +79,7 @@ class TagTest < ActiveSupport::TestCase
         [7, %w[meta]],
         [8, %w[lore lor]],
         [9, %w[gender]],
+        [10, %w[important imp]],
       ]
       mapping.each do |category, matches|
         matches.each do |match|

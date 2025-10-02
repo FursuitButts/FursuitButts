@@ -59,6 +59,7 @@ Metrics/BlockLength:
     - config/environments/*.rb
     - db/seeds.rb
     - db/seeds/*.rb
+    - db/migrate/*.rb
 
 Metrics/ClassLength:
   Enabled: false
@@ -268,3 +269,7 @@ Local/CurrentUserOutsideOfRequests:
     - app/logical/session_loader.rb
     - test/unit/current_user_test.rb
 
+Rails/SquishedSQLHeredocs:
+  Enabled: true
+  Exclude:
+    - db/migrate/*.rb

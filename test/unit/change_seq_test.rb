@@ -51,7 +51,7 @@ class ChangeSeqTest < ActiveSupport::TestCase
     context("change_seq") do
       setup do
         # columns which would be reset by callbacks
-        @force_columns = %i[comment_count tag_count_general tag_count_artist tag_count_character tag_count_copyright tag_count_meta tag_count_species tag_count_invalid tag_count_lore tag_count_gender tag_count_contributor]
+        @force_columns = %i[comment_count tag_count_general tag_count_artist tag_count_character tag_count_copyright tag_count_meta tag_count_species tag_count_invalid tag_count_lore tag_count_gender tag_count_contributor tag_count_important]
         @post = create(:webm_post)
       end
 

@@ -72,6 +72,7 @@ BEGIN
         OR NEW.tag_count_lore IS DISTINCT FROM OLD.tag_count_lore
         OR NEW.tag_count_gender IS DISTINCT FROM OLD.tag_count_gender
         OR NEW.tag_count_contributor IS DISTINCT FROM OLD.tag_count_contributor
+        OR NEW.tag_count_important IS DISTINCT FROM OLD.tag_count_important
         OR old_md5 IS DISTINCT FROM new_md5
     THEN
         NEW.change_seq = nextval('public.posts_change_seq_seq');
@@ -2012,7 +2013,8 @@ CREATE TABLE public.posts (
     typed_tag_string character varying DEFAULT ''::character varying NOT NULL,
     upload_media_asset_id bigint,
     updater_id bigint NOT NULL,
-    updater_ip_addr inet NOT NULL
+    updater_ip_addr inet NOT NULL,
+    tag_count_important integer DEFAULT 0 NOT NULL
 );
 
 
@@ -7537,6 +7539,7 @@ ALTER TABLE ONLY public.help_pages
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20251002085332'),
 ('20250923161649'),
 ('20250722120905'),
 ('20250620164659'),

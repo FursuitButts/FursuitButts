@@ -115,6 +115,9 @@ body {
   --color-tag-gender:             #dad88b;
   --color-tag-gender-alt:         #ede660;
 
+  --color-tag-important:          #58f0f7;
+  --color-tag-important-alt:      #{lighten(#58f0f7, 10%)};
+
   --color-tag-pool:               wheat;
   --color-tag-pool-alt:           #d0b27a;
 
