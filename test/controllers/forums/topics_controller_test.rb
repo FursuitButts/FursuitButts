@@ -33,7 +33,7 @@ module Forums
         end
 
         should("have the correct page number") do
-          FemboyFans.config.stubs(:records_per_page).returns(2)
+          Config.any_instance.stubs(:records_per_page).returns(2)
           assert_equal(1, @forum_topic.last_page)
           @forum_posts = create_list(:forum_post, 3, topic: @forum_topic, creator: @user)
           assert_equal(2, @forum_topic.last_page)
@@ -162,7 +162,7 @@ module Forums
       context("create action") do
         should("create a new forum topic and post") do
           assert_difference({ "ForumPost.count" => 1, "ForumTopic.count" => 1, "ModAction.count" => 0 }) do
-            post_auth(forum_topics_path, @user, params: { forum_topic: { title: "bababa", category_id: FemboyFans.config.alias_implication_forum_category, original_post_attributes: { body: "xaxaxa" } } })
+            post_auth(forum_topics_path, @user, params: { forum_topic: { title: "bababa", category_id: Config.instance.alias_and_implication_forum_category, original_post_attributes: { body: "xaxaxa" } } })
           end
 
           forum_topic = ForumTopic.last
@@ -176,11 +176,11 @@ module Forums
         end
 
         should("cause the unread indicator to show") do
-          @other_user.forum_category_visits.find_or_create_by!(forum_category_id: FemboyFans.config.alias_implication_forum_category).update!(last_read_at: Time.now)
+          @other_user.forum_category_visits.find_or_create_by!(forum_category_id: Config.instance.alias_and_implication_forum_category).update!(last_read_at: Time.now)
           get_auth(posts_path, @other_user)
           assert_select("#nav-forum.forum-updated", false)
 
-          post_auth(forum_topics_path, @user, params: { forum_topic: { title: "bababa", category_id: FemboyFans.config.alias_implication_forum_category, original_post_attributes: { body: "xaxaxa" } } })
+          post_auth(forum_topics_path, @user, params: { forum_topic: { title: "bababa", category_id: Config.instance.alias_and_implication_forum_category, original_post_attributes: { body: "xaxaxa" } } })
 
           get_auth(posts_path, @other_user)
           assert_select("#nav-forum.forum-updated")
@@ -188,7 +188,7 @@ module Forums
 
         should("allow setting allow_voting=true") do
           assert_difference({ "ForumPost.count" => 1, "ForumTopic.count" => 1, "EditHistory.count" => 2 }) do
-            post_auth(forum_topics_path, @user, params: { forum_topic: { title: "bababa", category_id: FemboyFans.config.alias_implication_forum_category, original_post_attributes: { body: "xaxaxa", allow_voting: true } } })
+            post_auth(forum_topics_path, @user, params: { forum_topic: { title: "bababa", category_id: Config.instance.alias_and_implication_forum_category, original_post_attributes: { body: "xaxaxa", allow_voting: true } } })
             @forum_topic = ForumTopic.last
             assert_redirected_to(forum_topic_path(@forum_topic))
           end

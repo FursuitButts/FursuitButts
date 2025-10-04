@@ -23,7 +23,7 @@ class UploadTest < ActiveSupport::TestCase
 
     context("From a user that has too many pending uploads") do
       setup do
-        FemboyFans.config.stubs(:pending_uploads_limit).returns(0)
+        Config.any_instance.stubs(:pending_uploads_limit).returns(0)
       end
 
       should("fail creation") do

@@ -12,6 +12,7 @@ class StaffAuditLog < ApplicationRecord
     destroyed_post_id
     duration
     params
+    data
   ].freeze
 
   store_accessor(:values, *VALUES)
@@ -141,6 +142,12 @@ class StaffAuditLog < ApplicationRecord
     disable_post_notifications: {
       text: ->(log) { "Disabled re-upload notifications for \"destroyed post ##{log.post_id}\":#{h.admin_destroyed_post_path(id: post_id)}" },
       json: %i[destroyed_post_id post_id],
+    },
+
+    ### Config ###
+    config_update:              {
+      text: ->(log) { "Updated the config keys: #{log.data.keys.join(', ')}" },
+      json: %i[data],
     },
   }.freeze
   ACTIONS = FORMATTERS.keys.freeze

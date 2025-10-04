@@ -62,13 +62,13 @@ class UsersController < ApplicationController
     User.transaction do
       @user = User.new(permitted_attributes(User).merge({ last_ip_addr: request.remote_ip }))
       @user.validate_email_format = true
-      @user.email_verified = false if FemboyFans.config.enable_email_verification?
+      @user.email_verified = false if Config.instance.enable_email_verification
       if !FemboyFans.config.enable_recaptcha? || verify_recaptcha(model: @user)
         @user.save
         if @user.errors.empty?
           session[:user_id] = @user.id
           session[:ph] = @user.password_token
-          if FemboyFans.config.enable_email_verification?
+          if Config.instance.enable_email_verification
             Users::EmailConfirmationMailer.confirmation(@user).deliver_now
           end
           UserEvent.create_from_request!(@user, :user_creation, request)

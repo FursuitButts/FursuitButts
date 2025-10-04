@@ -17,7 +17,7 @@ class Pool < ApplicationRecord
   normalizes(:description, with: ->(desc) { desc.gsub("\r\n", "\n") })
   validates(:name, uniqueness: { case_sensitive: false, if: :name_changed? })
   validates(:name, length: { minimum: 1, maximum: 250 })
-  validates(:description, length: { maximum: FemboyFans.config.pool_descr_max_size })
+  validates(:description, length: { maximum: -> { Config.instance.pool_description_max_size } })
   validate(:user_not_create_limited, on: :create)
   validate(:user_not_limited, on: :update, if: :limited_attribute_changed?)
   validate(:user_not_posts_limited, on: :update, if: :post_ids_changed?)
@@ -163,7 +163,7 @@ class Pool < ApplicationRecord
     post_ids_before = post_ids_before_last_save || post_ids_was
     added = post_ids - post_ids_before
     return if added.empty?
-    max = FemboyFans.config.pool_post_limit(updater)
+    max = Config.get_with_bypass(:pool_post_limit, updater)
     if post_ids.size > max
       errors.add(:base, "Pools can only have up to #{ActiveSupport::NumberHelper.number_to_delimited(max)} posts each")
       false

@@ -368,15 +368,14 @@ class Tag < ApplicationRecord
   def category_editable_by_implicit?(user, artist: false)
     return false unless user.is_janitor? || artist
     return false if is_locked?
-    return false if post_count >= FemboyFans.config.tag_type_change_cutoff(user)
+    return false if post_count >= Config.get_user(:tag_type_edit_implicit_limit, user)
     true
   end
 
   def category_editable_by?(user)
-    return true if user.is_admin?
-    return false if is_locked?
+    return false if is_locked? && !user.is_admin?
     return false unless TagCategory.get(category).can_use?(user)
-    return true if post_count < FemboyFans.config.tag_type_change_cutoff(user)
+    return true if post_count < Config.get_user(:tag_type_edit_limit, user)
     false
   end
 

@@ -48,7 +48,7 @@ class QueryBuilder
       when :datetime
         @q = q.datetime_attribute_matches(field, value)
       when :text, :string
-        value = value.split(",").first(FemboyFans.config.max_multi_count) if multi # explicitly supports arrays
+        value = value.split(",").first(Config.instance.max_multi_count) if multi # explicitly supports arrays
         @q = q.text_attribute_matches(field, value)
       when :inet
         @q = q.ip_attribute_matches(field, value)

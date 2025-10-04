@@ -91,14 +91,14 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
         end
         created_user = User.find(session[:user_id])
         assert_equal("xxx", created_user.name)
-        assert_equal(FemboyFans.config.records_per_page, created_user.per_page)
+        assert_equal(Config.instance.records_per_page, created_user.per_page)
         assert_not_nil(created_user.last_ip_addr)
         assert_equal(true, created_user.user_events.user_creation.exists?)
       end
 
       context("with sockpuppet validation enabled") do
         setup do
-          FemboyFans.config.unstub(:enable_sock_puppet_validation?)
+          Config.any_instance.stubs(:enable_sock_puppet_validation).returns(true)
           @user.update_columns(last_ip_addr: "127.0.0.1")
         end
 
@@ -124,7 +124,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
 
       context("with email validation") do
         setup do
-          FemboyFans.config.stubs(:enable_email_verification?).returns(true)
+          Config.any_instance.stubs(:enable_email_verification).returns(true)
         end
 
         should("reject invalid emails") do
@@ -188,7 +188,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
       context("for a user with blank email") do
         setup do
           @user = create(:user, email: "")
-          FemboyFans.config.stubs(:enable_email_verification?).returns(true)
+          Config.any_instance.stubs(:enable_email_verification).returns(true)
         end
 
         should("force them to update their email") do

@@ -14,13 +14,13 @@ class PostReplacementTest < ActiveSupport::TestCase
 
   context("User Limits:") do
     should("fail on too many per post in one day") do
-      FemboyFans.config.stubs(:post_replacement_per_day_limit).returns(-1)
+      Config.any_instance.stubs(:post_replacement_per_day_limit).returns(-1)
       @replacement = @post.replacements.create(attributes_for(:png_replacement).merge(creator: @user))
       assert_equal(["Creator has already suggested too many replacements for this post today"], @replacement.errors.full_messages)
     end
 
     should("fail on too many per post total") do
-      FemboyFans.config.stubs(:post_replacement_per_post_limit).returns(-1)
+      Config.any_instance.stubs(:post_replacement_per_post_limit).returns(-1)
       @replacement = @post.replacements.create(attributes_for(:png_replacement).merge(creator: @user))
       assert_equal(["Creator already has too many pending replacements for this post"], @replacement.errors.full_messages)
     end
@@ -69,14 +69,16 @@ class PostReplacementTest < ActiveSupport::TestCase
     end
 
     should("not allow files that are too large") do
-      FemboyFans.config.stubs(:max_file_sizes).returns({ "png" => 0 })
+      zero = Config.instance.max_file_sizes.transform_values { 0 }
+      Config.any_instance.stubs(:max_file_sizes).returns(zero)
       @replacement = @post.replacements.create(attributes_for(:png_replacement).merge(creator: @user))
       assert_equal("failed", @replacement.media_asset.status)
       assert_equal("File size is too large. Maximum allowed for this file type is 0 Bytes", @replacement.media_asset.status_message)
     end
 
     should("not allow an apng that is too large") do
-      FemboyFans.config.stubs(:max_apng_file_size).returns(0)
+      zero = Config.instance.max_file_sizes.transform_values { 0 }
+      Config.any_instance.stubs(:max_file_sizes).returns(zero)
       @replacement = @post.replacements.create(attributes_for(:apng_replacement).merge(creator: @user))
       assert_equal("failed", @replacement.media_asset.status)
       assert_equal("File size is too large. Maximum allowed for this file type is 0 Bytes", @replacement.media_asset.status_message)

@@ -68,15 +68,15 @@ class PaginatorTest < ActiveSupport::TestCase
         assert_invalid_page_number(model, -1)
         assert_invalid_page_number(model, "-1")
         assert_invalid_page_number(model, "a")
-        assert_invalid_page_number(model, FemboyFans.config.max_numbered_pages + 1)
+        assert_invalid_page_number(model, Config.instance.max_numbered_pages + 1)
         assert_invalid_page_number(model, "c1")
       end
 
       should("apply the correct limit") do
-        assert_equal(FemboyFans.config.records_per_page, model.paginate(1).records_per_page)
+        assert_equal(Config.instance.records_per_page, model.paginate(1).records_per_page)
         assert_equal(10, model.paginate(1, limit: 10).records_per_page)
         assert_equal(10, model.paginate(1, limit: "10").records_per_page)
-        assert_equal(FemboyFans.config.max_per_page, model.paginate(1, limit: FemboyFans.config.max_per_page + 1).records_per_page)
+        assert_equal(Config.instance.max_per_page, model.paginate(1, limit: Config.instance.max_per_page + 1).records_per_page)
         assert_equal(0, model.paginate(1, limit: "0").records_per_page)
         assert_equal(0, model.paginate(1, limit: "-1").records_per_page)
         assert_equal(0, model.paginate(1, limit: "a").records_per_page)

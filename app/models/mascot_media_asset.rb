@@ -15,7 +15,7 @@ class MascotMediaAsset < MediaAsset
 
   module FileMethods
     def validate_file
-      FileValidator.new(self, file.path).validate(max_file_sizes: FemboyFans.config.max_mascot_file_sizes, max_width: FemboyFans.config.max_mascot_width, max_height: FemboyFans.config.max_mascot_height)
+      FileValidator.new(self, file.path).validate(max_file_sizes: Config.instance.max_mascot_file_sizes.transform_values { |v| v * 1.kilobyte }, max_width: Config.instance.max_mascot_width, max_height: Config.instance.max_mascot_height)
     end
   end
 

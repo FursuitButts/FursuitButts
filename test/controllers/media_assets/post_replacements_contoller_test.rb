@@ -72,8 +72,8 @@ module MediaAssets
         end
 
         should("not allow files that are too large") do
-          FemboyFans.config.stubs(:max_file_size).returns(0)
-          FemboyFans.config.stubs(:max_file_sizes).returns({ "jpg" => 0 })
+          Config.any_instance.stubs(:max_file_size).returns(0)
+          Config.any_instance.stubs(:max_file_sizes).returns({ "jpg" => 0 })
           put_auth(append_post_replacement_media_asset_path(@media_asset), @user, params: { post_replacement_media_asset: { chunk_id: 1, data: file_fixture_upload(@combined) }, format: :json })
           assert_response(:unprocessable_entity)
           assert_equal("failed: File size is too large. Maximum allowed for this file type is 0 Bytes", @response.parsed_body["message"])

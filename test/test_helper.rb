@@ -56,7 +56,7 @@ class ActiveSupport::TestCase # rubocop:disable Style/ClassAndModuleChildren
   storage_root = Rails.root.join("tmp/test-storage2").to_s
   setup do
     Socket.stubs(:gethostname).returns("www.example.com")
-    FemboyFans.config.stubs(:enable_sock_puppet_validation?).returns(false)
+    Config.any_instance.stubs(:enable_sock_puppet_validation).returns(false)
     FemboyFans.config.stubs(:disable_throttles?).returns(true)
     FemboyFans.config.stubs(:reports_enabled?).returns(false)
 
@@ -67,7 +67,7 @@ class ActiveSupport::TestCase # rubocop:disable Style/ClassAndModuleChildren
     storage_manager = StorageManager::Local.new(base_dir: storage_root)
     FemboyFans.config.stubs(:storage_manager).returns(storage_manager)
     FemboyFans.config.stubs(:backup_storage_manager).returns(StorageManager::Null.new)
-    FemboyFans.config.stubs(:enable_email_verification?).returns(false)
+    Config.any_instance.stubs(:enable_email_verification).returns(false)
   end
 
   teardown do

@@ -106,7 +106,7 @@ class SystemInfo
   end
 
   def main
-    @main ||= RecursiveOpenStruct.new(ruby_version: RUBY_VERSION, rails_version: Rails.version, node_version: `node --version`.strip, alpine_version: File.read("/etc/alpine-release").strip, environment: Rails.env, hostname: FemboyFans.config.hostname, name: FemboyFans.config.app_name, url: FemboyFans.config.app_url, description: FemboyFans.config.description, safe_mode: FemboyFans.config.safe_mode?, version: FemboyFans.config.version, date: Time.now.utc.iso8601, timezone: Time.zone.name, timezone_sys: `date +%Z`[..-1])
+    @main ||= RecursiveOpenStruct.new(ruby_version: RUBY_VERSION, rails_version: Rails.version, node_version: `node --version`.strip, alpine_version: File.read("/etc/alpine-release").strip, environment: Rails.env, hostname: FemboyFans.config.hostname, name: FemboyFans.config.app_name, url: Config.instance.app_url, description: FemboyFans.config.description, safe_mode: FemboyFans.config.safe_mode?, version: FemboyFans.config.version, date: Time.now.utc.iso8601, timezone: Time.zone.name, timezone_sys: `date +%Z`[..-1])
   end
 
   def gems

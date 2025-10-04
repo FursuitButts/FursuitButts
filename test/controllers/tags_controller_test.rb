@@ -82,16 +82,16 @@ class TagsControllerTest < ActionDispatch::IntegrationTest
 
       context("for a tag with >1000 posts") do
         setup do
-          @tag.update_columns(post_count: 1000)
+          @tag.update_columns(post_count: 1001)
         end
 
-        should("not update the category for a janitor") do
-          put_auth(tag_path(@tag), @user, params: { tag: { category: TagCategory.general } })
+        should("not update the category for a trusted user") do
+          put_auth(tag_path(@tag), create(:trusted_user), params: { tag: { category: TagCategory.general } })
 
           assert_not_equal(TagCategory.general, @tag.reload.category)
         end
 
-        should("update the category for an admin") do
+        should("update the category for an admin user") do
           @admin = create(:admin_user)
           put_auth(tag_path(@tag), @admin, params: { tag: { category: TagCategory.general } })
 
@@ -100,8 +100,28 @@ class TagsControllerTest < ActionDispatch::IntegrationTest
         end
       end
 
-      should("not change category when the tag is too large to be changed by a builder") do
-        @tag.update_with(@user, category: TagCategory.general, post_count: 1001)
+      context("for a tag with >10000 posts") do
+        setup do
+          @tag.update_columns(post_count: 10_001)
+        end
+
+        should("not update the category for a janitor user") do
+          put_auth(tag_path(@tag), @user, params: { tag: { category: TagCategory.general } })
+
+          assert_not_equal(TagCategory.general, @tag.reload.category)
+        end
+
+        should("update the category for an admin user") do
+          @admin = create(:admin_user)
+          put_auth(tag_path(@tag), @admin, params: { tag: { category: TagCategory.general } })
+
+          assert_redirected_to(@tag)
+          assert_equal(TagCategory.general, @tag.reload.category)
+        end
+      end
+
+      should("not change category when the tag is too large to be changed by a janitor") do
+        @tag.update_with(@user, category: TagCategory.general, post_count: 10_001)
         put_auth(tag_path(@tag), @user, params: { tag: { category: TagCategory.artist } })
 
         assert_response(:forbidden)
@@ -134,7 +154,7 @@ class TagsControllerTest < ActionDispatch::IntegrationTest
       end
 
       should("not allow following more than the user's limit") do
-        FemboyFans.config.stubs(:followed_tag_limit).returns(0)
+        Config.stubs(:get_user).with(:followed_tag_limit, @user).returns(0)
         put_auth(follow_tag_path(@tag), @user, params: { format: :json })
         assert_response(:unprocessable_entity)
         assert_equal(0, @tag.reload.follower_count)

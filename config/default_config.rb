@@ -48,15 +48,6 @@ module FemboyFans
       Socket.gethostname
     end
 
-    # Contact email address of the admin.
-    def contact_email
-      "admin@#{domain}"
-    end
-
-    def takedown_email
-      "admin@#{domain}"
-    end
-
     def source_code_url
       "https://github.com/FemboyFans/FemboyFans"
     end
@@ -98,10 +89,6 @@ module FemboyFans
       end
     end
 
-    def default_user_timezone
-      "Central Time (US & Canada)"
-    end
-
     # The default name to use for anyone who isn't logged in.
     def default_guest_name
       "Anonymous"
@@ -113,7 +100,7 @@ module FemboyFans
       user.comment_threshold          = -10
       user.enable_autocomplete        = true
       user.enable_keyboard_navigation = true
-      user.per_page                   = records_per_page
+      user.per_page                   = Config.instance.records_per_page
       user.style_usernames            = true
       user.move_related_thumbnails    = true
       user.enable_hover_zoom          = true
@@ -182,23 +169,9 @@ module FemboyFans
       "/images/deleted-preview.png"
     end
 
-    # When calculating statistics based on the posts table, gather this many posts to sample from.
-    def post_sample_size
-      300
-    end
-
     # List of memcached servers
     def memcached_servers
       %w[127.0.0.1:11211]
-    end
-
-    def alias_implication_forum_category
-      1
-    end
-
-    # After a post receives this many comments, new comments will no longer bump the post in comment/index.
-    def comment_threshold
-      40
     end
 
     def disable_throttles?
@@ -213,141 +186,13 @@ module FemboyFans
       false
     end
 
-    def pending_uploads_limit
-      3
-    end
-
-    # Members cannot post more than X comments in an hour.
-    def member_comment_limit
-      15
-    end
-
-    def comment_vote_limit
-      25
-    end
-
-    def post_vote_limit
-      1_000
-    end
-
-    def dmail_minute_limit
-      2
-    end
-
-    def dmail_limit
-      30
-    end
-
-    def dmail_day_limit
-      60
-    end
-
-    def dmail_restricted_day_limit
-      5
-    end
-
-    def tag_suggestion_limit
-      15
-    end
-
-    def forum_vote_limit
-      25
-    end
-
-    # Artists creator or edited in the last hour
-    def artist_edit_limit
-      25
-    end
-
-    # Wiki pages created or edited in the last hour
-    def wiki_edit_limit
-      60
-    end
-
-    # Notes applied to posts edited or created in the last hour
-    def note_edit_limit
-      50
-    end
-
-    # Pools created in the last hour
-    def pool_limit
-      2
-    end
-
-    # Pools created or edited in the last hour
-    def pool_edit_limit
-      10
-    end
-
-    # Pools that you can edit the posts for in the last hour
-    def pool_post_edit_limit
-      30
-    end
-
-    # Members cannot create more than X post versions in an hour.
-    def post_edit_limit
-      150
-    end
-
-    def post_appeal_limit
-      5
-    end
-
-    def post_flag_limit
-      20
-    end
-
-    # Flat limit that applies to all users, regardless of level
-    def hourly_upload_limit
-      30
-    end
-
-    def ticket_limit
-      30
-    end
-
     # Members cannot change the category of pools with more than this many posts.
     def pool_category_change_limit
       30
     end
 
-    def post_replacement_per_day_limit
-      2
-    end
-
-    def post_replacement_per_post_limit
-      5
-    end
-
-    def compact_uploader_minimum_posts
-      10
-    end
-
     def remember_key
       "abc123"
-    end
-
-    def tag_type_change_cutoff(user)
-      if user.is_trusted?
-        1_000
-      else
-        100
-      end
-    end
-
-    # Users cannot search for more than X regular tags at a time.
-    def tag_query_limit
-      40
-    end
-
-    def followed_tag_limit(user)
-      if user.is_staff?
-        1000
-      elsif user.is_trusted?
-        500
-      else
-        100
-      end
     end
 
     # If the user can request a bulk update request containing a nuke instruction
@@ -355,170 +200,15 @@ module FemboyFans
       user.is_admin?
     end
 
-    def bur_entry_limit(user)
-      return Float::INFINITY if user.is_admin?
-      50
-    end
-
     # Return true if the given tag shouldn't count against the user's tag search limit.
     def is_unlimited_tag?(tag)
       !!(tag =~ /\A(-?status:deleted|rating:s.*|limit:.+)\z/i)
-    end
-
-    # After this many pages, the paginator will switch to sequential mode.
-    def max_numbered_pages
-      1_000
-    end
-
-    def max_per_page
-      500
-    end
-
-    def comment_max_size
-      10_000
-    end
-
-    def dmail_max_size
-      50_000
-    end
-
-    def forum_post_max_size
-      50_000
-    end
-
-    def forum_category_description_max_size
-      250
-    end
-
-    def note_max_size
-      1_000
-    end
-
-    def pool_descr_max_size
-      10_000
-    end
-
-    def post_descr_max_size
-      50_000
-    end
-
-    def ticket_max_size
-      5_000
-    end
-
-    def user_about_max_size
-      50_000
-    end
-
-    def blacklisted_tags_max_size
-      150_000
-    end
-
-    def custom_style_max_size
-      500_000
-    end
-
-    def wiki_page_max_size
-      250_000
-    end
-
-    def user_feedback_max_size
-      20_000
-    end
-
-    def news_update_max_size
-      50_000
-    end
-
-    def pool_post_limit(user)
-      if user.is_admin?
-        Float::INFINITY
-      else
-        1_000
-      end
-    end
-
-    def set_post_limit(user)
-      if user.is_admin?
-        Float::INFINITY
-      else
-        10_000
-      end
-    end
-
-    def disapproval_message_max_size
-      250
     end
 
     def discord_site
     end
 
     def discord_secret
-    end
-
-    # Maximum size of an upload. If you change this, you must also change
-    # `client_max_body_size` in your nginx.conf.
-    def max_file_size
-      200.megabytes
-    end
-
-    def max_upload_per_request
-      75.megabytes
-    end
-
-    def max_file_sizes
-      {
-        "jpg"  => 100.megabytes,
-        "png"  => 100.megabytes,
-        "webp" => 100.megabytes,
-        "gif"  => 30.megabytes,
-        "webm" => 200.megabytes,
-        "mp4"  => 200.megabytes,
-      }
-    end
-
-    def max_apng_file_size
-      30.megabytes
-    end
-
-    def max_mascot_file_sizes
-      {
-        "png"  => 1.megabyte,
-        "jpg"  => 1.megabyte,
-        "webp" => 1.megabyte,
-      }
-    end
-
-    def max_mascot_width
-      1000
-    end
-
-    def max_mascot_height
-      1000
-    end
-
-    # Measured in seconds
-    def max_video_duration
-      30.minutes
-    end
-
-    # Maximum resolution (width * height) of an upload. Default: 441 megapixels (21000x21000 pixels).
-    def max_image_resolution
-      21_000 * 21_000
-    end
-
-    # Maximum width of an upload.
-    def max_image_width
-      40_000
-    end
-
-    # Maximum height of an upload.
-    def max_image_height
-      40_000
-    end
-
-    def max_tags_per_post
-      2000
     end
 
     # Permanently redirect all HTTP requests to HTTPS.
@@ -634,55 +324,6 @@ module FemboyFans
       nil
     end
 
-    def flag_notice_wiki_page
-      "internal:flag_notice"
-    end
-
-    def replacement_notice_wiki_page
-      "internal:replacement_notice"
-    end
-
-    def avoid_posting_notice_wiki_page
-      "internal:avoid_posting_notice"
-    end
-
-    def discord_notice_wiki_page
-      "internal:discord_notice"
-    end
-
-    def rules_body_wiki_page
-      "internal:rules_body"
-    end
-
-    def restricted_notice_wiki_page
-      "internal:restricted_notice"
-    end
-
-    def rejected_notice_wiki_page
-      "internal:rejected_notice"
-    end
-
-    def appeal_notice_wiki_page
-      "internal:appeal_notice"
-    end
-
-    def ban_notice_wiki_page
-      "internal:ban_notice"
-    end
-
-    def user_approved_wiki_page
-      "internal:user_approved"
-    end
-
-    def user_rejected_wiki_page
-      "internal:user_rejected"
-    end
-
-    # The number of posts displayed per page.
-    def records_per_page
-      100
-    end
-
     def can_user_see_post?(user, post)
       # TODO: appealed posts should be visible, but this makes it far too easy to get the contents of deleted posts at a moments notice
       return true if user.is_staff? # || post.is_appealed?
@@ -759,11 +400,6 @@ module FemboyFans
     end
 
     def smtp_tls
-    end
-
-    # disable this for tests
-    def enable_sock_puppet_validation?
-      !Rails.env.development?
     end
 
     def recommender_server
@@ -983,10 +619,6 @@ module FemboyFans
       "https://#{hostname}"
     end
 
-    def default_forum_category
-      alias_implication_forum_category
-    end
-
     def upload_whitelists_topic
       0
     end
@@ -1000,36 +632,8 @@ module FemboyFans
       user.is_janitor?
     end
 
-    # only applies to approving
-    def tag_change_request_update_limit(user)
-      return 0 unless user.can_manage_aibur?
-      if user.is_owner?
-        Float::INFINITY
-      elsif user.is_admin?
-        100_000
-      elsif user.is_moderator?
-        10_000
-      elsif user.is_janitor?
-        1_000
-      elsif user.is_trusted?
-        500
-      else
-        0
-      end
-    end
-
-    # Prevents Aliases/BURs from copying non-general categories from antecedent tags to large consequent tags
-    def alias_category_change_cutoff
-      10_000
-    end
-
     def max_concurrency
       Concurrent.available_processor_count.to_i.clamp(1..)
-    end
-
-    # the maximum number of inputs for "multi" values ("in" ranges, comma separated names, etc.)
-    def max_multi_count
-      100
     end
   end
 

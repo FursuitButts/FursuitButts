@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_10_02_085332) do
+ActiveRecord::Schema[7.1].define(version: 2025_10_02_093244) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -174,6 +174,123 @@ ActiveRecord::Schema[7.1].define(version: 2025_10_02_085332) do
     t.index ["creator_ip_addr"], name: "index_comments_on_creator_ip_addr"
     t.index ["post_id", "is_hidden"], name: "index_comments_on_post_id_and_is_hidden"
     t.index ["post_id"], name: "index_comments_on_post_id"
+  end
+
+  create_table "config", id: :text, default: "config", force: :cascade do |t|
+    t.text "contributor_suffixes", default: "va, modeler", null: false
+    t.integer "comment_bump_threshold", default: 40, null: false
+    t.integer "pending_uploads_limit", default: 3, null: false
+    t.integer "comment_limit", default: 15, null: false
+    t.integer "comment_limit_bypass", default: 15, null: false
+    t.integer "comment_vote_limit", default: 25, null: false
+    t.integer "comment_vote_limit_bypass", default: 15, null: false
+    t.integer "post_vote_limit", default: 1000, null: false
+    t.integer "post_vote_limit_bypass", default: 15, null: false
+    t.integer "dmail_minute_limit", default: 2, null: false
+    t.integer "dmail_minute_limit_bypass", default: 20, null: false
+    t.integer "dmail_hour_limit", default: 30, null: false
+    t.integer "dmail_hour_limit_bypass", default: 20, null: false
+    t.integer "dmail_day_limit", default: 60, null: false
+    t.integer "dmail_day_limit_bypass", default: 20, null: false
+    t.integer "dmail_restricted_day_limit", default: 5, null: false
+    t.integer "tag_suggestion_limit", default: 15, null: false
+    t.integer "tag_suggestion_limit_bypass", default: 15, null: false
+    t.integer "forum_vote_limit", default: 25, null: false
+    t.integer "forum_vote_limit_bypass", default: 15, null: false
+    t.integer "artist_edit_limit", default: 25, null: false
+    t.integer "artist_edit_limit_bypass", default: 15, null: false
+    t.integer "wiki_edit_limit", default: 60, null: false
+    t.integer "wiki_edit_limit_bypass", default: 15, null: false
+    t.integer "note_edit_limit", default: 50, null: false
+    t.integer "note_edit_limit_bypass", default: 15, null: false
+    t.integer "pool_limit", default: 2, null: false
+    t.integer "pool_limit_bypass", default: 15, null: false
+    t.integer "pool_edit_limit", default: 10, null: false
+    t.integer "pool_edit_limit_bypass", default: 15, null: false
+    t.integer "pool_post_edit_limit", default: 30, null: false
+    t.integer "pool_post_edit_limit_bypass", default: 15, null: false
+    t.integer "post_edit_limit", default: 150, null: false
+    t.integer "post_edit_limit_bypass", default: 15, null: false
+    t.integer "post_appeal_limit", default: 5, null: false
+    t.integer "post_appeal_limit_bypass", default: 15, null: false
+    t.integer "post_flag_limit", default: 20, null: false
+    t.integer "post_flag_limit_bypass", default: 15, null: false
+    t.integer "hourly_upload_limit", default: 30, null: false
+    t.integer "ticket_limit", default: 30, null: false
+    t.integer "ticket_limit_bypass", default: 15, null: false
+    t.integer "pool_category_change_limit", default: 30, null: false
+    t.integer "post_replacement_per_day_limit", default: 2, null: false
+    t.integer "post_replacement_per_day_limit_bypass", default: 20, null: false
+    t.integer "post_replacement_per_post_limit", default: 5, null: false
+    t.integer "post_replacement_per_post_limit_bypass", default: 20, null: false
+    t.integer "compact_uploader_minimum_posts", default: 10, null: false
+    t.integer "tag_query_limit", default: 10, null: false
+    t.jsonb "bur_entry_limit", default: {"10"=>50, "40"=>-1}, null: false
+    t.integer "max_numbered_pages", default: 1000, null: false
+    t.integer "max_per_page", default: 500, null: false
+    t.integer "comment_max_size", default: 10000, null: false
+    t.integer "dmail_max_size", default: 50000, null: false
+    t.integer "forum_post_max_size", default: 50000, null: false
+    t.integer "forum_category_description_max_size", default: 250, null: false
+    t.integer "note_max_size", default: 1000, null: false
+    t.integer "pool_description_max_size", default: 10000, null: false
+    t.integer "post_description_max_size", default: 50000, null: false
+    t.integer "ticket_max_size", default: 5000, null: false
+    t.integer "user_about_max_size", default: 50000, null: false
+    t.integer "blacklisted_tags_max_size", default: 150000, null: false
+    t.integer "custom_style_max_size", default: 500000, null: false
+    t.integer "wiki_page_max_size", default: 250000, null: false
+    t.integer "user_feedback_max_size", default: 20000, null: false
+    t.integer "news_update_max_size", default: 50000, null: false
+    t.integer "pool_post_limit", default: 1000, null: false
+    t.integer "pool_post_limit_bypass", default: 40, null: false
+    t.integer "set_post_limit", default: 10000, null: false
+    t.integer "set_post_limit_bypass", default: 40, null: false
+    t.integer "disapproval_message_max_size", default: 250, null: false
+    t.integer "max_upload_per_request", default: 75, null: false
+    t.integer "max_file_size", default: 200, null: false
+    t.jsonb "max_file_sizes", default: {"gif"=>30, "jpg"=>100, "mp4"=>200, "png"=>100, "apng"=>30, "webm"=>200, "webp"=>100}, null: false
+    t.jsonb "max_mascot_file_sizes", default: {"jpg"=>1000, "png"=>1000, "webp"=>1000}, null: false
+    t.integer "max_mascot_width", default: 1000, null: false
+    t.integer "max_mascot_height", default: 1000, null: false
+    t.integer "max_video_duration", default: 1800, null: false
+    t.integer "max_image_resolution", default: 441, null: false
+    t.integer "max_image_width", default: 40000, null: false
+    t.integer "max_image_height", default: 40000, null: false
+    t.integer "max_tags_per_post", default: 2000, null: false
+    t.boolean "enable_signups", default: true, null: false
+    t.boolean "user_approvals_enabled", default: true, null: false
+    t.boolean "enable_email_verification", default: false, null: false
+    t.boolean "enable_stale_forum_topics", default: true, null: false
+    t.boolean "enable_sock_puppet_validation", default: false, null: false
+    t.integer "forum_topic_stale_window", default: 180, null: false
+    t.integer "forum_topic_aibur_stale_window", default: 365, null: false
+    t.string "flag_notice_wiki_page", default: "internal:flag_notice", null: false
+    t.string "replacement_notice_wiki_page", default: "internal:replacement_notice", null: false
+    t.string "avoid_posting_notice_wiki_page", default: "internal:avoid_posting_notice", null: false
+    t.string "discord_notice_wiki_page", default: "internal:discord_notice", null: false
+    t.string "rules_body_wiki_page", default: "internal:rules_body", null: false
+    t.string "restricted_notice_wiki_page", default: "internal:restricted_notice", null: false
+    t.string "rejected_notice_wiki_page", default: "internal:rejected_notice", null: false
+    t.string "appeal_notice_wiki_page", default: "internal:appeal_notice", null: false
+    t.string "ban_notice_wiki_page", default: "internal:ban_notice", null: false
+    t.string "user_approved_wiki_page", default: "internal:user_approved", null: false
+    t.string "user_rejected_wiki_page", default: "internal:user_rejected", null: false
+    t.integer "records_per_page", default: 100, null: false
+    t.jsonb "tag_change_request_update_limit", default: {"15"=>500, "20"=>1000, "30"=>10000, "40"=>100000, "50"=>-1}, null: false
+    t.jsonb "followed_tag_limit", default: {"10"=>100, "15"=>500, "20"=>1000}, null: false
+    t.jsonb "tag_type_edit_limit", default: {"10"=>100, "15"=>1000, "20"=>10000, "40"=>-1}, null: false
+    t.jsonb "tag_type_edit_implicit_limit", default: {"10"=>100, "15"=>1000}, null: false
+    t.integer "alias_category_change_cutoff", default: 10000, null: false
+    t.integer "max_multi_count", default: 100, null: false
+    t.string "takedown_email", default: "admin@femboy.fan", null: false
+    t.string "contact_email", default: "admin@femboy.fan", null: false
+    t.string "default_user_timezone", default: "Central Time (US & Canada)"
+    t.integer "alias_and_implication_forum_category", default: 1, null: false
+    t.integer "default_forum_category", default: 1, null: false
+    t.integer "upload_whitelists_forum_topic", default: 0, null: false
+    t.integer "post_sample_size", default: 300, null: false
+    t.datetime "updated_at"
   end
 
   create_table "destroyed_posts", force: :cascade do |t|

@@ -1462,7 +1462,7 @@ class PostTest < ActiveSupport::TestCase
         end
 
         should("error if the tagcount is above the limit") do
-          FemboyFans.config.stubs(:max_tags_per_post).returns(5)
+          Config.any_instance.stubs(:max_tags_per_post).returns(5)
           post = create(:post, tag_string: "1 2 3 4 5")
           post.add_tag("6")
           post.save
@@ -1470,7 +1470,7 @@ class PostTest < ActiveSupport::TestCase
         end
 
         should("error if the tagcount via implications is above the limit") do
-          FemboyFans.config.stubs(:max_tags_per_post).returns(2)
+          Config.any_instance.stubs(:max_tags_per_post).returns(2)
           create(:tag_implication, antecedent_name: "2", consequent_name: "3")
           post = create(:post, tag_string: "1")
           post.add_tag("2")
@@ -1480,7 +1480,7 @@ class PostTest < ActiveSupport::TestCase
         end
 
         should("allow removing tags when the post is above the limit") do
-          FemboyFans.config.stubs(:max_tags_per_post).returns(2)
+          Config.any_instance.stubs(:max_tags_per_post).returns(2)
           post = build(:post, tag_string: "1 2 3", uploader: @user)
           post.save(validate: false)
           post.remove_tag("3")
@@ -2655,7 +2655,7 @@ class PostTest < ActiveSupport::TestCase
         end
 
         should("gracefully fail if the set is full") do
-          FemboyFans.config.stubs(:set_post_limit).returns(0)
+          Config.stubs(:get_with_bypass).with(:set_post_limit, @user).returns(0)
           @post.update_with(@user, tag_string_diff: "set:#{@set.id}")
           assert_equal(["Sets can only have up to 0 posts each"], @post.errors.full_messages)
           assert_equal([], @set.reload.post_ids)
@@ -2671,7 +2671,7 @@ class PostTest < ActiveSupport::TestCase
         end
 
         should("gracefully fail if the set is full") do
-          FemboyFans.config.stubs(:set_post_limit).returns(0)
+          Config.stubs(:get_with_bypass).with(:set_post_limit, @user).returns(0)
           @post.update_with(@user, tag_string_diff: "set:#{@set.shortname}")
           assert_equal(["Sets can only have up to 0 posts each"], @post.errors.full_messages)
           assert_equal([], @set.reload.post_ids)
@@ -2695,7 +2695,7 @@ class PostTest < ActiveSupport::TestCase
         end
 
         should("gracefully fail if the pool is full") do
-          FemboyFans.config.stubs(:pool_post_limit).returns(0)
+          Config.stubs(:get_with_bypass).with(:pool_post_limit, @user).returns(0)
           @post.update_with(@user, tag_string_diff: "pool:#{@pool.id}")
           assert_equal(["Pools can only have up to 0 posts each"], @post.errors.full_messages)
           assert_equal([], @pool.reload.post_ids)
@@ -2717,7 +2717,7 @@ class PostTest < ActiveSupport::TestCase
         end
 
         should("gracefully fail if the pool is full") do
-          FemboyFans.config.stubs(:pool_post_limit).returns(0)
+          Config.stubs(:get_with_bypass).with(:pool_post_limit, @user).returns(0)
           @post.update_with(@user, tag_string_diff: "pool:#{@pool.name}")
           assert_equal(["Pools can only have up to 0 posts each"], @post.errors.full_messages)
           assert_equal([], @pool.reload.post_ids)

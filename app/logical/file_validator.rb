@@ -8,7 +8,11 @@ class FileValidator
     @file_path = file_path
   end
 
-  def validate(max_file_sizes: FemboyFans.config.max_file_sizes, max_width: FemboyFans.config.max_image_width, max_height: FemboyFans.config.max_image_height)
+  def validate(max_file_sizes: nil, max_width: nil, max_height: nil)
+    # default arguments are evaluated when the method is defined
+    max_file_sizes ||= Config.instance.max_file_sizes.transform_values { |v| v * 1.megabyte }
+    max_width ||= Config.instance.max_image_width
+    max_height ||= Config.instance.max_image_height
     validate_file_ext(max_file_sizes)
     validate_file_size(max_file_sizes)
     validate_file_integrity
@@ -40,19 +44,20 @@ class FileValidator
       record.errors.add(:file_size, "is too small")
     end
     max_size = max_file_sizes.fetch(record.file_ext, 0)
+    max_size_apng = max_file_sizes.fetch("apng", 0)
     if record.file_size > max_size
       record.errors.add(:file_size, "is too large. Maximum allowed for this file type is #{ApplicationController.helpers.number_to_human_size(max_size)}")
     end
-    if MediaAsset.is_animated_png?(file_path) && record.file_size > FemboyFans.config.max_apng_file_size
-      record.errors.add(:file_size, "is too large. Maximum allowed for this file type is #{ApplicationController.helpers.number_to_human_size(FemboyFans.config.max_apng_file_size)}")
+    if MediaAsset.is_animated_png?(file_path) && record.file_size > max_size_apng
+      record.errors.add(:file_size, "is too large. Maximum allowed for this file type is #{ApplicationController.helpers.number_to_human_size(max_size_apng)}")
     end
   end
 
   def validate_resolution(max_width, max_height)
     resolution = record.image_width.to_i * record.image_height.to_i
 
-    if resolution > FemboyFans.config.max_image_resolution
-      record.errors.add(:base, "image resolution is too large (resolution: #{(resolution / 1_000_000.0).round(1)} megapixels (#{record.image_width}x#{record.image_height}); max: #{FemboyFans.config.max_image_resolution / 1_000_000} megapixels)")
+    if resolution > Config.instance.max_image_resolution * 1_000_000
+      record.errors.add(:base, "image resolution is too large (resolution: #{(resolution / 1_000_000.0).round(1)} megapixels (#{record.image_width}x#{record.image_height}); max: #{Config.instance.max_image_resolution} megapixels)")
     elsif record.image_width > max_width
       record.errors.add(:image_width, "is too large (width: #{record.image_width}; max width: #{max_width})")
     elsif record.image_height > max_height
@@ -61,8 +66,8 @@ class FileValidator
   end
 
   def validate_duration(video)
-    if video.duration > FemboyFans.config.max_video_duration
-      record.errors.add(:base, "video must not be longer than #{FemboyFans.config.max_video_duration / 1.minute} minutes")
+    if video.duration > Config.instance.max_video_duration
+      record.errors.add(:base, "video must not be longer than #{Config.instance.max_video_duration / 1.minute} minutes")
     end
   end
 

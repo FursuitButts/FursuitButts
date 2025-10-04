@@ -3,6 +3,7 @@
 class StaticController < ApplicationController
   respond_to(:text, only: %i[robots])
   respond_to(:xml, only: %i[site_map])
+  respond_to(:html)
 
   def privacy
     @page = view_context.safe_wiki("help:privacy_policy")
@@ -25,7 +26,7 @@ class StaticController < ApplicationController
   end
 
   def avoid_posting
-    @page = view_context.safe_wiki(FemboyFans.config.avoid_posting_notice_wiki_page)
+    @page = view_context.safe_wiki(Config.instance.avoid_posting_notice_wiki_page)
   end
 
   def not_found
@@ -36,14 +37,16 @@ class StaticController < ApplicationController
   end
 
   def site_map
-    expires_in(1.day, public: true)
-    case params[:type]
-    when nil, ""
-      render(partial: "static/site_maps/index")
-    when "main"
-      render(partial: "static/site_maps/main")
-    when "posts"
-      render(partial: "static/site_maps/posts", locals: { from: params[:from].to_i, to: params[:to].to_i })
+    if request.format.xml?
+      expires_in(1.day, public: true)
+      case params[:type]
+      when nil, ""
+        render(partial: "static/site_maps/index")
+      when "main"
+        render(partial: "static/site_maps/main")
+      when "posts"
+        render(partial: "static/site_maps/posts", locals: { from: params[:from].to_i, to: params[:to].to_i })
+      end
     end
   end
 
@@ -80,7 +83,7 @@ class StaticController < ApplicationController
 
       redirect_to(FemboyFans.config.discord_site + user_hash, allow_other_host: true)
     else
-      @page = view_context.safe_wiki(FemboyFans.config.discord_notice_wiki_page)
+      @page = view_context.safe_wiki(Config.instance.discord_notice_wiki_page)
     end
   end
 

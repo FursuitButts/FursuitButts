@@ -52,7 +52,7 @@ class Post < ApplicationRecord
   normalizes(:description, with: ->(desc) { desc.gsub("\r\n", "\n") })
   validates(:rating, inclusion: { in: %w[s q e], message: "rating must be s, q, or e" })
   validates(:bg_color, format: { with: /\A[A-Fa-f0-9]{6}\z/ }, allow_nil: true)
-  validates(:description, length: { maximum: FemboyFans.config.post_descr_max_size }, if: :description_changed?)
+  validates(:description, length: { maximum: -> { Config.instance.post_description_max_size } }, if: :description_changed?)
   validate(:added_tags_are_valid, if: :should_process_tags?)
   validate(:removed_tags_are_valid, if: :should_process_tags?)
   validate(:has_artist_tag, if: :should_process_tags?)
@@ -693,7 +693,7 @@ class Post < ApplicationRecord
     def tag_count_not_insane
       return if do_not_version_changes || automated_edit
 
-      max_count = FemboyFans.config.max_tags_per_post
+      max_count = Config.instance.max_tags_per_post
       if TagQuery.scan(tag_string).size > max_count
         errors.add(:tag_string, "tag count exceeds maximum of #{max_count}")
         throw(:abort)

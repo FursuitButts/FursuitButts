@@ -106,7 +106,7 @@ class BulkUpdateRequestProcessorTest < ActiveSupport::TestCase
 
     context("script length") do
       setup do
-        FemboyFans.config.stubs(:bur_entry_limit).returns(1)
+        Config.stubs(:get_user).with(:bur_entry_limit, @user).returns(1)
         @script = "alias aaa -> bbb\n" \
                   "imply bbb -> ccc"
 

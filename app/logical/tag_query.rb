@@ -68,8 +68,8 @@ class TagQuery
     @tag_count = 0
 
     parse_query(query)
-    if @tag_count > FemboyFans.config.tag_query_limit - free_tags_count
-      raise(CountExceededError, "You cannot search for more than #{FemboyFans.config.tag_query_limit} tags at a time")
+    if @tag_count > Config.instance.tag_query_limit - free_tags_count
+      raise(CountExceededError, "You cannot search for more than #{Config.instance.tag_query_limit} tags at a time")
     end
   end
 
@@ -446,7 +446,7 @@ class TagQuery
   end
 
   def pull_wildcard_tags(tag)
-    matches = Tag.name_matches(tag).limit(FemboyFans.config.tag_query_limit).order("post_count DESC").pluck(:name)
+    matches = Tag.name_matches(tag).limit(Config.instance.tag_query_limit).order("post_count DESC").pluck(:name)
     matches = ["~~not_found~~"] if matches.empty?
     matches
   end

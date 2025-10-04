@@ -129,7 +129,7 @@ module ChunkedUpload
     end
 
     def check_size!(file_ext = nil)
-      too_large!(file_ext) if tempfile_size > FemboyFans.config.max_file_sizes.fetch(file_ext, FemboyFans.config.max_file_size)
+      too_large!(file_ext) if tempfile_size > Config.instance.max_file_sizes.fetch(file_ext, Config.instance.max_file_size) * 1.megabyte
       return true unless failed? && status_message.starts_with?("File size is too large.")
       false
     end
@@ -137,7 +137,7 @@ module ChunkedUpload
     def too_large!(file_ext = nil)
       unsaved { cancel! }
       self.status = "failed"
-      self.status_message = "File size is too large. Maximum allowed for this file type is #{ApplicationController.helpers.number_to_human_size(FemboyFans.config.max_file_sizes.fetch(file_ext, FemboyFans.config.max_file_size))}"
+      self.status_message = "File size is too large. Maximum allowed for this file type is #{ApplicationController.helpers.number_to_human_size(Config.instance.max_file_sizes.fetch(file_ext, Config.instance.max_file_size) * 1.megabyte)}"
       save! unless no_save
     end
 

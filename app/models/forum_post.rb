@@ -30,7 +30,7 @@ class ForumPost < ApplicationRecord
   after_destroy(:update_topic_updated_at_on_destroy)
   normalizes(:body, with: ->(body) { body.gsub("\r\n", "\n") })
   validates(:body, :creator_id, presence: true)
-  validates(:body, length: { minimum: 1, maximum: FemboyFans.config.forum_post_max_size })
+  validates(:body, length: { minimum: 1, maximum: -> { Config.instance.forum_post_max_size } })
   validate(:validate_topic_is_unlocked)
   validate(:validate_topic_id_not_invalid)
   validate(:validate_topic_is_not_restricted, on: :create)
@@ -251,7 +251,7 @@ class ForumPost < ApplicationRecord
 
   def forum_topic_page
     Cache.fetch("fp_topic_page:#{id}", expires_in: 12.hours) do
-      (ForumPost.where("topic_id = ? and created_at <= ?", topic_id, created_at).count / FemboyFans.config.records_per_page.to_f).ceil
+      (ForumPost.where("topic_id = ? and created_at <= ?", topic_id, created_at).count / Config.instance.records_per_page.to_f).ceil
     end
   end
 

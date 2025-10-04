@@ -95,7 +95,7 @@ class Upload < ApplicationRecord
   end
 
   def no_excessive_pending_uploads
-    if Upload.in_progress.where(uploader_id: uploader_id).count >= FemboyFans.config.pending_uploads_limit
+    if Upload.in_progress.where(uploader_id: uploader_id).count >= Config.instance.pending_uploads_limit
       errors.add(:base, "You have too many pending uploads. Finish or cancel your existing uploads and try again")
       return false
     end

@@ -57,7 +57,7 @@ module ParseValue
       [:between, cast(left, type), cast(right, type)]
 
     elsif range.include?(",")
-      [:in, range.split(",").first(FemboyFans.config.max_multi_count).map { |x| cast(x, type) }]
+      [:in, range.split(",").first(Config.instance.max_multi_count).map { |x| cast(x, type) }]
 
     else
       [:eq, cast(range, type)]

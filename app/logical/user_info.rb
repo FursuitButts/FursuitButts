@@ -51,7 +51,7 @@ class UserInfo
       when :post_vote
         r.url_for(controller: "posts/votes", action: :index, search: { user_id: user.id })
       when :suggest_tag
-        r.forum_topics_path(search: { creator_id: user.id, category_id: FemboyFans.config.alias_implication_forum_category })
+        r.forum_topics_path(search: { creator_id: user.id, category_id: Config.instance.alias_and_implication_forum_category })
       when :ticket
         r.tickets_path(search: { creator_id: user.id })
       when :wiki_edit

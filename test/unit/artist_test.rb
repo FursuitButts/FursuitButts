@@ -317,9 +317,9 @@ class ArtistTest < ActiveSupport::TestCase
         assert_equal("https://femboy.fan", @artist.url_string)
 
         FemboyFans.config.stubs(:disable_throttles?).returns(false)
-        FemboyFans.config.stubs(:artist_edit_limit).returns(0)
+        Config.any_instance.stubs(:artist_edit_limit).returns(0)
 
-        assert_no_difference(-> { ArtistVersion.count }) do
+        assert_no_difference("ArtistVersion.count") do
           @artist.update_with(@user, url_string: "")
         end
 

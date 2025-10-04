@@ -1,0 +1,25 @@
+#c-admin-configs #a-show {
+  dl {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.5rem 1rem;
+  }
+
+  dl dt {
+    font-weight: bold;
+  }
+
+  dl dd {
+    margin: 0;
+  }
+
+  .section-header {
+    text-align: center;
+    font-size: 200%;
+  }
+
+  .submit-button {
+    text-align: center;
+    font-size: 200%;
+  }
+}

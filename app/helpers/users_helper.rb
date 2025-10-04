@@ -12,8 +12,12 @@ module UsersHelper
     link_to("»", users_path(search: { email_matches: "*@#{domain}" }))
   end
 
-  def user_levels_for_select(min_level = User::Levels::MEMBER, current: nil)
-    User::Levels.hash.select { |_name, level| level >= min_level || (current && current == level) }
+  def user_levels_for_select(min_level = User::Levels::MEMBER, max_level = nil, current: nil)
+    User::Levels.hash.select do |_name, level|
+      within_range = level >= min_level && (max_level.nil? || level <= max_level)
+      is_current   = current && current == level
+      within_range || is_current
+    end
   end
 
   def user_level_select_tag(name, min_level = User::Levels::MEMBER, options = {}, current: nil)

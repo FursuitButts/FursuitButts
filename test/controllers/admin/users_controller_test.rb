@@ -47,7 +47,7 @@ module Admin
         context("on an user with a blank email") do
           setup do
             @user = create(:user, email: "")
-            FemboyFans.config.stubs(:enable_email_verification?).returns(true)
+            Config.any_instance.stubs(:enable_email_verification).returns(true)
           end
 
           should("succeed") do
@@ -68,7 +68,7 @@ module Admin
           setup do
             @user1 = create(:user, email: "test@femboy.fan")
             @user2 = create(:user, email: "test@femboy.fan")
-            FemboyFans.config.stubs(:enable_email_verification?).returns(true)
+            Config.any_instance.stubs(:enable_email_verification).returns(true)
           end
 
           should("allow editing if the email is not changed") do

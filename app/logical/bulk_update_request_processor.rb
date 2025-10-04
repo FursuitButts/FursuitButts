@@ -44,7 +44,7 @@ class BulkUpdateRequestProcessor
   end
 
   def validate_script_length
-    limit = FemboyFans.config.bur_entry_limit(creator)
+    limit = Config.get_user(:bur_entry_limit, creator)
     errors.add(:script, "cannot have more than #{limit} entries") if entry_count > limit
   end
 

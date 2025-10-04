@@ -472,6 +472,129 @@ ALTER SEQUENCE public.comments_id_seq OWNED BY public.comments.id;
 
 
 --
+-- Name: config; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.config (
+    id text DEFAULT 'config'::text NOT NULL,
+    contributor_suffixes text DEFAULT 'va, modeler'::text NOT NULL,
+    comment_bump_threshold integer DEFAULT 40 NOT NULL,
+    pending_uploads_limit integer DEFAULT 3 NOT NULL,
+    comment_limit integer DEFAULT 15 NOT NULL,
+    comment_limit_bypass integer DEFAULT 15 NOT NULL,
+    comment_vote_limit integer DEFAULT 25 NOT NULL,
+    comment_vote_limit_bypass integer DEFAULT 15 NOT NULL,
+    post_vote_limit integer DEFAULT 1000 NOT NULL,
+    post_vote_limit_bypass integer DEFAULT 15 NOT NULL,
+    dmail_minute_limit integer DEFAULT 2 NOT NULL,
+    dmail_minute_limit_bypass integer DEFAULT 20 NOT NULL,
+    dmail_hour_limit integer DEFAULT 30 NOT NULL,
+    dmail_hour_limit_bypass integer DEFAULT 20 NOT NULL,
+    dmail_day_limit integer DEFAULT 60 NOT NULL,
+    dmail_day_limit_bypass integer DEFAULT 20 NOT NULL,
+    dmail_restricted_day_limit integer DEFAULT 5 NOT NULL,
+    tag_suggestion_limit integer DEFAULT 15 NOT NULL,
+    tag_suggestion_limit_bypass integer DEFAULT 15 NOT NULL,
+    forum_vote_limit integer DEFAULT 25 NOT NULL,
+    forum_vote_limit_bypass integer DEFAULT 15 NOT NULL,
+    artist_edit_limit integer DEFAULT 25 NOT NULL,
+    artist_edit_limit_bypass integer DEFAULT 15 NOT NULL,
+    wiki_edit_limit integer DEFAULT 60 NOT NULL,
+    wiki_edit_limit_bypass integer DEFAULT 15 NOT NULL,
+    note_edit_limit integer DEFAULT 50 NOT NULL,
+    note_edit_limit_bypass integer DEFAULT 15 NOT NULL,
+    pool_limit integer DEFAULT 2 NOT NULL,
+    pool_limit_bypass integer DEFAULT 15 NOT NULL,
+    pool_edit_limit integer DEFAULT 10 NOT NULL,
+    pool_edit_limit_bypass integer DEFAULT 15 NOT NULL,
+    pool_post_edit_limit integer DEFAULT 30 NOT NULL,
+    pool_post_edit_limit_bypass integer DEFAULT 15 NOT NULL,
+    post_edit_limit integer DEFAULT 150 NOT NULL,
+    post_edit_limit_bypass integer DEFAULT 15 NOT NULL,
+    post_appeal_limit integer DEFAULT 5 NOT NULL,
+    post_appeal_limit_bypass integer DEFAULT 15 NOT NULL,
+    post_flag_limit integer DEFAULT 20 NOT NULL,
+    post_flag_limit_bypass integer DEFAULT 15 NOT NULL,
+    hourly_upload_limit integer DEFAULT 30 NOT NULL,
+    ticket_limit integer DEFAULT 30 NOT NULL,
+    ticket_limit_bypass integer DEFAULT 15 NOT NULL,
+    pool_category_change_limit integer DEFAULT 30 NOT NULL,
+    post_replacement_per_day_limit integer DEFAULT 2 NOT NULL,
+    post_replacement_per_day_limit_bypass integer DEFAULT 20 NOT NULL,
+    post_replacement_per_post_limit integer DEFAULT 5 NOT NULL,
+    post_replacement_per_post_limit_bypass integer DEFAULT 20 NOT NULL,
+    compact_uploader_minimum_posts integer DEFAULT 10 NOT NULL,
+    tag_query_limit integer DEFAULT 10 NOT NULL,
+    bur_entry_limit jsonb DEFAULT '{"10": 50, "40": -1}'::jsonb NOT NULL,
+    max_numbered_pages integer DEFAULT 1000 NOT NULL,
+    max_per_page integer DEFAULT 500 NOT NULL,
+    comment_max_size integer DEFAULT 10000 NOT NULL,
+    dmail_max_size integer DEFAULT 50000 NOT NULL,
+    forum_post_max_size integer DEFAULT 50000 NOT NULL,
+    forum_category_description_max_size integer DEFAULT 250 NOT NULL,
+    note_max_size integer DEFAULT 1000 NOT NULL,
+    pool_description_max_size integer DEFAULT 10000 NOT NULL,
+    post_description_max_size integer DEFAULT 50000 NOT NULL,
+    ticket_max_size integer DEFAULT 5000 NOT NULL,
+    user_about_max_size integer DEFAULT 50000 NOT NULL,
+    blacklisted_tags_max_size integer DEFAULT 150000 NOT NULL,
+    custom_style_max_size integer DEFAULT 500000 NOT NULL,
+    wiki_page_max_size integer DEFAULT 250000 NOT NULL,
+    user_feedback_max_size integer DEFAULT 20000 NOT NULL,
+    news_update_max_size integer DEFAULT 50000 NOT NULL,
+    pool_post_limit integer DEFAULT 1000 NOT NULL,
+    pool_post_limit_bypass integer DEFAULT 40 NOT NULL,
+    set_post_limit integer DEFAULT 10000 NOT NULL,
+    set_post_limit_bypass integer DEFAULT 40 NOT NULL,
+    disapproval_message_max_size integer DEFAULT 250 NOT NULL,
+    max_upload_per_request integer DEFAULT 75 NOT NULL,
+    max_file_size integer DEFAULT 200 NOT NULL,
+    max_file_sizes jsonb DEFAULT '{"gif": 30, "jpg": 100, "mp4": 200, "png": 100, "apng": 30, "webm": 200, "webp": 100}'::jsonb NOT NULL,
+    max_mascot_file_sizes jsonb DEFAULT '{"jpg": 1000, "png": 1000, "webp": 1000}'::jsonb NOT NULL,
+    max_mascot_width integer DEFAULT 1000 NOT NULL,
+    max_mascot_height integer DEFAULT 1000 NOT NULL,
+    max_video_duration integer DEFAULT 1800 NOT NULL,
+    max_image_resolution integer DEFAULT 441 NOT NULL,
+    max_image_width integer DEFAULT 40000 NOT NULL,
+    max_image_height integer DEFAULT 40000 NOT NULL,
+    max_tags_per_post integer DEFAULT 2000 NOT NULL,
+    enable_signups boolean DEFAULT true NOT NULL,
+    user_approvals_enabled boolean DEFAULT true NOT NULL,
+    enable_email_verification boolean DEFAULT false NOT NULL,
+    enable_stale_forum_topics boolean DEFAULT true NOT NULL,
+    enable_sock_puppet_validation boolean DEFAULT false NOT NULL,
+    forum_topic_stale_window integer DEFAULT 180 NOT NULL,
+    forum_topic_aibur_stale_window integer DEFAULT 365 NOT NULL,
+    flag_notice_wiki_page character varying DEFAULT 'internal:flag_notice'::character varying NOT NULL,
+    replacement_notice_wiki_page character varying DEFAULT 'internal:replacement_notice'::character varying NOT NULL,
+    avoid_posting_notice_wiki_page character varying DEFAULT 'internal:avoid_posting_notice'::character varying NOT NULL,
+    discord_notice_wiki_page character varying DEFAULT 'internal:discord_notice'::character varying NOT NULL,
+    rules_body_wiki_page character varying DEFAULT 'internal:rules_body'::character varying NOT NULL,
+    restricted_notice_wiki_page character varying DEFAULT 'internal:restricted_notice'::character varying NOT NULL,
+    rejected_notice_wiki_page character varying DEFAULT 'internal:rejected_notice'::character varying NOT NULL,
+    appeal_notice_wiki_page character varying DEFAULT 'internal:appeal_notice'::character varying NOT NULL,
+    ban_notice_wiki_page character varying DEFAULT 'internal:ban_notice'::character varying NOT NULL,
+    user_approved_wiki_page character varying DEFAULT 'internal:user_approved'::character varying NOT NULL,
+    user_rejected_wiki_page character varying DEFAULT 'internal:user_rejected'::character varying NOT NULL,
+    records_per_page integer DEFAULT 100 NOT NULL,
+    tag_change_request_update_limit jsonb DEFAULT '{"15": 500, "20": 1000, "30": 10000, "40": 100000, "50": -1}'::jsonb NOT NULL,
+    followed_tag_limit jsonb DEFAULT '{"10": 100, "15": 500, "20": 1000}'::jsonb NOT NULL,
+    tag_type_edit_limit jsonb DEFAULT '{"10": 100, "15": 1000, "20": 10000, "40": -1}'::jsonb NOT NULL,
+    tag_type_edit_implicit_limit jsonb DEFAULT '{"10": 100, "15": 1000}'::jsonb NOT NULL,
+    alias_category_change_cutoff integer DEFAULT 10000 NOT NULL,
+    max_multi_count integer DEFAULT 100 NOT NULL,
+    takedown_email character varying DEFAULT 'admin@femboy.fan'::character varying NOT NULL,
+    contact_email character varying DEFAULT 'admin@femboy.fan'::character varying NOT NULL,
+    default_user_timezone character varying DEFAULT 'Central Time (US & Canada)'::character varying,
+    alias_and_implication_forum_category integer DEFAULT 1 NOT NULL,
+    default_forum_category integer DEFAULT 1 NOT NULL,
+    upload_whitelists_forum_topic integer DEFAULT 0 NOT NULL,
+    post_sample_size integer DEFAULT 300 NOT NULL,
+    updated_at timestamp(6) without time zone
+);
+
+
+--
 -- Name: destroyed_posts; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -3776,6 +3899,14 @@ ALTER TABLE ONLY public.comment_votes
 
 ALTER TABLE ONLY public.comments
     ADD CONSTRAINT comments_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: config config_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.config
+    ADD CONSTRAINT config_pkey PRIMARY KEY (id);
 
 
 --
@@ -7539,6 +7670,7 @@ ALTER TABLE ONLY public.help_pages
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20251002093244'),
 ('20251002085332'),
 ('20250923161649'),
 ('20250722120905'),

@@ -30,7 +30,7 @@ class ForumTopic < ApplicationRecord
     Cache.delete("topic_name:#{id}")
   end
 
-  attribute(:category_id, :integer, default: -> { FemboyFans.config.default_forum_category })
+  attribute(:category_id, :integer, default: -> { Config.instance.default_forum_category })
 
   attr_accessor(:is_merging, :target_topic_id)
 
@@ -275,7 +275,7 @@ class ForumTopic < ApplicationRecord
   end
 
   def last_page
-    (response_count / FemboyFans.config.records_per_page.to_f).ceil
+    (response_count / Config.instance.records_per_page.to_f).ceil
   end
 
   def hide!(user)
@@ -293,9 +293,9 @@ class ForumTopic < ApplicationRecord
   end
 
   def is_stale?
-    return false unless FemboyFans.config.enable_stale_forum_topics?
-    return false if !posts.many? || (original_post&.is_aibur? && (original_post&.tag_change_request&.is_pending? || posts.last.created_at < FemboyFans.config.forum_topic_aibur_stale_window.ago))
-    posts.last.created_at < FemboyFans.config.forum_topic_stale_window.ago
+    return false unless Config.instance.enable_stale_forum_topics
+    return false if !posts.many? || (original_post&.is_aibur? && (original_post&.tag_change_request&.is_pending? || posts.last.created_at < Config.instance.forum_topic_aibur_stale_window.days.ago))
+    posts.last.created_at < Config.instance.forum_topic_stale_window.days.ago
   end
 
   def is_stale_for?(user)
