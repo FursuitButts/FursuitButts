@@ -524,7 +524,7 @@ CREATE TABLE public.config (
     post_replacement_per_post_limit integer DEFAULT 5 NOT NULL,
     post_replacement_per_post_limit_bypass integer DEFAULT 20 NOT NULL,
     compact_uploader_minimum_posts integer DEFAULT 10 NOT NULL,
-    tag_query_limit integer DEFAULT 10 NOT NULL,
+    tag_query_limit integer DEFAULT 40 NOT NULL,
     bur_entry_limit jsonb DEFAULT '{"10": 50, "40": -1}'::jsonb NOT NULL,
     max_numbered_pages integer DEFAULT 1000 NOT NULL,
     max_per_page integer DEFAULT 500 NOT NULL,
@@ -590,7 +590,9 @@ CREATE TABLE public.config (
     default_forum_category integer DEFAULT 1 NOT NULL,
     upload_whitelists_forum_topic integer DEFAULT 0 NOT NULL,
     post_sample_size integer DEFAULT 300 NOT NULL,
-    updated_at timestamp(6) without time zone
+    updated_at timestamp(6) without time zone,
+    lore_suffixes text DEFAULT 'lore'::text NOT NULL,
+    artist_exclusion_tags text DEFAULT 'avoid_posting, conditional_dnp, epilepsy_warning, sound_warning'::text NOT NULL
 );
 
 
@@ -7670,6 +7672,7 @@ ALTER TABLE ONLY public.help_pages
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20251005055245'),
 ('20251002093244'),
 ('20251002085332'),
 ('20250923161649'),

@@ -63,12 +63,7 @@ class Config < ApplicationRecord
     columns.reject { |c| %w[updated_at].include?(c.name) }
   end
 
-  def self.column_hint(name)
-    case name
-    when "contributor_suffixes"
-      "Separate by a comma followed by a space."
-    else
-      ""
-    end
+  def ary(key)
+    public_send(key).split(",").map(&:strip)
   end
 end

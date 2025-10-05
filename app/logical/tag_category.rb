@@ -4,7 +4,7 @@ module TagCategory
   module_function
 
   Category = Struct.new(:id, :name, :aliases) do
-    KWARGS = %i[header suffix limit exclusion regex formatstr].freeze # rubocop:disable Lint/ConstantDefinitionInBlock
+    KWARGS = %i[header suffixes limit exclusion regex formatstr].freeze # rubocop:disable Lint/ConstantDefinitionInBlock
     attr_accessor(*KWARGS)
 
     def initialize(*, **kwargs)
@@ -31,18 +31,26 @@ module TagCategory
     def can_use?(user)
       !admin_only? || (user.is_system? || user.is_admin?)
     end
+
+    KWARGS.each do |name|
+      define_method(name) do
+        value = instance_variable_get(:"@#{name}")
+        return value.call if value.is_a?(Proc)
+        value
+      end
+    end
   end
   class AdminCategory < Category; end
 
   GENERAL = Category.new(0, "general", %w[gen])
-  ARTIST = Category.new(1, "artist", %w[art], header: "Artists", exclusion: FemboyFans.config.artist_exclusion_tags, formatstr: "created by %s")
-  CONTRIBUTOR = Category.new(2, "contributor", %w[cont], header: "Contributors")
+  ARTIST = Category.new(1, "artist", %w[art], header: "Artists", exclusion: -> { Config.instance.ary(:artist_exclusion_tags) }, formatstr: "created by %s")
+  CONTRIBUTOR = Category.new(2, "contributor", %w[cont], header: "Contributors", suffixes: -> { Config.instance.ary(:contributor_suffixes) })
   COPYRIGHT = Category.new(3, "copyright", %w[copy co], header: "Copyrights", limit: 1, formatstr: "(%s)")
   CHARACTER = Category.new(4, "character", %w[char ch oc], header: "Characters", limit: 5, regex: /^(.+?)(?:_\(.+\))?$/)
   SPECIES = Category.new(5, "species", %w[spec])
   INVALID = AdminCategory.new(6, "invalid", %w[inv])
   META = AdminCategory.new(7, "meta")
-  LORE = AdminCategory.new(8, "lore", %w[lor], suffix: "_(lore)")
+  LORE = AdminCategory.new(8, "lore", %w[lor], suffixes: -> { Config.instance.ary(:lore_suffixes) })
   GENDER = AdminCategory.new(9, "gender")
   IMPORTANT = AdminCategory.new(10, "important", %w[imp])
 

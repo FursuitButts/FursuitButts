@@ -140,8 +140,8 @@ class Tag < ApplicationRecord
         errors.add(:category, "can only used by admins")
         return false
       end
-      if cat.suffix && !name&.ends_with?(cat.suffix)
-        errors.add(:category, "can only be applied to tags that end with '#{cat.suffix}'")
+      if cat.suffixes && !cat.suffixes.any? { |s| name&.ends_with?("_(#{s})") }
+        errors.add(:category, "can only be applied to tags that end with #{cat.suffixes.map { |s| "'_(#{s})'" }.join(", ")}")
         false
       end
     end

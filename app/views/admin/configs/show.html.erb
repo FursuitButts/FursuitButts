@@ -121,6 +121,8 @@
       <%= number_config_field(@config, :comment_bump_threshold, name: "Comment Bump Threshold", disabled: !edit, hint: "posts with more comments will not be bumped") %>
       <%= number_config_field(@config, :compact_uploader_minimum_posts, name: "Compact Uploader Minimum Uploads", disabled: !edit) %>
       <%= text_config_field(@config, :contributor_suffixes, name: "Contributor Suffixes", disabled: !edit, hint: "separate by a comma and space") %>
+      <%= text_config_field(@config, :lore_suffixes, name: "Lore Suffixes", disabled: !edit, hint: "separate by a comma and space") %>
+      <%= text_config_field(@config, :artist_exclusion_tags, name: "Artist Exclusion Tags", disabled: !edit, hint: "separate by a comma and space") %>
       <%= number_config_field(@config, :post_sample_size, name: "Post Sample Size", disabled: !edit, hint: "When calculating statistics based on the posts table, gather this many posts to sample from") %>
       <%= number_config_field(@config, :pool_category_change_limit, name: "Pool Category Change Limit", disabled: !edit) %>
       <%= number_config_field(@config, :alias_and_implication_forum_category, name: "Alias And Implication Forum Category", disabled: !edit) %>

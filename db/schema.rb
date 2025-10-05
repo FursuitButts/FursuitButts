@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_10_02_093244) do
+ActiveRecord::Schema[7.1].define(version: 2025_10_05_055245) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -224,7 +224,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_10_02_093244) do
     t.integer "post_replacement_per_post_limit", default: 5, null: false
     t.integer "post_replacement_per_post_limit_bypass", default: 20, null: false
     t.integer "compact_uploader_minimum_posts", default: 10, null: false
-    t.integer "tag_query_limit", default: 10, null: false
+    t.integer "tag_query_limit", default: 40, null: false
     t.jsonb "bur_entry_limit", default: {"10"=>50, "40"=>-1}, null: false
     t.integer "max_numbered_pages", default: 1000, null: false
     t.integer "max_per_page", default: 500, null: false
@@ -291,6 +291,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_10_02_093244) do
     t.integer "upload_whitelists_forum_topic", default: 0, null: false
     t.integer "post_sample_size", default: 300, null: false
     t.datetime "updated_at"
+    t.text "lore_suffixes", default: "lore", null: false
+    t.text "artist_exclusion_tags", default: "avoid_posting, conditional_dnp, epilepsy_warning, sound_warning", null: false
   end
 
   create_table "destroyed_posts", force: :cascade do |t|

@@ -51,7 +51,7 @@ class CreateConfig < ActiveRecord::Migration[7.1]
       t.column(:post_replacement_per_post_limit, :integer, default: 5, null: false)
       t.column(:post_replacement_per_post_limit_bypass, :integer, default: User::Levels::JANITOR, null: false)
       t.column(:compact_uploader_minimum_posts, :integer, default: 10, null: false)
-      t.column(:tag_query_limit, :integer, default: 10, null: false)
+      t.column(:tag_query_limit, :integer, default: 40, null: false)
       t.column(:bur_entry_limit, :jsonb, default: {
         User::Levels::MEMBER => 50,
         User::Levels::ADMIN  => -1,
@@ -153,5 +153,6 @@ class CreateConfig < ActiveRecord::Migration[7.1]
       t.column(:post_sample_size, :integer, default: 300, null: false)
       t.column(:updated_at, :datetime)
     end
+    Config.delete_cache
   end
 end

@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 class Pool < ApplicationRecord
-  ARTIST_EXCLUSION_TAGS = TagCategory::ARTIST.exclusion
-
   array_attribute(:post_ids, parse: %r{(?:https://#{FemboyFans.config.domain}/posts/)?(\d+)}i, cast: :to_i)
   belongs_to_user(:creator, ip: true, clones: :updater)
   resolvable(:updater)
@@ -230,7 +228,7 @@ class Pool < ApplicationRecord
       .with_unflattened_tags
       .joins("inner join tags on tags.name = tag")
       .where("pools.id = ? AND tags.category = ?", id, TagCategory.artist)
-      .where.not("tags.name": ARTIST_EXCLUSION_TAGS)
+      .where.not("tags.name": TagCategory::ARTIST.exclusion)
       .pluck("tags.name")
       .uniq
   end

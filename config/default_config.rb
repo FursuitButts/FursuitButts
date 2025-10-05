@@ -342,11 +342,6 @@ module FemboyFans
       true
     end
 
-    # tags excluded when listing artists
-    def artist_exclusion_tags
-      %w[avoid_posting conditional_dnp epilepsy_warning sound_warning]
-    end
-
     # The default headers to be sent with outgoing http requests. Some external
     # services will fail if you don't set a valid User-Agent.
     def http_headers
