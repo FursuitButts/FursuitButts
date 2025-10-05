@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_10_05_055245) do
+ActiveRecord::Schema[7.1].define(version: 2025_10_05_070316) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -1447,6 +1447,14 @@ ActiveRecord::Schema[7.1].define(version: 2025_10_05_055245) do
     t.index "to_tsvector('english'::regconfig, profile_about)", name: "index_users_on_to_tsvector_english_profile_about", using: :gin
     t.index "to_tsvector('english'::regconfig, profile_artinfo)", name: "index_users_on_to_tsvector_english_profile_artinfo", using: :gin
     t.index ["email"], name: "index_users_on_email"
+    t.index ["id"], name: "index_users_on_bit_prefs_can_approve_posts_false", where: "((bit_prefs & (256)::bigint) = 0)"
+    t.index ["id"], name: "index_users_on_bit_prefs_can_approve_posts_true", where: "((bit_prefs & (256)::bigint) = 256)"
+    t.index ["id"], name: "index_users_on_bit_prefs_can_manage_aibur_false", where: "((bit_prefs & (4194304)::bigint) = 0)"
+    t.index ["id"], name: "index_users_on_bit_prefs_can_manage_aibur_true", where: "((bit_prefs & (4194304)::bigint) = 4194304)"
+    t.index ["id"], name: "index_users_on_bit_prefs_enable_privacy_mode_false", where: "((bit_prefs & (32)::bigint) = 0)"
+    t.index ["id"], name: "index_users_on_bit_prefs_enable_privacy_mode_true", where: "((bit_prefs & (32)::bigint) = 32)"
+    t.index ["id"], name: "index_users_on_bit_prefs_unrestricted_uploads_false", where: "((bit_prefs & (512)::bigint) = 0)"
+    t.index ["id"], name: "index_users_on_bit_prefs_unrestricted_uploads_true", where: "((bit_prefs & (512)::bigint) = 512)"
     t.index ["last_ip_addr"], name: "index_users_on_last_ip_addr", where: "(last_ip_addr IS NOT NULL)"
   end
 

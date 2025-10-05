@@ -6188,6 +6188,62 @@ CREATE INDEX index_user_text_versions_on_user_id ON public.user_text_versions US
 
 
 --
+-- Name: index_users_on_bit_prefs_can_approve_posts_false; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_users_on_bit_prefs_can_approve_posts_false ON public.users USING btree (id) WHERE ((bit_prefs & (256)::bigint) = 0);
+
+
+--
+-- Name: index_users_on_bit_prefs_can_approve_posts_true; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_users_on_bit_prefs_can_approve_posts_true ON public.users USING btree (id) WHERE ((bit_prefs & (256)::bigint) = 256);
+
+
+--
+-- Name: index_users_on_bit_prefs_can_manage_aibur_false; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_users_on_bit_prefs_can_manage_aibur_false ON public.users USING btree (id) WHERE ((bit_prefs & (4194304)::bigint) = 0);
+
+
+--
+-- Name: index_users_on_bit_prefs_can_manage_aibur_true; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_users_on_bit_prefs_can_manage_aibur_true ON public.users USING btree (id) WHERE ((bit_prefs & (4194304)::bigint) = 4194304);
+
+
+--
+-- Name: index_users_on_bit_prefs_enable_privacy_mode_false; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_users_on_bit_prefs_enable_privacy_mode_false ON public.users USING btree (id) WHERE ((bit_prefs & (32)::bigint) = 0);
+
+
+--
+-- Name: index_users_on_bit_prefs_enable_privacy_mode_true; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_users_on_bit_prefs_enable_privacy_mode_true ON public.users USING btree (id) WHERE ((bit_prefs & (32)::bigint) = 32);
+
+
+--
+-- Name: index_users_on_bit_prefs_unrestricted_uploads_false; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_users_on_bit_prefs_unrestricted_uploads_false ON public.users USING btree (id) WHERE ((bit_prefs & (512)::bigint) = 0);
+
+
+--
+-- Name: index_users_on_bit_prefs_unrestricted_uploads_true; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_users_on_bit_prefs_unrestricted_uploads_true ON public.users USING btree (id) WHERE ((bit_prefs & (512)::bigint) = 512);
+
+
+--
 -- Name: index_users_on_email; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -7672,6 +7728,7 @@ ALTER TABLE ONLY public.help_pages
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20251005070316'),
 ('20251005055245'),
 ('20251002093244'),
 ('20251002085332'),

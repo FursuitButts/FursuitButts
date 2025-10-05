@@ -233,7 +233,7 @@ $(() => {
   // This seems extraordinarily uncommon, so it's here
   // just for feature parity with the old blacklist.
   if ($("#c-posts #a-show").length > 0) return;
-  let container = $("#image-container[data-file-ext='webm']").on("blk:hide", () => {
+  let container = $("#image-container[data-file-ext='webm'], #image-container[data-file-ext='mp4']").on("blk:hide", () => {
     const video = container.find("video");
     if (!video.length) return;
     video[0].pause();

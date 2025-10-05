@@ -1037,33 +1037,22 @@ class User < ApplicationRecord
         .custom(:max_level, ->(q, v) { q.where.lteq(level: v) })
         .custom(:can_approve_posts, ->(q, v) { bitprefs_query(q, v, :can_approve_posts) })
         .custom(:unrestricted_uploads, ->(q, v) { bitprefs_query(q, v, :unrestricted_uploads) })
+        .custom(:can_manage_aibur, ->(q, v) { bitprefs_query(q, v, :can_manage_aibur) })
     end
 
     def bitprefs_query(q, value, pref)
-      bitprefs_length = Preferences.constants.length
-      bitprefs_include = nil
-      bitprefs_exclude = nil
+      include_bits = 0
+      exclude_bits = 0
 
-      attr_idx = Preferences.index(pref.upcase)
+      bit = Preferences.const_get(pref.upcase)
       if value.to_s.truthy?
-        bitprefs_include ||= "0" * bitprefs_length
-        bitprefs_include[attr_idx] = "1"
+        include_bits |= bit
       elsif value.to_s.falsy?
-        bitprefs_exclude ||= "0" * bitprefs_length
-        bitprefs_exclude[attr_idx] = "1"
+        exclude_bits |= bit
       end
 
-      if bitprefs_include
-        bitprefs_include.reverse!
-        q = q.where("bit_prefs::bit(:len) & :bits::bit(:len) = :bits::bit(:len)",
-                    { len: bitprefs_length, bits: bitprefs_include })
-      end
-
-      if bitprefs_exclude
-        bitprefs_exclude.reverse!
-        q = q.where("bit_prefs::bit(:len) & :bits::bit(:len) = 0::bit(:len)",
-                    { len: bitprefs_length, bits: bitprefs_exclude })
-      end
+      q = q.where("(bit_prefs & :mask) = :mask", mask: include_bits) if include_bits > 0
+      q = q.where("(bit_prefs & :mask) = 0", mask: exclude_bits) if exclude_bits > 0
       q
     end
 
