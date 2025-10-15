@@ -34,6 +34,10 @@ module FemboyFans
       "static.femboy.fan"
     end
 
+    def server_name
+      `hostname`[..-2]
+    end
+
     # Force rating:s on this version of the site.
     def safe_mode?
       false
