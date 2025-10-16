@@ -18,6 +18,7 @@ FactoryBot.define do
       file_ext { "jpg" }
       is_animated_png { false }
       is_animated_gif { false }
+      is_animated_webp { false }
       file_size { 1.megabyte }
       image_width { 1000 }
       image_height { 1000 }
@@ -42,6 +43,7 @@ FactoryBot.define do
         file_ext { "jpg" }
         is_animated_png { false }
         is_animated_gif { false }
+        is_animated_webp { false }
         file_size { 28_086 }
         image_width { 500 }
         image_height { 335 }
@@ -67,6 +69,7 @@ FactoryBot.define do
         file_ext { "png" }
         is_animated_png { false }
         is_animated_gif { false }
+        is_animated_webp { false }
         file_size { 446_148 }
         image_width { 768 }
         image_height { 1024 }
@@ -92,6 +95,7 @@ FactoryBot.define do
         file_ext { "png" }
         is_animated_png { true }
         is_animated_gif { false }
+        is_animated_webp { false }
         file_size { 6679 }
         image_width { 150 }
         image_height { 150 }
@@ -116,6 +120,7 @@ FactoryBot.define do
         file_ext { "webp" }
         is_animated_png { false }
         is_animated_gif { false }
+        is_animated_webp { false }
         file_size { 27_650 }
         image_width { 386 }
         image_height { 395 }
@@ -141,6 +146,7 @@ FactoryBot.define do
         file_ext { "gif" }
         is_animated_png { false }
         is_animated_gif { true }
+        is_animated_webp { false }
         file_size { 203_616 }
         image_width { 1000 }
         image_height { 685 }
@@ -166,6 +172,7 @@ FactoryBot.define do
         file_ext { "mp4" }
         is_animated_png { false }
         is_animated_gif { false }
+        is_animated_webp { false }
         file_size { 18_677 }
         image_width { 300 }
         image_height { 300 }
@@ -192,6 +199,7 @@ FactoryBot.define do
         file_ext { "webm" }
         is_animated_png { false }
         is_animated_gif { false }
+        is_animated_webp { false }
         file_size { 50_679 }
         image_width { 512 }
         image_height { 512 }

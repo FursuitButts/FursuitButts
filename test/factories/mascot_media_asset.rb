@@ -11,6 +11,7 @@ FactoryBot.define do
       file_ext { "jpg" }
       is_animated_png { false }
       is_animated_gif { false }
+      is_animated_webp { false }
       file_size { 28_086 }
       image_width { 500 }
       image_height { 335 }
@@ -26,6 +27,7 @@ FactoryBot.define do
     #   file_ext { "png" }
     #   is_animated_png { false }
     #   is_animated_gif { false }
+    #   is_animated_webp { false }
     #   file_size { 446148 }
     #   image_width { 768 }
     #   image_height { 1024 }

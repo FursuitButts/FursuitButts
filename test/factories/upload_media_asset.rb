@@ -18,6 +18,7 @@ FactoryBot.define do
       file_ext { "jpg" }
       is_animated_png { false }
       is_animated_gif { false }
+      is_animated_webp { false }
       file_size { 1.megabyte }
       image_width { 1000 }
       image_height { 1000 }
@@ -42,6 +43,7 @@ FactoryBot.define do
         file_ext { "jpg" }
         is_animated_png { false }
         is_animated_gif { false }
+        is_animated_webp { false }
         file_size { 28_086 }
         image_width { 500 }
         image_height { 335 }
@@ -67,6 +69,7 @@ FactoryBot.define do
         file_ext { "png" }
         is_animated_png { false }
         is_animated_gif { false }
+        is_animated_webp { false }
         file_size { 446_148 }
         image_width { 768 }
         image_height { 1024 }
@@ -91,6 +94,7 @@ FactoryBot.define do
         md5 { "0c7758e594a1d9b83d79e03a8709bedf" }
         file_ext { "png" }
         is_animated_png { true }
+        is_animated_webp { false }
         is_animated_gif { false }
         file_size { 6679 }
         image_width { 150 }
@@ -115,6 +119,7 @@ FactoryBot.define do
         md5 { "291654feb88606970e927f32b08e2621" }
         file_ext { "webp" }
         is_animated_png { false }
+        is_animated_webp { false }
         is_animated_gif { false }
         file_size { 27_650 }
         image_width { 386 }
@@ -140,6 +145,7 @@ FactoryBot.define do
         md5 { "05f1c7a0466a4e6a2af1eef3387f4dbe" }
         file_ext { "gif" }
         is_animated_png { false }
+        is_animated_webp { false }
         is_animated_gif { true }
         file_size { 203_616 }
         image_width { 1000 }
@@ -165,6 +171,7 @@ FactoryBot.define do
         md5 { "865c93102cad3e8a893d6aac6b51b0d2" }
         file_ext { "mp4" }
         is_animated_png { false }
+        is_animated_webp { false }
         is_animated_gif { false }
         file_size { 18_677 }
         image_width { 300 }
@@ -191,6 +198,7 @@ FactoryBot.define do
         md5 { "34dd2489f7aaa9e57eda1b996ff26ff7" }
         file_ext { "webm" }
         is_animated_png { false }
+        is_animated_webp { false }
         is_animated_gif { false }
         file_size { 12_345 }
         image_width { 512 }

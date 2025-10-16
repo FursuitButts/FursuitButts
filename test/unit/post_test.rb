@@ -121,7 +121,7 @@ class PostTest < ActiveSupport::TestCase
         should("succeed") do
           @post.delete!(@user, "test")
 
-          assert_equal(true, @post.is_deleted)
+          assert_equal(true, @post.is_deleted?)
           assert_equal(1, @post.flags.size)
           assert_match(/test/, @post.flags.last.reason)
         end
@@ -143,6 +143,40 @@ class PostTest < ActiveSupport::TestCase
         assert_equal(false, post.is_deleted?)
         post.delete!(@user, "test")
         assert_equal(true, post.is_deleted?)
+      end
+
+      should("move the files") do
+        post = create(:post)
+        path = post.media_asset.file_path(protected: false)
+        new_path = post.media_asset.file_path(protected: true)
+        preview = post.media_asset.find_variant!(:preview)
+        preview_path = preview.file_path(protected: false)
+        new_preview_path = preview.file_path(protected: true)
+        assert_equal(post.file_path, path)
+        assert_equal(post.preview_file_path, preview_path)
+        post.delete!(@user, "test")
+        assert_equal(post.file_path, new_path)
+        assert_equal(post.preview_file_path, new_preview_path)
+        post.undelete!(@user)
+        assert_equal(post.file_path, path)
+        assert_equal(post.preview_file_path, preview_path)
+      end
+
+      should("generated the expected paths") do
+        post = create(:post)
+        h = { prefix: FemboyFans.config.post_path_prefix, protected_prefix: FemboyFans.config.protected_path_prefix }
+        path = FemboyFans.config.storage_manager.file_path(post.md5, post.file_ext, :original, protected: false, **h)
+        preview_path = FemboyFans.config.storage_manager.file_path(post.md5, "webp", :preview, protected: false, **h)
+        new_path = FemboyFans.config.storage_manager.file_path(post.md5, post.file_ext, :original, protected: true, **h)
+        new_preview_path = FemboyFans.config.storage_manager.file_path(post.md5, "webp", :preview, protected: true, **h)
+        assert_equal(post.file_path, path)
+        assert_equal(post.preview_file_path, preview_path)
+        post.delete!(@user, "test")
+        assert_equal(post.file_path, new_path)
+        assert_equal(post.preview_file_path, new_preview_path)
+        post.undelete!(@user)
+        assert_equal(post.file_path, path)
+        assert_equal(post.preview_file_path, preview_path)
       end
     end
   end

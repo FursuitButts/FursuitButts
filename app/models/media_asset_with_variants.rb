@@ -214,14 +214,14 @@ class MediaAssetWithVariants < MediaAsset
 
     def delete!
       raise(MediaAsset::DeletionNotSupportedError, "deletion of #{parent_class.name} is not supported") unless parent_class.deletion_supported
-      storage_manager.move_file_delete(md5, file_ext, type, prefix: path_prefix, protected_prefix: protected_path_prefix, hierarchical: hierarchical?)
-      backup_storage_manager.move_file_delete(md5, file_ext, type, prefix: path_prefix, protected_prefix: protected_path_prefix, hierarchical: hierarchical?)
+      storage_manager.move_file_delete(md5, ext, type, prefix: path_prefix, protected_prefix: protected_path_prefix, hierarchical: hierarchical?)
+      backup_storage_manager.move_file_delete(md5, ext, type, prefix: path_prefix, protected_prefix: protected_path_prefix, hierarchical: hierarchical?)
     end
 
     def undelete!
       raise(MediaAsset::DeletionNotSupportedError, "deletion of #{parent_class.name} is not supported") unless parent_class.deletion_supported
-      storage_manager.move_file_undelete(md5, file_ext, type, prefix: path_prefix, protected_prefix: protected_path_prefix, hierarchical: hierarchical?)
-      backup_storage_manager.move_file_undelete(md5, file_ext, type, prefix: path_prefix, protected_prefix: protected_path_prefix, hierarchical: hierarchical?)
+      storage_manager.move_file_undelete(md5, ext, type, prefix: path_prefix, protected_prefix: protected_path_prefix, hierarchical: hierarchical?)
+      backup_storage_manager.move_file_undelete(md5, ext, type, prefix: path_prefix, protected_prefix: protected_path_prefix, hierarchical: hierarchical?)
     end
 
     def expunge!

@@ -387,7 +387,7 @@ class MediaAsset < ApplicationRecord
     "#{status}: #{status_message}"
   end
 
-  DELEGATED = %i[is_png? is_jpeg? is_gif? is_webp? is_webm? is_mp4? is_image? is_video? is_animated_png? is_animated_gif? is_corrupt? is_ai_generated?
+  DELEGATED = %i[is_png? is_jpeg? is_gif? is_webp? is_webm? is_mp4? is_image? is_video? is_animated_png? is_animated_gif? is_animated_webp? is_corrupt? is_ai_generated?
                  file_path file_url md5 file_ext file_size image_width image_height duration framecount pixel_hash checksum].freeze
   module DelegateProperties
     delegate(*DELEGATED, to: :media_asset)

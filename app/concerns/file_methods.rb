@@ -86,16 +86,16 @@ module FileMethods
     def webp_metadata(file_path)
       stdout, stderr, status = Open3.capture3("webpmux", "-info", file_path.to_s)
       hash = {
-        width:       0,
-        height:      0,
-        features:    [],
-        bgcolor:     "00000000",
-        framecount:  0,
-        loopcount:   nil,
-        frames:      [],
-        exif_size:   0,
-        duration:    0.0,
-        frame_rate:  0.0
+        width:      0,
+        height:     0,
+        features:   [],
+        bgcolor:    "00000000",
+        framecount: 0,
+        loopcount:  nil,
+        frames:     [],
+        exif_size:  0,
+        duration:   0.0,
+        frame_rate: 0.0,
       }
       unless status.success?
         ExceptionLog.add!(StandardError.new("webp metadata failed: #{file_path}"), source: "FileMethods#webp_metadata", stdout: stdout, stderr: stderr)
@@ -117,7 +117,7 @@ module FileMethods
         when /\ANumber of frames\s*:\s*(\d+)\s*\z/i
           hash[:framecount] = $1.to_i
         when /^No\.\s*:\s*(.+)$/i
-               headers = $1.split(/\s+/).map { |h| h.downcase.to_sym }
+          headers = $1.split(/\s+/).map { |h| h.downcase.to_sym }
         when /\A\s*(\d+):\s*(.*)\z/
           next if headers.empty?
           h = { index: $1.to_i }
@@ -140,7 +140,7 @@ module FileMethods
       end
 
       hash[:frames].compact!
-      if hash[:frames].length > 0
+      unless hash[:frames].empty?
         hash[:duration] = hash[:frames].sum { |f| f[:duration].to_i } / 1000.0
         hash[:frame_rate] = hash[:framecount] / hash[:duration]
       end
@@ -170,7 +170,7 @@ module FileMethods
 
     def calculate_dimensions(file_path)
       if (is_file_gif?(file_path) && (data = gif_metadata(file_path))) ||
-        (is_file_webp?(file_path) && (data = webp_metadata(file_path))) ||
+         (is_file_webp?(file_path) && (data = webp_metadata(file_path))) ||
          (is_file_image?(file_path) && (data = image_metadata(file_path))) ||
          (is_file_video?(file_path) && (data = video_metadata(file_path)))
         [data[:width], data[:height]]
