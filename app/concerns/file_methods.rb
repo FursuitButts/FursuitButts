@@ -104,7 +104,7 @@ module FileMethods
 
       lines = stdout.lines.map(&:strip)
       headers = []
-      lines.each do |line|
+      lines.each do |line| # rubocop:disable Metrics/BlockLength
         case line
         when /\ACanvas size:\s*(\d+)\s*x\s*(\d+)\s*\z/i
           hash[:width] = $1.to_i
