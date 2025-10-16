@@ -26,7 +26,8 @@ FROM ruby:3.3.8-alpine3.21
 RUN apk --no-cache add ffmpeg vips \
   postgresql17-client \
   git jemalloc tzdata \
-  sudo xz gcompat
+  sudo xz gcompat \
+  libwebp-tools exiftool
 
 WORKDIR /app
 

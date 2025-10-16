@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_10_05_070316) do
+ActiveRecord::Schema[7.1].define(version: 2025_10_16_005855) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -553,6 +553,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_10_05_070316) do
     t.integer "last_chunk_id", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "is_animated_webp"
     t.index ["checksum"], name: "index_mascot_media_assets_on_checksum"
     t.index ["creator_id"], name: "index_mascot_media_assets_on_creator_id"
     t.index ["md5"], name: "index_mascot_media_assets_on_md5", unique: true, where: "((status)::text = 'active'::text)"
@@ -809,6 +810,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_10_05_070316) do
     t.jsonb "variants_data", default: [], null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "is_animated_webp"
     t.index ["checksum"], name: "index_post_replacement_media_assets_on_checksum"
     t.index ["creator_id"], name: "index_post_replacement_media_assets_on_creator_id"
     t.index ["md5"], name: "index_post_replacement_media_assets_on_md5"
@@ -1233,6 +1235,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_10_05_070316) do
     t.jsonb "variants_data", default: [], null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "is_animated_webp"
     t.index ["checksum"], name: "index_upload_media_assets_on_checksum"
     t.index ["creator_id"], name: "index_upload_media_assets_on_creator_id"
     t.index ["md5"], name: "index_upload_media_assets_on_md5", unique: true, where: "((status)::text = 'active'::text)"

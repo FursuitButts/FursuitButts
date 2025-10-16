@@ -21,13 +21,13 @@ class MediaAsset < ApplicationRecord
   after_finalize(:store_file_finalize, unless: -> { expunged? || duplicate? })
   validates(:md5, uniqueness: { conditions: -> { duplicate_relevant } }, if: :active?)
   validates(:md5, :file_ext, presence: true, if: :active?)
-  validates(:is_animated_png, :is_animated_gif, inclusion: { in: [true, false] }, if: :active?)
+  validates(:is_animated_png, :is_animated_gif, :is_animated_webp, inclusion: { in: [true, false] }, if: :active?)
   validates(:file_size, :image_width, :image_height, presence: true, comparison: { greater_than: 0 }, if: :active?)
   # noinspection RubyArgCount
   validates(:duration, presence: true, comparison: { greater_than: 0 }, if: -> { active? && is_video? })
   validates(:checksum, length: { is: 32 }, if: -> { checksum.present? })
   # noinspection RubyArgCount
-  validates(:pixel_hash, presence: true, if: -> { active? && is_image? && !is_animated_png? })
+  validates(:pixel_hash, presence: true, if: -> { active? && is_image? && !is_animated? })
   validates(:checksum, presence: true, if: -> { in_progress? && file.present? })
 
   scope(:in_progress, -> { where(status: %w[pending uploading]) })
@@ -63,6 +63,10 @@ class MediaAsset < ApplicationRecord
 
   def file_later?
     !skip_files && persisted? && active?
+  end
+
+  def is_animated?
+    is_animated_png? || !is_animated_gif? || !is_animated_webp?
   end
 
   def link_to_duplicate
@@ -131,7 +135,7 @@ class MediaAsset < ApplicationRecord
     end
 
     def load_file!
-      self.file = open_file
+      self.file ||= open_file
     end
 
     def is_protected?
@@ -154,6 +158,7 @@ class MediaAsset < ApplicationRecord
       self.pixel_hash = file_pixel_hash
       self.is_animated_png = MediaAsset.is_animated_png?(file.path)
       self.is_animated_gif = MediaAsset.is_animated_gif?(file.path)
+      self.is_animated_webp = MediaAsset.is_animated_webp?(file.path)
       update_metadata
 
       self.duration = media_metadata.duration
@@ -162,11 +167,20 @@ class MediaAsset < ApplicationRecord
       self.image_height = media_metadata.height
     end
 
+    def reset_file_attributes!
+      load_file!
+      set_file_attributes
+      media_metadata.save!
+      save!
+    end
+
     def metadata(file = self.file)
       if is_video?
         file.present? ? self.class.video_metadata(file.path) : video_metadata
       elsif is_gif?
         file.present? ? self.class.gif_metadata(file.path) : gif_metadata
+      elsif is_webp?
+        file.present? ? self.class.webp_metadata(file.path) : webp_metadata
       elsif is_image?
         file.present? ? self.class.image_metadata(file.path) : image_metadata
       end

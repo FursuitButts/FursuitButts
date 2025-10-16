@@ -88,4 +88,9 @@ module MigrationHelpers
       end
     end
   end
+
+  def add_column_with_value(table, name, *, value:, **)
+    add_column(table, name, *, **, default: value)
+    change_column_default(table, name, from: value, to: nil)
+  end
 end

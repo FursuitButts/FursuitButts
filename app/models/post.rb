@@ -430,7 +430,7 @@ class Post < ApplicationRecord
   module SourceMethods
     def source_array
       return [] if source.blank?
-      source.split("\n")
+      source.split("\n").compact_blank
     end
 
     def apply_source_diff
@@ -845,6 +845,7 @@ class Post < ApplicationRecord
 
       tags << "webm" if is_webm?
       tags << "mp4" if is_mp4?
+      tags << "animated_webp" if is_animated_webp?
       tags << "animated_gif" if is_animated_gif?
       tags << "animated_png" if is_animated_png?
       tags << "long_playtime" if is_video? && duration >= 30

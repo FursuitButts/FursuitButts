@@ -1,3 +1,8 @@
+\restrict AMN46XxRBjvGG623yfwvDJ0tFjEapLAZMBEd9lNdubL82dCZCVELmJzQZvzOW46
+
+-- Dumped from database version 17.5
+-- Dumped by pg_dump version 17.6
+
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
@@ -1215,7 +1220,8 @@ CREATE TABLE public.mascot_media_assets (
     status_message character varying,
     last_chunk_id integer DEFAULT 0 NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    is_animated_webp boolean
 );
 
 
@@ -1817,7 +1823,8 @@ CREATE TABLE public.post_replacement_media_assets (
     generated_variants jsonb DEFAULT '[]'::jsonb NOT NULL,
     variants_data jsonb DEFAULT '[]'::jsonb NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    is_animated_webp boolean
 );
 
 
@@ -2719,7 +2726,8 @@ CREATE TABLE public.upload_media_assets (
     generated_variants jsonb DEFAULT '[]'::jsonb NOT NULL,
     variants_data jsonb DEFAULT '[]'::jsonb NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    is_animated_webp boolean
 );
 
 
@@ -7725,9 +7733,12 @@ ALTER TABLE ONLY public.help_pages
 -- PostgreSQL database dump complete
 --
 
+\unrestrict AMN46XxRBjvGG623yfwvDJ0tFjEapLAZMBEd9lNdubL82dCZCVELmJzQZvzOW46
+
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20251016005855'),
 ('20251005070316'),
 ('20251005055245'),
 ('20251002093244'),
