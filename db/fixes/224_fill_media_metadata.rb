@@ -7,10 +7,11 @@ require(File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "config",
   model.transaction do
     model.find_each do |record|
       puts("#{model.name}:#{record.id}")
-      record.load_file!
       # use backup storage manager, prevent needing to pull down every remote file in prod
       if Rails.env.production?
         record.file = File.open(record.backup_storage_manager.file_path(record.md5, record.file_ext, :original, protected: record.is_protected?, prefix: record.path_prefix, protected_prefix: record.protected_path_prefix, hierarchical: record.hierarchical?))
+      else
+        record.load_file!
       end
       record.reset_file_attributes!
     rescue Errno::ENOENT
