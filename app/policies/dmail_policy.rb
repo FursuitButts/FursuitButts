@@ -50,7 +50,7 @@ class DmailPolicy < ApplicationPolicy
   end
 
   def api_attributes
-    super - %i[key]
+    super - %i[key] + %i[owner_name to_name from_name]
   end
 
   def html_data_attributes

@@ -8,7 +8,7 @@ module Sources
       end
 
       def domains
-        ["youtube.com", "youtu.be"]
+        %w[youtube.com youtu.be]
       end
 
       def original_url
