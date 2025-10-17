@@ -14,6 +14,8 @@ class FileMethodsTest < ActiveSupport::TestCase
     @mp4 = file_fixture("test-300x300.mp4").to_s
     @webm = file_fixture("test-512x512.webm").to_s
     @anamorphic = file_fixture("test-anamorphic.webm").to_s
+    @ai_generator = file_fixture("ai/generator.png").to_s
+    @ai_tokens = file_fixture("ai/tokens.png").to_s
     @obj = BasicObject.include(FileMethods)
   end
 
@@ -761,15 +763,16 @@ class FileMethodsTest < ActiveSupport::TestCase
 
   context("is_ai_generated?") do
     should("work") do
-      assert_not(@obj.is_ai_generated?(@jpg))
-      assert_not(@obj.is_ai_generated?(@png))
-      assert_not(@obj.is_ai_generated?(@webp))
-      assert_not(@obj.is_ai_generated?(@gif))
-      assert_not(@obj.is_ai_generated?(@mp4))
-      assert_not(@obj.is_ai_generated?(@webm))
-      assert_not(@obj.is_ai_generated?(@tiff))
-      assert_not(@obj.is_ai_generated?(@empty))
-      # TODO: add ai generated image to test
+      assert_operator(@obj.is_ai_generated?(@jpg)[:score], :==, 0)
+      assert_operator(@obj.is_ai_generated?(@png)[:score], :==, 0)
+      assert_operator(@obj.is_ai_generated?(@webp)[:score], :==, 0)
+      assert_operator(@obj.is_ai_generated?(@gif)[:score], :==, 0)
+      assert_operator(@obj.is_ai_generated?(@mp4)[:score], :==, 0)
+      assert_operator(@obj.is_ai_generated?(@webm)[:score], :==, 0)
+      assert_operator(@obj.is_ai_generated?(@tiff)[:score], :==, 0)
+      assert_operator(@obj.is_ai_generated?(@empty)[:score], :==, 0)
+      assert_operator(@obj.is_ai_generated?(@ai_generator)[:score], :>=, 70)
+      assert_operator(@obj.is_ai_generated?(@ai_tokens)[:score], :>=, 60)
     end
   end
 

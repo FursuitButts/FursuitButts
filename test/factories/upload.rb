@@ -54,6 +54,11 @@ FactoryBot.define do
       file { |rec| rec.upload_media_asset&.file }
     end
 
+    factory(:ai_upload) do
+      upload_media_asset { build(:ai_upload_media_asset, :pending, creator: uploader) }
+      file { |rec| rec.upload_media_asset&.file }
+    end
+
     factory(:empty_upload) do
       upload_media_asset { build(:empty_upload_media_asset, :pending, creator: uploader) }
       file { |rec| rec.upload_media_asset&.file }

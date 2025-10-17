@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_10_16_005855) do
+ActiveRecord::Schema[7.1].define(version: 2025_10_16_215522) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -293,6 +293,9 @@ ActiveRecord::Schema[7.1].define(version: 2025_10_16_005855) do
     t.datetime "updated_at"
     t.text "lore_suffixes", default: "lore", null: false
     t.text "artist_exclusion_tags", default: "avoid_posting, conditional_dnp, epilepsy_warning, sound_warning", null: false
+    t.boolean "flag_ai_posts", default: true, null: false
+    t.boolean "tag_ai_posts", default: true, null: false
+    t.integer "ai_confidence_threshold", default: 50, null: false
   end
 
   create_table "destroyed_posts", force: :cascade do |t|

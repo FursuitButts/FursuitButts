@@ -106,6 +106,32 @@ FactoryBot.define do
       end
     end
 
+    factory(:ai_upload_media_asset) do
+      checksum { "4b2ecbafe561475ae0d20fadb837d293" }
+      file { fixture_file_upload("ai/generator.png") }
+      pending
+
+      trait(:pending) do
+        status { "pending" }
+      end
+
+      trait(:active) do
+        md5 { "4b2ecbafe561475ae0d20fadb837d293" }
+        file_ext { "png" }
+        is_animated_png { false }
+        is_animated_webp { false }
+        is_animated_gif { false }
+        file_size { 1_019_068 }
+        image_width { 832 }
+        image_height { 1216 }
+        pixel_hash { "eb36db5d609888c2c52e2bdf4dd75c6f" }
+        status { "active" }
+        skip_files { true }
+        generated_variants(&method(:get_generated_variants))
+        variants_data(&method(:get_variants_data))
+      end
+    end
+
     factory(:webp_upload_media_asset) do
       checksum { "291654feb88606970e927f32b08e2621" }
       file { fixture_file_upload("test.webp") }

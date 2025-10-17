@@ -67,6 +67,8 @@ class ActiveSupport::TestCase # rubocop:disable Style/ClassAndModuleChildren
     storage_manager = StorageManager::Local.new(base_dir: storage_root)
     FemboyFans.config.stubs(:storage_manager).returns(storage_manager)
     FemboyFans.config.stubs(:backup_storage_manager).returns(StorageManager::Null.new)
+    Config.any_instance.stubs(:flag_ai_posts).returns(false)
+    Config.any_instance.stubs(:tag_ai_posts).returns(false)
     Config.any_instance.stubs(:enable_email_verification).returns(false)
   end
 

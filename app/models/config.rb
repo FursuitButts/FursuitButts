@@ -60,10 +60,17 @@ class Config < ApplicationRecord
   end
 
   def self.settable_columns(_user)
-    columns.reject { |c| %w[updated_at].include?(c.name) }
+    columns.reject { |c| %w[id updated_at].include?(c.name) }
   end
 
   def ary(key)
     public_send(key).split(",").map(&:strip)
+  end
+
+  # TODO: safeguards to ensure we don't override existing methods?
+  column_names.each do |column|
+    define_method("#{column}?") { !!public_send(column) }
+    define_singleton_method(column) { instance.public_send(column) }
+    define_singleton_method("#{column}?") { !!instance.public_send(column) }
   end
 end

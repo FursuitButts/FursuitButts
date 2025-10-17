@@ -127,7 +127,7 @@ class PostFlag < ApplicationRecord
   def update_reason
     case reason_name
     when "deletion"
-      # NOP
+      # NOOP
     when "inferior"
       return unless parent_post
       old_parent_id = post.parent_id

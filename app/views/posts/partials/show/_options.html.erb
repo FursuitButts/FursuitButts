@@ -40,11 +40,12 @@
     <% if post.is_approvable? && policy(post).approve? %>
       <li><%= tag.a("Approve", "href": "#", "class": "approve-post-link", "data-pid": post.id) %></li>
     <% end %>
-
     <% if post.is_unapprovable?(CurrentUser.user) && policy(post).unapprove? %>
       <li><%= tag.a("Unapprove", "href": "#", "data-pid": post.id, "id": "unapprove-post-link") %></li>
     <% end %>
-
+    <% if policy(post).ai_check? %>
+      <%= li_link_to("Check for AI", ai_check_post_path(post), method: :put) %>
+    <% end %>
     <% if IqdbProxy.enabled? && policy(post).update_iqdb? %>
       <li><%= link_to("Update IQDB", update_iqdb_post_path(post), method: :put) %></li>
     <% end %>

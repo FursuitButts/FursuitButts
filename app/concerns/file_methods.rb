@@ -8,6 +8,8 @@ module FileMethods
   EXTENSIONS = (IMAGE_EXTENSIONS + VIDEO_EXTENSIONS + GIF_EXTENSIONS).uniq.freeze
 
   module ClassMethods
+    include(AiMethods)
+
     def file_header_to_file_ext(file_path)
       File.open(file_path) do |bin|
         mime_type = Marcel::MimeType.for(bin)
@@ -270,26 +272,6 @@ module FileMethods
       false
     rescue StandardError
       true
-    end
-
-    def is_ai_generated?(file_path)
-      return false unless is_file_image?(file_path)
-
-      image = self.image(file_path)
-      fetch = ->(key) do
-        value = image.get(key)
-        value.encode("ASCII", invalid: :replace, undef: :replace).gsub("\u0000", "")
-      rescue Vips::Error
-        ""
-      end
-
-      return true if fetch.call("png-comment-0-parameters").present?
-      return true if fetch.call("png-comment-0-Dream").present?
-      return true if fetch.call("exif-ifd0-Software").include?("NovelAI") || fetch.call("png-comment-2-Software").include?("NovelAI")
-      return true if %w[exif-ifd0-ImageDescription exif-ifd2-UserComment png-comment-4-Comment].any? { |field| fetch.call(field).include?('"sampler": "') }
-      exif_data = fetch.call("exif-data")
-      return true if ["Model hash", "OpenAI", "NovelAI"].any? { |marker| exif_data.include?(marker) }
-      false
     end
 
     def pixel_hash(file_path)

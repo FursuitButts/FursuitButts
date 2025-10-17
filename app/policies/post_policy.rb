@@ -81,6 +81,10 @@ class PostPolicy < ApplicationPolicy
     true
   end
 
+  def ai_check?
+    approver?
+  end
+
   def change_locked_tags?
     user.is_admin?
   end

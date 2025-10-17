@@ -255,6 +255,17 @@ class PostsController < ApplicationController
     File.delete(path)
   end
 
+  def ai_check
+    @post = authorize(Post.find(params[:id]))
+    @post.ai_check! => { score:, reason: }
+    if score < Config.ai_confidence_threshold
+      notice("Post is not AI")
+    else
+      notice("Post is AI: #{reason} (score: #{score})  ")
+    end
+    redirect_back(fallback_location: post_path(@post))
+  end
+
   private
 
   def tag_query

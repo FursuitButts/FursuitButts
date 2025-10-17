@@ -3,6 +3,8 @@
 require("test_helper")
 
 class UploadTest < ActiveSupport::TestCase
+  include(ActiveJob::TestHelper)
+
   context("An upload") do
     setup do
       @user = create(:user, created_at: 2.weeks.ago)
@@ -70,6 +72,42 @@ class UploadTest < ActiveSupport::TestCase
     should("create a post") do
       @upload = create(:jpg_upload, uploader: @user)
       assert_not_nil(@upload.post)
+    end
+
+    context("That is AI") do
+      should("be flagged") do
+        Config.any_instance.stubs(:ai_confidence_threshold).returns(50)
+        Config.any_instance.stubs(:flag_ai_posts).returns(true)
+        @upload = create(:ai_upload, uploader: @user)
+        perform_enqueued_jobs(only: AiCheckJob)
+        @post = @upload.post&.reload
+        assert_not_nil(@post)
+        assert(@post.flags.flag.by_system.unresolved.exists?)
+      end
+
+      should("be tagged") do
+        Config.any_instance.stubs(:ai_confidence_threshold).returns(50)
+        Config.any_instance.stubs(:tag_ai_posts).returns(true)
+        @upload = create(:ai_upload, uploader: @user)
+        perform_enqueued_jobs(only: AiCheckJob)
+        @post = @upload.post&.reload
+        assert_not_nil(@post)
+        assert(@post.has_tag?("ai_generated"))
+        assert_match(/ai_generated/, @post.locked_tags)
+      end
+
+      should("keep the correct uploader and editor") do
+        Config.any_instance.stubs(:ai_confidence_threshold).returns(50)
+        Config.any_instance.stubs(:flag_ai_posts).returns(true)
+        Config.any_instance.stubs(:tag_ai_posts).returns(true)
+        @upload = create(:ai_upload, uploader: @user)
+        perform_enqueued_jobs(only: AiCheckJob)
+        @post = @upload.post&.reload
+        assert_not_nil(@post)
+        assert_equal(@user.id, @post.uploader_id)
+        assert_equal(@user.id, @post.versions.first.updater_id)
+        assert_equal(User.system.id, @post.versions.second.updater_id)
+      end
     end
   end
 end

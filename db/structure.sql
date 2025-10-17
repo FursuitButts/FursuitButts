@@ -1,4 +1,4 @@
-\restrict AMN46XxRBjvGG623yfwvDJ0tFjEapLAZMBEd9lNdubL82dCZCVELmJzQZvzOW46
+\restrict 3F59ZKKPqCgYPrdfIzNjTA9puXaj1tLhmQx0o6Ph6B5zg9FXktywPMiWUYNs57i
 
 -- Dumped from database version 17.5
 -- Dumped by pg_dump version 17.6
@@ -597,7 +597,10 @@ CREATE TABLE public.config (
     post_sample_size integer DEFAULT 300 NOT NULL,
     updated_at timestamp(6) without time zone,
     lore_suffixes text DEFAULT 'lore'::text NOT NULL,
-    artist_exclusion_tags text DEFAULT 'avoid_posting, conditional_dnp, epilepsy_warning, sound_warning'::text NOT NULL
+    artist_exclusion_tags text DEFAULT 'avoid_posting, conditional_dnp, epilepsy_warning, sound_warning'::text NOT NULL,
+    flag_ai_posts boolean DEFAULT true NOT NULL,
+    tag_ai_posts boolean DEFAULT true NOT NULL,
+    ai_confidence_threshold integer DEFAULT 50 NOT NULL
 );
 
 
@@ -7733,11 +7736,12 @@ ALTER TABLE ONLY public.help_pages
 -- PostgreSQL database dump complete
 --
 
-\unrestrict AMN46XxRBjvGG623yfwvDJ0tFjEapLAZMBEd9lNdubL82dCZCVELmJzQZvzOW46
+\unrestrict 3F59ZKKPqCgYPrdfIzNjTA9puXaj1tLhmQx0o6Ph6B5zg9FXktywPMiWUYNs57i
 
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20251016215522'),
 ('20251016005855'),
 ('20251005070316'),
 ('20251005055245'),

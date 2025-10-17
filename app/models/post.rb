@@ -62,6 +62,7 @@ class Post < ApplicationRecord
   validate(:validate_thumbnail_frame)
   before_save(:update_tag_post_counts, if: :should_process_tags?)
   before_save(:update_qtags, if: :will_save_change_to_description?)
+  after_create(:ai_check, if: -> { Config.flag_ai_posts? || Config.tag_ai_posts? })
   after_update(:regenerate_image_variants, if: :saved_change_to_thumbnail_frame?)
   after_save(:create_post_events)
   after_save(:create_version)
@@ -136,6 +137,32 @@ class Post < ApplicationRecord
       posts:    results["posts_size"],
       variants: results["variants_size"],
     }
+  end
+
+  def ai_check
+    AiCheckJob.perform_later(self)
+  end
+
+  def ai_check!
+    is_ai_generated? => { score:, reason: }
+    if score > Config.ai_confidence_threshold
+      if Config.flag_ai_posts?
+        flags.create!(
+          creator:     User.system,
+          reason_name: "uploading_guidelines",
+          # TODO: note
+          # note: "AI Score: #{score}\nReason: #{reason}"
+        )
+      end
+      if Config.tag_ai_posts?
+        self.updater = User.system
+        self.edit_reason = "AI Generated"
+        add_tag("ai_generated")
+        self.locked_tags = (locked_tags.split + %w[ai_generated]).uniq.join(" ")
+        save!
+      end
+    end
+    { score: score, reason: reason }
   end
 
   module Ratings

@@ -343,6 +343,7 @@ Rails.application.routes.draw do
       put(:undelete)
       put(:regenerate_thumbnails)
       put(:regenerate_videos)
+      put(:ai_check)
       post(:add_to_pool)
       post(:remove_from_pool)
       get("/frame/:frame", to: "posts#frame", as: "frame")

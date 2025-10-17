@@ -128,6 +128,9 @@
       <%= number_config_field(@config, :alias_and_implication_forum_category, name: "Alias And Implication Forum Category", disabled: !edit) %>
       <%= number_config_field(@config, :default_forum_category, name: "Default Forum Category", disabled: !edit) %>
       <%= number_config_field(@config, :upload_whitelists_forum_topic, name: "Upload Whitelists Forum Topic", disabled: !edit) %>
+      <%= boolean_config_field(@config, :flag_ai_posts, name: "Flag AI Posts", disabled: !edit, hint: "If flags detected as ai generated should be automatically flagged") %>
+      <%= boolean_config_field(@config, :tag_ai_posts, name: "Tag AI Posts", disabled: !edit, hint: "If flags detected as ai generated should be automatically tagged") %>
+      <%= number_config_field(@config, :ai_confidence_threshold, name: "AI Confidence Threshold", disabled: !edit, hint: "The minimum required threshold to flag/tag ai generated content") %>
       <tr>
         <td colspan="3" class="submit-button">
           <%= submit_tag %>
