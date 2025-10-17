@@ -8,10 +8,7 @@ module Artists
       @artist_urls = authorize(ArtistUrl).includes(:artist)
                                          .search_current(search_params(ArtistUrl))
                                          .paginate(params[:page], limit: params[:limit])
-      respond_with(@artist_urls) do |format|
-        # FIXME: this makes the only parameter not work
-        format.json { render(json: @artist_urls.to_json(include: :artist)) }
-      end
+      respond_with(@artist_urls, include: %i[artist])
     end
   end
 end

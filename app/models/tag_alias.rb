@@ -138,8 +138,7 @@ class TagAlias < TagRelationship
       output_line.uniq.join(" ")
     end
 
-    # TODO: This causes every empty line except for the very first one will get stripped.
-    # At the end of the day, it's not a huge deal.
+    # TODO: This causes every empty line except for the very first one will get stripped. At the end of the day, it's not a huge deal.
     output.uniq.join("\n")
   end
 

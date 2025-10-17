@@ -44,7 +44,7 @@ class UserAttribute
   def validate_clones!
     return if clones.empty?
     raise(CircularCloneError, "clones must not contain attribute (#{klass}.#{attribute}") if clones.include?(attribute)
-    # TODO
+    # TODO: implement clone validation logic
   end
 
   def validate_value!(value, type, record: nil)

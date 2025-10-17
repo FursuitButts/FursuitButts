@@ -44,9 +44,6 @@ class MediaAssetWithVariants < MediaAsset
       self.class.scaled_variant_dimensions(options, image_width, image_height)
     end
 
-    # TODO: make this method "variants" and override it in the class, possibly via an intermediate
-    # abstract class rather than a concern
-
     def variants(variant_class = Variant)
       [variant_class.new(self, :original, is_video? ? :video : :image, file_ext, MediaAsset::Rescale.new(width: image_width, height: image_height, method: :none))]
     end

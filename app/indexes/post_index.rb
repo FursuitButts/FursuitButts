@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module PostIndex
-  PostData = Struct.new(:id, :pool_ids, :post_set_ids, :commenter_ids, :comment_count, :noter_ids, :note_bodies, :fav_user_ids, :upvote_user_ids, :downvote_user_ids, :child_post_ids, :disapprover_ids, :disapproval_count, :deleter_id, :deletion_reason, :has_pending_appeals, :has_pending_replacements, :has_verified_artist, :file_size, :image_width, :image_height, :duration, :framecount, :md5, :file_ext, keyword_init: true) do
+  PostData = Struct.new(:id, :pool_ids, :post_set_ids, :commenter_ids, :comment_count, :noter_ids, :note_bodies, :fav_user_ids, :upvote_user_ids, :downvote_user_ids, :child_post_ids, :disapprover_ids, :disapproval_count, :deleter_id, :deletion_reason, :has_pending_replacements, :has_verified_artist, :file_size, :image_width, :image_height, :duration, :framecount, :md5, :file_ext, keyword_init: true) do
     def initialize(**options)
       %i[pool_ids post_set_ids commenter_ids noter_ids note_bodies fav_user_ids upvote_user_ids downvote_user_ids child_post_ids disapprover_ids].each do |key|
         next unless options.key?(key)
@@ -143,7 +143,6 @@ module PostIndex
         deleter_ids              = data.to_h { |d| [d.id, d.deleter_id] }
         deletion_reasons         = data.to_h { |d| [d.id, d.deletion_reason] }
         has_pending_replacements = data.to_h { |d| [d.id, d.has_pending_replacements] }
-        has_pending_appeals      = data.to_h { |d| [d.id, d.has_pending_appeals] }
         has_verified_artist      = data.to_h { |d| [d.id, d.has_verified_artist] }
         file_sizes               = data.to_h { |d| [d.id, d.file_size] }
         image_widths             = data.to_h { |d| [d.id, d.image_width] }
@@ -174,7 +173,6 @@ module PostIndex
             disapproval_count:        disapproval_counts[p.id] || 0,
             artverified:              has_verified_artist[p.id] || false,
             views:                    views[p.id] || 0,
-            appealed:                 has_pending_appeals[p.id] || false,
             file_size:                file_sizes[p.id] || 0,
             width:                    image_widths[p.id] || 0,
             height:                   image_heights[p.id] || 0,
@@ -214,7 +212,6 @@ module PostIndex
                     "post_disapprovals_agg.disapprover_ids", "post_disapprovals_agg.disapproval_count",
                     "last_flag.deleter_id, last_flag.deletion_reason",
                     "post_replacements_agg.has_pending_replacements",
-                    "post_appeals_agg.has_pending_appeals",
                     "verified_artist_agg.has_verified_artist",
                     "upload_media_assets.file_size",
                     "upload_media_assets.image_width",
@@ -233,7 +230,6 @@ module PostIndex
             .joins("LEFT JOIN LATERAL (SELECT ARRAY_AGG(post_disapprovals.user_id) AS disapprover_ids, COUNT(post_disapprovals.user_id) AS disapproval_count FROM post_disapprovals WHERE post_disapprovals.post_id = posts.id) post_disapprovals_agg ON TRUE")
             .joins("LEFT JOIN LATERAL (SELECT creator_id as deleter_id, reason as deletion_reason FROM post_flags WHERE post_flags.post_id = posts.id AND post_flags.is_resolved = FALSE and post_flags.is_deletion = TRUE ORDER BY id DESC LIMIT 1) last_flag ON TRUE")
             .joins("LEFT JOIN LATERAL (SELECT EXISTS(SELECT 1 FROM post_replacements WHERE post_replacements.post_id = posts.id AND post_replacements.status = 'pending') as has_pending_replacements) post_replacements_agg ON TRUE")
-            .joins("LEFT JOIN LATERAL (SELECT EXISTS(SELECT 1 FROM post_appeals WHERE post_appeals.post_id = posts.id AND post_appeals.status = #{PostAppeal.statuses['pending']}) as has_pending_appeals) post_appeals_agg ON TRUE")
             .joins("LEFT JOIN linked_artists ON linked_artists.linked_user_id = posts.uploader_id")
             .joins("LEFT JOIN LATERAL (SELECT EXISTS(SELECT 1 FROM unnest(string_to_array(posts.tag_string, ' ')) AS tag WHERE tag = ANY(linked_artists.artist_names)) AS has_verified_artist) verified_artist_agg ON TRUE")
             .joins("LEFT JOIN upload_media_assets ON upload_media_assets.id = posts.upload_media_asset_id")
@@ -343,7 +339,7 @@ module PostIndex
       flagged:                  is_flagged,
       pending:                  is_pending,
       deleted:                  is_deleted,
-      appealed:                 options_or_get.call(:appealed, -> { is_appealed? }),
+      appealed:                 is_appealed,
       has_children:             has_children,
       has_pending_replacements: options_or_get.call(:has_pending_replacements, -> { replacements.pending.any? }),
       artverified:              options_or_get.call(:artverified, -> { uploader_linked_artists.any? }),

@@ -114,6 +114,8 @@ class Post < ApplicationRecord
   scope(:not_deleted, -> { where(is_deleted: false) })
   scope(:flagged, -> { where(is_flagged: true) })
   scope(:not_flagged, -> { where(is_flagged: false) })
+  scope(:appealed, -> { where(is_appealed: true) })
+  scope(:not_appealed, -> { where(is_appealed: false) })
   scope(:pending_or_flagged, -> { pending.or(flagged) })
   scope(:has_notes, -> { where.not(last_noted_at: nil) })
   scope(:expired, -> { pending.where(posts: { created_at: ...PostPruner::MODERATION_WINDOW.days.ago }) })
@@ -404,11 +406,6 @@ class Post < ApplicationRecord
       is_deleted? && !is_appealed?
     end
 
-    # TODO: add database column
-    def is_appealed?
-      is_deleted? && appeals.pending.any?
-    end
-
     def is_active?
       !is_pending? && !is_deleted?
     end
@@ -449,6 +446,8 @@ class Post < ApplicationRecord
         approvals.create(user: approver)
         update(approver: approver, is_pending: false, updater: approver)
         uploader.notify_for_upload(self, :post_approve) if uploader_id != approver.id
+        appeals.pending.each { |a| a.accept!(user) }
+        flags.pending.each { |f| f.resolve!(user) }
       end
     end
   end
@@ -1488,6 +1487,7 @@ class Post < ApplicationRecord
         change_seq:    change_seq,
         is_deleted:    is_deleted,
         is_pending:    is_pending,
+        is_appealed:   is_appealed,
         duration:      duration,
         fav_count:     fav_count,
         comment_count: comment_count,
@@ -1557,13 +1557,16 @@ class Post < ApplicationRecord
           end
 
           update(
-            is_deleted: true,
-            is_pending: false,
-            is_flagged: false,
+            is_deleted:  true,
+            is_pending:  false,
+            is_flagged:  false,
+            is_appealed: false,
           )
           decrement_tag_post_counts
           move_files_on_delete(user)
           PostEvent.add!(id, user, :deleted, reason: reason)
+          appeals.pending.each { |a| a.reject!(user) }
+          flags.pending.each { |f| f.resolve!(user) }
           uploader.notify_for_upload(self, :post_delete) if uploader_id != user.id
         end
       end
@@ -1601,13 +1604,15 @@ class Post < ApplicationRecord
       transaction do
         self.is_deleted = false
         self.is_pending = false
+        self.is_appealed = false
         self.approver = user
         flags.each { |f| f.resolve!(user) }
         increment_tag_post_counts
         save
         approvals.create(user: user)
         PostEvent.add!(id, user, :undeleted)
-        appeals.pending.each { |p| p.accept!(user) }
+        appeals.pending.each { |a| a.accept!(user) }
+        flags.pending.each { |f| f.resolve!(user) }
         uploader.notify_for_upload(self, :post_undelete) if uploader_id != user.id
       end
       move_files_on_undelete(user)

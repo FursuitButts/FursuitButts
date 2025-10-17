@@ -121,7 +121,7 @@ module Posts
             end
           end
 
-          # TODO
+          # TODO: reimplement ability to disable notifications
           # should "fail and not create ticket if notify=false" do
           #   DestroyedPost.find_by!(post_id: @post2.id).update_column(:notify, false)
           #   assert_difference(%w[Post.count Ticket.count], 0) do

@@ -77,7 +77,6 @@ class StaticController < ApplicationController
     if request.post?
       time = (Time.now + 5.minutes).to_i
       secret = FemboyFans.config.discord_secret
-      # TODO: Proper HMAC
       hashed_values = Digest::SHA256.hexdigest("#{CurrentUser.user.id};#{CurrentUser.name};#{time};#{secret};index")
       user_hash = "?user_id=#{CurrentUser.user.id}&user_name=#{CurrentUser.name}&time=#{time}&hash=#{hashed_values}"
 

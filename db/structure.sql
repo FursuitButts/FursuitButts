@@ -1,4 +1,4 @@
-\restrict vnE3TPp2K15NzYmDOqpgQYx4DcVcD0qOYDwv0dVxMtEBzGl1NyQXEomIB40lal8
+\restrict yQNlGogyYIQ5OZha2IS7RAfkmMVJSGSV6NwZGrrucAygdbT2aLiWwhF1rOmxJzK
 
 -- Dumped from database version 17.5
 -- Dumped by pg_dump version 17.6
@@ -2152,7 +2152,8 @@ CREATE TABLE public.posts (
     upload_media_asset_id bigint,
     updater_id bigint NOT NULL,
     updater_ip_addr inet NOT NULL,
-    tag_count_important integer DEFAULT 0 NOT NULL
+    tag_count_important integer DEFAULT 0 NOT NULL,
+    is_appealed boolean DEFAULT false NOT NULL
 );
 
 
@@ -7739,11 +7740,12 @@ ALTER TABLE ONLY public.help_pages
 -- PostgreSQL database dump complete
 --
 
-\unrestrict vnE3TPp2K15NzYmDOqpgQYx4DcVcD0qOYDwv0dVxMtEBzGl1NyQXEomIB40lal8
+\unrestrict yQNlGogyYIQ5OZha2IS7RAfkmMVJSGSV6NwZGrrucAygdbT2aLiWwhF1rOmxJzK
 
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20251017055837'),
 ('20251017041942'),
 ('20251017021932'),
 ('20251017021457'),
