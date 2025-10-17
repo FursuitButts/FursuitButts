@@ -12,6 +12,7 @@
     "jquery": "^3.6.3",
     "jquery-hotkeys": "^0.2.2",
     "jquery-ui": "^1.12.1",
+    "leasot": "^14.4.0",
     "mini-css-extract-plugin": "^2.3.0",
     "rails-erb-loader": "^5.5.2",
     "sass": "^1.42.1",
@@ -33,6 +34,7 @@
     "webpack-dev-server": "4.15.2"
   },
   "scripts": {
-    "lint": "yarn run eslint ./app/javascript/src/**/*.js --no-fix --max-warnings 0"
+    "lint": "yarn run eslint ./app/javascript/src/**/*.js --no-fix --max-warnings 0",
+    "todo": "leasot {app,bin,config,db,lib,test}/**/*.{rb,erb,js,scss} -x --reporter markdown --tags XXX,HACK > TODO.md"
   }
 }

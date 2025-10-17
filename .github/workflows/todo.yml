@@ -1,0 +1,30 @@
+name: Update TODO
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  update-todo:
+    name: Update Todo
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+      - run: npm install -g leasot
+      - name: Generate TODO
+        run: yarn todo
+      - name: Commit Changes
+        id: commit
+        uses: stefanzweifel/git-auto-commit-action@v6
+        with:
+          commit_message: "Update TODO [skip ci]"
+          file_pattern: "TODO.md"
+          commit_user_name: "github-actions[bot]"
+          commit_user_email: "41898282+github-actions[bot]@users.noreply.github.com"
+          commit_author: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
