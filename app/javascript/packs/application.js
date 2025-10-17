@@ -46,6 +46,7 @@ export { default as Notification } from "../src/javascripts/notifications.js";
 export { default as Post } from "../src/javascripts/posts.js";
 export { default as PostDeletion } from "../src/javascripts/post_delete.js";
 export { default as PostDeletionReasons } from "../src/javascripts/post_deletion_reasons.js";
+export { default as PostFlags } from "../src/javascripts/post_flags.js";
 export { default as PostModeMenu } from "../src/javascripts/post_mode_menu.js";
 export { default as PostReplacement } from "../src/javascripts/post_replacement.js";
 export { default as PostReplacementRejection } from "../src/javascripts/post_replacement_reject.js";

@@ -7,6 +7,7 @@
     %w[Deletion deletion],
   ], include_blank: true) %>
   <%= f.input(:is_resolved, label: "Resolved?", collection: [["Yes", true], ["No", false]], include_blank: true) %>
+  <%= f.input(:note_matches) %>
   <%= f.user(:creator) %>
   <%= f.input(:ip_addr, label: "Ip Address") %>
 <% end %>

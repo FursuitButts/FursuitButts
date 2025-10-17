@@ -82,7 +82,10 @@ class UploadTest < ActiveSupport::TestCase
         perform_enqueued_jobs(only: AiCheckJob)
         @post = @upload.post&.reload
         assert_not_nil(@post)
-        assert(@post.flags.flag.by_system.unresolved.exists?)
+        @flag = @post.flags.flag.by_system.unresolved.first
+        assert_not_nil(@flag)
+        MediaAsset.is_ai_generated?(@post.file_path) => { score:, reason: }
+        assert_equal("AI Score: #{score}\nReason: #{reason}", @flag.note)
       end
 
       should("be tagged") do

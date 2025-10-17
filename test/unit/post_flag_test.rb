@@ -69,5 +69,39 @@ class PostFlagTest < ActiveSupport::TestCase
         assert_match(/You cannot flag posts/, error.message)
       end
     end
+
+    context("notes") do
+      setup do
+        @user = create(:user)
+        @post = create(:post, uploader: @user)
+      end
+
+      should("be required on reasons that require explanation") do
+        reasons = FemboyFans.config.flag_reasons.select { |r| r[:require_explanation] }
+        reasons.each do |reason|
+          flag = build(:post_flag, post: @post, creator: @user, reason_name: reason[:name], note: "")
+          assert_not(flag.valid?, "note should be required for reason #{reason[:name]}")
+          assert_includes(flag.errors[:note], "is required for the selected reason")
+        end
+      end
+
+      should("not be required on reasons that do not require explanation") do
+        reasons = FemboyFans.config.flag_reasons.reject { |r| r[:require_explanation] }
+        reasons.each do |reason|
+          flag = build(:post_flag, post: @post, creator: @user, reason_name: reason[:name], note: "")
+          flag.valid?
+          assert_not_includes(flag.errors[:note], "is required for the selected reason")
+        end
+      end
+
+      should("be allowed") do
+        reasons = FemboyFans.config.flag_reasons.select { |r| r[:require_explanation] }
+        reasons.each do |reason|
+          flag = build(:post_flag, post: @post, creator: @user, reason_name: reason[:name], note: "Some explanation")
+          flag.valid?
+          assert_not_includes(flag.errors[:note], "is required for the selected reason")
+        end
+      end
+    end
   end
 end

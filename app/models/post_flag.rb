@@ -15,6 +15,8 @@ class PostFlag < ApplicationRecord
   validate(:validate_reason)
   validate(:update_reason, on: :create)
   validates(:reason, presence: true)
+  validates(:note, length: { maximum: -> { Config.post_flag_note_max_size } })
+  validate(:validate_note_required_for_reason)
   before_save(:update_post)
   after_create(:create_post_event)
   after_commit(:index_post)
@@ -39,6 +41,7 @@ class PostFlag < ApplicationRecord
     def query_dsl
       super
         .field(:reason_matches, :reason)
+        .field(:note_matches, :note)
         .field(:is_resolved)
         .field(:post_id)
         .field(:ip_addr, :creator_ip_addr)
@@ -124,6 +127,14 @@ class PostFlag < ApplicationRecord
     end
   end
 
+  def validate_note_required_for_reason
+    return if reason_name.blank?
+    reason = FemboyFans.config.flag_reasons.find { |r| r[:name].to_s == reason_name.to_s }
+    if reason && reason[:require_explanation] && note.to_s.strip.blank?
+      errors.add(:note, "is required for the selected reason")
+    end
+  end
+
   def update_reason
     case reason_name
     when "deletion"
@@ -162,6 +173,11 @@ class PostFlag < ApplicationRecord
   def create_post_event
     # Deletions also create flags, but they create a deletion event instead
     PostEvent.add!(post.id, creator, :flag_created, reason: reason, post_flag_id: id) unless is_deletion
+  end
+
+  def can_see_note?(user)
+    return true if user.is_staff?
+    creator_id == user.id
   end
 
   def self.available_includes

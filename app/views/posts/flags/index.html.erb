@@ -7,7 +7,17 @@
     <%= PostPresenter.preview(post_flag.post, show_deleted: true) %>
   <% end %>
   <% t.column("Reason") do |post_flag| %>
-    <div class="dtext-container"><%= format_text(post_flag.reason) %></div>
+    <div class="dtext-container">
+      <%= format_text post_flag.reason %>
+    </div>
+    <% if post_flag.note.present? && post_flag.can_see_note?(CurrentUser.user) %>
+      <div class="post-flag-note">
+        <div class="post-flag-note-header">» Notes</div>
+        <div class="dtext-container post-flag-note-body">
+          <%= format_text(post_flag.note) %>
+        </div>
+      </div>
+    <% end %>
   <% end %>
   <% t.column("Flags", width: "1%") do |post_flag| %>
     <%= link_to(post_flag.post.flags.size, post_flags_path(search: { post_id: post_flag.post_id })) %>

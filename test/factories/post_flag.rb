@@ -5,6 +5,7 @@ FactoryBot.define do
     association(:creator, factory: :user)
     association(:post)
     reason_name { "dnp_artist" }
+    note { "Some explanation" }
     is_resolved { false }
   end
 end

@@ -279,9 +279,10 @@ module FemboyFans
     def flag_reasons
       [
         {
-          name:   "uploading_guidelines",
-          reason: "Does not meet the \"uploading guidelines\":/help/uploading_guidelines",
-          text:   "This post fails to meet the site's standards, be it for artistic worth, image quality, relevancy, or something else.\nKeep in mind that your personal preferences have no bearing on this. If you find the content of a post objectionable, simply \"blacklist\":/help/blacklisting it.",
+          name:                "uploading_guidelines",
+          reason:              "Does not meet the \"uploading guidelines\":/help/uploading_guidelines",
+          text:                "This post fails to meet the site's standards, be it for artistic worth, image quality, relevancy, or something else.\nKeep in mind that your personal preferences have no bearing on this. If you find the content of a post objectionable, simply \"blacklist\":/help/blacklisting it.",
+          require_explanation: true,
         },
         {
           name:   "dnp_artist",
@@ -294,9 +295,10 @@ module FemboyFans
           text:   "We do not host paysite or commercial that is under 1 year old.",
         },
         {
-          name:   "trace",
-          reason: "Trace of another artist's work",
-          text:   "Images traced from other artists' artwork are not accepted on this site. Referencing from something is fine, but outright copying someone else's work is not.\nPlease, leave more information in the comments, or simply add the original artwork as the posts's parent if it's hosted on this site.",
+          name:                "trace",
+          reason:              "Trace of another artist's work",
+          text:                "Images traced from other artists' artwork are not accepted on this site. Referencing from something is fine, but outright copying someone else's work is not.\nPlease, leave more information in the comments, or simply add the original artwork as the posts's parent if it's hosted on this site.",
+          require_explanation: true,
         },
         {
           name:   "previously_deleted",
@@ -309,9 +311,10 @@ module FemboyFans
           text:   "Posts featuring real-life pornography are not acceptable on this site.",
         },
         {
-          name:   "corrupt",
-          reason: "File is either corrupted, broken, or otherwise does not work",
-          text:   "Something about this post does not work quite right. This may be a broken video, or a corrupted image.\nEither way, in order to avoid confusion, please explain the situation in the comments.",
+          name:                "corrupt",
+          reason:              "File is either corrupted, broken, or otherwise does not work",
+          text:                "Something about this post does not work quite right. This may be a broken video, or a corrupted image.\nEither way, in order to avoid confusion, please explain the situation in the comments.",
+          require_explanation: true,
         },
         {
           name:   "inferior",

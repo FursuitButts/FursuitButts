@@ -1,4 +1,4 @@
-\restrict 3F59ZKKPqCgYPrdfIzNjTA9puXaj1tLhmQx0o6Ph6B5zg9FXktywPMiWUYNs57i
+\restrict s71tH0BMAz3gCZbXjz36OIXkM2rKB2lT3d20L7ODURqFlqg6iPw22zCWgZRzvfR
 
 -- Dumped from database version 17.5
 -- Dumped by pg_dump version 17.6
@@ -600,7 +600,8 @@ CREATE TABLE public.config (
     artist_exclusion_tags text DEFAULT 'avoid_posting, conditional_dnp, epilepsy_warning, sound_warning'::text NOT NULL,
     flag_ai_posts boolean DEFAULT true NOT NULL,
     tag_ai_posts boolean DEFAULT true NOT NULL,
-    ai_confidence_threshold integer DEFAULT 50 NOT NULL
+    ai_confidence_threshold integer DEFAULT 50 NOT NULL,
+    post_flag_note_max_size integer DEFAULT 10000 NOT NULL
 );
 
 
@@ -1776,7 +1777,8 @@ CREATE TABLE public.post_flags (
     is_resolved boolean DEFAULT false NOT NULL,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
-    is_deletion boolean DEFAULT false NOT NULL
+    is_deletion boolean DEFAULT false NOT NULL,
+    note character varying
 );
 
 
@@ -7736,11 +7738,13 @@ ALTER TABLE ONLY public.help_pages
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 3F59ZKKPqCgYPrdfIzNjTA9puXaj1tLhmQx0o6Ph6B5zg9FXktywPMiWUYNs57i
+\unrestrict s71tH0BMAz3gCZbXjz36OIXkM2rKB2lT3d20L7ODURqFlqg6iPw22zCWgZRzvfR
 
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20251017021932'),
+('20251017021457'),
 ('20251016215522'),
 ('20251016005855'),
 ('20251005070316'),
