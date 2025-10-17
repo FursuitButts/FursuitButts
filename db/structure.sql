@@ -1,4 +1,4 @@
-\restrict s71tH0BMAz3gCZbXjz36OIXkM2rKB2lT3d20L7ODURqFlqg6iPw22zCWgZRzvfR
+\restrict vnE3TPp2K15NzYmDOqpgQYx4DcVcD0qOYDwv0dVxMtEBzGl1NyQXEomIB40lal8
 
 -- Dumped from database version 17.5
 -- Dumped by pg_dump version 17.6
@@ -601,7 +601,8 @@ CREATE TABLE public.config (
     flag_ai_posts boolean DEFAULT true NOT NULL,
     tag_ai_posts boolean DEFAULT true NOT NULL,
     ai_confidence_threshold integer DEFAULT 50 NOT NULL,
-    post_flag_note_max_size integer DEFAULT 10000 NOT NULL
+    post_flag_note_max_size integer DEFAULT 10000 NOT NULL,
+    db_exports_path character varying DEFAULT '/db_exports'::character varying
 );
 
 
@@ -7738,11 +7739,12 @@ ALTER TABLE ONLY public.help_pages
 -- PostgreSQL database dump complete
 --
 
-\unrestrict s71tH0BMAz3gCZbXjz36OIXkM2rKB2lT3d20L7ODURqFlqg6iPw22zCWgZRzvfR
+\unrestrict vnE3TPp2K15NzYmDOqpgQYx4DcVcD0qOYDwv0dVxMtEBzGl1NyQXEomIB40lal8
 
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20251017041942'),
 ('20251017021932'),
 ('20251017021457'),
 ('20251016215522'),

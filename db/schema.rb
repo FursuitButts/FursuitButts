@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_10_17_021932) do
+ActiveRecord::Schema[7.1].define(version: 2025_10_17_041942) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -297,6 +297,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_10_17_021932) do
     t.boolean "tag_ai_posts", default: true, null: false
     t.integer "ai_confidence_threshold", default: 50, null: false
     t.integer "post_flag_note_max_size", default: 10000, null: false
+    t.string "db_exports_path", default: "/db_exports"
   end
 
   create_table "destroyed_posts", force: :cascade do |t|

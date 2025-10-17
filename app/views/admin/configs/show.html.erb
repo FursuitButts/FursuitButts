@@ -132,6 +132,7 @@
       <%= boolean_config_field(@config, :flag_ai_posts, name: "Flag AI Posts", disabled: !edit, hint: "If flags detected as ai generated should be automatically flagged") %>
       <%= boolean_config_field(@config, :tag_ai_posts, name: "Tag AI Posts", disabled: !edit, hint: "If flags detected as ai generated should be automatically tagged") %>
       <%= number_config_field(@config, :ai_confidence_threshold, name: "AI Confidence Threshold", disabled: !edit, hint: "The minimum required threshold to flag/tag ai generated content") %>
+      <%= text_config_field(@config, :db_exports_path, name: "DB Exports Path", disabled: !edit, hint: "The path db exports are located at.") %>
       <tr>
         <td colspan="3" class="submit-button">
           <%= submit_tag %>

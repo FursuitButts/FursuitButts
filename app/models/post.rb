@@ -150,7 +150,7 @@ class Post < ApplicationRecord
         flags.create!(
           creator:     User.system,
           reason_name: "uploading_guidelines",
-          note: "AI Score: #{score}\nReason: #{reason}"
+          note:        "AI Score: #{score}\nReason: #{reason}",
         )
       end
       if Config.tag_ai_posts?

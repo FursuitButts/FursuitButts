@@ -8,7 +8,7 @@
   <% end %>
   <% t.column("Reason") do |post_flag| %>
     <div class="dtext-container">
-      <%= format_text post_flag.reason %>
+      <%= format_text(post_flag.reason) %>
     </div>
     <% if post_flag.note.present? && post_flag.can_see_note?(CurrentUser.user) %>
       <div class="post-flag-note">
