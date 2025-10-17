@@ -14,10 +14,9 @@
 | [app/models/forum_topic.rb](app/models/forum_topic.rb#L173) | 173 | revisit muting, it may need to be further optimized or removed due to performance issues |
 | [app/models/media_asset.rb](app/models/media_asset.rb#L88) | 88 | reimplement ability to disable notifications |
 | [app/models/media_asset_with_variants.rb](app/models/media_asset_with_variants.rb#L47) | 47 | make this method "variants" and override it in the class, possibly via an intermediate |
-| [app/models/post.rb](app/models/post.rb#L153) | 153 | note |
-| [app/models/post.rb](app/models/post.rb#L408) | 408 | add database column |
+| [app/models/post.rb](app/models/post.rb#L407) | 407 | add database column |
 | [app/models/post_event.rb](app/models/post_event.rb#L93) | 93 | We need access control/blocks for associations |
-| [app/models/post_flag.rb](app/models/post_flag.rb#L49) | 49 | We need access control/blocks for associations |
+| [app/models/post_flag.rb](app/models/post_flag.rb#L52) | 52 | We need access control/blocks for associations |
 | [app/models/post_set.rb](app/models/post_set.rb#L122) | 122 | convert to user throttle |
 | [app/models/tag_alias.rb](app/models/tag_alias.rb#L141) | 141 | This causes every empty line except for the very first one will get stripped. |
 | [app/models/tag_alias.rb](app/models/tag_alias.rb#L169) | 169 | Race condition with indexing jobs here. |
@@ -34,8 +33,9 @@
 | [app/views/posts/deletion_reasons/index.html.erb](app/views/posts/deletion_reasons/index.html.erb#L3) | 3 | convert to new table syntax |
 | [app/javascript/src/javascripts/models/Filter.js](app/javascript/src/javascripts/models/Filter.js#L130) | 130 | This REQUIRES the tokens to be formatted properly. |
 | [app/javascript/src/javascripts/utility/filter_util.js](app/javascript/src/javascripts/utility/filter_util.js#L27) | 27 | Don't re-parse this on every run |
+| [app/javascript/src/styles/common/_standard_elements.scss](app/javascript/src/styles/common/_standard_elements.scss#L29) | 29 | What if button is on a light background |
 | [app/views/posts/replacements/rejection_reasons/index.html.erb](app/views/posts/replacements/rejection_reasons/index.html.erb#L3) | 3 | convert to new table syntax |
-| [test/test_helper.rb](test/test_helper.rb#L216) | 216 | look into refactoring out minitest? |
+| [test/test_helper.rb](test/test_helper.rb#L217) | 217 | look into refactoring out minitest? |
 | [test/controllers/uploads_controller_test.rb](test/controllers/uploads_controller_test.rb#L118) | 118 |  |
 | [test/unit/file_methods_test.rb](test/unit/file_methods_test.rb#L357) | 357 | neither video has audio |
 | [test/unit/post_test.rb](test/unit/post_test.rb#L515) | 515 | This was moved to be a controller concern to fix issues with internal post updates |
@@ -46,7 +46,7 @@
 | [test/unit/post_test.rb](test/unit/post_test.rb#L2459) | 2459 | These are pretty messed up, both structurally, and expectation wise. |
 | [test/controllers/posts/replacements_controller_test.rb](test/controllers/posts/replacements_controller_test.rb#L124) | 124 |  |
 | [config/default_config.rb](config/default_config.rb#L134) | 134 | remove these |
-| [config/default_config.rb](config/default_config.rb#L332) | 332 | appealed posts should be visible, but this makes it far too easy to get the contents of deleted posts at a moments notice |
+| [config/default_config.rb](config/default_config.rb#L335) | 335 | appealed posts should be visible, but this makes it far too easy to get the contents of deleted posts at a moments notice |
 
 ### XXXs
 | Filename | line # | XXX |
@@ -55,9 +55,9 @@
 | [app/concerns/api_methods.rb](app/concerns/api_methods.rb#L32) | 32 | deprecated, shouldn't expose this as an instance method. |
 | [app/concerns/concurrency_methods.rb](app/concerns/concurrency_methods.rb#L8) | 8 | We may deadlock if a transaction is open; do a non-parallel each. |
 | [app/models/pool.rb](app/models/pool.rb#L286) | 286 | finds wrong post when the pool contains multiple copies of the same post (#2042). |
-| [app/models/post.rb](app/models/post.rb#L1611) | 1611 | This must happen *after* the `is_deleted` flag is set to true (issue #3419). |
+| [app/models/post.rb](app/models/post.rb#L1571) | 1571 | This must happen *after* the `is_deleted` flag is set to true (issue #3419). |
 | [app/logical/femboy_fans/paginator/active_record_extension.rb](app/logical/femboy_fans/paginator/active_record_extension.rb#L48) | 48 | Hack: in sequential pagination we fetch one more record than we need |
-| [test/test_helper.rb](test/test_helper.rb#L214) | 214 | Testing modules should not have a say in if we can or cannot use assert_equal with nil |
+| [test/test_helper.rb](test/test_helper.rb#L215) | 215 | Testing modules should not have a say in if we can or cannot use assert_equal with nil |
 
 ### FIXMEs
 | Filename | line # | FIXME |
@@ -70,7 +70,6 @@
 | [test/unit/post_test.rb](test/unit/post_test.rb#L2176) | 2176 | This test fails randomly at different assertions |
 | [test/functional/post_events/formatting_test.rb](test/functional/post_events/formatting_test.rb#L81) | 81 | make a way to test two actions at once, as these are both only ever created at the same time in a determined order |
 | [test/unit/post_sets/favorites_test.rb](test/unit/post_sets/favorites_test.rb#L30) | 30 | PaginatedArray does not preserve mode and mode_seq |
-| [test/unit/sources/helper.rb](test/unit/sources/helper.rb#L5) | 5 | I don't think this should *have* to be done this way, but this is the only way it worked |
 
 ### HACKs
 | Filename | line # | HACK |
