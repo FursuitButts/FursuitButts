@@ -1,6 +1,7 @@
 <div class="c-mascots">
   <div class="a-edit">
     <h1>Edit Mascot</h1>
+    <div class="mascot-preview" style="background-image: url('<%= @mascot.file_url(user: CurrentUser.user) %>'); background-color: <%= @mascot.background_color %>;"></div>
     <%= render("form", mascot: @mascot) %>
   </div>
 </div>

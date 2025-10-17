@@ -2,6 +2,7 @@
 
 <%= table_for(@mascots) do |t| %>
   <% t.column("Name") do |mascot| %>
+    <img src="<%= mascot.file_url(user: CurrentUser.user) %>" alt="<%= mascot.display_name %>" class="mascot-thumbnail" />
     <%= link_to(mascot.display_name, mascot.file_url(user: CurrentUser.user)) %>
   <% end %>
   <% t.column(:background_color) %>

@@ -10,9 +10,9 @@ class FileValidator
 
   def validate(max_file_sizes: nil, max_width: nil, max_height: nil)
     # default arguments are evaluated when the method is defined
-    max_file_sizes ||= Config.instance.max_file_sizes.transform_values { |v| v * 1.megabyte }
-    max_width ||= Config.instance.max_image_width
-    max_height ||= Config.instance.max_image_height
+    max_file_sizes ||= Config.max_file_sizes.transform_values { |v| v * 1.megabyte }
+    max_width ||= Config.max_image_width
+    max_height ||= Config.max_image_height
     validate_file_ext(max_file_sizes)
     validate_file_size(max_file_sizes)
     validate_file_integrity
