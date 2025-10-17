@@ -13,7 +13,7 @@ module Sources
           "https://e621.net/posts/3242510",
           Sources::Alternates::E621,
           "https://e621.net/posts/3242510",
-          )
+        )
       end
 
       context("A source from E926") do
@@ -21,7 +21,7 @@ module Sources
           "https://e926.net/posts/3242510",
           Sources::Alternates::E621,
           "https://e621.net/posts/3242510",
-          )
+        )
       end
 
       context("A direct link from E621") do
@@ -33,7 +33,7 @@ module Sources
           "https://static1.e621.net/data/b9/19/b919c42410b3e90a3dd2667612ccebc2.png",
           Sources::Alternates::E621,
           "https://static1.e621.net/data/b9/19/b919c42410b3e90a3dd2667612ccebc2.png",
-          )
+        )
       end
 
       context("A direct link from E926") do
@@ -45,7 +45,7 @@ module Sources
           "https://static1.e926.net/data/b9/19/b919c42410b3e90a3dd2667612ccebc2.png",
           Sources::Alternates::E621,
           "https://static1.e621.net/data/b9/19/b919c42410b3e90a3dd2667612ccebc2.png",
-          )
+        )
       end
     end
   end

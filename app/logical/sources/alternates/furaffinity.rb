@@ -29,7 +29,7 @@ module Sources
         # Remove "?upload-successful" query after upload
         @parsed_url.query = nil if @parsed_url.query == "upload-successful"
         # Remove comment anchor
-        @parsed_url.fragment = nil  if @parsed_url.fragment&.start_with?("cid:")
+        @parsed_url.fragment = nil if @parsed_url.fragment&.start_with?("cid:")
         @parsed_url.host = @parsed_url.host[4..] if @parsed_url.host.start_with?("www.")
         @parsed_url.path = @parsed_url.path.delete_suffix("/") if @parsed_url.path.end_with?("/")
 

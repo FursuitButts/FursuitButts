@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 require_relative("helper")
 
 module Sources
@@ -8,7 +8,7 @@ module Sources
     class DeviantartTest < ActiveSupport::TestCase
       extend(Helper)
 
-      context "A modern source from deviantart" do
+      context("A modern source from deviantart") do
         alternate_should_work(
           "https://www.deviantart.com/yann-s/art/Nostalgia-for-infinity-GIF-animation-749119309",
           Sources::Alternates::Deviantart,
@@ -16,7 +16,7 @@ module Sources
         )
       end
 
-      context "An old style source from deviantart" do
+      context("An old style source from deviantart") do
         alternate_should_work(
           "https://yann-s.deviantart.com/art/Nostalgia-for-infinity-GIF-animation-749119309",
           Sources::Alternates::Deviantart,

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require("test_helper")
 require_relative("helper")
 
 module Sources
@@ -8,7 +8,7 @@ module Sources
     class InkbunnyTest < ActiveSupport::TestCase
       extend(Helper)
 
-      context "A normal source from Inkbunny" do
+      context("A normal source from Inkbunny") do
         alternate_should_work(
           "https://inkbunny.net/s/2082543",
           Sources::Alternates::Inkbunny,
@@ -16,7 +16,7 @@ module Sources
         )
       end
 
-      context "A direct image source from Inkbunny" do
+      context("A direct image source from Inkbunny") do
         alternate_should_work(
           "https://gb2.ib.metapix.net/files/full/3012/3012936_MeganBryar_meganbryar.png",
           Sources::Alternates::Inkbunny,
@@ -24,11 +24,19 @@ module Sources
         )
       end
 
-      context "An Inkbunny source with an anchor" do
+      context("An Inkbunny source with an anchor") do
         alternate_should_work(
           "https://inkbunny.net/s/2582678-p2-#pictop",
           Sources::Alternates::Inkbunny,
-          "https://inkbunny.net/s/2582678-p2-",
+          "https://inkbunny.net/s/2582678-p2",
+        )
+      end
+
+      context("An Inkbunny source with trailing dash") do
+        alternate_should_work(
+          "https://inkbunny.net/s/237847384-p3-",
+          Sources::Alternates::Inkbunny,
+          "https://inkbunny.net/s/237847384-p3",
         )
       end
     end
