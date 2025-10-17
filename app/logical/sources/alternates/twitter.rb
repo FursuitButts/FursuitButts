@@ -3,8 +3,8 @@
 module Sources
   module Alternates
     class Twitter < Base
-      TWITFIX_DOMAINS = %w[fxtwitter.com ayytwitter.com twitter64.com vxtwitter.com pxtwitter.com twittpr.com].freeze
-      NITTER_HOSTS = %w[nitter.net nitter.moomoo.me nitter.kavin.rocks nitter.it nitter.domain.glass nitter.ca nitter.fdn.fr].freeze
+      TWITFIX_DOMAINS = %w[fxtwitter.com ayytwitter.com twitter64.com vxtwitter.com pxtwitter.com twittpr.com fixupx.com].freeze
+      NITTER_HOSTS = %w[nitter.net nitter.moomoo.me nitter.kavin.rocks nitter.it nitter.domain.glass nitter.ca nitter.fdn.fr nitter.poast.org nitter.space xcancel.com lightbrd.com nitter.tiekoetter.com nuku.trabun.org].freeze
 
       def force_https?
         true
@@ -19,15 +19,15 @@ module Sources
       end
 
       def original_url
-        # Convert X/mobile URLs to base ones
-        if %w[x.com mobile.x.com mobile.twitter.com].include?(@parsed_url.host)
-          @parsed_url.host = "twitter.com"
+        # Convert twitter/mobile URLs to base ones
+        if %w[m.x.com mobile.x.com twitter.com m.twitter.com mobile.twitter.com].include?(@parsed_url.host)
+          @parsed_url.host = "x.com"
         end
         # Replace twitter embed-helper links with twitter links
         if TWITFIX_DOMAINS.include?(@parsed_url.host)
-          @parsed_url.host = "twitter.com"
+          @parsed_url.host = "x.com"
         end
-        # Replace nitter links with twitter links, but allow other links on the same domain to skip later checks
+        # Replace nitter links with 𝕏 links, but allow other links on the same domain to skip later checks
         if nitter_domains.include?(@parsed_url.domain)
           if NITTER_HOSTS.include?(@parsed_url.host)
             if @parsed_url.path.start_with?("/pic/")
@@ -36,7 +36,7 @@ module Sources
               # URI must be re-parsed, to ensure query values are parsed
               @parsed_url = Addressable::URI.heuristic_parse(@parsed_url.to_s)
             else
-              @parsed_url.host = "twitter.com"
+              @parsed_url.host = "x.com"
             end
           else
             # Allow non-nitter subdomains, on the same domain, to avoid later handling here
@@ -44,15 +44,18 @@ module Sources
           end
         end
         # Remove tracking data from links
-        if @parsed_url.domain == "twitter.com" && @parsed_url.query.present?
-          @parsed_url.query = nil
+        if @parsed_url.domain == "x.com" && @parsed_url.query.present?
+          query_values = @parsed_url.query_values || {}
+          query_values.delete("s")
+          query_values.delete("t")
+          query_values.delete_if { |key, _| key.start_with?("utm_") }
+          @parsed_url.query_values = query_values.empty? ? nil : query_values
         end
+        # Remove photo specifier from links
         split_path = @parsed_url.path.split("/")
-        if @parsed_url.domain == "twitter.com"
-          # Remove photo specifier from links
+        if @parsed_url.domain == "x.com"
           if split_path.length == 6 && split_path[-2] == "photo"
             @parsed_url.path = split_path[0..-3].join("/")
-          # Remove media & with_replies from links
           elsif split_path.length == 3 && %w[media with_replies].include?(split_path[1])
             @parsed_url.path = split_path[1]
           end

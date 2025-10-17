@@ -3,9 +3,9 @@
 module Sources
   module Alternates
     class Base
-      attr_reader(:url, :gallery_url, :submission_url, :direct_url, :additional_urls, :parsed_url)
+      attr_reader :url, :gallery_url, :submission_url, :direct_url, :additional_urls, :parsed_url
 
-      SECURE_DOMAINS = %w[weasyl.com imgur.com].freeze
+      SECURE_DOMAINS = %w[weasyl.com e-hentai.org hentai-foundry.com paheal.net imgur.com].freeze
 
       def initialize(url)
         @url = url
@@ -17,12 +17,16 @@ module Sources
         end
 
         if @parsed_url.present?
-          if force_https?
-            @parsed_url.scheme = "https"
-            @url = @parsed_url.to_s
-          end
+          begin
+            if force_https?
+              @parsed_url.scheme = "https"
+              @url = @parsed_url.to_s
+            end
 
-          parse
+            parse
+          rescue StandardError
+            @parsed_url = nil
+          end
         end
       end
 

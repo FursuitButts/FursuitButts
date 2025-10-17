@@ -3,7 +3,7 @@
 module Sources
   module Alternates
     def self.all
-      constants.reject { |name| name == :Base }.map { |name| const_get(name) }
+      constants.map { |name| const_get(name) }.select { |klass| klass < Base }
     end
 
     def self.find(url, default: Alternates::Null)

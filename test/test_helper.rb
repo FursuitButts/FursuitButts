@@ -18,6 +18,8 @@ require("simplecov-cobertura")
 SimpleCov.formatter = SimpleCov::Formatter::CoberturaFormatter
 
 require("sidekiq/testing")
+
+require "sidekiq/testing"
 Sidekiq::Testing.fake!
 # https://github.com/sidekiq/sidekiq/issues/5907#issuecomment-1536457365
 Sidekiq.configure_client do |cfg|
@@ -50,8 +52,8 @@ Post.document_store.create_index!(delete_existing: true)
 PostVersion.document_store.create_index!(delete_existing: true)
 
 class ActiveSupport::TestCase # rubocop:disable Style/ClassAndModuleChildren
-  include(ActionDispatch::TestProcess::FixtureFile)
-  include(FactoryBot::Syntax::Methods)
+  include ActionDispatch::TestProcess::FixtureFile
+  include FactoryBot::Syntax::Methods
 
   storage_root = Rails.root.join("tmp/test-storage2").to_s
   setup do
