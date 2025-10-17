@@ -298,7 +298,12 @@ class Pool < ApplicationRecord
     post_ids[n]
   end
 
+  def saved_change_to_watched_attributes?
+    saved_change_to_name? || saved_change_to_description? || saved_change_to_post_ids? || saved_change_to_is_active?
+  end
+
   def create_version
+    return unless saved_change_to_watched_attributes?
     PoolVersion.queue(self, updater.resolvable(updater_ip_addr))
   end
 
