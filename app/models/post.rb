@@ -846,46 +846,7 @@ class Post < ApplicationRecord
     def add_automatic_tags(tags)
       return tags unless FemboyFans.config.enable_autotagging?
 
-      tags -= %w[thumbnail low_res hi_res absurd_res superabsurd_res large_filesize huge_filesize absurd_filesize insane_filesize webm mp4 animated_gif animated_png long_playtime short_playtime wide_image long_image invalid_source]
-
-      if has_dimensions?
-        tags << "superabsurd_res" if image_width >= 10_000 && image_height >= 10_000
-        tags << "absurd_res" if image_width >= 3200 || image_height >= 2400
-        tags << "hi_res" if image_width >= 1600 || image_height >= 1200
-        tags << "low_res" if image_width <= 500 && image_height <= 500
-        tags << "thumbnail" if image_width <= 250 && image_height <= 250
-
-        if image_width >= 1024 && image_width.to_f / image_height >= 4
-          tags << "wide_image"
-          tags << "long_image"
-        elsif image_height >= 1024 && image_height.to_f / image_width >= 4
-          tags << "tall_image"
-          tags << "long_image"
-        end
-      end
-
-      tags << "large_filesize" if file_size >= 25.megabytes
-      tags << "huge_filesize" if file_size >= 75.megabytes
-      tags << "absurd_filesize" if file_size >= 125.megabytes
-      tags << "insane_filesize" if file_size >= 175.megabytes
-
-      tags << "webm" if is_webm?
-      tags << "mp4" if is_mp4?
-      tags << "animated_webp" if is_animated_webp?
-      tags << "animated_gif" if is_animated_gif?
-      tags << "animated_png" if is_animated_png?
-      tags << "long_playtime" if is_video? && duration >= 30
-      tags << "short_playtime" if is_video? && duration < 30
-
-      if invalid_source?
-        tags << "invalid_source"
-      end
-
-      if bad_source?
-        tags << "bad_source"
-      end
-
-      tags
+      Autotagger.new(self).apply(tags)
     end
 
     # should_process_tags?
