@@ -11,6 +11,7 @@ class PostAppeal < ApplicationRecord
   validates(:creator, uniqueness: { scope: :post, message: "has already appealed this post" }, on: :create)
   after_create(:prune_disapprovals)
   after_create(:create_post_event)
+  after_commit(:update_post)
 
   enum(:status, {
     pending:  0,
@@ -22,6 +23,10 @@ class PostAppeal < ApplicationRecord
 
   def prune_disapprovals
     PostDisapproval.where(post: post).delete_all
+  end
+
+  def update_post
+    post.update!(is_appealed: post.appeals.pending.exists?, updater: updater)
   end
 
   def create_post_event
