@@ -11,6 +11,8 @@ class PopularController < ApplicationController
     @post_set = PostSets::Popular::Uploads.new(@date, @scale, @min_date, @max_date, limit: limit, current_user: CurrentUser.user)
     @posts = @post_set.posts
     respond_with(@posts)
+  rescue ArgumentError => e
+    render_expected_error(422, e)
   end
 
   def views
@@ -19,6 +21,8 @@ class PopularController < ApplicationController
     @posts = @post_set.posts
     @ranking = @post_set.ranking.to_h { |r| [r["post"], r["count"]] }
     respond_with(@posts)
+  rescue ArgumentError => e
+    render_expected_error(422, e)
   end
 
   def top_views
@@ -35,6 +39,8 @@ class PopularController < ApplicationController
     @tags = Tag.find_by_name_list(@ranking.map(&:first))
     @nav = NavLinks.new(@date, "searches_popular_index_path", "top_searches_popular_index_path")
     respond_with(@ranking, &format_json(@ranking))
+  rescue ArgumentError => e
+    render_expected_error(422, e)
   end
 
   def top_searches
@@ -49,6 +55,8 @@ class PopularController < ApplicationController
     @ranking = Reports.get_missed_searches_rank(@date).first(limit)
     @nav = NavLinks.new(@date, "missed_searches_popular_index_path", "top_missed_searches_popular_index_path")
     respond_with(@ranking, &format_json(@ranking))
+  rescue ArgumentError => e
+    render_expected_error(422, e)
   end
 
   def top_missed_searches
@@ -58,7 +66,7 @@ class PopularController < ApplicationController
   end
 
   def followed_tags
-    @tags = Tag.order(follower_count: :desc, name: :asc).where("follower_count > ?", 0).paginate(params[:page], limit: limit)
+    @tags = Tag.order(follower_count: :desc, name: :asc).where.gt(follower_count: 0).paginate(params[:page], limit: limit)
     respond_with(@tags)
   end
 
