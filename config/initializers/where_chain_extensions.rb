@@ -1,11 +1,14 @@
 # frozen_string_literal: true
 
 module WhereChainExtensions
-  %i[lt lteq gt gteq
-     between not_between in not_in like
-     ilike not_like not_ilike
-     like_all ilike_all not_like_all not_ilike_all
-     like_any ilike_any not_like_any not_ilike_any].each do |method|
+  %i[
+    lt lteq gt gteq
+    between not_between in not_in like
+    ilike not_like not_ilike
+    like_all ilike_all not_like_all not_ilike_all
+    like_any ilike_any not_like_any not_ilike_any
+    has_bits not_has_bits
+  ].each do |method|
     define_method(method) do |conditions|
       build(conditions, method)
     end
@@ -55,6 +58,8 @@ module WhereChainExtensions
     regex:         ->(table_name, column, value, flags) { Arel::Table.new(table_name)[column].matches_regexp("(?#{flags})#{value.is_a?(Regexp) ? value.source : value}") },
     not_regex:     ->(table_name, column, value, flags) { Arel::Table.new(table_name)[column].does_not_match_regexp("(?#{flags})#{value.is_a?(Regexp) ? value.source : value}") },
     tsquery:       ->(table_name, column, value, ts_config) { Arel.sql("to_tsvector(:ts_config, :table) @@ plainto_tsquery(:ts_config, :value)", ts_config: ts_config, value: value, table: Arel.sql("#{table_name}.#{column}")) },
+    has_bits:      ->(table_name, column, value) { Arel.sql("(#{table_name}.#{column} & #{Arel::Nodes.build_quoted(value).to_sql}) = #{Arel::Nodes.build_quoted(value).to_sql}") },
+    not_has_bits:  ->(table_name, column, value) { Arel.sql("(#{table_name}.#{column} & #{Arel::Nodes.build_quoted(value).to_sql}) != #{Arel::Nodes.build_quoted(value).to_sql}") },
   }.freeze
 
   private

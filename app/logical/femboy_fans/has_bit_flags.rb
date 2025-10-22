@@ -11,12 +11,13 @@ module FemboyFans
         field = options[:field] || :bit_flags
 
         define_singleton_method("flag_value_for") do |key|
-          value = attributes[key]
+          value = attributes[key.to_s]
           return value if value
           raise(ArgumentError, "Invalid flag: #{key}")
         end
 
         attributes.each do |name, value|
+          scope(name.to_sym, -> { where.has_bits(field => value) })
           define_method(name) do
             send("#{name}?")
           end

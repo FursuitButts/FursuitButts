@@ -50,7 +50,7 @@ class PostPolicy < ApplicationPolicy
   end
 
   def undelete?
-    user.is_approver?
+    user.is_approver? && (!post.is_taken_down? || user.can_handle_takedowns?)
   end
 
   def move_favorites?

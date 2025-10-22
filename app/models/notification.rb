@@ -54,7 +54,10 @@ class Notification < ApplicationRecord
       val = category[9..]
       val += "e" unless val.ends_with?("e")
       "@#{User.id_to_name(data_user_id)} #{val}d a #{record_type} on your account: record ##{record_id}"
-    when "post_delete", "post_undelete", "post_approve", "post_unapprove"
+    when "post_delete"
+      reason = Post.find_by(id: post_id)&.deletion_flag&.reason
+      "Your post ##{post_id} was deleted#{": #{reason}" if reason}"
+    when "post_undelete", "post_approve", "post_unapprove"
       "Your post ##{post_id} was #{category[5..]}d"
     when "appeal_accept", "appeal_reject"
       "Your appeal on post ##{post_appeal_id} was #{category[7..]}ed"

@@ -27,6 +27,7 @@ class Post < ApplicationRecord
     # HAS_CROPPED              = 1 << 0
     HIDE_FROM_ANONYMOUS      = 1 << 1
     HIDE_FROM_SEARCH_ENGINES = 1 << 2
+    IS_TAKEN_DOWN            = 1 << 3
 
     def self.map
       constants.to_h { |name| [name.to_s.downcase, const_get(name)] }
@@ -121,6 +122,10 @@ class Post < ApplicationRecord
   scope(:expired, -> { pending.where(posts: { created_at: ...PostPruner::MODERATION_WINDOW.days.ago }) })
   scope(:with_assets, -> { includes(:media_asset) })
   scope(:with_assets_and_metadata, -> { with_assets.includes(media_asset: :media_metadata) })
+
+  class << self
+    alias takedowns is_taken_down
+  end
 
   IMAGE_TYPES = %i[original large preview crop].freeze
 
@@ -1556,13 +1561,13 @@ class Post < ApplicationRecord
             raise(PostFlag::Error, flag.errors.full_messages.join("; "))
           end
 
-          update(
-            is_deleted:  true,
-            is_pending:  false,
-            is_flagged:  false,
-            is_appealed: false,
-          )
+          self.is_deleted = true
+          self.is_pending = false
+          self.is_flagged = false
+          self.is_appealed = false
+          self.is_taken_down = options.fetch(:takeodnw, false)
           decrement_tag_post_counts
+          save
           move_files_on_delete(user)
           PostEvent.add!(id, user, :deleted, reason: reason)
           appeals.pending.each { |a| a.reject!(user) }
@@ -1592,6 +1597,11 @@ class Post < ApplicationRecord
         return
       end
 
+      if is_taken_down? && !user.can_handle_takedowns? && !options.fetch(:force, false)
+        errors.add(:is_taken_down, "; cannot undelete post")
+        return
+      end
+
       if !user.is_admin? && uploader_id == user.id
         raise(User::PrivilegeError, "You cannot undelete a post you uploaded")
       end
@@ -1605,6 +1615,7 @@ class Post < ApplicationRecord
         self.is_deleted = false
         self.is_pending = false
         self.is_appealed = false
+        self.is_taken_down = false
         self.approver = user
         flags.each { |f| f.resolve!(user) }
         increment_tag_post_counts
@@ -1790,12 +1801,13 @@ class Post < ApplicationRecord
         locked_tags:     locked_tags.split,
         change_seq:      change_seq,
         flags:           {
-          pending:       is_pending,
-          flagged:       is_flagged,
-          note_locked:   is_note_locked,
-          status_locked: is_status_locked,
-          rating_locked: is_rating_locked,
-          deleted:       is_deleted,
+          pending:       is_pending?,
+          flagged:       is_flagged?,
+          note_locked:   is_note_locked?,
+          status_locked: is_status_locked?,
+          rating_locked: is_rating_locked?,
+          deleted:       is_deleted?,
+          takedown:      is_taken_down?,
         },
         rating:          rating,
         fav_count:       fav_count,
