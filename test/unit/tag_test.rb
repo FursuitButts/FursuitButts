@@ -202,13 +202,15 @@ class TagTest < ActiveSupport::TestCase
     end
 
     context("during name validation") do
+      subject do
+        build(:tag) # required because of creator validation
+      end
+
       # tags with spaces or uppercase are allowed because they are normalized
       # to lowercase with underscores.
       should(allow_value(" foo ").for(:name).on(:create))
       should(allow_value("foo bar").for(:name).on(:create))
       should(allow_value("FOO").for(:name).on(:create))
-      should(allow_value("foo_(bar)").for(:name).on(:create))
-      should(allow_value("foo_(bar_(baz))").for(:name).on(:create))
 
       should_not(allow_value("").for(:name).on(:create))
       should_not(allow_value("___").for(:name).on(:create))
@@ -229,6 +231,33 @@ class TagTest < ActiveSupport::TestCase
       should_not(allow_value("foo)(").for(:name).on(:create))
       should_not(allow_value("foo(()").for(:name).on(:create))
       should_not(allow_value("foo())").for(:name).on(:create))
+
+      # Valid nested and ordered parentheses
+      should(allow_value("foo_(bar)").for(:name).on(:create))
+      should(allow_value("foo_(bar_(baz))").for(:name).on(:create))
+      should(allow_value("foo_(bar)_(baz)").for(:name).on(:create))
+      should(allow_value("foo_(bar_baz)").for(:name).on(:create))
+
+      # Invalid: '(' not preceded by underscore
+      should_not(allow_value("foo(bar)").for(:name).on(:create))
+      should_not(allow_value("foo(bar)_(baz)").for(:name).on(:create))
+      should_not(allow_value("foo(bar)(qux)").for(:name).on(:create))
+      should_not(allow_value("foo(bar_(baz))").for(:name).on(:create))
+
+      # Invalid: unbalanced parentheses
+      should_not(allow_value("foo_(bar").for(:name).on(:create))
+      should_not(allow_value("foo_bar)").for(:name).on(:create))
+      should_not(allow_value("foo_(bar_(baz)").for(:name).on(:create))
+      should_not(allow_value("foo_(bar))").for(:name).on(:create))
+
+      # Invalid: improperly ordered parentheses
+      should_not(allow_value("foo_)bar(").for(:name).on(:create))
+      should_not(allow_value("foo_()b)(c").for(:name).on(:create))
+      should_not(allow_value("foo_(bar)baz)").for(:name).on(:create))
+      should_not(allow_value("foo_)bar_(baz(").for(:name).on(:create))
+
+      # Valid: parentheses properly ordered and balanced even across multiple segments
+      should(allow_value("foo_(bar)_baz_(qux)").for(:name).on(:create))
 
       metatags = TagQuery::METATAGS + TagCategory.mapping.keys
       metatags.each do |metatag|

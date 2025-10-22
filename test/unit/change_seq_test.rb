@@ -25,6 +25,8 @@ class ChangeSeqTest < ActiveSupport::TestCase
       end
     when :tag_string, :locked_tags
       [*current.split, SecureRandom.hex(4)].sort.join(" ")
+    when :typed_tag_string
+      [*current.split, "0|#{SecureRandom.hex(4)}"].sort.join(" ")
     else
       case type
       when :integer
@@ -43,7 +45,7 @@ class ChangeSeqTest < ActiveSupport::TestCase
     should("Check or ignore all columns in the posts table") do
       missed = Post.get_change_seq_missed
       missed.each do |column|
-        TraceLogger.error("ValidateChangeSeq", "Column #{column} not checked in function or ignored")
+        TraceLogger.error("ValidateChangeSeq", "Column #{column} not checked or ignored in function")
       end
       assert(missed.empty?, "The posts_trigger_change_seq function does not check or ignore: #{missed.join(', ')}")
     end
@@ -51,7 +53,7 @@ class ChangeSeqTest < ActiveSupport::TestCase
     context("change_seq") do
       setup do
         # columns which would be reset by callbacks
-        @force_columns = %i[comment_count tag_count_general tag_count_artist tag_count_character tag_count_copyright tag_count_meta tag_count_species tag_count_invalid tag_count_lore tag_count_gender tag_count_contributor tag_count_important]
+        @force_columns = %i[comment_count tag_count_general tag_count_artist tag_count_contributor tag_count_character tag_count_copyright tag_count_meta tag_count_species tag_count_invalid tag_count_lore tag_count_gender tag_count_important typed_tag_string]
         @post = create(:webm_post)
       end
 

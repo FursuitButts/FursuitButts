@@ -6,23 +6,24 @@ module Pools
   class VersionsControllerTest < ActionDispatch::IntegrationTest
     context("The pool versions controller") do
       setup do
-        @user = create(:user)
+        @user = create(:user, created_at: 2.weeks.ago)
       end
 
       context("index action") do
         setup do
+          @posts = create_list(:post, 4) # posts must be valid to be added to pools
           @pool = create(:pool, creator: @user)
-          @user2 = create(:user)
-          @user3 = create(:user)
+          @user2 = create(:user, created_at: 2.weeks.ago)
+          @user3 = create(:user, created_at: 2.weeks.ago)
 
-          @pool.update_with(@user2, post_ids: "1 2")
-
-          @pool.update_with(@user3, post_ids: "1 2 3 4")
+          @pool.update_with!(@user2, post_ids: @posts.first(2).pluck(:id))
+          @pool.update_with!(@user3, post_ids: @posts.pluck(:id))
 
           @versions = @pool.versions
         end
 
         should("list all versions") do
+          assert_equal(@posts.pluck(:id), @pool.reload.post_ids)
           get_auth(pool_versions_path, @user)
           assert_response(:success)
           assert_select("#pool-version-#{@versions[0].id}")

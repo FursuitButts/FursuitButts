@@ -93,4 +93,36 @@ module MigrationHelpers
     add_column(table, name, *, **, default: value)
     change_column_default(table, name, from: value, to: nil)
   end
+
+  def update_change_seq_sql(columns)
+    ctext = ""
+    columns.each do |name|
+      ctext += "\n    OR NEW.#{name} IS DISTINCT FROM OLD.#{name}"
+    end
+    ctext = ctext[8..]
+    <<~SQL.squish
+      CREATE OR REPLACE FUNCTION public.posts_trigger_change_seq() RETURNS trigger
+        LANGUAGE plpgsql
+      AS $$
+      DECLARE
+        old_md5 text;
+        new_md5 text;
+      BEGIN
+        SELECT md5 INTO old_md5 FROM upload_media_assets WHERE id = OLD.upload_media_asset_id;
+        SELECT md5 INTO new_md5 FROM upload_media_assets WHERE id = NEW.upload_media_asset_id;
+
+        IF #{ctext}
+          OR old_md5 IS DISTINCT FROM new_md5
+        THEN
+          NEW.change_seq = nextval('public.posts_change_seq_seq');
+        END IF;
+        RETURN NEW;
+      END;
+      $$;
+    SQL
+  end
+
+  def update_change_seq(columns)
+    execute(update_change_seq_sql(columns))
+  end
 end

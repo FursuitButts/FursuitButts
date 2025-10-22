@@ -62,7 +62,7 @@ module PostEvents
 
       context("flags") do
         should("format flag_created correctly") do
-          @flag = @post.flags.create!(reason_name: "uploading_guidelines", creator: @admin)
+          @flag = @post.flags.create!(reason_name: "uploading_guidelines", creator: @admin, note: "abc")
 
           reason = FemboyFans.config.flag_reasons.find { |r| r[:name] == "uploading_guidelines" }[:reason]
           assert_matches(
@@ -300,7 +300,7 @@ module PostEvents
         end
 
         should("format appeal_created correctly") do
-          @appeal.delete
+          @appeal.destroy
           @appeal = @post.appeals.create!(reason: "Test", creator: @admin)
 
           assert_matches(

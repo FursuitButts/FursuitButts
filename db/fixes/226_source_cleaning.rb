@@ -8,13 +8,12 @@ Post.without_timeout do
   fixed = 0
   Post.in_batches(load: true, order: :desc).each_with_index do |group, index|
     group.each do |post|
-      puts post.id
+      puts(post.id)
       post.strip_source
-      if post.changed?
-        post.updater = updater
-        post.save(validate: false)
-        fixed += 1
-      end
+      next unless post.changed?
+      post.updater = updater
+      post.save(validate: false)
+      fixed += 1
     end
 
     puts("batch #{index} fixed #{fixed}")

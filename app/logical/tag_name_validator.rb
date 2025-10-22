@@ -47,6 +47,30 @@ class TagNameValidator < ActiveModel::EachValidator
       end
     end
 
+    unless options[:disable_parenthesis_check]
+      if normalized =~ /(?<!_)\(/
+        record.errors.add(attribute, "'#{value}' must have '(' preceded by an underscore (e.g., 'a_(bc)')")
+        return
+      end
+
+      depth = 0
+      normalized.each_char.with_index do |char, i|
+        if char == "("
+          depth += 1
+        elsif char == ")"
+          depth -= 1
+          if depth < 0
+            record.errors.add(attribute, "'#{value}' has improperly ordered parentheses (')' before '(' at position #{i})")
+            break
+          end
+        end
+      end
+
+      if depth != 0
+        record.errors.add(attribute, "'#{value}' has unbalanced parentheses")
+      end
+    end
+
     if !options[:disable_ascii_check] && normalized =~ /[^[:ascii:]]/
       record.errors.add(attribute, "'#{value}' must consist of only ASCII characters")
     end

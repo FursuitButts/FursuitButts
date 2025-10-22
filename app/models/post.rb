@@ -13,7 +13,7 @@ class Post < ApplicationRecord
   IMAGE_EXTENSIONS = ::FileMethods::IMAGE_EXTENSIONS
   GIF_EXTENSIONS = ::FileMethods::GIF_EXTENSIONS
   EXTENSIONS = ::FileMethods::EXTENSIONS
-  CHANGE_SEQ_IGNORED = %i[id created_at updated_at up_score down_score score uploader_id uploader_ip_addr fav_string pool_string last_comment_bumped_at fav_count tag_count has_children bit_flags change_seq original_tag_string upload_url vote_string typed_tag_string upload_media_asset_id updater_id updater_ip_addr].freeze
+  CHANGE_SEQ_IGNORED = %i[id created_at updated_at up_score down_score score uploader_id uploader_ip_addr fav_string pool_string last_comment_bumped_at fav_count tag_count change_seq original_tag_string upload_url vote_string upload_media_asset_id updater_id updater_ip_addr].freeze
 
   def self.get_change_seq_tracked
     Post.connection.select_one("SELECT prosrc FROM pg_proc WHERE proname = $1", nil, ["posts_trigger_change_seq"])["prosrc"].scan(/NEW\.([a-z_]+) IS DISTINCT FROM OLD\.([a-z_]+)/).flatten.uniq.map(&:to_sym)
@@ -436,16 +436,16 @@ class Post < ApplicationRecord
       !is_pending? && !is_deleted? && created_at.after?(PostPruner::MODERATION_WINDOW.days.ago)
     end
 
-    def approve!(approver)
-      return unless self.approver.nil?
+    def approve!(user)
+      return unless approver.nil?
 
-      if uploader == approver
+      if uploader_id == user.id
         update(is_pending: false)
       else
-        PostEvent.add!(id, approver, :approved)
-        approvals.create(user: approver)
-        update(approver: approver, is_pending: false, updater: approver)
-        uploader.notify_for_upload(self, :post_approve) if uploader_id != approver.id
+        PostEvent.add!(id, user, :approved)
+        approvals.create(user: user)
+        update(approver: user, is_pending: false, updater: user)
+        uploader.notify_for_upload(self, :post_approve) if uploader_id != user.id
         appeals.pending.each { |a| a.accept!(user) }
         flags.pending.each { |f| f.resolve!(user) }
       end

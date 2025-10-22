@@ -5,12 +5,12 @@ module Sources
     class Twitter < Base
       attr_reader(:has_profile, :has_submission, :has_direct)
 
-      DOMAINS = %w[twitter.com twimg.com x.com].freeze
-      PROFILE_REGEX = %r{twitter\.com/\w{1,15}$}
-      INTENT_USER_REGEX = %r{twitter\.com/intent/user}
-      SUBMISSION_REGEX = %r{twitter\.com/\w{1,15}/status/(\d+)}
+      DOMAINS = %w[twimg.com x.com].freeze
+      PROFILE_REGEX = %r{x\.com/(\w{1,15})$}
+      INTENT_USER_REGEX = %r{x\.com/intent/user}
+      SUBMISSION_REGEX = %r{x\.com/(\w{1,15})/status/(\d+)}
       DIRECT_REGEX = %r{(?:pbs|video)\.twimg\.com/}
-      INTENT_REGEX = %r{twitter\.com/i/(?:web/)?status/\d+$}
+      INTENT_REGEX = %r{x\.com/i/(?:web/)?status/(\d+)$}
 
       def bad?
         sources.each do |source|
