@@ -50,7 +50,7 @@ class PostPolicy < ApplicationPolicy
   end
 
   def undelete?
-    user.is_approver? && (!post.is_taken_down? || user.can_handle_takedowns?)
+    user.is_approver? && (!(!record.is_a?(Post) || record.is_taken_down?) || user.can_handle_takedowns?)
   end
 
   def move_favorites?
@@ -124,7 +124,7 @@ class PostPolicy < ApplicationPolicy
   end
 
   def api_attributes
-    attr = super + %i[has_large has_visible_children children_ids pool_ids apionly_is_favorited? apionly_is_voted_up? apionly_is_voted_down?] - %i[pool_string fav_string vote_string]
+    attr = super + %i[has_large apionly_has_visible_children children_ids pool_ids apionly_is_favorited? apionly_is_voted_up? apionly_is_voted_down?] - %i[pool_string fav_string vote_string]
     if record.visible?(user)
       attr += %i[apionly_file_url]
       attr += %i[apionly_large_file_url] if record.has_large?

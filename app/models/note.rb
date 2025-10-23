@@ -5,6 +5,7 @@ class Note < ApplicationRecord
 
   belongs_to(:post)
   belongs_to_user(:creator, ip: true, clones: :updater)
+  soft_deletable(:is_active)
   resolvable(:updater)
   has_many(:versions, -> { order("note_versions.id": :asc) }, class_name: "NoteVersion", dependent: :destroy)
   normalizes(:body, with: ->(body) { body.gsub("\r\n", "\n") })
@@ -26,10 +27,6 @@ class Note < ApplicationRecord
   after_save(:update_post)
   after_save(:create_version)
   validate(:post_must_not_be_note_locked)
-
-  scope(:active, -> { where(is_active: true) })
-  scope(:deleted, -> { where(is_active: false) })
-  scope(:for_creator, ->(user) { where(creator_id: u2id(user)) })
 
   module SearchMethods
     def post_tags_match(query, user)

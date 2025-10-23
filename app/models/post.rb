@@ -1386,6 +1386,49 @@ class Post < ApplicationRecord
     # - Move favorites to the first child.
     # - Reparent all children to the first child.
 
+    def parent=(new_parent)
+      self.parent_id = new_parent&.id
+    end
+
+    def parent_id=(new_parent_id)
+      super
+
+      # Allow reversing a parent-child relationship by making the child into the parent without creating a loop.
+      if parent != self && parent&.parent == self
+        parent.parent_id = nil
+      end
+    end
+
+    # @return [Array<Post>] The list of this post's ancestors (its parent, grandparent, great-grandparent, etc).
+    def ancestors
+      ancestors = []
+      parent = self.parent
+
+      while parent.present? && !in?(ancestors)
+        ancestors << parent
+        parent = parent.parent
+      end
+
+      ancestors
+    end
+
+    # @return [Integer] The total number of levels in the entire parent-child tree. A post with no parent or
+    # children has depth 1; a post with a parent but no children has depth 2; a post with a parent and one level of
+    # children has depth 3; etc.
+    def parent_hierarchy_depth
+      ancestors.size + child_height + 1
+    end
+
+    # @return [Integer] The number of levels of child posts this post has. A post with no children has height 0; a post
+    # with children but no grandchildren has height 1; a post with grandchildren but no great-grandchildren has height 2; etc.
+    def child_height
+      if children.present?
+        children.map(&:child_height).max + 1
+      else
+        0
+      end
+    end
+
     def update_has_children_flag
       update(has_children: children.exists?, has_active_children: children.not_deleted.exists?)
     end
@@ -1457,11 +1500,9 @@ class Post < ApplicationRecord
       false
     end
 
-    # rubocop:disable Local/CurrentUserOutsideOfRequests -- used exclusively within requests for json
-    def has_visible_children
+    def apionly_has_visible_children
       has_visible_children?(CurrentUser.user)
     end
-    # rubocop:enable Local/CurrentUserOutsideOfRequests
 
     def inject_children(ids)
       @children_ids = ids.map(&:id).join(" ")

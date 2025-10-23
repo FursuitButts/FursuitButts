@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 class Dmail < ApplicationRecord
+  soft_deletable
   normalizes(:body, with: ->(body) { body.gsub("\r\n", "\n") })
   validates(:title, :body, presence: { on: :create })
   validates(:title, length: { minimum: 1, maximum: 250 })

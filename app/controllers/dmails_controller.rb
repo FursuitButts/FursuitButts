@@ -46,10 +46,9 @@ class DmailsController < ApplicationController
   def destroy
     @dmail = authorize(Dmail.find(params[:id]))
     @dmail.mark_as_read!(CurrentUser.user)
-    @dmail.update_with_current(:updater, is_deleted: true)
-    respond_to do |format|
+    @dmail.soft_delete_with_current(:updater)
+    respond_with(@dmail) do |format|
       format.html { redirect_to(dmails_path, notice: "Message deleted") }
-      format.json
     end
   end
 

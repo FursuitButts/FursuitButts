@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+# TODO: rename pool is_active to is_ongoing
+# TODO: add back pool types
 class Pool < ApplicationRecord
   array_attribute(:post_ids, parse: %r{(?:https://#{FemboyFans.config.domain}/posts/)?(\d+)}i, cast: :to_i)
   belongs_to_user(:creator, ip: true, clones: :updater)

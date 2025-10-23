@@ -52,7 +52,7 @@ class NotesController < ApplicationController
 
   def destroy
     @note = authorize(Note.find(params[:id]))
-    @note.update_with_current(:updater, is_active: false)
+    @note.soft_delete_with_current(:updater)
     respond_with(@note)
   end
 

@@ -4,6 +4,7 @@ class StaffNote < ApplicationRecord
   belongs_to_user(:creator, ip: true, clones: :updater)
   belongs_to_user(:updater, ip: true)
   belongs_to_user(:user)
+  soft_deletable
 
   validates(:body, length: { maximum: 10_000 })
   after_create(:log_create)

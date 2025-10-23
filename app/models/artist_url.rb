@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 class ArtistUrl < ApplicationRecord
+  soft_deletable(:is_active)
   before_validation(:initialize_normalized_url, on: :create)
   before_validation(:normalize)
   validates(:url, presence: true, uniqueness: { scope: :artist_id })

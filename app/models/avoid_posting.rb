@@ -3,6 +3,7 @@
 class AvoidPosting < ApplicationRecord
   belongs_to_user(:creator, ip: true, clones: :updater)
   belongs_to_user(:updater, ip: true)
+  soft_deletable(:is_active)
   resolvable(:destroyer)
   belongs_to(:artist)
   has_many(:versions, -> { order("avoid_posting_versions.id": :asc) }, class_name: "AvoidPostingVersion", dependent: :destroy)
@@ -18,9 +19,6 @@ class AvoidPosting < ApplicationRecord
   validates_associated(:artist)
   accepts_nested_attributes_for(:artist)
   after_commit(:invalidate_cache)
-
-  scope(:active, -> { where(is_active: true) })
-  scope(:deleted, -> { where(is_active: false) })
 
   def initialize_artist_creator
     return if artist.blank?
