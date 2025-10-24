@@ -23,7 +23,6 @@
 ### TODOs
 | Filename | line # | TODO |
 |:------|:------:|:------|
-| [app/controllers/mod_actions_controller.rb](app/controllers/mod_actions_controller.rb#L7) | 7 | We need a way to construct urls without needing to load the model, as this results in needing to load many different |
 | [app/controllers/takedowns_controller.rb](app/controllers/takedowns_controller.rb#L41) | 41 | this *should* be changed eventually to use the update method & be strictly validated |
 | [app/controllers/uploads_controller.rb](app/controllers/uploads_controller.rb#L12) | 12 | this route has many performance issues and needs to be revised |
 | [app/logical/current_user.rb](app/logical/current_user.rb#L10) | 10 | replace with defaults with rails 7.2 upgrade |
