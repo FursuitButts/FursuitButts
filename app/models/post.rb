@@ -1232,7 +1232,7 @@ class Post < ApplicationRecord
       @pools ||= if pool_string.blank?
                    Pool.none
                  else
-                   Pool.where(id: pool_ids)
+                   Pool.where(id: pool_ids).series_first
                  end
     end
 

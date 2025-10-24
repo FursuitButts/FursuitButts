@@ -8,9 +8,10 @@ module Revertible
     def revertible(options = {}, &block)
       raise(ArgumentError, "missing block") if block.blank?
       raise(ArgumentError, "invalid block") if block.arity != 1
-      cattr_accessor(:revertible_updater_column, :revertible_versionable_column, :revertible_block)
-      self.revertible_updater_column = options[:revertible_updater_column] || "updater"
-      self.revertible_versionable_column = options[:revertible_versionable_column] || "#{name.underscore}_id"
+      cattr_accessor(:is_revertible, :revertible_updater, :revertible_versionable_column, :revertible_block)
+      self.is_revertible = true
+      self.revertible_updater = options[:updater] || "updater"
+      self.revertible_versionable_column = options[:versionable_column] || "#{name.underscore}_id"
       self.revertible_block = block
 
       class_eval do
@@ -23,8 +24,8 @@ module Revertible
 
         def revert_to!(version, user)
           revert_to(version)
-          send("#{self.class.revertible_updater_column}=", user)
-          save!
+          send("#{self.class.revertible_updater}=", user)
+          save
         end
       end
     end

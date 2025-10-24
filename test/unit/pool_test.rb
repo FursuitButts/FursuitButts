@@ -112,7 +112,7 @@ class PoolTest < ActiveSupport::TestCase
 
     context("Updating a pool") do
       setup do
-        @pool = create(:pool)
+        @pool = create(:pool, category: "series")
         @p1 = create(:post)
         @p2 = create(:post)
       end
@@ -217,6 +217,27 @@ class PoolTest < ActiveSupport::TestCase
         end
       end
 
+      context("by changing the category") do
+        setup do
+          Config.any_instance.stubs(:pool_category_change_cutoff).returns(1)
+          @pool.add!(@p1, @user)
+          @pool.add!(@p2, @user)
+        end
+
+        should("not allow members to change the category of large pools") do
+          @pool.update_with(@user, category: "collection")
+          assert_equal(["You cannot change the category of pools with more than 1 posts"], @pool.errors[:base])
+          assert_equal("series", @pool.reload.category)
+        end
+
+        should("allow janitors to changer the category of large pools") do
+          @janitor = create(:janitor_user)
+          @pool.update_with(@janitor, category: "collection")
+          assert(@pool.errors.none?)
+          assert_equal("collection", @pool.reload.category)
+        end
+      end
+
       should("create new versions for each distinct user") do
         assert_equal(1, @pool.versions.size)
         user2 = create(:user, created_at: 1.month.ago)
@@ -271,7 +292,7 @@ class PoolTest < ActiveSupport::TestCase
           Pool.any_instance.stubs(:creator).returns(@user)
         end
 
-        ["foo,bar", "foo*bar", "123", "--", "___", "   ", "any", "none"].each do |bad_name|
+        ["foo,bar", "foo*bar", "123", "--", "___", "   ", "any", "none", "series", "collection"].each do |bad_name|
           should_not(allow_value(bad_name).for(:name))
         end
 

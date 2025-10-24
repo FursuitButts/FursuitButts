@@ -276,6 +276,7 @@ Rails.application.routes.draw do
       resources(:versions, controller: "pools/versions", as: "pool_versions", only: %i[index]) do
         member do
           get(:diff)
+          put(:undo)
         end
       end
     end

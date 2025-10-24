@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-# TODO: rename pool is_active to is_ongoing
-# TODO: add back pool types
 class Pool < ApplicationRecord
   array_attribute(:post_ids, parse: %r{(?:https://#{FemboyFans.config.domain}/posts/)?(\d+)}i, cast: :to_i)
   belongs_to_user(:creator, ip: true, clones: :updater)
@@ -12,12 +10,16 @@ class Pool < ApplicationRecord
     self.post_ids = version.post_ids
     self.name = version.name
     self.description = version.description
+    self.is_ongoing = version.is_ongoing
   end
 
   normalizes(:description, with: ->(desc) { desc.gsub("\r\n", "\n") })
   validates(:name, uniqueness: { case_sensitive: false, if: :name_changed? })
-  validates(:name, length: { minimum: 1, maximum: 250 })
+  validates(:name, length: { minimum: 1, maximum: -> { Config.pool_name_max_size } })
   validates(:description, length: { maximum: -> { Config.instance.pool_description_max_size } })
+  validates(:category, inclusion: { in: %w[series collection] })
+  validates(:cover_post_id, presence: true, allow_nil: false, unless: -> { post_ids.empty? })
+  validate(:validate_updater_can_change_category, on: :update, if: :category_changed?)
   validate(:user_not_create_limited, on: :create)
   validate(:user_not_limited, on: :update, if: :limited_attribute_changed?)
   validate(:user_not_posts_limited, on: :update, if: :post_ids_changed?)
@@ -34,14 +36,16 @@ class Pool < ApplicationRecord
   after_save(:create_version)
   after_save(:synchronize, if: :saved_change_to_post_ids?)
   has_one(:cover_post, class_name: "Post", foreign_key: :id, primary_key: :cover_post_id)
-  has_many(:versions, -> { order("id asc") }, class_name: "PoolVersion", dependent: :destroy)
+  has_many(:versions, -> { order(id: :asc) }, class_name: "PoolVersion", dependent: :destroy)
+
+  scope(:series, -> { where(category: "series") })
+  scope(:collection, -> { where(category: "collection") })
+  scope(:series_first, -> { order(case_order(:category, %w[series])) })
 
   attr_accessor(:skip_sync)
 
-  validates(:cover_post_id, presence: true, allow_nil: false, unless: -> { post_ids.empty? })
-
   def limited_attribute_changed?
-    name_changed? || description_changed? || is_active_changed?
+    name_changed? || description_changed? || is_ongoing_changed? || category_changed?
   end
 
   module SearchMethods
@@ -74,7 +78,8 @@ class Pool < ApplicationRecord
 
     def query_dsl
       super
-        .field(:is_active)
+        .field(:is_ongoing)
+        .field(:category)
         .custom(:name_matches, ->(q, v) { q.attribute_matches(:name, Pool.normalize_name(v), convert_to_wildcard: true) })
         .custom(:any_artist_name_matches, ->(q, v) { q.any_artist_name_matches(v) })
         .custom(:any_artist_name_like, ->(q, v) { q.any_artist_name_like(v) })
@@ -138,6 +143,10 @@ class Pool < ApplicationRecord
     self.name = Pool.normalize_name(name)
   end
 
+  def pretty_category
+    category.titleize
+  end
+
   def pretty_name
     name.tr("_", " ")
   end
@@ -157,6 +166,16 @@ class Pool < ApplicationRecord
 
   def deletable_by?(user)
     user.is_janitor?
+  end
+
+  def category_changeable_by?(user)
+    return true if Config.bypass?(:pool_category_change_cutoff, user)
+    user.is_member? && post_count <= Config.pool_category_change_cutoff
+  end
+
+  def validate_updater_can_change_category
+    return if category_changeable_by?(updater)
+    errors.add(:base, "You cannot change the category of pools with more than #{Config.pool_category_change_cutoff} posts")
   end
 
   def validate_number_of_posts
@@ -301,7 +320,7 @@ class Pool < ApplicationRecord
   end
 
   def saved_change_to_watched_attributes?
-    saved_change_to_name? || saved_change_to_description? || saved_change_to_post_ids? || saved_change_to_is_active?
+    saved_change_to_name? || saved_change_to_description? || saved_change_to_post_ids? || saved_change_to_is_ongoing? || saved_change_to_category?
   end
 
   def create_version
@@ -317,8 +336,8 @@ class Pool < ApplicationRecord
 
   def validate_name
     case name
-    when /\A(any|none)\z/i
-      errors.add(:name, "cannot be any of the following names: any, none")
+    when /\A(any|none|series|collection)\z/i
+      errors.add(:name, "cannot be any of the following names: any, none, series, collection")
     when /\*/
       errors.add(:name, "cannot contain asterisks")
     when ""

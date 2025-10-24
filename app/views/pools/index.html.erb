@@ -13,6 +13,9 @@
   <% end %>
   <% t.column("Count") do |pool| %>
     <%= pool.post_count %>
+    <% if pool.is_ongoing? %>
+      <span class="hint">ongoing</span>
+    <% end %>
   <% end %>
 <% end %>
 

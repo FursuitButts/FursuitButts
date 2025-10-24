@@ -38,6 +38,7 @@
       <%= number_config_field(@config, :pending_uploads_limit, name: "Pending Uploads Limit", disabled: !edit) %>
       <%= number_config_field(@config, :pool_post_limit, name: "Pool Post Limit", bypass: true, disabled: !edit) %>
       <%= number_config_field(@config, :set_post_limit, name: "Set Post Limit", bypass: true, disabled: !edit) %>
+      <%= number_config_field(@config, :pool_category_change_cutoff, name: "Pool Category Change Cutoff", bypass: true, disabled: !edit) %>
       <%= user_config_field(@config, :bur_entry_limit, name: "BUR Entry Limit", disabled: !edit, hint: "-1 for unlimited") %>
       <%= user_config_field(@config, :tag_change_request_update_limit, name: "Tag Change Request Update Limit", disabled: !edit, hint: "-1 for unlimited") %>
       <%= user_config_field(@config, :followed_tag_limit, name: "Followed Tag Limit", disabled: !edit, hint: "-1 for unlimited") %>
@@ -67,6 +68,7 @@
       <%= number_config_field(@config, :forum_post_max_size, name: "Forum Post Max Size", disabled: !edit) %>
       <%= number_config_field(@config, :forum_category_description_max_size, name: "Forum Category Description Max Size", disabled: !edit) %>
       <%= number_config_field(@config, :note_max_size, name: "Note Max Size", disabled: !edit) %>
+      <%= number_config_field(@config, :pool_name_max_size, name: "Pool Name Max Size", disabled: !edit) %>
       <%= number_config_field(@config, :pool_description_max_size, name: "Pool Description Max Size", disabled: !edit) %>
       <%= number_config_field(@config, :post_description_max_size, name: "Post Description Max Size", disabled: !edit) %>
       <%= number_config_field(@config, :ticket_max_size, name: "Ticket Max Size", disabled: !edit) %>

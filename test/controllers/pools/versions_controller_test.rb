@@ -43,6 +43,31 @@ module Pools
           assert_access(User::Levels::ANONYMOUS) { |user| get_auth(pool_versions_path, user) }
         end
       end
+
+      context("undo action") do
+        setup do
+          @posts = create_list(:post, 2)
+          @pool = create(:pool, post_ids: [@posts.first.id])
+          @pool.update_with(@user, post_ids: [@posts.first.id, @posts.second.id])
+        end
+
+        should("work") do
+          version = @pool.versions.first
+          assert_equal([@posts.first.id], version.post_ids)
+          put_auth(undo_pool_version_path(@pool.versions.second), @user)
+          @pool.reload
+          assert_equal([@posts.first.id], @pool.post_ids)
+        end
+
+        should("not allow undoing version 1") do
+          put_auth(undo_pool_version_path(@pool.versions.first), @user)
+          assert_response(:bad_request)
+        end
+
+        should("restrict access") do
+          assert_access(User::Levels::MEMBER, success_response: :redirect) { |user| put_auth(undo_pool_version_path(@pool.versions.second), user) }
+        end
+      end
     end
   end
 end

@@ -18,5 +18,24 @@ module Pools
     def diff
       @pool_version = authorize(PoolVersion.find(params[:id]))
     end
+
+    def undo
+      @pool_version = authorize(PoolVersion.find(params[:id]))
+      @pool_version.undo!(CurrentUser.user)
+
+      text = ""
+      if @pool_version.errors.any?
+        text += @pool_version.errors.full_messages.join(", ")
+      elsif @pool_version.pool.errors.any?
+        text += "; " if text.present?
+        text += @pool_version.pool.errors.full_messages.join(", ")
+      end
+
+      return render_expected_error(422, text) if text.present?
+      notice("Pool version undone")
+      respond_with(@pool_version) do |format|
+        format.html { redirect_back(fallback_location: pool_versions_path) }
+      end
+    end
   end
 end

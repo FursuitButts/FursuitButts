@@ -1,11 +1,47 @@
-<h1>Pool Version Comparison: <%= @pool_version.name %></h1>
+<h1>Pool Version Comparison: <%= @pool_version.pretty_name %></h1>
 
 <ul>
-  <li><strong>Posts</strong>: <%= pool_version_posts_diff(@pool_version) %></li>
-  <% if @pool_version.previous %>
-    <li><strong>Old Desc</strong>: <%= @pool_version.previous.description %></li>
+  <% if @pool_version.name_changed? %>
+  <li>
+    <dl>
+      <dt><b>Name</b></dt>
+      <dd>
+        <% if @pool_version.previous %><%= @pool_version.previous.name %> -><% end %>
+        <%= @pool_version.name %>
+      </dd>
+    </dl>
+  </li>
   <% end %>
-  <li><strong>New Desc</strong>: <%= @pool_version.description %></li>
+  <% if @pool_version.description_changed? %>
+  <li>
+    <dl>
+      <dt><b>Description</b></dt>
+      <dd>
+        <% if @pool_version.previous %><%= @pool_version.previous.description %> -><% end %>
+        <%= @pool_version.description %>
+      </dd>
+    </dl>
+  </li>
+  <% end %>
+  <% if @pool_version.is_ongoing_changed? %>
+  <li>
+    <dl>
+      <dt><b>Is Ongoing</b></dt>
+      <dd>
+        <% if @pool_version.previous %><%= @pool_version.previous.is_ongoing? ? "Yes" : "No" %> -><% end %>
+        <%= @pool_version.is_ongoing? ? "Yes" : "No" %>
+      </dd>
+    </dl>
+  </li>
+  <% end %>
+  <% if @pool_version.added_post_ids.any? || @pool_version.removed_post_ids.any? %>
+  <li>
+    <dl>
+      <dt><b>Posts</b></dt>
+      <dd><%= pool_version_posts_diff(@pool_version) %></dd>
+    </dl>
+  </li>
+  <% end %>
 </ul>
 
 <%= render("pools/secondary_links") %>

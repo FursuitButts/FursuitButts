@@ -5,8 +5,12 @@ class PoolVersionPolicy < ApplicationPolicy
     index?
   end
 
+  def undo?
+    member?
+  end
+
   def permitted_search_params
-    params = super + %i[updater_id updater_name pool_id is_active] + nested_search_params(updater: User, pool: Pool)
+    params = super + %i[updater_id updater_name pool_id is_ongoing] + nested_search_params(updater: User, pool: Pool)
     params += %i[ip_addr] if can_search_ip_addr?
     params
   end

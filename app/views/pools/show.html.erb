@@ -1,5 +1,6 @@
 <h2>
   <%= link_to(@pool.pretty_name, posts_path(tags: "pool:#{@pool.id}")) %>
+  <% if @pool.is_ongoing? %><span class="hint">ongoing</span><% end %>
 </h2>
 
 <div id="description" class="dtext-container">

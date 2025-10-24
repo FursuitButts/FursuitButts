@@ -7,11 +7,8 @@
   <% t.column("Post Count") do |pool_version| %>
     <%= link_to(pool_version.post_ids.size, pool_versions_path(search: { pool_id: pool_version.pool_id })) %>
   <% end %>
-  <% t.column("Changes", th: { class: "col-expand" }) do |pool_version| %>
-    <%= pool_version_posts_diff(pool_version) %>
-  <% end %>
-  <% t.column("Description Changed") do |pool_version| %>
-    <%= link_to_if(pool_version.description_changed, pool_version.description_changed, diff_pool_version_path(pool_version.id)) %>
+  <% t.column("Changes") do |pool_version| %>
+    <%= link_to_if(pool_version.changes_text.any?, pool_version.changes_text.join(", "), diff_pool_version_path(pool_version.id)) %>
   <% end %>
   <% t.column("Updater") do |pool_version| %>
     <%= link_to_user(pool_version.updater) if pool_version.updater %>
@@ -20,8 +17,13 @@
     <% end %>
     <p><%= compact_time(pool_version.updated_at) %></p>
   <% end %>
-  <% t.column(if: params.dig(:search, :pool_id).present?) do |pool_version| %>
-    <%= link_to("Revert to", revert_pool_path(pool_version.pool_id, version_id: pool_version.id, format: :json), "class": "revert-item-link", "data-noun": "pool") %>
+  <% t.column do |pool_version| %>
+    <% if params.dig(:search, :pool_id).present? %>
+      <%= link_to("Revert to", revert_pool_path(pool_version.pool_id, version_id: pool_version.id, format: :json), "class": "revert-item-link", "data-noun": "pool") %>
+    <% end %>
+    <% if pool_version.undo? %>
+      <%= link_to("Undo", undo_pool_version_path(pool_version), method: :put) %>
+    <% end %>
   <% end %>
 <% end %>
 

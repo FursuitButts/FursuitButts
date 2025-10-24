@@ -2,13 +2,14 @@
 
 class PoolVersion < ApplicationRecord
   belongs_to_user(:updater, ip: true, counter_cache: "pool_update_count")
+  undoable
   belongs_to(:pool)
   before_validation(:fill_version, on: :create)
   before_validation(:fill_changes, on: :create)
 
   module SearchMethods
     def default_order
-      order(updated_at: :desc)
+      order(id: :desc)
     end
 
     def query_dsl
@@ -30,12 +31,13 @@ class PoolVersion < ApplicationRecord
       updater_ip_addr: updater.ip_addr,
       description:     pool.description,
       name:            pool.name,
-      is_active:       pool.is_active?,
+      is_ongoing:      pool.is_ongoing?,
+      category:        pool.category,
     })
   end
 
   def self.calculate_version(pool_id)
-    1 + where("pool_id = ?", pool_id).maximum(:version).to_i
+    1 + where(pool_id: pool_id).maximum(:version).to_i
   end
 
   def fill_version
@@ -53,10 +55,12 @@ class PoolVersion < ApplicationRecord
 
     self.description_changed = previous.nil? || description != previous.description
     self.name_changed = previous.nil? || name != previous.name
+    self.is_ongoing_changed = previous.nil? || is_ongoing != previous.is_ongoing
+    self.category_changed = previous.nil? || category != previous.category
   end
 
   def previous
-    @previous ||= PoolVersion.where("pool_id = ? and version < ?", pool_id, version).order("version desc").first
+    @previous ||= PoolVersion.where(pool_id: pool_id).where.lt(version: version).order(version: :desc).first
   end
 
   def pool
@@ -73,6 +77,22 @@ class PoolVersion < ApplicationRecord
 
   def pretty_name
     name&.tr("_", " ") || "(Unknown Name)"
+  end
+
+  def changes_text
+    return %w[created] if version == 1
+    list = []
+    if added_post_ids.any? || removed_post_ids.any?
+      text = "posts ("
+      text += "+#{added_post_ids.size}, " if added_post_ids.any?
+      text += "-#{removed_post_ids.size}" if removed_post_ids.any?
+      list << "#{text.delete_suffix(', ')})"
+    end
+    list << "description" if description_changed?
+    list << "name" if name_changed?
+    list << "ongoing" if is_ongoing_changed?
+    list << "category" if category_changed?
+    list
   end
 
   def self.available_includes

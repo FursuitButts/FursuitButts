@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_10_22_125008) do
+ActiveRecord::Schema[7.1].define(version: 2025_10_24_004655) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -298,6 +298,9 @@ ActiveRecord::Schema[7.1].define(version: 2025_10_22_125008) do
     t.integer "ai_confidence_threshold", default: 50, null: false
     t.integer "post_flag_note_max_size", default: 10000, null: false
     t.string "db_exports_path", default: "/db_exports"
+    t.integer "pool_category_change_cutoff", default: 30, null: false
+    t.integer "pool_category_change_cutoff_bypass", default: 20, null: false
+    t.integer "pool_name_max_size", default: 250, null: false
   end
 
   create_table "destroyed_posts", force: :cascade do |t|
@@ -680,8 +683,11 @@ ActiveRecord::Schema[7.1].define(version: 2025_10_22_125008) do
     t.boolean "name_changed", default: false, null: false
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
-    t.boolean "is_active", default: true, null: false
+    t.boolean "is_ongoing", default: true, null: false
     t.integer "version", default: 1, null: false
+    t.boolean "is_ongoing_changed", default: false, null: false
+    t.string "category", null: false
+    t.boolean "category_changed", default: false, null: false
     t.index ["pool_id"], name: "index_pool_versions_on_pool_id"
     t.index ["updater_id"], name: "index_pool_versions_on_updater_id"
     t.index ["updater_ip_addr"], name: "index_pool_versions_on_updater_ip_addr"
@@ -691,13 +697,14 @@ ActiveRecord::Schema[7.1].define(version: 2025_10_22_125008) do
     t.string "name", null: false
     t.bigint "creator_id", null: false
     t.text "description", default: "", null: false
-    t.boolean "is_active", default: true, null: false
+    t.boolean "is_ongoing", default: true, null: false
     t.bigint "post_ids", default: [], null: false, array: true
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.string "artist_names", default: [], null: false, array: true
     t.bigint "cover_post_id"
     t.inet "creator_ip_addr", null: false
+    t.string "category", default: "series", null: false
     t.index "lower((name)::text) gin_trgm_ops", name: "index_pools_on_name_trgm", using: :gin
     t.index "lower((name)::text)", name: "index_pools_on_lower_name"
     t.index ["cover_post_id"], name: "index_pools_on_cover_post_id"

@@ -22,6 +22,7 @@ class ApplicationRecord < ActiveRecord::Base
   include(::MentionableMethods)
   include(::PrivilegeMethods)
   include(::Revertible)
+  include(::Undoable)
   include(::SearchMethods)
   include(::SimpleVersioningMethods)
   include(::UserMethods)

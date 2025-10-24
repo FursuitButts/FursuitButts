@@ -1,4 +1,4 @@
-\restrict tNsWH40tweYIUqkxoMc3hrbSmDvgWtMFNsQx8HjHqruKWZZAUftuPn7paxMMpNh
+\restrict POa8coUKFHeRxpBFFEINeyJsUe4wk1fMgtpAaYP90fNXgcd34gAeyalxWrYbsF6
 
 -- Dumped from database version 17.5
 -- Dumped by pg_dump version 17.6
@@ -605,7 +605,10 @@ CREATE TABLE public.config (
     tag_ai_posts boolean DEFAULT true NOT NULL,
     ai_confidence_threshold integer DEFAULT 50 NOT NULL,
     post_flag_note_max_size integer DEFAULT 10000 NOT NULL,
-    db_exports_path character varying DEFAULT '/db_exports'::character varying
+    db_exports_path character varying DEFAULT '/db_exports'::character varying,
+    pool_category_change_cutoff integer DEFAULT 30 NOT NULL,
+    pool_category_change_cutoff_bypass integer DEFAULT 20 NOT NULL,
+    pool_name_max_size integer DEFAULT 250 NOT NULL
 );
 
 
@@ -1529,8 +1532,11 @@ CREATE TABLE public.pool_versions (
     name_changed boolean DEFAULT false NOT NULL,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
-    is_active boolean DEFAULT true NOT NULL,
-    version integer DEFAULT 1 NOT NULL
+    is_ongoing boolean DEFAULT true NOT NULL,
+    version integer DEFAULT 1 NOT NULL,
+    is_ongoing_changed boolean DEFAULT false NOT NULL,
+    category character varying NOT NULL,
+    category_changed boolean DEFAULT false NOT NULL
 );
 
 
@@ -1562,13 +1568,14 @@ CREATE TABLE public.pools (
     name character varying NOT NULL,
     creator_id bigint NOT NULL,
     description text DEFAULT ''::text NOT NULL,
-    is_active boolean DEFAULT true NOT NULL,
+    is_ongoing boolean DEFAULT true NOT NULL,
     post_ids bigint[] DEFAULT '{}'::bigint[] NOT NULL,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
     artist_names character varying[] DEFAULT '{}'::character varying[] NOT NULL,
     cover_post_id bigint,
-    creator_ip_addr inet NOT NULL
+    creator_ip_addr inet NOT NULL,
+    category character varying DEFAULT 'series'::character varying NOT NULL
 );
 
 
@@ -7743,11 +7750,13 @@ ALTER TABLE ONLY public.help_pages
 -- PostgreSQL database dump complete
 --
 
-\unrestrict tNsWH40tweYIUqkxoMc3hrbSmDvgWtMFNsQx8HjHqruKWZZAUftuPn7paxMMpNh
+\unrestrict POa8coUKFHeRxpBFFEINeyJsUe4wk1fMgtpAaYP90fNXgcd34gAeyalxWrYbsF6
 
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20251024004655'),
+('20251023230141'),
 ('20251022125008'),
 ('20251017055837'),
 ('20251017041942'),
