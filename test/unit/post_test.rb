@@ -2579,19 +2579,16 @@ class PostTest < ActiveSupport::TestCase
       end
 
       should("not revert the rating") do
-        assert_raises(ActiveRecord::RecordInvalid) do
-          @post.revert_to!(@post.versions.first, @user)
-        end
+        @post.revert_to!(@post.versions.first, @user)
 
+        assert_not(@post.valid?)
         assert_equal(["Rating is locked and cannot be changed. Unlock the post first."], @post.errors.full_messages)
         assert_equal(@post.versions.last.rating, @post.reload.rating)
       end
 
       should("revert the rating after unlocking") do
         @post.update_with(@user, rating: "e", is_rating_locked: false)
-        assert_nothing_raised do
-          @post.revert_to!(@post.versions.first, @user)
-        end
+        @post.revert_to!(@post.versions.first, @user)
 
         assert(@post.valid?)
         assert_equal(@post.versions.first.rating, @post.rating)

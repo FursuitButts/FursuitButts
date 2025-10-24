@@ -5,6 +5,7 @@ class UserFeedback < ApplicationRecord
   belongs_to_user(:creator, ip: true, clones: :updater)
   belongs_to_user(:updater, ip: true)
   resolvable(:destroyer)
+  soft_deletable
   normalizes(:body, with: ->(body) { body.gsub("\r\n", "\n") })
   validates(:body, :category, presence: true)
   validates(:body, length: { minimum: 1, maximum: -> { Config.instance.user_feedback_max_size } })

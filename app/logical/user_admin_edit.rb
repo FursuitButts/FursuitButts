@@ -55,7 +55,6 @@ class UserAdminEdit
     )
     if change_request.valid?
       change_request.approve!
-      user.log_name_change(promoter)
     else
       errors.add(:name, change_request.errors.full_messages.join("; "))
     end

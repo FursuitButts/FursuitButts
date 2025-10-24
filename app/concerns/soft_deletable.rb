@@ -22,7 +22,7 @@ module SoftDeletable
       end
 
       define_method(:soft_delete_with_current) do |*args, **options|
-        update_with_current!(*args, column => deleted_value, **options)
+        update_with_current(*args, column => deleted_value, **options)
       end
 
       define_method(:soft_delete!) do |**options|

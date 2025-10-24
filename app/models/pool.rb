@@ -354,7 +354,7 @@ class Pool < ApplicationRecord
   def updater_can_remove_posts
     removed = post_ids_was - post_ids
     if removed.any? && !updater.can_remove_from_pools?
-      errors.add(:base, "You cannot removes posts from pools within the 3 days of sign up")
+      errors.add(:base, "You cannot removes posts from pools within the first 3 days of sign up")
     end
   end
 
