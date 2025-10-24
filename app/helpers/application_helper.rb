@@ -46,12 +46,34 @@ module ApplicationHelper
     raw("")
   end
 
+  def bulk_dtext_ragel(texts, **)
+    parsed = DTextHelper.bulk_parse(texts, **)
+    return {} if parsed.empty?
+    parsed.to_h do |text, hash|
+      deferred_post_ids.merge(hash[:post_ids]) if hash[:post_ids].present?
+      [text, raw(hash[:dtext])]
+    end
+  rescue DText::Error
+    {}
+  end
+
   def format_text(text, **options)
     # preserve the current inline behaviour
     if options[:inline]
       dtext_ragel(text, **options)
     else
       raw(%(<div class="styled-dtext">#{dtext_ragel(text, **options)}</div>))
+    end
+  end
+
+  def bulk_format_text(texts, **options)
+    if options[:inline]
+      texts.index_with { |text| dtext_ragel(text, **options) }
+    else
+      parsed = bulk_dtext_ragel(texts, **options)
+      parsed.transform_values do |dtext|
+        raw(%(<div class="styled-dtext">#{dtext}</div>))
+      end
     end
   end
 

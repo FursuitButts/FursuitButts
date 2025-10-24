@@ -2,6 +2,7 @@
 
 <%= render("search") %>
 
+<% texts = bulk_format_text(@mod_actions.map(&:format_text)) %>
 <%= table_for(@mod_actions) do |t| %>
   <% t.column("User") do |mod_action| %>
     <%= link_to_user(mod_action.creator) %>
@@ -9,20 +10,17 @@
   <% end %>
   <% t.column("Subject") do |mod_action| %>
     <% if mod_action.subject_id.present? %>
-      <% if mod_action.subject.present? %>
-        <% result = Rails.application.routes.recognize_path(url_for(mod_action.subject)) rescue nil %>
-        <% if result.blank? || (result[:controller] == "static" && result[:action] == "not_found") %>
-          <%= mod_action.subject_type.titleize %> #<%= mod_action.subject_id %>
-        <% else %>
-          <%= link_to("#{mod_action.subject_type.titleize} ##{mod_action.subject_id}", mod_action.subject) %>
-        <% end %>
-      <% else %>
+      <% model = mod_action.subject_type.constantize.new(id: mod_action.subject_id) rescue nil %>
+      <% result = Rails.application.routes.recognize_path(url_for(model)) if model rescue nil %>
+      <% if result.blank? || (result[:controller] == "static" && result[:action] == "not_found") %>
         <%= mod_action.subject_type.titleize %> #<%= mod_action.subject_id %>
+      <% else %>
+        <%= link_to("#{mod_action.subject_type.titleize} ##{mod_action.subject_id}", model) %>
       <% end %>
     <% end %>
   <% end %>
   <% t.column("Message") do |mod_action| %>
-    <%= format_text(mod_action.format_text) %>
+    <%= texts[mod_action.format_text] || format_text(mod_action.format_text) %>
   <% end %>
 <% end %>
 

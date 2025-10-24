@@ -56,6 +56,9 @@ group(:development) do
   gem("faker", require: false)
   gem("bullet")
   gem("active_record_query_trace")
+  gem("rack-mini-profiler")
+  gem("memory_profiler")
+  gem("stackprof")
 end
 
 group(:test) do

@@ -191,6 +191,7 @@ GEM
     mailgun-ruby (1.2.14)
       rest-client (>= 2.0.2)
     marcel (1.0.4)
+    memory_profiler (1.1.0)
     mime-types (3.5.2)
       mime-types-data (~> 3.2015)
     mime-types-data (3.2024.0206)
@@ -244,6 +245,8 @@ GEM
       activesupport (>= 3.0.0)
     racc (1.8.1)
     rack (2.2.17)
+    rack-mini-profiler (4.0.1)
+      rack (>= 1.2.0)
     rack-proxy (0.7.7)
       rack
     rack-session (1.0.2)
@@ -382,6 +385,7 @@ GEM
     simplecov_json_formatter (0.1.4)
     smart_properties (1.17.0)
     sorbet-runtime (0.5.11284)
+    stackprof (0.2.27)
     streamio-ffmpeg (3.0.2)
       multi_json (~> 1.8)
     stringio (3.1.6)
@@ -443,12 +447,14 @@ DEPENDENCIES
   jwt (~> 2.8)
   mailgun-ruby
   marcel
+  memory_profiler
   mocha
   net-ftp (~> 0.3.4)
   pg
   pitchfork
   puma
   pundit (~> 2.3)
+  rack-mini-profiler
   rails (~> 7.1.0)
   rakismet (~> 1.5)
   recaptcha
@@ -475,6 +481,7 @@ DEPENDENCIES
   simple_form
   simplecov
   simplecov-cobertura
+  stackprof
   streamio-ffmpeg
   webmock
   webpacker (>= 4.0.x)

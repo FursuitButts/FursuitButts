@@ -12,6 +12,17 @@ module DTextHelper
     hash
   end
 
+  def bulk_parse(texts, **)
+    return [] if texts.blank?
+    *data, topics = preprocess(texts)
+    texts.to_h do |text|
+      text = replace_topics(text, topics)
+      hash = DText.parse(text, **)
+      hash[:dtext] = postprocess(hash[:dtext], *data)
+      [text, hash]
+    end
+  end
+
   def format_text(text, **)
     parse(text, **).fetch(:dtext)
   end
