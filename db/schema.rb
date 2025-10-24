@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_10_24_042421) do
+ActiveRecord::Schema[7.1].define(version: 2025_10_24_060615) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -319,6 +319,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_10_24_042421) do
     t.integer "pool_category_change_cutoff", default: 30, null: false
     t.integer "pool_category_change_cutoff_bypass", default: 20, null: false
     t.integer "pool_name_max_size", default: 250, null: false
+    t.string "default_blacklist", default: "", null: false
+    t.string "safeblocked_tags", default: "", null: false
   end
 
   create_table "destroyed_posts", force: :cascade do |t|

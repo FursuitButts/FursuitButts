@@ -1,4 +1,4 @@
-\restrict sQHPcCbVPkhttALmNxqVWrXyO0dbd8VyqS8EcwMbc3JfLFWAfq4fP3KeC3yb7V5
+\restrict XBE0Nasdu2ky6H2mEQYqq2RTvPnMgB6ByC4b2I0CKGglRSO0RtbKLcebyi5cscp
 
 -- Dumped from database version 17.5
 -- Dumped by pg_dump version 17.6
@@ -649,7 +649,9 @@ CREATE TABLE public.config (
     db_exports_path character varying DEFAULT '/db_exports'::character varying,
     pool_category_change_cutoff integer DEFAULT 30 NOT NULL,
     pool_category_change_cutoff_bypass integer DEFAULT 20 NOT NULL,
-    pool_name_max_size integer DEFAULT 250 NOT NULL
+    pool_name_max_size integer DEFAULT 250 NOT NULL,
+    default_blacklist character varying DEFAULT ''::character varying NOT NULL,
+    safeblocked_tags character varying DEFAULT ''::character varying NOT NULL
 );
 
 
@@ -7836,11 +7838,12 @@ ALTER TABLE ONLY public.help_pages
 -- PostgreSQL database dump complete
 --
 
-\unrestrict sQHPcCbVPkhttALmNxqVWrXyO0dbd8VyqS8EcwMbc3JfLFWAfq4fP3KeC3yb7V5
+\unrestrict XBE0Nasdu2ky6H2mEQYqq2RTvPnMgB6ByC4b2I0CKGglRSO0RtbKLcebyi5cscp
 
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20251024060615'),
 ('20251024042421'),
 ('20251024004655'),
 ('20251023230141'),

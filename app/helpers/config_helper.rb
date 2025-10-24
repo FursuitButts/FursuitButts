@@ -9,6 +9,10 @@ module ConfigHelper
     field_tag(:text_field_tag, ...)
   end
 
+  def large_text_config_field(...)
+    field_tag(:text_area_tag, ...)
+  end
+
   def field_tag(type, config, attribute, name: nil, bypass: false, disabled: false, hint: nil, value: config.public_send(attribute), input_options: {})
     tag.tr do
       safe_join([tag.td { label_tag(attribute, name) },

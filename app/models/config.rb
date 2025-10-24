@@ -67,6 +67,10 @@ class Config < ApplicationRecord
     public_send(key).split(",").map(&:strip)
   end
 
+  def self.ary(key)
+    instance.ary(key)
+  end
+
   # TODO: safeguards to ensure we don't override existing methods?
   column_names.each do |column|
     define_method("#{column}?") { !!public_send(column) }

@@ -2142,7 +2142,7 @@ class Post < ApplicationRecord
 
   def safeblocked?(user)
     return true if FemboyFans.config.safe_mode? && rating != "s"
-    (FemboyFans.config.safe_mode? || user.enable_safe_mode?) && (rating != "s" || has_tag?(*FemboyFans.config.safeblocked_tags))
+    (FemboyFans.config.safe_mode? || user.enable_safe_mode?) && (rating != "s" || has_tag?(*Config.ary(:safeblocked_tags)))
   end
 
   def deleteblocked?(user)

@@ -135,6 +135,8 @@
       <%= boolean_config_field(@config, :tag_ai_posts, name: "Tag AI Posts", disabled: !edit, hint: "If flags detected as ai generated should be automatically tagged") %>
       <%= number_config_field(@config, :ai_confidence_threshold, name: "AI Confidence Threshold", disabled: !edit, hint: "The minimum required threshold to flag/tag ai generated content") %>
       <%= text_config_field(@config, :db_exports_path, name: "DB Exports Path", disabled: !edit, hint: "The path db exports are located at.") %>
+      <%= text_config_field(@config, :safeblocked_tags, name: "Safeblocked Tags", disabled: !edit, hint: "separate by a comma and space") %>
+      <%= large_text_config_field(@config, :default_blacklist, name: "Default Blacklist", disabled: !edit, input_options: { size: "40x10" }) %>
       <tr>
         <td colspan="3" class="submit-button">
           <%= submit_tag %>

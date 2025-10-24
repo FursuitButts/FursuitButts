@@ -100,7 +100,7 @@ module FemboyFans
 
     # Set the default level, permissions, and other settings for new users here.
     def customize_new_user(user)
-      user.blacklisted_tags           = default_blacklist.join("\n")
+      user.blacklisted_tags           = Config.default_blacklist
       user.comment_threshold          = -10
       user.enable_autocomplete        = true
       user.enable_keyboard_navigation = true
@@ -117,32 +117,10 @@ module FemboyFans
       user.level                      = User::Levels::RESTRICTED if user_approvals_enabled? && user.level == User::Levels::MEMBER
     end
 
-    def default_blacklist
-      []
-    end
-
-    def safeblocked_tags
-      []
-    end
-
     # This allows using statically linked copies of ffmpeg in non default locations. Not universally supported across
     # the codebase at this time.
     def ffmpeg_path
       "/usr/bin/ffmpeg"
-    end
-
-    # TODO: remove these
-
-    # Thumbnail size
-    # @deprecated
-    def small_image_width
-      300
-    end
-
-    # Large resize image width. Set to nil to disable.
-    # @deprecated
-    def large_image_width
-      850
     end
 
     def protected_path_prefix
@@ -440,6 +418,10 @@ module FemboyFans
       user.is_admin? || user == User.system
     end
 
+    def large_image_width
+      image_variants["large"]&.width || raise("missing large image variant")
+    end
+
     # Additional video samples will be generated in these dimensions if it makes sense to do so
     # They will be available as additional scale options on applicable posts in the order they appear here
     def video_variants
@@ -461,7 +443,7 @@ module FemboyFans
       {
         "crop"    => MediaAsset::Rescale.new(width: 300, height: 300, method: :exact),
         "preview" => MediaAsset::Rescale.new(width: 300, height: nil, method: :scaled), # thumbnail, small
-        "large"   => MediaAsset::Rescale.new(width: 850, height: nil, method: :scaled), # sample
+        "large"   => MediaAsset::Rescale.new(width: 850, height: nil, method: :scaled), # sample, width is used to determine resizing
       }
     end
 
