@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_10_24_004655) do
+ActiveRecord::Schema[7.1].define(version: 2025_10_24_042421) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -117,6 +117,24 @@ ActiveRecord::Schema[7.1].define(version: 2025_10_24_004655) do
     t.index ["banner_id"], name: "index_bans_on_banner_id"
     t.index ["expires_at"], name: "index_bans_on_expires_at"
     t.index ["user_id"], name: "index_bans_on_user_id"
+  end
+
+  create_table "bulk_update_request_versions", force: :cascade do |t|
+    t.bigint "bulk_update_request_id", null: false
+    t.bigint "updater_id", null: false
+    t.inet "updater_ip_addr", null: false
+    t.string "script", null: false
+    t.boolean "script_changed", default: false, null: false
+    t.string "status", null: false
+    t.boolean "status_changed", default: false, null: false
+    t.string "title", null: false
+    t.boolean "title_changed", default: false, null: false
+    t.integer "version", default: 1, null: false
+    t.integer "integer", default: 1, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["bulk_update_request_id"], name: "index_bulk_update_request_versions_on_bulk_update_request_id"
+    t.index ["updater_id"], name: "index_bulk_update_request_versions_on_updater_id"
   end
 
   create_table "bulk_update_requests", force: :cascade do |t|
@@ -1527,6 +1545,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_10_24_004655) do
   add_foreign_key "avoid_postings", "users", column: "updater_id"
   add_foreign_key "bans", "users"
   add_foreign_key "bans", "users", column: "banner_id"
+  add_foreign_key "bulk_update_request_versions", "bulk_update_requests"
+  add_foreign_key "bulk_update_request_versions", "users", column: "updater_id"
   add_foreign_key "bulk_update_requests", "forum_posts", on_delete: :nullify
   add_foreign_key "bulk_update_requests", "forum_topics", on_delete: :nullify
   add_foreign_key "bulk_update_requests", "users", column: "approver_id"

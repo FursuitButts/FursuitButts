@@ -1,0 +1,51 @@
+<h1>Bulk Update Request Version Comparison: <%= @bulk_update_request_version.title %></h1>
+
+<ul>
+  <% if @bulk_update_request_version.script_changed? %>
+  <li>
+    <dl>
+      <% if @bulk_update_request_version.previous %>
+        <dt><b>Old Script</b></dt>
+        <dd>
+          <%= format_text(@bulk_update_request_version.previous.script) %>
+        </dd>
+        <dt><b>New Script</b></dt>
+        <dd>
+          <%= format_text(@bulk_update_request_version.script) %>
+        </dd>
+      <% else %>
+      <dt><b>Script</b></dt>
+        <dd><%= format_text(@bulk_update_request_version.script) %></dd>
+      <% end %>
+    </dl>
+  </li>
+  <% end %>
+  <% if @bulk_update_request_version.status_changed? %>
+  <li>
+    <dl>
+      <dt><b>Status</b></dt>
+      <dd>
+        <% if @bulk_update_request_version.previous %><%= @bulk_update_request_version.previous.status %> -><% end %>
+        <%= @bulk_update_request_version.status %>
+      </dd>
+    </dl>
+  </li>
+  <% end %>
+  <% if @bulk_update_request_version.title_changed? %>
+  <li>
+    <dl>
+      <dt><b>Title</b></dt>
+      <dd>
+        <% if @bulk_update_request_version.previous %><%= @bulk_update_request_version.previous.title %> -><% end %>
+        <%= @bulk_update_request_version.title %>
+      </dd>
+    </dl>
+  </li>
+  <% end %>
+</ul>
+
+<%= render("bulk_update_requests/secondary_links") %>
+
+<% content_for(:page_title) do %>
+  Bulk Update Request Version Comparison
+<% end %>

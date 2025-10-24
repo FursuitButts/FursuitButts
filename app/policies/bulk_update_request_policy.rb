@@ -18,6 +18,10 @@ class BulkUpdateRequestPolicy < ApplicationPolicy
 
   alias reject? destroy?
 
+  def revert?
+    update?
+  end
+
   def permitted_attributes
     %i[script]
   end

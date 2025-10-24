@@ -6,7 +6,6 @@ class TagAlias < TagRelationship
   belongs_to_user(:creator, ip: true, clones: :updater)
   belongs_to_user(:updater, ip: true)
   belongs_to_user(:approver, optional: true)
-  after_save(:create_mod_action)
   validates(:antecedent_name, uniqueness: { conditions: -> { duplicate_relevant } }, unless: :is_deleted?)
   validate(:absence_of_transitive_relation, unless: :is_deleted?)
 
@@ -205,27 +204,6 @@ class TagAlias < TagRelationship
   def self.update_cached_post_counts_for_all
     TagAlias.without_timeout do
       connection.execute("UPDATE tag_aliases SET post_count = tags.post_count FROM tags WHERE tags.name = tag_aliases.consequent_name")
-    end
-  end
-
-  def create_mod_action
-    alias_desc = %("tag alias ##{id}":[#{Rails.application.routes.url_helpers.tag_alias_path(self)}]: [[#{antecedent_name}]] -> [[#{consequent_name}]])
-
-    if previously_new_record?
-      ModAction.log!(creator, :tag_alias_create, self, alias_desc: alias_desc)
-    else
-      # format the changes hash more nicely.
-      change_desc = saved_changes.except(:updated_at).map do |attribute, values|
-        old = values[0]
-        new = values[1]
-        if old.nil?
-          %(set #{attribute} to "#{new}")
-        else
-          %(changed #{attribute} from "#{old}" to "#{new}")
-        end
-      end.join(", ")
-
-      ModAction.log!(updater, :tag_alias_update, self, alias_desc: alias_desc, change_desc: change_desc)
     end
   end
 

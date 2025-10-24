@@ -48,7 +48,11 @@
     <%= li_link_to("Listing", tags_path) %>
     <%= li_link_to_if(policy(Tag).followed?, "Followed", followed_tags_path) %>
     <%= li_link_to("Aliases", tag_aliases_path) %>
+    <%= li_link_to("Alias History", mod_actions_path(search: { action: "tag_alias_create,tag_alias_update" })) %>
     <%= li_link_to("Implications", tag_implications_path) %>
+    <%= li_link_to("Implication History", mod_actions_path(search: { action: "tag_implication_create,tag_implication_update" })) %>
+    <%= li_link_to("Bulk Update Requests", bulk_update_requests_path) %>
+    <%= li_link_to("Bulk Update Request History", bulk_update_request_versions_path) %>
     <%= li_link_to("Most Followed", followed_tags_popular_index_path) %>
     <%= li_link_to("Cheat Sheet", help_page_path(id: "cheatsheet")) %>
     <%= li_link_to("Help", help_page_path(id: "tags")) %>

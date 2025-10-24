@@ -5,6 +5,17 @@
   <%= subnav_link_to("Request implication", new_tag_implication_path) %>
   <%= subnav_link_to("Request bulk update", new_bulk_update_request_path) %>
   <%= subnav_link_to("Help", help_page_path(id: "tag_implications")) %>
+  <% if @tag_implication %>
+    |
+    <% if @tag_implication.forum_topic %>
+      <% if @tag_implication.forum_post && !@tag_implication.forum_post.is_original_post? %>
+        <%= subnav_link_to("Forum Post", @tag_implication.forum_post.topic_link) %>
+      <% else %>
+        <%= subnav_link_to("Forum Topic", forum_topic_path(@tag_implication.forum_topic_id)) %>
+      <% end %>
+    <% end %>
+    <%= subnav_link_to("History", mod_actions_path(search: { action: "tag_implication_create,tag_implication_update", subject_type: "TagImplication", subject_id: @tag_implication.id })) %>
+  <% end %>
   <% if policy(BulkUpdateRequestImport).create? %>
     |
     <%= subnav_link_to("Import", new_admin_bulk_update_request_import_path) %>

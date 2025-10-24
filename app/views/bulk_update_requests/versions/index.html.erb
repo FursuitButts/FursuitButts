@@ -1,0 +1,37 @@
+<h1>Bulk Update Request History</h1>
+
+<%= table_for(@bulk_update_request_versions, class: "striped autofit") do |t| %>
+  <% t.column("Bulk Update Request") do |bulk_update_request_version| %>
+    <%= link_to(bulk_update_request_version.title, bulk_update_request_path(bulk_update_request_version.bulk_update_request_id)) %>
+  <% end %>
+  <% t.column("Changes") do |bulk_update_request_version| %>
+    <%= link_to_if(bulk_update_request_version.changes_text.any?, bulk_update_request_version.changes_text.join(", "), diff_bulk_update_request_version_path(bulk_update_request_version.id)) %>
+  <% end %>
+  <% t.column("Updater") do |bulk_update_request_version| %>
+    <%= link_to_user(bulk_update_request_version.updater) if bulk_update_request_version.updater %>
+    <% if policy(bulk_update_request_version).can_see_ip_addr? %>
+      (<%= link_to_ip(bulk_update_request_version.updater_ip_addr) %>)
+    <% end %>
+    <p><%= compact_time(bulk_update_request_version.updated_at) %></p>
+  <% end %>
+  <% t.column do |bulk_update_request_version| %>
+    <% revert = params.dig(:search, :bulk_update_request_id).present? && policy(bulk_update_request_version.bulk_update_request).revert? %>
+    <% undo = bulk_update_request_version.undo? && policy(bulk_update_request_version).undo? %>
+    <% if revert %>
+      <%= link_to("Revert to", revert_bulk_update_request_path(bulk_update_request_version.bulk_update_request_id, version_id: bulk_update_request_version.id, format: :json), "class": "revert-item-link", "data-noun": "bulk_update_request") %>
+    <% end %>
+    <% if revert && undo %>|<% end %>
+    <% if undo %>
+      <%= link_to("Undo", undo_bulk_update_request_version_path(bulk_update_request_version), method: :put) %>
+    <% end %>
+  <% end %>
+<% end %>
+
+<%= numbered_paginator(@bulk_update_request_versions) %>
+
+<%= render("bulk_update_requests/secondary_links") %>
+<%= latest_link(@bulk_update_request_versions) %>
+
+<% content_for(:page_title) do %>
+  Bulk Update Request Versions
+<% end %>

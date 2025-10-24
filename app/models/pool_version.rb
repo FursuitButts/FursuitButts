@@ -63,18 +63,6 @@ class PoolVersion < ApplicationRecord
     @previous ||= PoolVersion.where(pool_id: pool_id).where.lt(version: version).order(version: :desc).first
   end
 
-  def pool
-    Pool.find(pool_id)
-  end
-
-  def updater
-    User.find(updater_id)
-  end
-
-  def updater_name
-    User.id_to_name(updater_id)
-  end
-
   def pretty_name
     name&.tr("_", " ") || "(Unknown Name)"
   end

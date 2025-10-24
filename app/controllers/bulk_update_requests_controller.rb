@@ -52,6 +52,14 @@ class BulkUpdateRequestsController < ApplicationController
     respond_with(@bulk_update_request, location: bulk_update_requests_path)
   end
 
+  def revert
+    authorize(@bulk_update_request)
+    @version = @bulk_update_request.versions.find(params[:version_id])
+    @bulk_update_request.revert_to!(@version, CurrentUser.user)
+    notice("Bulk update request reverted")
+    respond_with(@bulk_update_request, &:js)
+  end
+
   private
 
   def load_bulk_update_request

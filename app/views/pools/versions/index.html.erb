@@ -18,10 +18,13 @@
     <p><%= compact_time(pool_version.updated_at) %></p>
   <% end %>
   <% t.column do |pool_version| %>
-    <% if params.dig(:search, :pool_id).present? %>
+    <% revert = params.dig(:search, :pool_id).present? && policy(pool_version.pool).revert? %>
+    <% undo = pool_version.undo? && policy(pool_version).undo? %>
+    <% if revert %>
       <%= link_to("Revert to", revert_pool_path(pool_version.pool_id, version_id: pool_version.id, format: :json), "class": "revert-item-link", "data-noun": "pool") %>
     <% end %>
-    <% if pool_version.undo? %>
+    <% if revert && undo %>|<% end %>
+    <% if undo %>
       <%= link_to("Undo", undo_pool_version_path(pool_version), method: :put) %>
     <% end %>
   <% end %>

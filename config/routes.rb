@@ -133,6 +133,15 @@ Rails.application.routes.draw do
   resources(:bulk_update_requests) do
     member do
       post(:approve)
+      put(:revert)
+    end
+    collection do
+      resources(:versions, controller: "bulk_update_requests/versions", as: "bulk_update_request_versions", only: %i[index]) do
+        member do
+          get(:diff)
+          put(:undo)
+        end
+      end
     end
   end
   resources(:comments) do

@@ -9,16 +9,6 @@ class TagRelationship < ApplicationRecord
   belongs_to(:forum_topic, optional: true)
   belongs_to(:antecedent_tag, class_name: "Tag", foreign_key: "antecedent_name", primary_key: "name", default: -> { Tag.find_or_create_by_name(antecedent_name, user: creator) })
   belongs_to(:consequent_tag, class_name: "Tag", foreign_key: "consequent_name", primary_key: "name", default: -> { Tag.find_or_create_by_name(consequent_name, user: creator) })
-
-  scope(:active, -> { approved })
-  scope(:approved, -> { where(status: %w[active processing queued]) })
-  scope(:deleted, -> { where(status: "deleted") })
-  scope(:not_deleted, -> { where.not(status: "deleted") })
-  scope(:pending, -> { where(status: "pending") })
-  scope(:retired, -> { where(status: "retired") })
-  scope(:duplicate_relevant, -> { where(status: %w[active processing queued pending]) })
-  scope(:errored, -> { where_ilike(:status, "error: *") })
-
   before_validation(:normalize_names)
   validates(:status, format: { with: /\A(active|deleted|pending|processing|queued|retired|error: .*)\Z/ })
   validates(:creator_id, :antecedent_name, :consequent_name, presence: true)
@@ -29,6 +19,16 @@ class TagRelationship < ApplicationRecord
   validates(:antecedent_name, tag_name: { disable_ascii_check: true }, if: :antecedent_name_changed?)
   validates(:consequent_name, tag_name: true, if: :consequent_name_changed?)
   validate(:antecedent_and_consequent_are_different)
+  after_save(:create_mod_action)
+
+  scope(:active, -> { approved })
+  scope(:approved, -> { where(status: %w[active processing queued]) })
+  scope(:deleted, -> { where(status: "deleted") })
+  scope(:not_deleted, -> { where.not(status: "deleted") })
+  scope(:pending, -> { where(status: "pending") })
+  scope(:retired, -> { where(status: "retired") })
+  scope(:duplicate_relevant, -> { where(status: %w[active processing queued pending]) })
+  scope(:errored, -> { where.ilike(status: "error: *") })
 
   def normalize_names
     self.antecedent_name = antecedent_name.downcase.tr(" ", "_")
@@ -216,6 +216,30 @@ class TagRelationship < ApplicationRecord
           post.save!
         end
       end
+    end
+  end
+
+  def create_mod_action
+    name = self.class.name.delete_prefix("Tag").underscore.gsub(" ", " ")
+    desc = %("tag #{name} ##{id}":[#{Routes.public_send("tag_#{name}_path", self)}]: [[#{antecedent_name}]] -> [[#{consequent_name}]])
+
+    if previously_new_record?
+      ModAction.log!(creator, :"tag_#{name}_create", self, "#{name}_desc": desc)
+    else
+      # format the changes hash more nicely.
+      change_desc = saved_changes.except(:updated_at).map do |attribute, values|
+        next unless %w[antecedent_name consequent_name status approver_id reason].include?(attribute)
+        old = values[0]
+        new = values[1]
+        if old.nil?
+          %(set #{attribute} to "#{new}")
+        else
+          %(changed #{attribute} from "#{old}" to "#{new}")
+        end
+      end.join("\n")
+
+      return if change_desc.blank?
+      ModAction.log!(updater, :"tag_#{name}_update", self, "#{name}_desc": desc, change_desc: change_desc)
     end
   end
 

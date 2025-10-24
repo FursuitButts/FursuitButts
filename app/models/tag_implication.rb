@@ -13,7 +13,6 @@ class TagImplication < TagRelationship
   before_save(:update_descendant_names)
   after_destroy(:update_descendant_names_for_parents)
   after_save(:update_descendant_names_for_parents)
-  after_save(:create_mod_action, if: :saved_change_to_status?)
   with_options(unless: :is_deleted?) do
     validates(:antecedent_name, uniqueness: { scope: [:consequent_name], conditions: -> { duplicate_relevant } })
     validate(:absence_of_circular_relation)
@@ -168,27 +167,6 @@ class TagImplication < TagRelationship
       update(status: "deleted", updater: rejector)
       invalidate_cached_descendants
       forum_updater.update(reject_message(rejector), "REJECTED") if update_topic
-    end
-
-    def create_mod_action
-      implication = %("tag implication ##{id}":[#{Rails.application.routes.url_helpers.tag_implication_path(self)}]: [[#{antecedent_name}]] -> [[#{consequent_name}]])
-
-      if previously_new_record?
-        ModAction.log!(creator, :tag_implication_create, self, implication_desc: implication)
-      else
-        # format the changes hash more nicely.
-        change_desc = saved_changes.except(:updated_at).map do |attribute, values|
-          old = values[0]
-          new = values[1]
-          if old.nil?
-            %(set #{attribute} to "#{new}")
-          else
-            %(changed #{attribute} from "#{old}" to "#{new}")
-          end
-        end.join(", ")
-
-        ModAction.log!(updater, :tag_implication_update, self, implication_desc: implication, change_desc: change_desc)
-      end
     end
 
     def forum_updater

@@ -34,6 +34,17 @@
     </dl>
   </li>
   <% end %>
+  <% if @pool_version.category_changed? %>
+    <li>
+      <dl>
+        <dt><b>Category</b></dt>
+        <dd>
+          <% if @pool_version.previous %><%= @pool_version.previous.category %> -><% end %>
+          <%= @pool_version.category %>
+        </dd>
+      </dl>
+    </li>
+  <% end %>
   <% if @pool_version.added_post_ids.any? || @pool_version.removed_post_ids.any? %>
   <li>
     <dl>

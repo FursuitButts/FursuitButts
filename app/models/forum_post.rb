@@ -351,4 +351,8 @@ class ForumPost < ApplicationRecord
     SQL
     ForumPost.connection.execute(query)
   end
+
+  def topic_link
+    Routes.forum_topic_path(topic_id, page: forum_topic_page, anchor: "forum_post_#{id}")
+  end
 end

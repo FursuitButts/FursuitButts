@@ -1,4 +1,4 @@
-\restrict POa8coUKFHeRxpBFFEINeyJsUe4wk1fMgtpAaYP90fNXgcd34gAeyalxWrYbsF6
+\restrict sQHPcCbVPkhttALmNxqVWrXyO0dbd8VyqS8EcwMbc3JfLFWAfq4fP3KeC3yb7V5
 
 -- Dumped from database version 17.5
 -- Dumped by pg_dump version 17.6
@@ -358,6 +358,47 @@ CREATE SEQUENCE public.bans_id_seq
 --
 
 ALTER SEQUENCE public.bans_id_seq OWNED BY public.bans.id;
+
+
+--
+-- Name: bulk_update_request_versions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.bulk_update_request_versions (
+    id bigint NOT NULL,
+    bulk_update_request_id bigint NOT NULL,
+    updater_id bigint NOT NULL,
+    updater_ip_addr inet NOT NULL,
+    script character varying NOT NULL,
+    script_changed boolean DEFAULT false NOT NULL,
+    status character varying NOT NULL,
+    status_changed boolean DEFAULT false NOT NULL,
+    title character varying NOT NULL,
+    title_changed boolean DEFAULT false NOT NULL,
+    version integer DEFAULT 1 NOT NULL,
+    "integer" integer DEFAULT 1 NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: bulk_update_request_versions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.bulk_update_request_versions_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: bulk_update_request_versions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.bulk_update_request_versions_id_seq OWNED BY public.bulk_update_request_versions.id;
 
 
 --
@@ -3344,6 +3385,13 @@ ALTER TABLE ONLY public.bans ALTER COLUMN id SET DEFAULT nextval('public.bans_id
 
 
 --
+-- Name: bulk_update_request_versions id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.bulk_update_request_versions ALTER COLUMN id SET DEFAULT nextval('public.bulk_update_request_versions_id_seq'::regclass);
+
+
+--
 -- Name: bulk_update_requests id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -3902,6 +3950,14 @@ ALTER TABLE ONLY public.avoid_postings
 
 ALTER TABLE ONLY public.bans
     ADD CONSTRAINT bans_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: bulk_update_request_versions bulk_update_request_versions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.bulk_update_request_versions
+    ADD CONSTRAINT bulk_update_request_versions_pkey PRIMARY KEY (id);
 
 
 --
@@ -4655,6 +4711,20 @@ CREATE INDEX index_bans_on_expires_at ON public.bans USING btree (expires_at);
 --
 
 CREATE INDEX index_bans_on_user_id ON public.bans USING btree (user_id);
+
+
+--
+-- Name: index_bulk_update_request_versions_on_bulk_update_request_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_bulk_update_request_versions_on_bulk_update_request_id ON public.bulk_update_request_versions USING btree (bulk_update_request_id);
+
+
+--
+-- Name: index_bulk_update_request_versions_on_updater_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_bulk_update_request_versions_on_updater_id ON public.bulk_update_request_versions USING btree (updater_id);
 
 
 --
@@ -7363,6 +7433,14 @@ ALTER TABLE ONLY public.avoid_postings
 
 
 --
+-- Name: bulk_update_request_versions fk_rails_b49b8f1b85; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.bulk_update_request_versions
+    ADD CONSTRAINT fk_rails_b49b8f1b85 FOREIGN KEY (updater_id) REFERENCES public.users(id);
+
+
+--
 -- Name: post_deletion_reasons fk_rails_b52713e204; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -7683,6 +7761,14 @@ ALTER TABLE ONLY public.staff_notes
 
 
 --
+-- Name: bulk_update_request_versions fk_rails_eda9d99712; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.bulk_update_request_versions
+    ADD CONSTRAINT fk_rails_eda9d99712 FOREIGN KEY (bulk_update_request_id) REFERENCES public.bulk_update_requests(id);
+
+
+--
 -- Name: forum_posts fk_rails_eef947df00; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -7750,11 +7836,12 @@ ALTER TABLE ONLY public.help_pages
 -- PostgreSQL database dump complete
 --
 
-\unrestrict POa8coUKFHeRxpBFFEINeyJsUe4wk1fMgtpAaYP90fNXgcd34gAeyalxWrYbsF6
+\unrestrict sQHPcCbVPkhttALmNxqVWrXyO0dbd8VyqS8EcwMbc3JfLFWAfq4fP3KeC3yb7V5
 
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20251024042421'),
 ('20251024004655'),
 ('20251023230141'),
 ('20251022125008'),

@@ -4,11 +4,17 @@ class BulkUpdateRequest < ApplicationRecord
   belongs_to_user(:creator, ip: true, clones: :updater)
   belongs_to_user(:updater, ip: true)
   belongs_to_user(:approver, optional: true)
+  revertible do |version|
+    self.script = version.script
+    self.status = version.status
+    self.title = version.title
+  end
   attr_accessor(:reason, :skip_forum, :should_validate)
   attr_writer(:context)
 
   belongs_to(:forum_topic, optional: true)
   belongs_to(:forum_post, optional: true)
+  has_many(:versions, -> { order(id: :asc) }, class_name: "BulkUpdateRequestVersion", dependent: :destroy)
 
   validates(:script, presence: true)
   validates(:title, presence: { if: ->(rec) { rec.forum_topic_id.blank? } })
@@ -20,6 +26,8 @@ class BulkUpdateRequest < ApplicationRecord
   validates(:reason, length: { minimum: 5, maximum: -> { Config.instance.forum_post_max_size } }, on: :create, unless: :skip_forum)
   before_validation(:normalize_text)
   after_create(:create_forum_topic)
+  after_create(:create_version)
+  after_update(:create_version, if: :saved_change_to_watched_attributes?)
 
   scope(:pending_first, -> { order(case_order(:status, [nil, "queued", "processing", "pending", "approved", "rejected"])) })
   scope(:pending, -> { where(status: "pending") })
@@ -146,9 +154,20 @@ class BulkUpdateRequest < ApplicationRecord
     end
   end
 
+  module VersionMethods
+    def create_version
+      BulkUpdateRequestVersion.queue(self, updater.resolvable(updater_ip_addr))
+    end
+
+    def saved_change_to_watched_attributes?
+      saved_change_to_script? || saved_change_to_status? || saved_change_to_title?
+    end
+  end
+
   extend(SearchMethods)
   include(ApprovalMethods)
   include(ValidationMethods)
+  include(VersionMethods)
 
   concerning(:EmbeddedText) do
     class_methods do

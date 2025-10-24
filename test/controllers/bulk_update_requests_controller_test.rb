@@ -141,5 +141,31 @@ class BulkUpdateRequestsControllerTest < ActionDispatch::IntegrationTest
         assert_access(User::Levels::ADMIN, success_response: :redirect) { |user| post_auth(approve_bulk_update_request_path(create(:bulk_update_request, skip_forum: true)), user) }
       end
     end
+
+    context("revert action") do
+      setup do
+        @bulk_update_request = create(:bulk_update_request, creator: @user)
+        @bulk_update_request.update_with(@user, script: "alias foo -> bar")
+      end
+
+      should("revert to a previous version") do
+        version = @bulk_update_request.versions.first
+        assert_match(/\Aalias aaa -> bbb/, version.script)
+        put_auth(revert_bulk_update_request_path(@bulk_update_request), @user, params: { version_id: version.id })
+        assert_match(/\Aalias aaa -> bbb/, @bulk_update_request.reload.script)
+      end
+
+      should("not allow reverting to a previous version of another bulk_update_request") do
+        @bulk_update_request2 = create(:bulk_update_request)
+        put_auth(revert_bulk_update_request_path(@bulk_update_request), @user, params: { version_id: @bulk_update_request2.versions.first.id })
+        @bulk_update_request.reload
+        assert_not_equal(@bulk_update_request.title, @bulk_update_request2.title)
+        assert_response(:missing)
+      end
+
+      should("restrict access") do
+        assert_access(User::Levels::ADMIN, success_response: :redirect) { |user| put_auth(revert_bulk_update_request_path(@bulk_update_request), user, params: { version_id: @bulk_update_request.versions.first.id }) }
+      end
+    end
   end
 end
