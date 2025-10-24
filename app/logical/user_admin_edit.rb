@@ -15,6 +15,7 @@ class UserAdminEdit
     [:force_name_change, nil, :is_admin?],
     [:enable_privacy_mode, nil, :is_admin?],
     [:email_verified, nil, :is_owner?],
+    [:age_verified, nil, :is_owner?],
   ].freeze
 
   def initialize(user, promoter, ip_addr, options)
@@ -73,10 +74,13 @@ class UserAdminEdit
     return unless promoter.is_owner?
     return if !options.key?(:email) || user.email == options[:email]
     user.email = options[:email]
+    user.validate_email_format = true
   end
 
   def apply
     User.transaction do
+      user.updater = promoter.resolvable(ip_addr)
+      user.is_admin_edit = true
       apply_preferences
       apply_level
       apply_name
@@ -84,11 +88,7 @@ class UserAdminEdit
       apply_email
       raise(ActiveRecord::Rollback) if invalid?
 
-      user.updater = promoter.resolvable(ip_addr)
-      user.is_admin_edit = true
-      user.validate_email_format = true
       user.save
-      raise(ActiveRecord::Rollback) if invalid?
     end
     valid?
   end

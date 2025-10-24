@@ -58,11 +58,16 @@
           <%= link_to_enclosed_if(policy(EditHistory).index?, "edits", edit_histories_path(search: { versionable_type: "Comment", user_id: user.id })) %>
         </span>
 
-        <% if CurrentUser.user.id == user.id || CurrentUser.user.is_janitor? %>
+        <% if CurrentUser.user.id == user.id || CurrentUser.user.is_staff? %>
           <% if presenter.previous_names(self).present? %>
             <span>Previous Names</span>
             <span><%= presenter.previous_names(self) %> -> <%= user.name %></span>
           <% end %>
+        <% end %>
+
+        <% if CurrentUser.user.is_staff? %>
+          <span>Age Verified</span>
+          <span><%= presenter.age_verified(self) %></span>
         <% end %>
       </div>
 

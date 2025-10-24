@@ -37,6 +37,14 @@ class StaffAuditLog < ApplicationRecord
       text: ->(log) { "Forced a name change for #{link_to_user(log.target_id)}" },
       json: %i[target_id],
     },
+    age_verified:               {
+      text: ->(log) { "Marked #{link_to_user(log.target_id)} as age verified" },
+      json: %i[target_id],
+    },
+    age_unverified:             {
+      text: ->(log) { "Marked #{link_to_user(log.target_id)} as not age verified" },
+      json: %i[target_id],
+    },
     hide_pending_posts_for:     {
       text: ->(log) { "Hid pending posts for #{log.duration} #{'hour'.pluralize(duration)}#{" (#{duration / 24} days)" if log.duration >= 24}" },
       json: %i[duration],
@@ -136,11 +144,11 @@ class StaffAuditLog < ApplicationRecord
 
     ### Destroyed Post Notifications ###
     enable_post_notifications:  {
-      text: ->(log) { "Enabled re-upload notifications for \"destroyed post ##{log.post_id}\":#{h.admin_destroyed_post_path(id: post_id)}" },
+      text: ->(log) { "Enabled re-upload notifications for \"destroyed post ##{log.post_id}\":#{h.admin_destroyed_post_path(id: log.post_id)}" },
       json: %i[destroyed_post_id post_id],
     },
     disable_post_notifications: {
-      text: ->(log) { "Disabled re-upload notifications for \"destroyed post ##{log.post_id}\":#{h.admin_destroyed_post_path(id: post_id)}" },
+      text: ->(log) { "Disabled re-upload notifications for \"destroyed post ##{log.post_id}\":#{h.admin_destroyed_post_path(id: log.post_id)}" },
       json: %i[destroyed_post_id post_id],
     },
 

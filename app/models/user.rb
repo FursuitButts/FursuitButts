@@ -118,6 +118,7 @@ class User < ApplicationRecord
     UNIQUE_VIEWS                     = pref(1 << 29)
     FORUM_UNREAD_BUBBLE              = pref(1 << 30, private: false)
     FORUM_UNREAD_ITALIC              = pref(1 << 31, private: false)
+    AGE_VERIFIED                     = pref(1 << 32, settable: false, private: false)
 
     def self.map
       constants.to_h { |name| [name.to_s.downcase, const_get(name)] }
@@ -153,11 +154,16 @@ class User < ApplicationRecord
     end
   end
 
-  include(FemboyFans::HasBitFlags)
   has_bit_flags(Preferences.map, field: "bit_prefs")
 
   def prefs_list
     Preferences.to_list(bit_prefs)
+  end
+
+  def age_verified_blame
+    Cache.fetch("avb:#{id}", expires_in: 1.hour) do
+      StaffAuditLog.where(action: :age_verified).where("(values->>'target_id')::integer = ?", id).order(id: :desc).first&.user
+    end
   end
 
   attr_accessor(:password, :old_password, :validate_email_format, :is_admin_edit)
@@ -237,6 +243,8 @@ class User < ApplicationRecord
   has_many(:user_events)
 
   scope(:has_blacklisted_tag, ->(name) { where.regex(blacklisted_tags: "(^| )[~-]?#{Regexp.escape(name)}( |$)", flags: "ni") })
+  scope(:email_verified, -> { where.has_bits(bit_prefs: Preferences::EMAIL_VERIFIED) })
+  scope(:not_email_verified, -> { where.not_has_bits(bit_prefs: Preferences::EMAIL_VERIFIED) })
 
   belongs_to(:avatar, class_name: "Post", optional: true)
   accepts_nested_attributes_for(:dmail_filter)
@@ -1126,19 +1134,23 @@ class User < ApplicationRecord
         ModAction.log!(updater, :user_upload_limit_change, self, old_upload_limit: base_upload_limit_before_last_save, upload_limit: base_upload_limit, user_id: id)
       end
 
-      if saved_change_to_title?
+      if saved_change_to_title? && (title_was.strip != title.strip)
         StaffAuditLog.log!(updater, :user_title_change, target_id: id, title: title)
       end
 
-      if force_name_change_was != force_name_change && force_name_change?
+      if saved_change_to_force_name_change? && force_name_change?
         StaffAuditLog.log!(updater, :force_name_change, target_id: id)
+      end
+
+      if saved_change_to_age_verified?
+        StaffAuditLog.log!(updater, age_verified? ? :age_verified : :age_unverified, target_id: id)
       end
 
       if bit_prefs != bit_prefs_before_last_save
         added = []
         removed = []
         UserAdminEdit::PREFERENCES.select { |p| p.second.present? }.each do |key, name|
-          next if send(key) == send("#{key}_was")
+          next unless send("saved_change_to_#{key}?")
           if send(key)
             added << name
           else
@@ -1151,11 +1163,11 @@ class User < ApplicationRecord
         end
       end
 
-      if level != level_before_last_save
+      if saved_change_to_level?
         ModAction.log!(updater, :user_level_change, self, user_id: id, level: level_string, old_level: level_string_was)
       end
 
-      log_name_change if name != name_before_last_save
+      log_name_change(updater) if saved_change_to_name?
     end
   end
 
@@ -1298,14 +1310,6 @@ class User < ApplicationRecord
 
   def clear_favorites
     ClearUserFavoritesJob.perform_later(self)
-  end
-
-  def self.email_verified
-    where("bit_prefs & :value = :value", { value: Preferences::EMAIL_VERIFIED })
-  end
-
-  def self.email_not_verified
-    where("bit_prefs & :value != :value", { value: Preferences::EMAIL_VERIFIED })
   end
 
   def self.upload_notifications_options

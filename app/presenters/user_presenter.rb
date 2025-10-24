@@ -175,7 +175,7 @@ class UserPresenter
   end
 
   def approval_count(template)
-    template.link_to(Post.where("approver_id = ?", user.id).count, template.posts_path(tags: "approver:#{user.name}"))
+    template.link_to(Post.where(approver_id: user.id).count, template.posts_path(tags: "approver:#{user.name}"))
   end
 
   def feedbacks
@@ -227,6 +227,13 @@ class UserPresenter
         category_id: tag.category,
       }
     end
+  end
+
+  def age_verified(template)
+    return "No" unless user.age_verified?
+    blame = user.age_verified_blame
+    return "Yes" if blame.blank?
+    "Yes, by #{template.link_to_user(blame)}".html_safe
   end
 
   def policy

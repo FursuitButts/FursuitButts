@@ -38,7 +38,6 @@ class Post < ApplicationRecord
     end
   end
 
-  include(FemboyFans::HasBitFlags)
   has_bit_flags(Flags.map)
 
   before_validation(:merge_old_changes)
