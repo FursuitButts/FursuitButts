@@ -3,16 +3,18 @@
 <% is_self = @user == CurrentUser.user %>
 <h1>Followed Tags<%= ": #{link_to_user(@user)}".html_safe unless is_self %></h1>
 
-<%= table_for(@tags) do |t| %>
-  <% t.column("Tag") do |tag| %>
-    <%= link_to(tag.tag_name, posts_path(tags: tag.tag_name)) %>
+<%= table_for(@followed_tags) do |t| %>
+  <% t.column("Tag") do |follow| %>
+    <span class="category-<%= follow.tag.category %>">
+      <%= link_to(follow.tag_name, posts_path(tags: follow.tag_name)) %>
+    </span>
   <% end %>
   <% if is_self %>
-    <% t.column("Followed At", width: "10%") do |tag| %>
-      <%= compact_time(tag.created_at) %>
+    <% t.column("Followed At", width: "10%") do |follow| %>
+      <%= compact_time(follow.created_at) %>
     <% end %>
-    <% t.column("Updated At", width: "10%") do |tag| %>
-      <%= compact_time(tag.updated_at) %>
+    <% t.column("Updated At", width: "10%") do |follow| %>
+      <%= compact_time(follow.updated_at) %>
     <% end %>
     <% t.column(width: "10%") do |tag| %>
       <%= link_to("Unfollow", unfollow_tag_path(tag.tag), method: :put) %>
@@ -20,7 +22,7 @@
   <% end %>
 <% end %>
 
-<%= numbered_paginator(@tags) %>
+<%= numbered_paginator(@followed_tags) %>
 
 <% content_for(:page_title) do %>
   Followed Tags

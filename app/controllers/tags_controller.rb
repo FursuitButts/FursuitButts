@@ -32,10 +32,10 @@ class TagsController < ApplicationController
     @user = User.find(params[:user_id] || CurrentUser.user.id)
     raise(User::PrivacyModeError) if @user.hide_followed_tags?(CurrentUser.user)
 
-    @tags = @user.followed_tags
+    @followed_tags = @user.followed_tags.includes(:tag)
                  .search_current(search_params(Tag))
                  .paginate(params[:page], limit: params[:limit])
-    respond_with(@tags.map(&:tag))
+    respond_with(@followed_tags.map(&:tag))
   end
 
   def followers
