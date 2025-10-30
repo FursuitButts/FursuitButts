@@ -28,6 +28,7 @@ class IpBan < ApplicationRecord
       super
         .field(:reason)
         .custom(:ip_addr, ->(q, v) { q.where.inet_contains_or_equals(ip_addr: v) }) # field would use contained_within_or_equals
+        .field(:creator_ip_addr)
         .association(:creator)
     end
   end

@@ -90,6 +90,8 @@ class AvoidPosting < ApplicationRecord
         .field(:staff_notes)
         .field(:ip_addr, :creator_ip_addr)
         .field(:updater_ip_addr)
+        .association(:creator)
+        .association(:updater)
         .association(:artist)
     end
 

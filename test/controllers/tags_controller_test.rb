@@ -43,6 +43,34 @@ class TagsControllerTest < ActionDispatch::IntegrationTest
       should("restrict access") do
         assert_access(User::Levels::ANONYMOUS) { |user| get_auth(tags_path, user) }
       end
+
+      context("search parameters") do
+        subject { tags_path }
+        setup do
+          TagVersion.delete_all
+          Tag.delete_all
+          @creator = create(:user)
+          @admin = create(:admin_user)
+          @general_tag = create(:tag, name: "foo", category: TagCategory.general, post_count: 3, creator: @creator, creator_ip_addr: "127.0.0.2", is_locked: false)
+          @artist_tag = create(:tag, name: "bar", category: TagCategory.artist, post_count: 5, creator: @creator, creator_ip_addr: "127.0.0.2", is_locked: true)
+          @copyright_tag = create(:tag, name: "baz", category: TagCategory.copyright, post_count: 5, creator: @creator, creator_ip_addr: "127.0.0.2", is_locked: false)
+          @wiki = create(:wiki_page, title: "foo")
+          @artist = create(:artist, name: "bar")
+        end
+
+        assert_search_param(:is_locked, "true", -> { [@artist_tag] })
+        assert_search_param(:category, TagCategory.general, -> { [@general_tag] })
+        assert_search_param(:category, "#{TagCategory.general},#{TagCategory.artist}", -> { [@artist_tag, @general_tag] })
+        assert_search_param(:name, "foo", -> { [@general_tag] })
+        assert_search_param(:name_matches, "bar", -> { [@artist_tag] })
+        assert_search_param(:fuzzy_name_matches, "ba", -> { [@copyright_tag, @artist_tag] })
+        assert_search_param(:has_wiki, "true", -> { [@general_tag] })
+        assert_search_param(:has_artist, "true", -> { [@artist_tag] })
+        assert_search_param(:creator_id, -> { @creator.id }, -> { [@copyright_tag, @artist_tag, @general_tag] })
+        assert_search_param(:creator_name, -> { @creator.name }, -> { [@copyright_tag, @artist_tag, @general_tag] })
+        assert_search_param(:ip_addr, "127.0.0.2", -> { [@copyright_tag, @artist_tag, @general_tag] }, -> { @admin })
+        assert_shared_search_params(-> { [@copyright_tag, @artist_tag, @general_tag] })
+      end
     end
 
     context("show action") do

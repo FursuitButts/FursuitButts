@@ -152,12 +152,13 @@ class Tag < ApplicationRecord
     end
 
     def create_version
-      TagVersion.create(tag_id:        id,
-                        updater:       updater,
-                        category:      category.to_i,
-                        is_locked:     is_locked?,
-                        is_deprecated: is_deprecated?,
-                        reason:        reason || "")
+      TagVersion.create(tag_id:          id,
+                        updater:         updater,
+                        updater_ip_addr: updater_ip_addr,
+                        category:        category.to_i,
+                        is_locked:       is_locked?,
+                        is_deprecated:   is_deprecated?,
+                        reason:          reason || "")
     end
 
     TagCategory.categories.map(&:name).each do |category|
@@ -300,8 +301,9 @@ class Tag < ApplicationRecord
       super
         .field(:is_locked)
         .field(:category, multi: true)
-        .custom(:name, ->(q, v) { q.name_matches(v) })
-        .custom(:name_matches, ->(q, v) { q.where.like(name: normalize_name(v)) })
+        .field(:ip_addr, :creator_ip_addr)
+        .field(:name, normalize: Tag.method(:normalize_name))
+        .field(:name_matches, :name, normalize: Tag.method(:normalize_name))
         # ref: https://www.postgresql.org/docs/current/static/pgtrgm.html#idm46428634524336
         .custom(:fuzzy_name_matches, ->(q, v) { q.where("tags.name % ?", v) })
         .present(:has_wiki, "wiki_pages.id") { |q| q.left_outer_joins(:wiki_page) }
@@ -318,22 +320,6 @@ class Tag < ApplicationRecord
 
     def name_matches(name)
       where.like(name: normalize_name(name))
-    end
-
-    def has_wiki_query(q, value)
-      if value.to_s.truthy?
-        q.joins(:wiki_page).where.not("wiki_pages.id": nil)
-      else
-        q.left_outer_joins(:wiki_page).where("wiki_pages.id": nil)
-      end
-    end
-
-    def has_artist_query(q, value)
-      if value.to_s.truthy?
-        q.joins(:artist).where.not("artists.id": nil)
-      else
-        q.left_outer_joins(:artist).where("artists.id": nil)
-      end
     end
 
     def search(params, user)

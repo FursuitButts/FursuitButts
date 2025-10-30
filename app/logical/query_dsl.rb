@@ -30,12 +30,19 @@ class QueryDSL
       association ||= param
       param = [:"#{param}_id", :"#{param}_name"]
     end
-    association = association.to_sym
-    associations = relation.reflect_on_all_associations(:belongs_to).map(&:name)
-    if associations.include?(association)
-      column = association_column(association)
-    else
-      column = association
+
+    case association
+    when Symbol, String
+      association = association.to_sym
+      associations = relation.reflect_on_all_associations(:belongs_to).map(&:name)
+      if associations.include?(association)
+        column = association_column(association)
+      else
+        column = association
+      end
+    when Array
+      column = association.first
+      association = association.second
     end
     field(param.first, column, not: binding.local_variable_get(:not), &) if param.first
     custom(param.second, ->(q, v) { q.user_name_matches(association, v) }, not: binding.local_variable_get(:not), &) if param.second

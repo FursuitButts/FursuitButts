@@ -428,9 +428,8 @@ class Artist < ApplicationRecord
       return all if value.nil?
       normalized_name = normalize_name(value)
       normalized_name = "*#{normalized_name}*" unless normalized_name.include?("*")
-      # can't call any_other_name_like because it would make the OR structurally incompatible
-      q = unnest("other_names")
-      q.where("other_name LIKE ? ESCAPE E'\\\\'", normalized_name.to_escaped_for_sql_like).or(q.where.like(name: normalized_name))
+      exists = Arel::Nodes::Exists.new(select("1").from(unnest("other_names", type: nil)).where("other_name LIKE ? ESCAPE E'\\\\'", value.to_escaped_for_sql_like).arel.ast)
+      where(exists).or(where.like(name: normalized_name))
     end
 
     def url_matches(query)
@@ -445,7 +444,7 @@ class Artist < ApplicationRecord
     def any_name_or_url_matches(query)
       return all if query.nil?
       if query =~ %r{\Ahttps?://}i
-        text_attribute_matches(:url, query, convert_to_wildcard: true)
+        url_matches(query)
       else
         any_name_matches(query)
       end
@@ -463,6 +462,7 @@ class Artist < ApplicationRecord
     def query_dsl
       super
         .field(:name)
+        .field(:ip_addr, :creator_ip_addr)
         .custom(:any_other_name_matches, ->(q, v) { q.any_other_name_like(v) }) # TODO: remove this, the previous regex method was never used anywhere
         .custom(:any_other_name_like, ->(q, v) { q.any_other_name_like(v) })
         .custom(:any_name_matches, ->(q, v) { q.any_name_matches(v) })

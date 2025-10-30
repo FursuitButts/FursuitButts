@@ -73,6 +73,7 @@ class Upload < ApplicationRecord
         .field(:parent_id)
         .field(:post_id)
         .field(:status, "upload_media_assets.status") { |q| q.joins(:upload_media_asset) }
+        .field(:ip_addr, :uploader_ip_addr)
         .present(:has_post, :post_id)
         .custom(:post_tags_match, ->(q, v, user) { q.post_tags_match(v, user) })
         .field(:backtrace, like: true)

@@ -43,7 +43,9 @@ class WikiPagePolicy < ApplicationPolicy
   end
 
   def permitted_search_params
-    super + %i[title title_matches body_matches creator_id creator_name updater_id updater_name protection_level linked_to not_linked_to] + nested_search_params(creator: User, updater: User)
+    params = super + %i[title title_matches body_matches creator_id creator_name updater_id updater_name protection_level parent linked_to not_linked_to] + nested_search_params(creator: User, updater: User)
+    params += %i[ip_addr updater_ip_addr] if can_search_ip_addr?
+    params
   end
 
   def api_attributes

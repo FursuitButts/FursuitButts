@@ -201,6 +201,43 @@ class ActionDispatch::IntegrationTest # rubocop:disable Style/ClassAndModuleChil
       end
     end
   end
+
+  def self.assert_search_param(param, value, records_getter, user_getter = nil, options = {})
+    should("work for #{param}=#{value}") do
+      include = options[:include]
+      ignore = options[:ignore]
+      value = instance_exec(&value) if value.is_a?(Proc)
+      records = instance_exec(&records_getter)
+      if user_getter.is_a?(Hash) # ruby shenanigans with kwargs and optional arguments
+        include ||= user_getter[:include]
+        ignore ||= user_getter[:ignore]
+        user_getter = nil
+      end
+      user_getter ||= -> { create(:user) }
+      user = instance_exec(&user_getter)
+      get_auth(subject, user, params: { search: { param => value }, format: :json })
+      expected = records.map { |r| CurrentUser.scoped(user) { r.as_json(user: user, include: include) } } # rubocop:disable Local/CurrentUserOutsideOfRequests
+      expected = expected.map { |r| r.without(*ignore) } if ignore&.any?
+      actual = @response.parsed_body.map { |r| r.try(:without, *ignore) }
+      actual = actual.map { |r| r.without(*ignore) } if ignore&.any?
+      assert_equal(expected, actual)
+    end
+  end
+
+  def self.assert_shared_search_params(records_getter, user_getter = nil, params = nil, options = {})
+    if user_getter.is_a?(Hash)
+      options = user_getter
+      user_getter = nil
+    end
+    if params.is_a?(Hash)
+      options = params
+      params = nil
+    end
+    params ||= %i[id created_at updated_at]
+    assert_search_param(:id, -> { instance_exec(&records_getter).map(&:id).join(",") }, records_getter, user_getter, options) if params.include?(:id)
+    assert_search_param(:created_at, -> { instance_exec(&records_getter).map(&:created_at).map(&:to_date).uniq.join(",") }, records_getter, user_getter, options) if params.include?(:created_at)
+    assert_search_param(:updated_at, -> { instance_exec(&records_getter).map(&:updated_at).map(&:to_date).uniq.join(",") }, records_getter, user_getter, options) if params.include?(:updated_at)
+  end
 end
 
 module ActionView

@@ -62,6 +62,36 @@ class BulkUpdateRequestsControllerTest < ActionDispatch::IntegrationTest
       should("restrict access") do
         assert_access(User::Levels::ANONYMOUS) { |user| get_auth(bulk_update_requests_path, user) }
       end
+
+      context("search parameters") do
+        subject { bulk_update_requests_path }
+        setup do
+          BulkUpdateRequestVersion.delete_all
+          BulkUpdateRequest.delete_all
+          @creator = create(:user)
+          @updater = create(:user)
+          @approver = create(:user)
+          @admin = create(:admin_user)
+          @forum_topic = create(:forum_topic, creator: @creator)
+          @forum_post = @forum_topic.posts.first
+          @bulk_update_request = create(:bulk_update_request, creator: @creator, creator_ip_addr: "127.0.0.2", updater: @updater, updater_ip_addr: "127.0.0.3", approver: @approver, status: "approved", title: "foo", script: "alias bar -> baz", forum_topic: @forum_topic, forum_post: @forum_post, skip_forum: true)
+        end
+
+        assert_search_param(:forum_topic_id, -> { @forum_topic.id }, -> { [@bulk_update_request] })
+        assert_search_param(:forum_post_id, -> { @forum_post.id }, -> { [@bulk_update_request] })
+        assert_search_param(:status, "approved", -> { [@bulk_update_request] })
+        assert_search_param(:title_matches, "foo", -> { [@bulk_update_request] })
+        assert_search_param(:script_matches, "bar", -> { [@bulk_update_request] })
+        assert_search_param(:creator_ip_addr, "127.0.0.2", -> { [@bulk_update_request] }, -> { @admin })
+        assert_search_param(:updater_ip_addr, "127.0.0.3", -> { [@bulk_update_request] }, -> { @admin })
+        assert_search_param(:creator_id, -> { @creator.id }, -> { [@bulk_update_request] })
+        assert_search_param(:creator_name, -> { @creator.name }, -> { [@bulk_update_request] })
+        assert_search_param(:updater_id, -> { @updater.id }, -> { [@bulk_update_request] })
+        assert_search_param(:updater_name, -> { @updater.name }, -> { [@bulk_update_request] })
+        assert_search_param(:approver_id, -> { @approver.id }, -> { [@bulk_update_request] })
+        assert_search_param(:approver_name, -> { @approver.name }, -> { [@bulk_update_request] })
+        assert_shared_search_params(-> { [@bulk_update_request] })
+      end
     end
 
     context("destroy action") do

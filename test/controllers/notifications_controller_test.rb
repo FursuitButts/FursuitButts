@@ -17,6 +17,18 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
       should("restrict access") do
         assert_access(User::Levels::REJECTED) { |user| get_auth(notifications_path, user) }
       end
+
+      context("search parameters") do
+        subject { notifications_path }
+        setup do
+          Notification.delete_all
+          @user = create(:user)
+          @notification = create(:notification, category: "default", user: @user)
+        end
+
+        assert_search_param(:category, "default", -> { [@notification] }, -> { @user })
+        assert_shared_search_params(-> { [@notification] }, -> { @user })
+      end
     end
 
     context("show action") do

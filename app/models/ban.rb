@@ -11,7 +11,7 @@ class Ban < ApplicationRecord
   after_destroy(:log_delete)
   belongs_to_user(:user)
   belongs_to_user(:banner, ip: true, clones: :updater, aliases: :creator) # TODO: convert to creator
-  resolvable(:updater)
+  resolvable(:updater) # TODO: store updater?
   resolvable(:destroyer)
   validate(:user_is_inferior)
   validates(:reason, :duration, presence: true)

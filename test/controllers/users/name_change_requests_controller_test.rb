@@ -84,6 +84,30 @@ module Users
           should("restrict access") do
             assert_access(User::Levels::MODERATOR) { |user| get_auth(user_name_change_requests_path, user) }
           end
+
+          context("search parameters") do
+            subject { user_name_change_requests_path }
+            setup do
+              UserNameChangeRequest.delete_all
+              @user = create(:user)
+              @creator = create(:user)
+              @approver = create(:user)
+              @mod = create(:moderator_user)
+              @admin = create(:admin_user)
+              @user_name_change_request = create(:user_name_change_request, user: @user, creator: @creator, creator_ip_addr: "127.0.0.2", approver: @approver, desired_name: "foo")
+            end
+
+            assert_search_param(:original_name, -> { @user.name }, -> { [@user_name_change_request] }, -> { @mod })
+            assert_search_param(:desired_name, "foo", -> { [@user_name_change_request] }, -> { @mod })
+            assert_search_param(:user_id, -> { @user.id }, -> { [@user_name_change_request] }, -> { @mod })
+            assert_search_param(:user_name, -> { @user.name }, -> { [@user_name_change_request] }, -> { @mod })
+            assert_search_param(:creator_id, -> { @creator.id }, -> { [@user_name_change_request] }, -> { @mod })
+            assert_search_param(:creator_name, -> { @creator.name }, -> { [@user_name_change_request] }, -> { @mod })
+            assert_search_param(:ip_addr, "127.0.0.2", -> { [@user_name_change_request] }, -> { @admin })
+            assert_search_param(:approver_id, -> { @approver.id }, -> { [@user_name_change_request] }, -> { @mod })
+            assert_search_param(:approver_name, -> { @approver.name }, -> { [@user_name_change_request] }, -> { @mod })
+            assert_shared_search_params(-> { [@user_name_change_request] }, -> { @mod })
+          end
         end
       end
     end

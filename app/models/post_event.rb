@@ -90,6 +90,7 @@ class PostEvent < ApplicationRecord
         .custom(:action, method(:action_query).to_proc)
         .custom(:creator_id, method(:creator_id_query).to_proc)
         .custom(:creator_name, method(:creator_name_query).to_proc)
+        .field(:ip_addr, :creator_ip_addr)
         # TODO: We need access control/blocks for associations
         # .association(:creator)
         .association(:post)

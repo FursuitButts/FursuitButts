@@ -25,6 +25,32 @@ class PoolsControllerTest < ActionDispatch::IntegrationTest
       should("restrict access") do
         assert_access(User::Levels::ANONYMOUS) { |user| get_auth(pools_path, user) }
       end
+
+      context("search parameters") do
+        subject { pools_path }
+        setup do
+          PoolVersion.delete_all
+          Pool.delete_all
+          @creator = create(:user)
+          @admin = create(:admin_user)
+          @wiki = create(:wiki_page, title: "bar")
+          @post = create(:post, tag_string: "artist:baz")
+          @pool = create(:pool, creator: @creator, creator_ip_addr: "127.0.0.2", name: "foo", description: "[[bar]] qux", category: "series", is_ongoing: true, post_ids: [@post.id])
+        end
+
+        assert_search_param(:is_ongoing, "true", -> { [@pool] })
+        assert_search_param(:category, "series", -> { [@pool] })
+        assert_search_param(:name_matches, "foo", -> { [@pool] })
+        assert_search_param(:description_matches, "qux", -> { [@pool] })
+        assert_search_param(:any_artist_name_matches, "baz", -> { [@pool] })
+        assert_search_param(:any_artist_name_like, "baz", -> { [@pool] })
+        assert_search_param(:linked_to, "bar", -> { [@pool] })
+        assert_search_param(:not_linked_to, "baz", -> { [@pool] })
+        assert_search_param(:creator_id, -> { @creator.id }, -> { [@pool] })
+        assert_search_param(:creator_name, -> { @creator.name }, -> { [@pool] })
+        assert_search_param(:ip_addr, "127.0.0.2", -> { [@pool] }, -> { @admin })
+        assert_shared_search_params(-> { [@pool] })
+      end
     end
 
     context("show action") do

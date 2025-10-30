@@ -37,10 +37,10 @@ class ArtistUrl < ApplicationRecord
     def query_dsl
       super
         .field(:artist_id)
+        .field(:artist_name, "artists.name") { |q| q.joins(:artist) }
         .field(:is_active)
         .field(:url)
         .field(:normalized_url)
-        .field(:artist_name, "artists.name") { |q| q.joins(:artist) }
         .field(:url_matches, :url, wildcard: true)
         .field(:normalized_url_matches, :normalized_url, wildcard: true)
         .association(:artist)

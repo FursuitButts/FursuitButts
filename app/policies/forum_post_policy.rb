@@ -64,7 +64,9 @@ class ForumPostPolicy < ApplicationPolicy
   end
 
   def permitted_search_params
-    super + %i[creator_id creator_name topic_id topic_title_matches body_matches topic_category_id is_hidden linked_to not_linked_to] + nested_search_params(creator: User, topic: ForumTopic)
+    params = super + %i[creator_id creator_name updater_id updater_name topic_id topic_title_matches body_matches topic_category_id is_hidden linked_to not_linked_to] + nested_search_params(creator: User, topic: ForumTopic)
+    params += %i[ip_addr updater_ip_addr] if can_search_ip_addr?
+    params
   end
 
   def api_attributes

@@ -6,7 +6,7 @@
   <%= f.user(:accused) %>
   <%= f.user(:claimant) %>
   <%= f.input(:reason) %>
-  <%= f.input(:model_type, label: "Type", collection: Ticket::MODEL_TYPES.index_by { |k| k }.to_a, include_blank: true) %>
+  <%= f.input(:model_type, label: "Type", collection: Ticket::MODELS.types.index_by { |k| k }.to_a, include_blank: true) %>
   <%= f.input(:status, collection: [
     ["Pending + Unclaimed", "pending_unclaimed"],
     ["Pending + Claimed", "pending_claimed"],

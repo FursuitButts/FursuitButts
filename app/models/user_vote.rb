@@ -58,7 +58,9 @@ class UserVote < ApplicationRecord
         .field(:score)
         .custom(:timeframe, ->(q, v) { q.where.gteq(updated_at: v.to_i.days.ago) })
         .custom(:duplicates_only, method(:duplicates_only_query).to_proc)
-        .user(:"#{model_type}_creator", "#{model.table_name}.#{model_creator_column}_id") { |q| q.joins(model_type) }
+        # TODO: this join is used for both sides despite only being needed for the id side
+        # FIXME: the logic around this is a mess, and I'm frankly amazed it works
+        .user(:"#{model_type}_creator", ["#{model.table_name}.#{model_creator_column}_id", { model_type => model_creator_column }]) { |q| q.joins(model_type) }
         .association(:user)
         .association(model_type)
     end

@@ -114,7 +114,7 @@ class TagRelationship < ApplicationRecord
     end
 
     def join_consequent
-      join_as(:consequent_name, "consequent_name", Arel::Nodes::OuterJoin)
+      join_as(:consequent_tag, "consequent_tag", Arel::Nodes::OuterJoin)
     end
 
     def default_order
@@ -146,10 +146,13 @@ class TagRelationship < ApplicationRecord
       super
         .field(:antecedent_name, multi: true)
         .field(:consequent_name, multi: true)
+        .field(:ip_addr, :creator_ip_addr)
+        .field(:updater_ip_addr)
         .custom(:antecedent_tag_category, ->(q, v) { q.join_antecedent.where("antecedent_tag.category": v.split(",").map(&:to_i).compact_blank.first(Config.instance.max_multi_count)) })
         .custom(:consequent_tag_category, ->(q, v) { q.join_consequent.where("consequent_tag.category": v.split(",").map(&:to_i).compact_blank.first(Config.instance.max_multi_count)) })
         .custom(:name_matches, ->(q, v) { q.where.like(antecedent_name: v).or(q.where.like(consequent_name: v)) })
         .custom(:status, ->(q, v) { q.status_matches(v) })
+        .association(:updater)
         .association(:creator)
         .association(:approver)
     end

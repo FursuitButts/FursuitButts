@@ -22,7 +22,8 @@ class PostDisapproval < ApplicationRecord
       super
         .field(:post_id)
         .field(:message)
-        .field(:reason)
+        .field(:reason, like: true)
+        .field(:ip_addr, :user_ip_addr)
         .custom(:post_tags_match, ->(q, v, user) { q.post_tags_match(v, user) })
         .custom(:has_message, ->(q, v) { q.if(v, q.with_message).else(q.without_message) })
         .association(:user, :creator)

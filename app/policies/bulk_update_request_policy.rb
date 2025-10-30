@@ -33,7 +33,7 @@ class BulkUpdateRequestPolicy < ApplicationPolicy
   end
 
   def permitted_search_params
-    params = super + %i[creator_id creator_name approver_id approver_name forum_topic_id forum_post_id status title_matches script_matches] + nested_search_params(creator: User, approver: User)
+    params = super + %i[creator_id creator_name updater_id updater_name approver_id approver_name forum_topic_id forum_post_id status title_matches script_matches] + nested_search_params(creator: User, updater: User, approver: User)
     params += %i[creator_ip_addr updater_ip_addr] if can_search_ip_addr?
     params
   end

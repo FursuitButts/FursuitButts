@@ -4,6 +4,19 @@ require("test_helper")
 
 class SessionsControllerTest < ActionDispatch::IntegrationTest
   context("the sessions controller") do
+    context("index action") do
+      should("render") do
+        get_auth(user_sessions_path, create(:admin_user))
+        assert_response(:success)
+      end
+
+      should("restrict access") do
+        assert_access(User::Levels::ADMIN) { |user| get_auth(user_sessions_path, user) }
+      end
+
+      # we can't test session searching due to get_auth creating a session we can't account for
+    end
+
     context("new action") do
       should("render") do
         get(new_session_path)

@@ -43,6 +43,31 @@ module MediaAssets
         should("restrict access") do
           assert_access(User::Levels::MEMBER) { |user| get_auth(upload_media_assets_path, user) }
         end
+
+        context("search parameters") do
+          subject { upload_media_assets_path }
+          setup do
+            UploadMediaAsset.delete_all
+            @janitor = create(:janitor_user)
+            @creator = create(:user, created_at: 2.weeks.ago)
+            @admin = create(:admin_user)
+            @upload = create(:jpg_upload, creator: @creator, creator_ip_addr: "127.0.0.2")
+            @media_asset = @upload.media_asset
+            @media_asset.update(status_message: "foo")
+          end
+
+          assert_search_param(:checksum, "ecef68c44edb8a0d6a3070b5f8e8ee76", -> { [@media_asset] }, -> { @janitor })
+          assert_search_param(:md5, "ecef68c44edb8a0d6a3070b5f8e8ee76", -> { [@media_asset] }, -> { @janitor })
+          assert_search_param(:file_ext, "jpg", -> { [@media_asset] }, -> { @janitor })
+          assert_search_param(:pixel_hash, "01cb481ec7730b7cfced57ffa5abd196", -> { [@media_asset] }, -> { @janitor })
+          assert_search_param(:status, "active", -> { [@media_asset] }, -> { @janitor })
+          assert_search_param(:status_message_matches, "foo", -> { [@media_asset] }, -> { @janitor })
+          assert_search_param(:upload_id, -> { @upload.id }, -> { [@media_asset] }, -> { @janitor })
+          assert_search_param(:creator_id, -> { @creator.id }, -> { [@media_asset] }, -> { @janitor })
+          assert_search_param(:creator_name, -> { @creator.name }, -> { [@media_asset] }, -> { @janitor })
+          assert_search_param(:ip_addr, "127.0.0.2", -> { [@media_asset] }, -> { @admin })
+          assert_shared_search_params(-> { [@media_asset] }, -> { @janitor })
+        end
       end
 
       context("append action") do

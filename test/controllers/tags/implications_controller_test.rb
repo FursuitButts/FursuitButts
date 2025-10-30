@@ -127,6 +127,37 @@ module Tags
         should("restrict access") do
           assert_access(User::Levels::ANONYMOUS) { |user| get_auth(tag_implications_path, user) }
         end
+
+        context("search parameters") do
+          subject { tag_implications_path }
+          setup do
+            TagImplication.delete_all
+            @creator = create(:user)
+            @updater = create(:user)
+            @approver = create(:user)
+            @admin = create(:admin_user)
+            create(:tag, name: "foo", category: TagCategory.copyright)
+            create(:tag, name: "bar", category: TagCategory.artist)
+            @tag_implication = create(:tag_implication, creator: @creator, creator_ip_addr: "127.0.0.2", updater: @updater, updater_ip_addr: "127.0.0.3", approver: @approver, status: "active", antecedent_name: "foo", consequent_name: "bar")
+          end
+
+          assert_search_param(:antecedent_name, "foo", -> { [@tag_implication] })
+          assert_search_param(:consequent_name, "bar", -> { [@tag_implication] })
+          assert_search_param(:antecedent_tag_category, TagCategory.copyright, -> { [@tag_implication] })
+          assert_search_param(:consequent_tag_category, TagCategory.artist, -> { [@tag_implication] })
+          assert_search_param(:name_matches, "foo", -> { [@tag_implication] })
+          assert_search_param(:name_matches, "bar", -> { [@tag_implication] })
+          assert_search_param(:status, "active", -> { [@tag_implication] })
+          assert_search_param(:creator_id, -> { @creator.id }, -> { [@tag_implication] })
+          assert_search_param(:creator_name, -> { @creator.name }, -> { [@tag_implication] })
+          assert_search_param(:ip_addr, "127.0.0.2", -> { [@tag_implication] }, -> { @admin })
+          assert_search_param(:updater_id, -> { @updater.id }, -> { [@tag_implication] })
+          assert_search_param(:updater_name, -> { @updater.name }, -> { [@tag_implication] })
+          assert_search_param(:updater_ip_addr, "127.0.0.3", -> { [@tag_implication] }, -> { @admin })
+          assert_search_param(:approver_id, -> { @approver.id }, -> { [@tag_implication] })
+          assert_search_param(:approver_name, -> { @approver.name }, -> { [@tag_implication] })
+          assert_shared_search_params(-> { [@tag_implication] })
+        end
       end
 
       context("approve action") do

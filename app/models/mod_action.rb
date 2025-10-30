@@ -664,9 +664,10 @@ class ModAction < ApplicationRecord
   module SearchMethods
     def query_dsl
       super
+        .field(:action, multi: true)
         .field(:subject_id)
         .field(:subject_type)
-        .custom(:action, ->(q, v) { q.where(action: v.split(",")) })
+        .field(:ip_addr, :creator_ip_addr)
         .association(:creator)
     end
   end

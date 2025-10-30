@@ -268,6 +268,35 @@ module Posts
         should("restrict access") do
           assert_access(User::Levels::MEMBER) { |user| get_auth(new_post_replacement_path, user, params: { post_id: @post.id }) }
         end
+
+        context("search parameters") do
+          subject { post_replacements_path }
+          setup do
+            Post.connection.execute("TRUNCATE posts CASCADE")
+            @creator = create(:user, created_at: 2.weeks.ago)
+            @approver = create(:user)
+            @rejector = create(:user)
+            @uploader_on_approve = create(:user)
+            @post = create(:post)
+            @admin = create(:admin_user)
+            @post_replacement = create(:jpg_replacement, post: @post, creator: @creator, creator_ip_addr: "127.0.0.2", approver: @approver, rejector: @rejector, uploader_on_approve: @uploader_on_approve, status: "approved")
+          end
+
+          assert_search_param(:file_ext, "jpg", -> { [@post_replacement] })
+          assert_search_param(:md5, "ecef68c44edb8a0d6a3070b5f8e8ee76", -> { [@post_replacement] })
+          assert_search_param(:status, "approved", -> { [@post_replacement] })
+          assert_search_param(:post_id, -> { @post.id }, -> { [@post_replacement] })
+          assert_search_param(:uploader_id_on_approve, -> { @uploader_on_approve.id }, -> { [@post_replacement] })
+          assert_search_param(:uploader_name_on_approve, -> { @uploader_on_approve.name }, -> { [@post_replacement] })
+          assert_search_param(:creator_id, -> { @creator.id }, -> { [@post_replacement] })
+          assert_search_param(:creator_name, -> { @creator.name }, -> { [@post_replacement] })
+          assert_search_param(:approver_id, -> { @approver.id }, -> { [@post_replacement] })
+          assert_search_param(:approver_name, -> { @approver.name }, -> { [@post_replacement] })
+          assert_search_param(:rejector_id, -> { @rejector.id }, -> { [@post_replacement] })
+          assert_search_param(:rejector_name, -> { @rejector.name }, -> { [@post_replacement] })
+          assert_search_param(:ip_addr, "127.0.0.2", -> { [@post_replacement] }, -> { @admin })
+          assert_shared_search_params(-> { [@post_replacement] })
+        end
       end
 
       context("destroy action") do

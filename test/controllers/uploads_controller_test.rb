@@ -53,6 +53,34 @@ class UploadsControllerTest < ActionDispatch::IntegrationTest
       should("restrict access") do
         assert_access(User::Levels::JANITOR) { |user| get_auth(uploads_path, user) }
       end
+
+      context("search parameters") do
+        subject { uploads_path }
+        setup do
+          Upload.delete_all
+          @uploader = create(:user, created_at: 2.weeks.ago)
+          @janitor = create(:janitor_user)
+          @admin = create(:admin_user)
+          @parent = create(:post)
+          @post = create(:post, uploader: @uploader, uploader_ip_addr: "127.0.0.2", source: "https://google.com", rating: "e", parent_id: @parent.id, tag_string: "tagme")
+          @upload = create(:upload, uploader: @uploader, uploader_ip_addr: "127.0.0.2", source: "https://google.com", rating: "e", parent_id: @parent.id, tag_string: "tagme", backtrace: "foo", post: @post)
+        end
+
+        assert_search_param(:source, "https://google.com", -> { [@upload] }, -> { @janitor })
+        assert_search_param(:source_matches, "https://google.com", -> { [@upload] }, -> { @janitor })
+        assert_search_param(:rating, "e", -> { [@upload] }, -> { @janitor })
+        assert_search_param(:parent_id, -> { @parent.id }, -> { [@upload] }, -> { @janitor })
+        assert_search_param(:post_id, -> { @post.id }, -> { [@upload] }, -> { @janitor })
+        assert_search_param(:status, "active", -> { [@upload] }, -> { @janitor })
+        assert_search_param(:ip_addr, "127.0.0.2", -> { [@upload] }, -> { @admin })
+        assert_search_param(:has_post, "true", -> { [@upload] }, -> { @janitor })
+        assert_search_param(:post_tags_match, "tagme", -> { [@upload] }, -> { @janitor })
+        assert_search_param(:backtrace, "foo", -> { [@upload] }, -> { @janitor })
+        assert_search_param(:tag_string, "tagme", -> { [@upload] }, -> { @janitor })
+        assert_search_param(:uploader_id, -> { @uploader.id }, -> { [@upload] }, -> { @janitor })
+        assert_search_param(:uploader_name, -> { @uploader.name }, -> { [@upload] }, -> { @janitor })
+        assert_shared_search_params(-> { [@upload] }, -> { @janitor })
+      end
     end
 
     context("show action") do

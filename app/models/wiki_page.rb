@@ -19,7 +19,7 @@ class WikiPage < ApplicationRecord
   has_one(:help_page)
   has_one(:tag, foreign_key: "name", primary_key: "title")
   has_one(:artist, foreign_key: "name", primary_key: "title")
-  has_many(:versions, -> { order("wiki_page_versions.id ASC") }, class_name: "WikiPageVersion", dependent: :destroy)
+  has_many(:versions, -> { order("wiki_page_versions.id": :asc) }, class_name: "WikiPageVersion", dependent: :destroy)
 
   after_initialize(:set_parent_props)
   before_validation(:normalize_title, unless: :destroyed?)
@@ -83,10 +83,12 @@ class WikiPage < ApplicationRecord
     def query_dsl
       super
         .field(:title, like: true, normalize: ->(value) { value.downcase.strip.tr(" ", "_") })
-        .field(:body_matches, :body)
         .field(:title_matches, :title)
+        .field(:body_matches, :body)
         .field(:protection_level)
         .field(:parent, normalize: ->(value) { value.tr(" ", "_") })
+        .field(:ip_addr, :creator_ip_addr)
+        .field(:updater_ip_addr)
         .custom(:linked_to, ->(q, v) { q.linked_to(v) })
         .custom(:not_linked_to, ->(q, v) { q.not_linked_to(v) })
         .association(:creator)

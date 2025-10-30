@@ -10,6 +10,7 @@ class TagFollower < ApplicationRecord
   after_create(:set_latest_post, unless: -> { last_post_id.present? })
   after_commit(:update_tag_follower_count, on: %i[create destroy])
   delegate(:name, to: :tag, prefix: true)
+  scope(:unbanned, -> { joins(:user).where.gt("users.level": User::Levels::BANNED) })
 
   def set_latest_post(exclude: nil)
     post = Post.sql_raw_tag_match(tag_name).order(id: :asc)
@@ -41,10 +42,6 @@ class TagFollower < ApplicationRecord
     group(:tag_id).count.each do |tag_id, count|
       Tag.update(tag_id, follower_count: count)
     end
-  end
-
-  def self.unbanned
-    joins(:user).where.gt("users.level": User::Levels::BANNED)
   end
 
   def self.update_from_post!(post)

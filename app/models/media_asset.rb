@@ -350,7 +350,7 @@ class MediaAsset < ApplicationRecord
     end
   end
 
-  module SearchMethods
+  module SearchMethodsnas
     def query_dsl
       super
         .field(:checksum)
@@ -359,6 +359,7 @@ class MediaAsset < ApplicationRecord
         .field(:pixel_hash)
         .field(:status)
         .field(:status_message_matches, :status_message)
+        .field(:ip_addr, :creator_ip_addr)
         .field(:"#{model.name.underscore}_id", "#{model.table_name}.id") { |q| q.joins(model.name.underscore.to_sym) }
         .association(:creator)
         .association(model.name.underscore.to_sym)

@@ -126,6 +126,8 @@ class Dmail < ApplicationRecord
         .field(:message_matches, :body)
         .field(:is_read)
         .field(:is_deleted)
+        .field(:is_spam)
+        .field(:ip_addr, :from_ip_addr)
         .custom(:read, ->(q, v) { q.if(v, q.read).else(q.unread) })
         .association(:to)
         .association(:from)

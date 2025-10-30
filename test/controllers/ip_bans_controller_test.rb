@@ -49,6 +49,23 @@ class IpBansControllerTest < ActionDispatch::IntegrationTest
       should("restrict access") do
         assert_access(User::Levels::ADMIN) { |user| get_auth(ip_bans_path, user) }
       end
+
+      context("search parameters") do
+        subject { ip_bans_path }
+        setup do
+          IpBan.delete_all
+          @creator = create(:admin_user)
+          @admin = create(:admin_user)
+          @ip_ban = create(:ip_ban, creator: @creator, creator_ip_addr: "127.0.0.2", ip_addr: "1.2.3.4", reason: "foo")
+        end
+
+        assert_search_param(:reason, "foo", -> { [@ip_ban] }, -> { @admin })
+        assert_search_param(:ip_addr, "1.2.3.4", -> { [@ip_ban] }, -> { @admin })
+        assert_search_param(:creator_id, -> { @creator.id }, -> { [@ip_ban] }, -> { @admin })
+        assert_search_param(:creator_name, -> { @creator.name }, -> { [@ip_ban] }, -> { @admin })
+        assert_search_param(:creator_ip_addr, "127.0.0.2", -> { [@ip_ban] }, -> { @admin })
+        assert_shared_search_params(-> { [@ip_ban] }, -> { @admin })
+      end
     end
 
     context("destroy action") do

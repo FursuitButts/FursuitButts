@@ -1,4 +1,4 @@
-\restrict XBE0Nasdu2ky6H2mEQYqq2RTvPnMgB6ByC4b2I0CKGglRSO0RtbKLcebyi5cscp
+\restrict hrUToNj6t9BAoPi0NrvBuKJuiKRbcunYfNmOrUwbFMPeUiIREDaXYf5b3e5j7OA
 
 -- Dumped from database version 17.5
 -- Dumped by pg_dump version 17.6
@@ -3196,11 +3196,8 @@ CREATE TABLE public.users (
     comment_threshold integer DEFAULT '-2'::integer NOT NULL,
     default_image_size character varying DEFAULT 'large'::character varying NOT NULL,
     favorite_tags text,
-    blacklisted_tags text DEFAULT 'spoilers
-guro
-scat
-furry -rating:s'::text,
-    time_zone character varying DEFAULT 'Eastern Time (US & Canada)'::character varying NOT NULL,
+    blacklisted_tags text DEFAULT ''::text,
+    time_zone character varying DEFAULT 'Central Time (US & Canada)'::character varying NOT NULL,
     bcrypt_password_hash text,
     per_page integer DEFAULT 100 NOT NULL,
     custom_style text DEFAULT ''::text NOT NULL,
@@ -7838,11 +7835,12 @@ ALTER TABLE ONLY public.help_pages
 -- PostgreSQL database dump complete
 --
 
-\unrestrict XBE0Nasdu2ky6H2mEQYqq2RTvPnMgB6ByC4b2I0CKGglRSO0RtbKLcebyi5cscp
+\unrestrict hrUToNj6t9BAoPi0NrvBuKJuiKRbcunYfNmOrUwbFMPeUiIREDaXYf5b3e5j7OA
 
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20251027050630'),
 ('20251024060615'),
 ('20251024042421'),
 ('20251024004655'),

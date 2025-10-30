@@ -5,7 +5,7 @@ class Takedown < ApplicationRecord
   belongs_to_user(:updater, ip: true, optional: true)
   belongs_to_user(:approver, optional: true)
   resolvable(:destroyer)
-  before_validation(:initialize_fields, on: :create)
+  before_validation(:initialize_vericode, on: :create)
   before_validation(:normalize_post_ids)
   before_validation(:strip_fields)
   validates(:email, format: { with: /\A([\s*A-Z0-9._%+-]+@[\s*A-Z0-9.-]+\.\s*[A-Z\s*]{2,15}\s*)\z/i, on: :create })
@@ -21,10 +21,8 @@ class Takedown < ApplicationRecord
   before_save(:update_post_count)
   after_destroy(:log_delete)
 
-  def initialize_fields
-    self.status = "pending"
-    self.vericode = Takedown.create_vericode
-    self.del_post_ids = ""
+  def initialize_vericode
+    self.vericode ||= Takedown.create_vericode
   end
 
   def strip_fields
@@ -215,6 +213,7 @@ class Takedown < ApplicationRecord
         .field(:vericode)
         .field(:status)
         .field(:ip_addr, :creator_ip_addr)
+        .field(:updater_ip_addr)
         .custom(:post_id, ->(q, v) { q.where.regex(post_ids: "(^| )#{v.to_i}($| )") })
         .association(:creator)
         .association(:updater)

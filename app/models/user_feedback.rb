@@ -59,6 +59,8 @@ class UserFeedback < ApplicationRecord
       super
         .field(:body_matches, :body)
         .field(:category)
+        .field(:ip_addr, :creator_ip_addr)
+        .field(:updater_ip_addr)
         .association(:user)
         .association(:creator)
         .association(:updater)

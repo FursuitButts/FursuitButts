@@ -25,6 +25,34 @@ class WikiPagesControllerTest < ActionDispatch::IntegrationTest
       should("restrict access") do
         assert_access(User::Levels::ANONYMOUS) { |user| get_auth(wiki_pages_path, user) }
       end
+
+      context("search parameters") do
+        subject { wiki_pages_path }
+        setup do
+          WikiPageVersion.delete_all
+          WikiPage.delete_all
+          @creator = create(:trusted_user)
+          @updater = create(:trusted_user)
+          @admin = create(:admin_user)
+          @parent = create(:wiki_page, title: "bar")
+          @wiki_page = create(:wiki_page, title: "foo", body: "[[bar]] baz", protection_level: User::Levels::TRUSTED, creator: @creator, creator_ip_addr: "127.0.0.2", updater: @updater, updater_ip_addr: "127.0.0.3", parent: @parent.title)
+        end
+
+        assert_search_param(:title, "foo", -> { [@wiki_page] })
+        assert_search_param(:title_matches, "foo", -> { [@wiki_page] })
+        assert_search_param(:body_matches, "baz", -> { [@wiki_page] })
+        assert_search_param(:protection_level, User::Levels::TRUSTED, -> { [@wiki_page] })
+        assert_search_param(:parent, "bar", -> { [@wiki_page] })
+        assert_search_param(:linked_to, "bar", -> { [@wiki_page] })
+        assert_search_param(:not_linked_to, "bar", -> { [@parent] })
+        assert_search_param(:creator_id, -> { @creator.id }, -> { [@wiki_page] })
+        assert_search_param(:creator_name, -> { @creator.name }, -> { [@wiki_page] })
+        assert_search_param(:ip_addr, "127.0.0.2", -> { [@wiki_page] }, -> { @admin })
+        assert_search_param(:updater_id, -> { @updater.id }, -> { [@wiki_page] })
+        assert_search_param(:updater_name, -> { @updater.name }, -> { [@wiki_page] })
+        assert_search_param(:updater_ip_addr, "127.0.0.3", -> { [@wiki_page] }, -> { @admin })
+        assert_shared_search_params(-> { [@wiki_page, @parent] })
+      end
     end
 
     context("show action") do

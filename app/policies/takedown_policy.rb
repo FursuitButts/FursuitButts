@@ -40,9 +40,9 @@ class TakedownPolicy < ApplicationPolicy
   end
 
   def permitted_search_params
-    params = (super - %i[order]) + %i[status] + nested_search_params(approver: User)
-    params += %i[source reason creator_id creator_name reason_hidden instructions post_id notes] + nested_search_params(updater: User, approver: User) if user.can_handle_takedowns? || user.is_staff?
-    params += %i[ip_addr] if can_search_ip_addr? && (user.can_handle_takedowns? || user.is_staff?)
+    params = (super - %i[order]) + %i[status approver_id approver_name] + nested_search_params(approver: User)
+    params += %i[source reason creator_id creator_name updater_id updater_name reason_hidden instructions post_id notes] + nested_search_params(creator: User, updater: User) if user.can_handle_takedowns? || user.is_staff?
+    params += %i[ip_addr updater_ip_addr] if can_search_ip_addr? && (user.can_handle_takedowns? || user.is_staff?)
     params += %i[email vericode order] if user.can_handle_takedowns?
     params
   end

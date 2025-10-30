@@ -36,6 +36,30 @@ class NotesControllerTest < ActionDispatch::IntegrationTest
       should("restrict access") do
         assert_access(User::Levels::ANONYMOUS) { |user| get_auth(notes_path, user) }
       end
+
+      context("search parameters") do
+        subject { notes_path }
+        setup do
+          NoteVersion.delete_all
+          Note.delete_all
+          @creator = create(:user)
+          @admin = create(:admin_user)
+          @post = create(:post, tag_string: "foo")
+          @note = create(:note, creator: @creator, creator_ip_addr: "127.0.0.2", post: @post, body: "bar", is_active: true)
+        end
+
+        assert_search_param(:body_matches, "bar", -> { [@note] })
+        assert_search_param(:is_active, "true", -> { [@note] })
+        assert_search_param(:post_id, -> { @post.id }, -> { [@note] })
+        assert_search_param(:post_tags_match, "foo", -> { [@note] })
+        assert_search_param(:post_note_updater_id, -> { @creator.id }, -> { [@note] })
+        assert_search_param(:post_note_updater_name, -> { @creator.name }, -> { [@note] })
+        assert_search_param(:creator_id, -> { @creator.id }, -> { [@note] })
+        assert_search_param(:creator_name, -> { @creator.name }, -> { [@note] })
+        assert_search_param(:post_id, -> { @post.id }, -> { [@note] })
+        assert_search_param(:ip_addr, "127.0.0.2", -> { [@note] }, -> { @admin })
+        assert_shared_search_params(-> { [@note] })
+      end
     end
 
     context("show action") do

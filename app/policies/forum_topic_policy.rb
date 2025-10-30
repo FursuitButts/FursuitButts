@@ -94,7 +94,9 @@ class ForumTopicPolicy < ApplicationPolicy
   end
 
   def permitted_search_params
-    super + %i[title title_matches category_id is_sticky is_locked is_hidden creator_id creator_name updater_id updater_name] + nested_search_params(creator: User, updater: User)
+    params = super + %i[title title_matches category_id is_sticky is_locked is_hidden creator_id creator_name updater_id updater_name] + nested_search_params(creator: User, updater: User)
+    params += %i[creator_ip_addr updater_ip_addr] if can_search_ip_addr?
+    params
   end
 
   def api_attributes

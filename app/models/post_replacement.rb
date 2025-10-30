@@ -325,6 +325,7 @@ class PostReplacement < ApplicationRecord
         .field(:md5, "post_replacement_media_assets.md5") { |q| q.joins(:post_replacement_media_asset) }
         .field(:status)
         .field(:post_id)
+        .field(:ip_addr, :creator_ip_addr)
         .user(%i[uploader_id_on_approve uploader_name_on_approve], :uploader_on_approve)
         .association(:creator)
         .association(:approver)
@@ -365,6 +366,10 @@ class PostReplacement < ApplicationRecord
         replacement_thumb_url(user)
       end
     end
+  end
+
+  def apionly_file_url
+    file_url(CurrentUser.user)
   end
 
   def post_details

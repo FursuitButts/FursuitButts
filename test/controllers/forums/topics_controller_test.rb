@@ -91,6 +91,33 @@ module Forums
             assert_select("a.forum-post-link", { count: 0, text: @topic2.title })
           end
         end
+
+        context("search parameters") do
+          subject { forum_topics_path }
+          setup do
+            ForumPost.delete_all
+            ForumTopic.delete_all
+            @creator = create(:user)
+            @updater = create(:user)
+            @admin = create(:admin_user)
+            @forum_topic = create(:forum_topic, title: "foo", creator: @creator, creator_ip_addr: "127.0.0.2", updater: @updater, updater_ip_addr: "127.0.0.3", is_sticky: true, is_locked: false, is_hidden: false)
+            @forum_topic.reload
+          end
+
+          assert_search_param(:title_matches, "foo", -> { [@forum_topic] })
+          assert_search_param(:title, "foo", -> { [@forum_topic] })
+          assert_search_param(:category_id, -> { @forum_topic.category_id }, -> { [@forum_topic] })
+          assert_search_param(:is_sticky, "true", -> { [@forum_topic] })
+          assert_search_param(:is_locked, "false", -> { [@forum_topic] })
+          assert_search_param(:is_hidden, "false", -> { [@forum_topic] })
+          assert_search_param(:creator_id, -> { @creator.id }, -> { [@forum_topic] })
+          assert_search_param(:creator_name, -> { @creator.name }, -> { [@forum_topic] })
+          assert_search_param(:creator_ip_addr, "127.0.0.2", -> { [@forum_topic] }, -> { @admin })
+          assert_search_param(:updater_id, -> { @updater.id }, -> { [@forum_topic] })
+          assert_search_param(:updater_name, -> { @updater.name }, -> { [@forum_topic] })
+          assert_search_param(:updater_ip_addr, "127.0.0.3", -> { [@forum_topic] }, -> { @admin })
+          assert_shared_search_params(-> { [@forum_topic] })
+        end
       end
 
       context("edit action") do

@@ -37,6 +37,41 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
       should("restrict access") do
         assert_access(User::Levels::ANONYMOUS) { |user| get_auth(comments_path, user) }
       end
+
+      context("search parameters") do
+        subject { comments_path }
+        setup do
+          Comment.delete_all
+          @user = create(:user)
+          @creator = create(:user)
+          @updater = create(:user)
+          @uploader = create(:user)
+          @admin = create(:admin_user)
+          @mod = create(:moderator_user)
+          @note_updater = create(:user)
+          @post = create(:post, tag_string: "foo", uploader: @uploader)
+          create(:note, post: @post, creator: @note_updater)
+          @comment = create(:comment, creator: @creator, creator_ip_addr: "127.0.0.2", updater: @updater, updater_ip_addr: "127.0.0.3", post: @post, body: "bar", is_hidden: false, is_sticky: true, is_spam: false)
+        end
+
+        assert_search_param(:body_matches, "bar", -> { [@comment] })
+        assert_search_param(:post_id, -> { @post.id }, -> { [@comment] })
+        assert_search_param(:ip_addr, "127.0.0.2", -> { [@comment] }, -> { @admin })
+        assert_search_param(:updater_ip_addr, "127.0.0.3", -> { [@comment] }, -> { @admin })
+        assert_search_param(:is_hidden, "false", -> { [@comment] }, -> { @mod })
+        assert_search_param(:is_sticky, "true", -> { [@comment] })
+        assert_search_param(:is_spam, "false", -> { [@comment] }, -> { @mod })
+        assert_search_param(:post_tags_match, "foo", -> { [@comment] })
+        assert_search_param(:post_note_updater_id, -> { @note_updater.id }, -> { [@comment] })
+        assert_search_param(:post_note_updater_name, -> { @note_updater.name }, -> { [@comment] })
+        assert_search_param(:creator_id, -> { @creator.id }, -> { [@comment] })
+        assert_search_param(:creator_name, -> { @creator.name }, -> { [@comment] })
+        assert_search_param(:updater_id, -> { @updater.id }, -> { [@comment] })
+        assert_search_param(:updater_name, -> { @updater.name }, -> { [@comment] })
+        assert_search_param(:poster_id, -> { @uploader.id }, -> { [@comment] })
+        assert_search_param(:poster_name, -> { @uploader.name }, -> { [@comment] })
+        assert_shared_search_params(-> { [@comment] })
+      end
     end
 
     context("search action") do

@@ -27,6 +27,7 @@ class PostApproval < ApplicationRecord
       def query_dsl
         super
           .field(:post_id)
+          .field(:ip_addr, :user_ip_addr)
           .custom(:post_tags_match, ->(q, v, user) { q.post_tags_match(v, user) })
           .association(:user)
           .association(:post)

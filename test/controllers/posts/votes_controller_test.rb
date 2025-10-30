@@ -41,6 +41,32 @@ module Posts
         should("restrict access") do
           assert_access(User::Levels::REJECTED) { |user| get_auth(url_for(controller: "posts/votes", action: "index", only_path: true), user) }
         end
+
+        context("search parameters") do
+          subject { url_for(controller: "posts/votes", action: "index", only_path: true) }
+          setup do
+            PostVote.delete_all
+            @creator = create(:user)
+            @voter = create(:user, created_at: 2.weeks.ago)
+            @voter2 = create(:user, created_at: 2.weeks.ago)
+            @admin = create(:admin_user)
+            @post = create(:post, creator: @creator)
+            @vote = create(:post_vote, post: @post, score: 1, user: @voter, user_ip_addr: "127.0.0.2", is_locked: false)
+            @vote2 = create(:post_vote, post: @post, score: -1, user: @voter2, user_ip_addr: "127.0.0.2", is_locked: false)
+          end
+
+          assert_search_param(:post_id, -> { @post.id }, -> { [@vote] }, -> { @voter })
+          assert_search_param(:ip_addr, "127.0.0.2", -> { [@vote2, @vote] }, -> { @admin })
+          assert_search_param(:score, "1", -> { [@vote] }, -> { @voter })
+          assert_search_param(:timeframe, "1", -> { [@vote] }, -> { @voter })
+          assert_search_param(:duplicates_only, "true", -> { [@vote2, @vote] }, -> { @admin })
+          assert_search_param(:post_creator_id, -> { @post.creator_id }, -> { [@vote] }, -> { @voter })
+          assert_search_param(:post_creator_name, -> { @post.creator_name }, -> { [@vote] }, -> { @voter })
+          assert_search_param(:user_id, -> { @voter.id }, -> { [@vote] }, -> { @voter })
+          assert_search_param(:user_name, -> { @voter.name }, -> { [@vote] }, -> { @voter })
+          assert_search_param(:is_locked, "false", -> { [@vote] }, -> { @voter })
+          assert_shared_search_params(-> { [@vote] }, -> { @voter })
+        end
       end
 
       context("create action") do

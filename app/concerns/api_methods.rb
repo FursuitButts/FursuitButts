@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module ApiMethods
+  class NotVisibleError < StandardError; end
   extend(ActiveSupport::Concern)
 
   module ClassMethods
@@ -73,7 +74,7 @@ module ApiMethods
     options[:only] += [SecureRandom.hex(6)]
 
     hash = super
-    hash.transform_keys! { |key| key.delete("?").gsub("apionly_", "") }
+    hash.transform_keys! { |key| key.delete("?").delete_prefix("apionly_") }
     deep_reject_hash(hash) { |_, v| v == :not_visible }
   end
 

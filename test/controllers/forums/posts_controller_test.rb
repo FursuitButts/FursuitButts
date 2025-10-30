@@ -104,6 +104,33 @@ module Forums
         should("restrict access") do
           assert_access(User::Levels::ANONYMOUS) { |user| get_auth(forum_posts_path, user) }
         end
+
+        context("search parameters") do
+          subject { forum_posts_path }
+          setup do
+            ForumPost.delete_all
+            @creator = create(:user)
+            @updater = create(:user)
+            @admin = create(:admin_user)
+            @forum_topic = create(:forum_topic, original_post_attributes: { body: "foo [[bar]]", is_hidden: false, updater: @updater, updater_ip_addr: "127.0.0.3" }, title: "baz", creator: @creator, creator_ip_addr: "127.0.0.2")
+            @forum_post = @forum_topic.original_post
+          end
+
+          assert_search_param(:topic_id, -> { @forum_topic.id }, -> { [@forum_post] })
+          assert_search_param(:body_matches, "foo", -> { [@forum_post] })
+          assert_search_param(:is_hidden, "false", -> { [@forum_post] })
+          assert_search_param(:topic_title_matches, "baz", -> { [@forum_post] })
+          assert_search_param(:topic_category_id, -> { @forum_topic.category_id }, -> { [@forum_post] })
+          assert_search_param(:creator_id, -> { @creator.id }, -> { [@forum_post] })
+          assert_search_param(:creator_name, -> { @creator.name }, -> { [@forum_post] })
+          assert_search_param(:ip_addr, "127.0.0.2", -> { [@forum_post] }, -> { @admin })
+          assert_search_param(:updater_id, -> { @updater.id }, -> { [@forum_post] })
+          assert_search_param(:updater_name, -> { @updater.name }, -> { [@forum_post] })
+          assert_search_param(:updater_ip_addr, "127.0.0.3", -> { [@forum_post] }, -> { @admin })
+          assert_search_param(:linked_to, "bar", -> { [@forum_post] })
+          assert_search_param(:not_linked_to, "baz", -> { [@forum_post] })
+          assert_shared_search_params(-> { [@forum_post] })
+        end
       end
 
       context("edit action") do

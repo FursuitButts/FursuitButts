@@ -86,7 +86,9 @@ class Post < ApplicationRecord
   has_many(:notes, dependent: :destroy)
   has_many(:note_versions)
   has_many(:appeals, class_name: "PostAppeal", dependent: :destroy)
-  has_many(:comments, -> { includes(:creator, :updater).order("comments.is_sticky DESC, comments.id") }, dependent: :destroy)
+  has_many(:events, class_name: "PostEvent") # no dependent
+
+  has_many(:comments, -> { includes(:creator, :updater).order("comments.is_sticky": :desc, "comments.id": :asc) }, dependent: :destroy)
   has_many(:children, -> { order("posts.id") }, class_name: "Post", foreign_key: "parent_id")
   has_many(:approvals, class_name: "PostApproval", dependent: :destroy)
   has_many(:disapprovals, class_name: "PostDisapproval", dependent: :destroy)
@@ -106,7 +108,7 @@ class Post < ApplicationRecord
                 :do_not_version_changes, :tag_string_diff, :source_diff, :edit_reason, :tag_string_before_parse,
                 :automated_edit)
 
-  has_many(:versions, -> { order("post_versions.id ASC") }, class_name: "PostVersion", dependent: :destroy)
+  has_many(:versions, -> { order("post_versions.id": :asc) }, class_name: "PostVersion", dependent: :destroy)
 
   scope(:pending, -> { where(is_pending: true) })
   scope(:not_pending, -> { where(is_pending: false) })
@@ -1605,7 +1607,7 @@ class Post < ApplicationRecord
           self.is_pending = false
           self.is_flagged = false
           self.is_appealed = false
-          self.is_taken_down = options.fetch(:takeodnw, false)
+          self.is_taken_down = options.fetch(:takedown, false)
           decrement_tag_post_counts
           save
           move_files_on_delete(user)

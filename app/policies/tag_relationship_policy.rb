@@ -32,7 +32,9 @@ class TagRelationshipPolicy < ApplicationPolicy
   end
 
   def permitted_search_params
-    super + %i[name_matches antecedent_name consequent_name status antecedent_tag_category consequent_tag_category creator_id creator_name approver_id approver_name] + nested_search_params(creator: User, approver: User)
+    params = super + %i[name_matches antecedent_name consequent_name status antecedent_tag_category consequent_tag_category creator_id creator_name updater_id updater_name approver_id approver_name] + nested_search_params(creator: User, approver: User)
+    params += %i[ip_addr updater_ip_addr] if can_search_ip_addr?
+    params
   end
 
   def model

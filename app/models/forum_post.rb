@@ -76,9 +76,12 @@ class ForumPost < ApplicationRecord
         .field(:is_hidden)
         .field(:topic_title_matches, "forum_topics.title") { |q| q.joins(:topic) }
         .field(:topic_category_id, "forum_topics.category_id") { |q| q.joins(:topic) }
+        .field(:ip_addr, :creator_ip_addr)
+        .field(:updater_ip_addr)
         .custom(:linked_to, ->(q, v) { q.linked_to(v) })
         .custom(:not_linked_to, ->(q, v) { q.not_linked_to(v) })
         .association(:creator)
+        .association(:updater)
         .association(:topic)
     end
   end
@@ -212,9 +215,12 @@ class ForumPost < ApplicationRecord
   def update_topic_updated_at_on_create
     if topic
       # need to do this to bypass the topic's original post from getting touched
-      t = Time.now
-      ForumTopic.where(id: topic.id).update_all(["updater_id = ?, response_count = response_count + 1, updated_at = ?, last_post_created_at = ?", creator_id, t, t])
-      topic.response_count += 1
+      # reloading the topic in any way will cause undoing merges to fail due to force validating the original post
+      ForumTopic.where(id: topic.id).update_all(updated_at: created_at, last_post_created_at: created_at)
+      unless is_original_post?
+        topic.response_count += 1
+        ForumTopic.where(id: topic.id).update_all("response_count = response_count + 1")
+      end
     end
   end
 

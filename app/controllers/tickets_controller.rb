@@ -18,7 +18,7 @@ class TicketsController < ApplicationController
   def new
     authorize(Ticket)
     @ticket = Ticket.new_with_current(:creator, permitted_attributes(Ticket))
-    if @ticket.model_type.present? && Ticket::MODEL_TYPES.exclude?(@ticket.model_type)
+    if @ticket.model_type.present? && Ticket::MODELS.types.exclude?(@ticket.model_type)
       return render_expected_error(404, "Invalid ticket type")
     end
     authorize(@ticket)
@@ -27,7 +27,7 @@ class TicketsController < ApplicationController
   def create
     authorize(Ticket)
     @ticket = Ticket.new_with_current(:creator, permitted_attributes(Ticket))
-    if @ticket.model_type.present? && Ticket::MODEL_TYPES.exclude?(@ticket.model_type)
+    if @ticket.model_type.present? && Ticket::MODELS[:types].exclude?(@ticket.model_type)
       return render_expected_error(404, "Invalid ticket type")
     end
     authorize(@ticket)

@@ -26,6 +26,26 @@ module WikiPages
         should("restrict access") do
           assert_access(User::Levels::ANONYMOUS) { |user| get_auth(wiki_page_versions_path, user) }
         end
+
+        context("search parameters") do
+          subject { wiki_page_versions_path }
+          setup do
+            WikiPageVersion.delete_all
+            @updater = create(:trusted_user)
+            @admin = create(:admin_user)
+            @wiki_page = create(:wiki_page, creator: @updater, updater_ip_addr: "127.0.0.2", title: "foo", body: "bar", protection_level: User::Levels::TRUSTED)
+            @wiki_page_version = @wiki_page.versions.first
+          end
+
+          assert_search_param(:wiki_page_id, -> { @wiki_page.id }, -> { [@wiki_page_version] })
+          assert_search_param(:title, "foo", -> { [@wiki_page_version] })
+          assert_search_param(:body, "bar", -> { [@wiki_page_version] })
+          assert_search_param(:protection_level, User::Levels::TRUSTED, -> { [@wiki_page_version] })
+          assert_search_param(:updater_id, -> { @updater.id }, -> { [@wiki_page_version] })
+          assert_search_param(:updater_name, -> { @updater.name }, -> { [@wiki_page_version] })
+          assert_search_param(:ip_addr, "127.0.0.2", -> { [@wiki_page_version] }, -> { @admin })
+          assert_shared_search_params(-> { [@wiki_page_version] })
+        end
       end
 
       context("show action") do

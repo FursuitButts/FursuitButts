@@ -28,6 +28,39 @@ class TicketsControllerTest < ActionDispatch::IntegrationTest
       @bad_actor = create(:user, created_at: 2.weeks.ago)
     end
 
+    context("index action") do
+      context("search parameters") do
+        subject { tickets_path }
+        setup do
+          Ticket.delete_all
+          @creator = create(:user)
+          @handler = create(:user)
+          @claimant = create(:user)
+          @accused = create(:user)
+          @mod = create(:moderator_user)
+          @admin = create(:admin_user)
+          @forum_post = create(:forum_post, creator: @accused)
+          @ticket = create(:ticket, creator: @creator, creator_ip_addr: "127.0.0.2", handler: @handler, handler_ip_addr: "127.0.0.3", claimant: @claimant, reason: "foo", status: "approved", model: @forum_post)
+        end
+
+        assert_search_param(:model_type, "ForumPost", -> { [@ticket] }, -> { @creator })
+        assert_search_param(:model_id, -> { @forum_post.id }, -> { [@ticket] }, -> { @creator })
+        assert_search_param(:reason, "foo", -> { [@ticket] }, -> { @mod })
+        assert_search_param(:status, "approved", -> { [@ticket] }, -> { @creator })
+        assert_search_param(:creator_id, -> { @creator.id }, -> { [@ticket] }, -> { @creator })
+        assert_search_param(:creator_name, -> { @creator.name }, -> { [@ticket] }, -> { @creator })
+        assert_search_param(:ip_addr, "127.0.0.2", -> { [@ticket] }, -> { @admin })
+        assert_search_param(:handler_id, -> { @handler.id }, -> { [@ticket] }, -> { @mod })
+        assert_search_param(:handler_name, -> { @handler.name }, -> { [@ticket] }, -> { @mod })
+        assert_search_param(:handler_ip_addr, "127.0.0.3", -> { [@ticket] }, -> { @admin })
+        assert_search_param(:claimant_id, -> { @claimant.id }, -> { [@ticket] }, -> { @mod })
+        assert_search_param(:claimant_name, -> { @claimant.name }, -> { [@ticket] }, -> { @mod })
+        assert_search_param(:accused_id, -> { @accused.id }, -> { [@ticket] }, -> { @mod })
+        assert_search_param(:accused_name, -> { @accused.name }, -> { [@ticket] }, -> { @mod })
+        assert_shared_search_params(-> { [@ticket] }, -> { @creator })
+      end
+    end
+
     context("update action") do
       setup do
         @ticket = create(:ticket, creator: @reporter, model: create(:comment))

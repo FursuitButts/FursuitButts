@@ -7,8 +7,7 @@ class Ticket < ApplicationRecord
   belongs_to_user(:accused, optional: true)
   resolvable(:updater)
   belongs_to(:model, polymorphic: true)
-  after_initialize(:classify)
-  before_validation(:initialize_fields, on: :create)
+  before_validation(:initialize_accused, on: :create)
   normalizes(:reason, with: ->(reason) { reason.gsub("\r\n", "\n") })
   validates(:reason, presence: true)
   validates(:reason, length: { minimum: 2, maximum: -> { Config.instance.ticket_max_size } })
@@ -32,8 +31,6 @@ class Ticket < ApplicationRecord
 
   attr_accessor(:record_type, :send_update_dmail)
 
-  MODEL_TYPES = %w[Artist Comment Dmail ForumPost Pool Post PostSet Tag User WikiPage].freeze
-
   # Permissions Table
   #
   # |    Type    |      Can Create     |    Details Visible   |
@@ -51,111 +48,57 @@ class Ticket < ApplicationRecord
   # |    Other   |         None        | Moderator+ / Creator |
   #
   # * Janitor+ can see details if the creator is Janitor+ or the ticket is a commendation, else Moderator+
-  module TicketTypes
-    module Artist
-      def can_view?(user)
-        user.is_janitor? || user.id == creator_id
-      end
 
-      def bot_target_name
-        model&.name
-      end
-    end
-
-    module Comment
-      def can_view?(user)
-        user.is_moderator? || (user.id == creator_id)
-      end
-    end
-
-    module Dmail
-      def can_create_for?(user)
-        model&.visible?(user) && model.to_id == user.id
-      end
-
-      def can_view?(user)
-        user.is_moderator? || (user.id == creator_id)
-      end
-
-      def bot_target_name
-        model&.from&.name
-      end
-    end
-
-    module ForumPost
-      def can_view?(user)
-        user.is_moderator? || (user.id == creator_id)
-      end
-    end
-
-    module Pool
-      def can_view?(user)
-        user.is_janitor? || user.id == creator_id
-      end
-
-      def bot_target_name
-        model&.name
-      end
-    end
-
-    module Post
-      def subject
-        reason.split("\n")[0] || "Unknown Report Type"
-      end
-
-      def can_view?(user)
-        user.is_janitor? || user.id == creator_id
-      end
-
-      def bot_target_name
-        model&.uploader&.name
-      end
-    end
-
-    module PostSet
-      def can_view?(user)
-        user.is_moderator? || user.id == creator_id
-      end
-
-      def bot_target_name
-        model&.name
-      end
-    end
-
-    module Tag
-      def can_view?(user)
-        user.is_janitor? || (user.id == creator_id)
-      end
-
-      def bot_target_name
-        model&.name
-      end
-    end
-
-    module User
-      def can_view?(user)
-        user.is_moderator? || user.id == creator_id || (user.is_janitor? && (report_type == "commendation" || creator.is_janitor?))
-      end
-
-      def bot_target_name
-        model&.name
-      end
-    end
-
-    module WikiPage
-      def can_view?(user)
-        user.is_janitor? || (user.id == creator_id)
-      end
-
-      def bot_target_name
-        model&.title
-      end
-    end
-  end
+  # All procs are executed in context
+  MODELS = {
+    types:        %w[Artist Comment Dmail ForumPost Pool Post PostSet Tag User WikiPage],
+    # If the ticket can be viewed
+    view:         {
+      Artist    => ->(user) { user.is_janitor? || user.is?(creator_id) },
+      Comment   => ->(user) { user.is_moderator? || user.is?(creator_id) },
+      Dmail     => ->(user) { user.is_moderator? || user.is?(creator_id) },
+      ForumPost => ->(user) { user.is_moderator? || user.is?(creator_id) },
+      Pool      => ->(user) { user.is_janitor?  || user.is?(creator_id) },
+      Post      => ->(user) { user.is_janitor?  || user.is?(creator_id) },
+      PostSet   => ->(user) { user.is_moderator? || user.is?(creator_id) },
+      Tag       => ->(user) { user.is_janitor? || user.is?(creator_id) },
+      User      => ->(user) { user.is_moderator? || user.is?(creator_id) || (user.is_janitor? && (report_type == "commendation" || creator.is_janitor?)) },
+      WikiPage  => ->(user) { user.is_janitor? || user.is?(creator_id) },
+      :default  => ->(user) { user.is_moderator? || user.is?(creator_id) },
+    },
+    # If the ticket's reporter can be seen
+    see_reporter: {
+      default: ->(user) { user.is_moderator? || user.is?(creator_id) },
+    },
+    # If a ticket can be created for the model
+    create:       {
+      Dmail    => ->(user) { model&.visible?(user) && model.to_id == user.id },
+      :default => ->(user) { model&.visible?(user) },
+    },
+    # The target name sent to the bot
+    target:       {
+      Artist   => -> { model&.name },
+      Dmail    => -> { model&.from&.name },
+      Pool     => -> { model&.name },
+      Post     => -> { model&.uploader&.name },
+      PostSet  => -> { model&.name },
+      Tag      => -> { model&.name },
+      User     => -> { model&.name },
+      WikiPage => -> { model&.title },
+      :default => -> {},
+    },
+    accused:      {
+      Comment   => -> { model.creator_id },
+      Dmail     => -> { model.from_id },
+      ForumPost => -> { model.creator_id },
+      User      => -> { model_id },
+      :default  => -> {},
+    },
+  }.freeze
 
   module ValidationMethods
     def validate_model_type
-      return if MODEL_TYPES.include?(model_type)
+      return if MODELS[:types].include?(model_type)
       errors.add(:model_type, "is not valid")
     end
 
@@ -179,16 +122,9 @@ class Ticket < ApplicationRecord
       errors.add(:model, "does not exist") if model.nil?
     end
 
-    def initialize_fields
-      self.status = "pending"
-      case model
-      when Comment, ForumPost
-        self.accused_id = model.creator_id
-      when Dmail
-        self.accused_id = model.from_id
-      when User
-        self.accused_id = model_id
-      end
+    def initialize_accused
+      proc = MODELS[:accused].fetch(model.class, nil) || MODELS[:accused][:default]
+      self.accused_id = instance_exec(&proc)
     end
   end
 
@@ -199,7 +135,7 @@ class Ticket < ApplicationRecord
     end
 
     def creator_name_query(q, value, user)
-      return none if !user.is_moderator? && value.downcase == user.name.downcase
+      return none if !user.is_moderator? && value.downcase != user.name.downcase
       q.for_creator_name(value)
     end
 
@@ -223,19 +159,16 @@ class Ticket < ApplicationRecord
         .field(:model_type)
         .field(:model_id)
         .field(:reason)
+        .field(:ip_addr, :creator_ip_addr)
+        .field(:handler_ip_addr)
         .custom(:status, method(:status_query).to_proc)
         .custom(:creator_id, method(:creator_id_query).to_proc)
         .custom(:creator_name, method(:creator_name_query).to_proc)
         # TODO: We need access control/blocks for associations
         .association(:creator)
+        .association(:handler)
         .association(:claimant)
         .association(:accused)
-    end
-  end
-
-  module ClassifyMethods
-    def classify
-      extend(TicketTypes.const_get(model_type)) if TicketTypes.constants.map(&:to_s).include?(model_type)
     end
   end
 
@@ -265,16 +198,23 @@ class Ticket < ApplicationRecord
     end
   end
 
-  def can_view?(user)
-    user.is_moderator?
+  def can_see_reporter?(user)
+    proc = MODELS[:see_reporter].fetch(model.class, nil) || MODELS[:see_reporter][:default]
+    instance_exec(user, &proc)
   end
 
-  def can_see_reporter?(user)
-    user.is_moderator? || (user.id == creator_id)
+  def can_view?(user)
+    proc = MODELS[:view].fetch(model.class, nil) || MODELS[:view][:default]
+    instance_exec(user, &proc)
   end
 
   def can_create_for?(user)
-    model.try(:visible?, user)
+    proc = MODELS[:create].fetch(model.class, nil) || MODELS[:create][:default]
+    instance_exec(user, &proc)
+  end
+
+  def visible?(user)
+    can_view?(user)
   end
 
   def type_title
@@ -392,18 +332,9 @@ class Ticket < ApplicationRecord
     end
   end
 
-  include(ClassifyMethods)
   include(ValidationMethods)
   include(ClaimMethods)
   include(NotificationMethods)
   include(PubSubMethods)
   extend(SearchMethods)
-
-  def self.available_includes
-    %i[handler]
-  end
-
-  def visible?(user)
-    can_view?(user)
-  end
 end

@@ -33,8 +33,8 @@ class TagsController < ApplicationController
     raise(User::PrivacyModeError) if @user.hide_followed_tags?(CurrentUser.user)
 
     @followed_tags = @user.followed_tags.includes(:tag)
-                 .search_current(search_params(Tag))
-                 .paginate(params[:page], limit: params[:limit])
+                          .search_current(search_params(Tag))
+                          .paginate(params[:page], limit: params[:limit])
     respond_with(@followed_tags.map(&:tag))
   end
 
@@ -42,10 +42,10 @@ class TagsController < ApplicationController
     @tag = authorize(Tag.find(params[:id]))
     query = User.joins(:followed_tags)
     unless CurrentUser.user.is_moderator?
-      query = query.where("bit_prefs & :value != :value", { value: User.flag_value_for("enable_privacy_mode") }).or(query.where(tag_followers: { user_id: CurrentUser.user.id }))
+      query = query.where.not_has_bits(bit_prefs: User::Preferences::ENABLE_PRIVACY_MODE).or(query.where("tag_followers.user_id": CurrentUser.user.id))
     end
-    query = query.where(tag_followers: { tag_id: @tag.id })
-    query = query.order("users.name asc")
+    query = query.where("tag_followers.tag_id": @tag.id)
+    query = query.order("users.name": :asc)
     @users = query.paginate(params[:page], limit: params[:limit])
     respond_with(@users)
   end

@@ -46,7 +46,10 @@ class DmailPolicy < ApplicationPolicy
   end
 
   def permitted_search_params
-    (super - %i[order]) + %i[title_matches message_matches to_name to_id from_name from_id is_read is_deleted read owner_id owner_name] + nested_search_params(to: User, from: User, owner: User)
+    params = (super - %i[order]) + %i[title_matches message_matches to_name to_id from_name from_id is_read is_deleted read owner_id owner_name] + nested_search_params(to: User, from: User, owner: User)
+    params << :is_spam if user.is_moderator?
+    params << :ip_addr if can_search_ip_addr?
+    params
   end
 
   def api_attributes

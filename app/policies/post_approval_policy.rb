@@ -11,6 +11,8 @@ class PostApprovalPolicy < ApplicationPolicy
   end
 
   def permitted_search_params
-    super + nested_search_params(user: User, post: Post)
+    params = super + %i[post_id user_id user_name post_tags_match] + nested_search_params(user: User, post: Post)
+    params << :ip_addr if can_search_ip_addr?
+    params
   end
 end

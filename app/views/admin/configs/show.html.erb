@@ -131,8 +131,8 @@
       <%= number_config_field(@config, :alias_and_implication_forum_category, name: "Alias And Implication Forum Category", disabled: !edit) %>
       <%= number_config_field(@config, :default_forum_category, name: "Default Forum Category", disabled: !edit) %>
       <%= number_config_field(@config, :upload_whitelists_forum_topic, name: "Upload Whitelists Forum Topic", disabled: !edit) %>
-      <%= boolean_config_field(@config, :flag_ai_posts, name: "Flag AI Posts", disabled: !edit, hint: "If flags detected as ai generated should be automatically flagged") %>
-      <%= boolean_config_field(@config, :tag_ai_posts, name: "Tag AI Posts", disabled: !edit, hint: "If flags detected as ai generated should be automatically tagged") %>
+      <%= boolean_config_field(@config, :flag_ai_posts, name: "Flag AI Posts", disabled: !edit, hint: "If posts detected as ai generated should be automatically flagged") %>
+      <%= boolean_config_field(@config, :tag_ai_posts, name: "Tag AI Posts", disabled: !edit, hint: "If posts detected as ai generated should be automatically tagged") %>
       <%= number_config_field(@config, :ai_confidence_threshold, name: "AI Confidence Threshold", disabled: !edit, hint: "The minimum required threshold to flag/tag ai generated content") %>
       <%= text_config_field(@config, :db_exports_path, name: "DB Exports Path", disabled: !edit, hint: "The path db exports are located at.") %>
       <%= text_config_field(@config, :safeblocked_tags, name: "Safeblocked Tags", disabled: !edit, hint: "separate by a comma and space") %>

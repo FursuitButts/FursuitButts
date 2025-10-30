@@ -6,8 +6,8 @@ class PostAppealPolicy < ApplicationPolicy
   end
 
   def permitted_search_params
-    params = super + %i[reason_matches creator_id creator_name post_id post_tags_match status] + nested_search_params(creator: User, updater: User, post: Post)
-    params += %i[ip_addr] if can_search_ip_addr?
+    params = super + %i[reason_matches creator_id creator_name updater_id updater_name post_id post_tags_match status] + nested_search_params(creator: User, updater: User, post: Post)
+    params += %i[ip_addr updater_ip_addr] if can_search_ip_addr?
     params
   end
 

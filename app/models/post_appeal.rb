@@ -68,6 +68,7 @@ class PostAppeal < ApplicationRecord
         .field(:status)
         .field(:post_id)
         .field(:ip_addr, :creator_ip_addr)
+        .field(:updater_ip_addr)
         .custom(:post_tags_match, ->(q, v, user) { q.post_tags_match(v, user) })
         .association(:creator)
         .association(:updater)

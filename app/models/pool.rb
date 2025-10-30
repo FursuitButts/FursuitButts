@@ -80,10 +80,11 @@ class Pool < ApplicationRecord
       super
         .field(:is_ongoing)
         .field(:category)
-        .custom(:name_matches, ->(q, v) { q.attribute_matches(:name, Pool.normalize_name(v), convert_to_wildcard: true) })
+        .field(:name_matches, :name, normalize: Pool.method(:normalize_name))
+        .field(:description_matches, :description)
+        .field(:ip_addr, :creator_ip_addr)
         .custom(:any_artist_name_matches, ->(q, v) { q.any_artist_name_matches(v) })
         .custom(:any_artist_name_like, ->(q, v) { q.any_artist_name_like(v) })
-        .custom(:description_matches, ->(q, v) { q.attributes_match(description: v) })
         .custom(:linked_to, ->(q, v) { q.linked_to(v) })
         .custom(:not_linked_to, ->(q, v) { q.not_linked_to(v) })
         .association(:creator)
@@ -330,7 +331,7 @@ class Pool < ApplicationRecord
 
   # rubocop:disable Local/CurrentUserOutsideOfRequests -- this is used exclusively within requests
   def last_page
-    (post_count / CurrentUser.user.per_page.to_f).ceil
+    (post_count / CurrentUser.user.per_page.to_f).ceil.clamp(1..)
   end
   # rubocop:enable Local/CurrentUserOutsideOfRequests
 

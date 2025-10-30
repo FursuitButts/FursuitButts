@@ -48,9 +48,9 @@ class CommentPolicy < ApplicationPolicy
   end
 
   def permitted_search_params
-    params = super + %i[body_matches post_id post_tags_match creator_name creator_id post_note_updater_name post_note_updater_id poster_id poster_name is_sticky order] + nested_search_params(creator: User, poster: User)
-    params += %i[is_hidden] if user.is_moderator?
-    params += %i[ip_addr] if can_search_ip_addr?
+    params = super + %i[body_matches post_id post_tags_match creator_name creator_id updater_name updater_id post_note_updater_name post_note_updater_id poster_id poster_name is_sticky order] + nested_search_params(creator: User, poster: User)
+    params += %i[is_hidden is_spam] if user.is_moderator?
+    params += %i[ip_addr updater_ip_addr] if can_search_ip_addr?
     params
   end
 

@@ -74,15 +74,17 @@ class Comment < ApplicationRecord
         .field(:body_matches, :body)
         .field(:post_id)
         .field(:ip_addr, :creator_ip_addr)
+        .field(:updater_ip_addr)
         .field(:is_hidden)
         .field(:is_sticky)
         .field(:is_spam)
         # Force a better query plan by ordering by created_at
         # .user(:poster, "posts.uploader_id") { |q| q.joins(:post).reorder(created_at: :desc) }
-        .custom(:post_tags_match, ->(q, v) { q.post_tags_match(v) })
+        .custom(:post_tags_match, ->(q, v, user) { q.post_tags_match(v, user) })
         .custom(:post_note_updater_id, ->(q, v) { q.where(post_id: NoteVersion.select(:post_id).where(updater_id: v.to_s.split(",").map(&:to_i))) })
         .custom(:post_note_updater_name, ->(q, v) { q.where(post_id: NoteVersion.select(:post_id).user_name_matches(:updater, v)) })
         .association(:creator)
+        .association(:updater)
         .association(post: :uploader, as: :poster)
     end
   end

@@ -38,6 +38,7 @@ class Note < ApplicationRecord
         .field(:body_matches, :body)
         .field(:is_active)
         .field(:post_id)
+        .field(:ip_addr, :creator_ip_addr)
         .custom(:post_tags_match, ->(q, v, user) { q.post_tags_match(v, user) })
         .custom(:post_note_updater_id, ->(q, v) { q.where(post_id: NoteVersion.select(:post_id).where(updater_id: v.to_s.split(",").map(&:to_i))) })
         .custom(:post_note_updater_name, ->(q, v) { q.where(post_id: NoteVersion.select(:post_id).user_name_matches(:updater, v)) })

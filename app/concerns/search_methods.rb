@@ -27,11 +27,43 @@ module SearchMethods
       where("lower(#{qualified_column_for(attr)}) LIKE ? ESCAPE E'\\\\'", value.downcase.to_escaped_for_sql_like)
     end
 
-    def join_as(attribute, alias_name, type = Arel::Nodes::InnerJoin)
-      r = reflect_on_association(attribute)
-      raise(ArgumentError, "no such association: #{attribute}") unless r
-      alias_table = r.klass.arel_table.alias(alias_name)
-      joins(arel_table.join(alias_table, type).on(alias_table[r.association_primary_key].eq(arel(r.foreign_key))).join_sources)
+    def join_as(association, alias_name, type = Arel::Nodes::InnerJoin, base_model = self)
+      case association
+      when Symbol, String
+        reflection = base_model.reflect_on_association(association)
+        raise(ArgumentError, "no such association: #{association}") unless reflection
+
+        base_table = base_model.arel_table
+        alias_table = reflection.klass.arel_table.alias(alias_name.to_s)
+
+        join_node = base_table.join(alias_table, type)
+                              .on(alias_table[reflection.association_primary_key]
+                                    .eq(base_table[reflection.foreign_key]))
+                              .join_sources
+
+        joins(join_node)
+
+      when Hash
+        outer, inner = association.first
+        outer_reflection = base_model.reflect_on_association(outer)
+        raise(ArgumentError, "no such association: #{outer}") unless outer_reflection
+
+        base_table = base_model.arel_table
+        outer_alias = "#{alias_name}_#{outer}"
+        outer_alias_table = outer_reflection.klass.arel_table.alias(outer_alias)
+
+        outer_join = base_table.join(outer_alias_table, type)
+                               .on(outer_alias_table[outer_reflection.association_primary_key]
+                                     .eq(base_table[outer_reflection.foreign_key]))
+                               .join_sources
+
+        # Apply outer join first, then recurse deeper
+        relation = joins(outer_join)
+        relation.join_as(inner, alias_name, type, outer_reflection.klass)
+
+      else
+        raise(ArgumentError, "association must be a Symbol, String, or Hash")
+      end
     end
 
     def get_column(attribute)
@@ -79,7 +111,9 @@ module SearchMethods
 
     def user_name_matches(attribute, value)
       return all if value.blank?
-      join_as(attribute, "#{attribute}_users").where("#{attribute}_users.name": value)
+      name = attribute
+      name = name.values.first while name.is_a?(Hash)
+      join_as(attribute, "#{name}_users").where("#{name}_users.name": value)
     end
 
     def if(condition, truthy_value, nil_value = nil)

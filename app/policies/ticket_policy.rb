@@ -46,7 +46,8 @@ class TicketPolicy < ApplicationPolicy
 
   def permitted_search_params
     params = super + %i[model_id model_type status creator_id creator_name]
-    params += %i[accused_name accused_id claimant_id claimant_name reason] + nested_search_params(creator: User, claimant: User, accused: User) if user.is_moderator?
+    params += %i[accused_name accused_id claimant_id claimant_name handler_id handler_name reason] + nested_search_params(creator: User, claimant: User, accused: User, handler: User) if user.is_moderator?
+    params += %i[ip_addr handler_ip_addr] if can_search_ip_addr?
     params
   end
 

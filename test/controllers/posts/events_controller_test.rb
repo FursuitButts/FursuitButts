@@ -94,6 +94,25 @@ module Posts
         should("restrict access") do
           assert_access(User::Levels::ANONYMOUS) { |user| get_auth(post_events_path, user) }
         end
+
+        context("search parameters") do
+          subject { post_events_path }
+          setup do
+            PostEvent.delete_all
+            @creator = create(:user)
+            @admin = create(:admin_user)
+            @post = create(:post)
+            @post.delete!(@creator.resolvable("127.0.0.2"), "foo")
+            @post_event = @post.events.last
+          end
+
+          assert_search_param(:post_id, -> { @post.id }, -> { [@post_event] })
+          assert_search_param(:action, "deleted", -> { [@post_event] })
+          assert_search_param(:creator_id, -> { @creator.id }, -> { [@post_event] })
+          assert_search_param(:creator_name, -> { @creator.name }, -> { [@post_event] })
+          assert_search_param(:ip_addr, "127.0.0.2", -> { [@post_event] }, -> { @admin })
+          assert_shared_search_params(-> { [@post_event] }, nil, %i[id created_at])
+        end
       end
     end
   end

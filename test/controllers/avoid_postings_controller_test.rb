@@ -22,6 +22,33 @@ class AvoidPostingsControllerTest < ActionDispatch::IntegrationTest
       should("restrict access") do
         assert_access(User::Levels::ANONYMOUS) { |user| get_auth(avoid_postings_path, user) }
       end
+
+      context("search parameters") do
+        subject { avoid_postings_path }
+        setup do
+          AvoidPostingVersion.delete_all
+          AvoidPosting.delete_all
+          @user = create(:user)
+          @updater = create(:user)
+          @artist = create(:artist, name: "foo", creator: @user)
+          @janitor = create(:janitor_user)
+          @admin = create(:admin_user)
+          @avoid_posting = create(:avoid_posting, is_active: true, details: "bar", staff_notes: "baz", artist: @artist, creator: @user, creator_ip_addr: "127.0.0.2", updater: @updater, updater_ip_addr: "127.0.0.3")
+        end
+
+        assert_search_param(:is_active, "true", -> { [@avoid_posting] })
+        assert_search_param(:artist_id, -> { @artist.id }, -> { [@avoid_posting] })
+        assert_search_param(:artist_name, "foo", -> { [@avoid_posting] })
+        assert_search_param(:details, "bar", -> { [@avoid_posting] })
+        assert_search_param(:staff_notes, "baz", -> { [@avoid_posting] }, -> { @janitor })
+        assert_search_param(:ip_addr, "127.0.0.2", -> { [@avoid_posting] }, -> { @admin })
+        assert_search_param(:updater_ip_addr, "127.0.0.3", -> { [@avoid_posting] }, -> { @admin })
+        assert_search_param(:creator_id, -> { @user.id }, -> { [@avoid_posting] })
+        assert_search_param(:creator_name, -> { @user.name }, -> { [@avoid_posting] })
+        assert_search_param(:updater_id, -> { @updater.id }, -> { [@avoid_posting] })
+        assert_search_param(:updater_name, -> { @updater.name }, -> { [@avoid_posting] })
+        assert_shared_search_params(-> { [@avoid_posting] })
+      end
     end
 
     context("show action") do

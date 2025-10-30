@@ -20,6 +20,30 @@ module Posts
         should("restrict access") do
           assert_access(User::Levels::ANONYMOUS) { |user| get_auth(post_appeals_path, user) }
         end
+
+        context("search parameters") do
+          subject { post_appeals_path }
+          setup do
+            PostAppeal.delete_all
+            @creator = create(:user)
+            @updater = create(:user)
+            @admin = create(:admin_user)
+            @post = create(:post, is_deleted: true, tag_string: "foo")
+            @post_appeal = create(:post_appeal, post: @post, creator: @creator, creator_ip_addr: "127.0.0.2", updater: @updater, updater_ip_addr: "127.0.0.3", reason: "bar", status: "pending")
+          end
+
+          assert_search_param(:post_id, -> { @post.id }, -> { [@post_appeal] })
+          assert_search_param(:reason_matches, "bar", -> { [@post_appeal] })
+          assert_search_param(:status, "pending", -> { [@post_appeal] })
+          assert_search_param(:creator_id, -> { @creator.id }, -> { [@post_appeal] })
+          assert_search_param(:creator_name, -> { @creator.name }, -> { [@post_appeal] })
+          assert_search_param(:ip_addr, "127.0.0.2", -> { [@post_appeal] }, -> { @admin })
+          assert_search_param(:updater_id, -> { @updater.id }, -> { [@post_appeal] })
+          assert_search_param(:updater_name, -> { @updater.name }, -> { [@post_appeal] })
+          assert_search_param(:updater_ip_addr, "127.0.0.3", -> { [@post_appeal] }, -> { @admin })
+          assert_search_param(:post_tags_match, "foo", -> { [@post_appeal] })
+          assert_shared_search_params(-> { [@post_appeal] })
+        end
       end
 
       context("new action") do

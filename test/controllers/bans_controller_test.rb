@@ -57,6 +57,27 @@ class BansControllerTest < ActionDispatch::IntegrationTest
       should("restrict access") do
         assert_access(User::Levels::ANONYMOUS) { |user| get_auth(bans_path, user) }
       end
+
+      context("search parameters") do
+        subject { bans_path }
+        setup do
+          Ban.delete_all
+          @user = create(:user)
+          @creator = create(:moderator_user)
+          @banner = create(:user)
+          @admin = create(:admin_user)
+          @ban = create(:ban, user: @user, banner: @creator, banner_ip_addr: "127.0.0.2", reason: "foo", is_permaban: true)
+        end
+
+        assert_search_param(:expired, "false", -> { [@ban] })
+        assert_search_param(:reason_matches, "foo", -> { [@ban] })
+        assert_search_param(:ip_addr, "127.0.0.2", -> { [@ban] }, -> { @admin })
+        assert_search_param(:banner_id, -> { @creator.id }, -> { [@ban] })
+        assert_search_param(:banner_name, -> { @creator.name }, -> { [@ban] })
+        assert_search_param(:user_id, -> { @user.id }, -> { [@ban] })
+        assert_search_param(:user_name, -> { @user.name }, -> { [@ban] })
+        assert_shared_search_params(-> { [@ban] })
+      end
     end
 
     context("create action") do

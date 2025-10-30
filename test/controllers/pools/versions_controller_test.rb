@@ -42,6 +42,25 @@ module Pools
         should("restrict access") do
           assert_access(User::Levels::ANONYMOUS) { |user| get_auth(pool_versions_path, user) }
         end
+
+        context("search parameters") do
+          subject { pool_versions_path }
+          setup do
+            PoolVersion.delete_all
+            Pool.delete_all
+            @updater = create(:user)
+            @admin = create(:admin_user)
+            @pool = create(:pool, creator: @updater, creator_ip_addr: "127.0.0.2", name: "foo", description: "bar")
+            @pool_version = @pool.versions.first
+          end
+
+          assert_search_param(:pool_id, -> { @pool.id }, -> { [@pool_version] })
+          assert_search_param(:name_matches, "foo", -> { [@pool_version] })
+          assert_search_param(:description_matches, "bar", -> { [@pool_version] })
+          assert_search_param(:updater_id, -> { @updater.id }, -> { [@pool_version] })
+          assert_search_param(:updater_name, -> { @updater.name }, -> { [@pool_version] })
+          assert_shared_search_params(-> { [@pool_version] })
+        end
       end
 
       context("undo action") do

@@ -2,7 +2,9 @@
 
 class PostEventPolicy < ApplicationPolicy
   def permitted_search_params
-    super + %i[post_id creator_id creator_name action] + nested_search_params(post: Post)
+    params = super + %i[post_id creator_id creator_name action] + nested_search_params(post: Post)
+    params << :ip_addr if can_search_ip_addr?
+    params
   end
 
   def api_attributes

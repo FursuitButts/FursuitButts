@@ -21,7 +21,7 @@ class UserNameChangeRequest < ApplicationRecord
       super
         .field(:original_name, ilike: true, normalize: User.method(:normalize_name).to_proc)
         .field(:desired_name, ilike: true, normalize: User.method(:normalize_name).to_proc)
-        .user([nil, :current_name], :user)
+        .field(:ip_addr, :creator_ip_addr).user([nil, :current_name], :user)
         .user(:user)
         .user(:creator)
         .user(:approver)

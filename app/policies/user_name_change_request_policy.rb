@@ -18,6 +18,8 @@ class UserNameChangeRequestPolicy < ApplicationPolicy
   end
 
   def permitted_search_params
-    super + %i[user_id user_name creator_id creator_name approver_id approver_name original_name desired_name] + nested_search_params(user: User, creator: User, approver: User)
+    params = super + %i[user_id user_name creator_id creator_name approver_id approver_name original_name desired_name] + nested_search_params(user: User, creator: User, approver: User)
+    params << :ip_addr if can_search_ip_addr?
+    params
   end
 end

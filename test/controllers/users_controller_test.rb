@@ -37,6 +37,30 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
       should("restrict access") do
         assert_access(User::Levels::ANONYMOUS) { |user| get_auth(users_path, user) }
       end
+
+      context("search parameters") do
+        subject { users_path }
+        setup do
+          ApplicationRecord.connection.execute("TRUNCATE users CASCADE")
+          @user = create(:user, email: "foo@example.com", name: "bar", last_ip_addr: "127.0.0.2", profile_about: "baz")
+          @admin = create(:admin_user, can_approve_posts: true, unrestricted_uploads: true, can_manage_aibur: true)
+          @post = create(:post, uploader: @user)
+          @user.update_columns(avatar_id: @post.id)
+        end
+
+        assert_search_param(:level, User::Levels::MEMBER, -> { [@user] }, -> { @user }, ignore: %w[updated_at last_logged_in_at])
+        assert_search_param(:avatar_id, -> { @post.id }, -> { [@user] }, -> { @user }, ignore: %w[updated_at last_logged_in_at])
+        assert_search_param(:email_matches, "foo@example.com", -> { [@user] }, -> { @admin }, ignore: %w[updated_at last_logged_in_at])
+        assert_search_param(:name_matches, "bar", -> { [@user] }, -> { @user }, ignore: %w[updated_at last_logged_in_at])
+        assert_search_param(:ip_addr, "127.0.0.2", -> { [@user] }, -> { @admin }, ignore: %w[updated_at last_logged_in_at])
+        assert_search_param(:about_me, "baz", -> { [@user] }, -> { @user }, ignore: %w[updated_at last_logged_in_at])
+        assert_search_param(:min_level, User::Levels::MEMBER, -> { [@admin, @user] }, -> { @user }, ignore: %w[updated_at last_logged_in_at])
+        assert_search_param(:max_level, User::Levels::MEMBER, -> { [@user] }, -> { @user }, ignore: %w[updated_at last_logged_in_at])
+        assert_search_param(:can_approve_posts, "true", -> { [@admin] }, -> { @user }, ignore: %w[updated_at last_logged_in_at])
+        assert_search_param(:unrestricted_uploads, "true", -> { [@admin] }, -> { @user }, ignore: %w[updated_at last_logged_in_at])
+        assert_search_param(:can_manage_aibur, "true", -> { [@admin] }, -> { @user }, ignore: %w[updated_at last_logged_in_at])
+        assert_shared_search_params(-> { [@admin, @user] }, -> { @user }, ignore: %w[updated_at last_logged_in_at])
+      end
     end
 
     context("show action") do

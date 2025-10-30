@@ -58,6 +58,33 @@ module Users
         should("restrict access") do
           assert_access(User::Levels::ANONYMOUS) { |user| get_auth(user_feedbacks_path, user) }
         end
+
+        context("search parameters") do
+          subject { user_feedbacks_path }
+          setup do
+            UserFeedback.delete_all
+            @user = create(:user)
+            @creator = create(:moderator_user)
+            @updater = create(:moderator_user)
+            @mod = create(:moderator_user)
+            @admin = create(:admin_user)
+            @user_feedback = create(:user_feedback, user: @user, creator: @creator, creator_ip_addr: "127.0.0.2", updater: @updater, updater_ip_addr: "127.0.0.3", body: "foo", category: "neutral")
+          end
+
+          assert_search_param(:body_matches, "foo", -> { [@user_feedback] })
+          assert_search_param(:category, "neutral", -> { [@user_feedback] })
+          assert_search_param(:deleted, "excluded", -> { [@user_feedback] }, -> { @mod })
+          assert_search_param(:deleted, "only", -> { [] }, -> { @mod })
+          assert_search_param(:user_id, -> { @user.id }, -> { [@user_feedback] })
+          assert_search_param(:user_name, -> { @user.name }, -> { [@user_feedback] })
+          assert_search_param(:creator_id, -> { @creator.id }, -> { [@user_feedback] })
+          assert_search_param(:creator_name, -> { @creator.name }, -> { [@user_feedback] })
+          assert_search_param(:ip_addr, "127.0.0.2", -> { [@user_feedback] }, -> { @admin })
+          assert_search_param(:updater_id, -> { @updater.id }, -> { [@user_feedback] })
+          assert_search_param(:updater_name, -> { @updater.name }, -> { [@user_feedback] })
+          assert_search_param(:updater_ip_addr, "127.0.0.3", -> { [@user_feedback] }, -> { @admin })
+          assert_shared_search_params(-> { [@user_feedback] })
+        end
       end
 
       context("create action") do

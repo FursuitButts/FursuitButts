@@ -7,7 +7,9 @@ class TagVersion < ApplicationRecord
   module SearchMethods
     def query_dsl
       super
-        .custom(:tag, ->(q, v) { q.where(tag: Tag.find_by_normalized_name(v)) })
+        .field(:tag_id)
+        .field(:ip_addr, :updater_ip_addr)
+        .custom(:tag_name, ->(q, v) { q.where(tag: Tag.find_by_normalized_name(v)) })
         .association(:updater)
         .association(:tag)
     end

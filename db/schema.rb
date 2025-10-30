@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_10_24_060615) do
+ActiveRecord::Schema[7.1].define(version: 2025_10_27_050630) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -1439,8 +1439,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_10_24_060615) do
     t.integer "comment_threshold", default: -2, null: false
     t.string "default_image_size", default: "large", null: false
     t.text "favorite_tags"
-    t.text "blacklisted_tags", default: "spoilers\nguro\nscat\nfurry -rating:s"
-    t.string "time_zone", default: "Eastern Time (US & Canada)", null: false
+    t.text "blacklisted_tags", default: ""
+    t.string "time_zone", default: "Central Time (US & Canada)", null: false
     t.text "bcrypt_password_hash"
     t.integer "per_page", default: 100, null: false
     t.text "custom_style", default: "", null: false

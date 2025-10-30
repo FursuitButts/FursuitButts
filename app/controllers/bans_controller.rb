@@ -8,6 +8,7 @@ class BansController < ApplicationController
     @bans = authorize(Ban).html_includes(request, :user, :banner)
                           .search_current(search_params(Ban))
                           .paginate(params[:page], limit: params[:limit])
+    respond_with(@bans)
   end
 
   def show

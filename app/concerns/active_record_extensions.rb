@@ -27,10 +27,12 @@ module ActiveRecordExtensions
       ApplicationRecord.connection.select_one("SELECT setting FROM pg_settings WHERE name = 'statement_timeout'")["setting"].to_i
     end
 
-    # CrossJoinLateral, LeftJoinLateral
-    def unnest(column, name = column.singularize, type = Arel::Nodes::LeftJoinLateral)
+    # CrossJoinLateral, LeftJoinLateral, nil
+    def unnest(column, name: column.singularize, type: Arel::Nodes::LeftJoinLateral)
+      function = Arel::Nodes::NamedFunction.new("unnest", [arel(column)], name)
+      return function if type.nil?
       joins(type.new(
-              Arel::Nodes::NamedFunction.new("unnest", [arel(column)], name),
+              function,
               Arel::Nodes::On.new(Arel.sql("TRUE")),
             ))
     end

@@ -65,6 +65,32 @@ class DmailsControllerTest < ActionDispatch::IntegrationTest
       should("restrict access") do
         assert_access(User::Levels::REJECTED) { |user| get_auth(dmails_path, user) }
       end
+
+      context("search parameters") do
+        subject { dmails_path }
+        setup do
+          Dmail.delete_all
+          @to = create(:user)
+          @from = create(:user)
+          @dmail = create(:dmail, to: @to, from: @from, from_ip_addr: "127.0.0.2", owner: @to, title: "foo", body: "bar", is_read: true, is_deleted: false, is_spam: false)
+          @owner = create(:owner_user)
+        end
+
+        assert_search_param(:title_matches, "foo", -> { [@dmail] }, -> { @to })
+        assert_search_param(:message_matches, "bar", -> { [@dmail] }, -> { @to })
+        assert_search_param(:is_read, "true", -> { [@dmail] }, -> { @to })
+        assert_search_param(:is_deleted, "false", -> { [@dmail] }, -> { @to })
+        assert_search_param(:is_spam, "false", -> { [@dmail] }, -> { @owner })
+        assert_search_param(:ip_addr, "127.0.0.2", -> { [@dmail] }, -> { @owner })
+        assert_search_param(:read, "true", -> { [@dmail] }, -> { @to })
+        assert_search_param(:to_id, -> { @to.id }, -> { [@dmail] }, -> { @to })
+        assert_search_param(:to_name, -> { @to.name }, -> { [@dmail] }, -> { @to })
+        assert_search_param(:from_id, -> { @from.id }, -> { [@dmail] }, -> { @to })
+        assert_search_param(:from_name, -> { @from.name }, -> { [@dmail] }, -> { @to })
+        assert_search_param(:owner_id, -> { @to.id }, -> { [@dmail] }, -> { @to })
+        assert_search_param(:owner_name, -> { @to.name }, -> { [@dmail] }, -> { @to })
+        assert_shared_search_params(-> { [@dmail] }, -> { @to })
+      end
     end
 
     context("show action") do

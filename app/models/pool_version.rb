@@ -15,6 +15,8 @@ class PoolVersion < ApplicationRecord
     def query_dsl
       super
         .field(:pool_id)
+        .field(:name_matches, :name)
+        .field(:description_matches, :description)
         .field(:ip_addr, :updater_ip_addr)
         .association(:updater)
         .association(:pool)

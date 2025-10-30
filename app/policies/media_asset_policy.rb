@@ -22,7 +22,9 @@ class MediaAssetPolicy < ApplicationPolicy
   end
 
   def permitted_search_params
-    super + %I[checksum md5 file_ext pixel_hash status status_message_matches creator_id creator_name #{model.model.name.underscore}_id] + nested_search_params(creator: User, "#{model.model.name.underscore}": model.model)
+    params = super + %I[checksum md5 file_ext pixel_hash status status_message_matches creator_id creator_name #{model.model.name.underscore}_id] + nested_search_params(creator: User, "#{model.model.name.underscore}": model.model)
+    params << :ip_addr if can_search_ip_addr?
+    params
   end
 
   def api_attributes

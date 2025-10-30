@@ -18,6 +18,24 @@ module Posts
         should("restrict access") do
           assert_access(User::Levels::ANONYMOUS) { |user| get_auth(post_approvals_path, user) }
         end
+
+        context("search parameters") do
+          subject { post_approvals_path }
+          setup do
+            PostApproval.delete_all
+            @creator = create(:user)
+            @admin = create(:admin_user)
+            @post = create(:post, is_deleted: true, tag_string: "foo")
+            @post_approval = create(:post_approval, post: @post, user: @creator, user_ip_addr: "127.0.0.2")
+          end
+
+          assert_search_param(:post_id, -> { @post.id }, -> { [@post_approval] })
+          assert_search_param(:post_tags_match, "foo", -> { [@post_approval] })
+          assert_search_param(:user_id, -> { @creator.id }, -> { [@post_approval] })
+          assert_search_param(:user_name, -> { @creator.name }, -> { [@post_approval] })
+          assert_search_param(:ip_addr, "127.0.0.2", -> { [@post_approval] }, -> { @admin })
+          assert_shared_search_params(-> { [@post_approval] })
+        end
       end
 
       context("create action") do

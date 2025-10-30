@@ -34,6 +34,8 @@ class ArtistPolicy < ApplicationPolicy
   end
 
   def permitted_search_params
-    super + %i[name any_other_name_like any_name_matches any_name_or_url_matches url_matches creator_id creator_name linked_user_id linked_user_name has_tag is_linked is_active order] + nested_search_params(creator: User, linked_user: User)
+    params = super + %i[name any_other_name_matches any_other_name_like any_name_matches any_name_or_url_matches url_matches creator_id creator_name linked_user_id linked_user_name has_tag is_linked order] + nested_search_params(creator: User, linked_user: User)
+    params << :ip_addr if can_search_ip_addr?
+    params
   end
 end

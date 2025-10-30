@@ -275,7 +275,7 @@ class ForumTopic < ApplicationRecord
   end
 
   def last_page
-    (response_count / Config.instance.records_per_page.to_f).ceil
+    (response_count / Config.instance.records_per_page.to_f).ceil.clamp(1..)
   end
 
   def hide!(user)
