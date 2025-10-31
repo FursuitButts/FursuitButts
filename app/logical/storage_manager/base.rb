@@ -102,6 +102,7 @@ module StorageManager
 
     protected
 
+    LOG_LINES = 5
     def log(message, if: true, &)
       cond = binding.local_variable_get(:if)
       format = "\e[34m[\e[36m%s\e[0m\e[34m]\e[0m %s \e[34m- \e[35m%s\e[0m"
@@ -114,8 +115,9 @@ module StorageManager
         if cond
           callers = caller_locations.reject do |loc|
             path = loc.absolute_path || loc.path
-            path.include?("/storage_manager/") || !Rails.backtrace_cleaner.clean_frame("#{path}:#{loc.lineno}")
-          end.first(3)
+            # path.include?("/storage_manager/") ||
+            !Rails.backtrace_cleaner.clean_frame("#{path}:#{loc.lineno}")
+          end.first(LOG_LINES)
           Rails.logger.debug(format(format, self.class, message, "#{duration.round(2)}ms"))
           callers.each { |c| Rails.logger.debug("↳ #{c.path.gsub(%r{^/app/}, '')}:#{c.lineno} in `#{c.label}`") }
         end
