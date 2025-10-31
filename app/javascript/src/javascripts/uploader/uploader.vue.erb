@@ -112,9 +112,29 @@
                         </div>
                     </div>
                     <div class="col2">
-          <textarea class="tag-textarea" v-model="tagEntries.content" id="post_content" rows="2"
-                    data-autocomplete="tag-edit"
-                    placeholder="Ex: cub scatplay watersports diaper my_little_pony vore rape hyper etc."></textarea>
+                      <div class="flex-wrap">
+                        <image-checkbox :check="checkboxes.cub" :checks="checkboxes.selected" @set="setCheck"></image-checkbox>
+                        <div class=" hide-default">
+                          <image-checkbox :check="check" :checks="checkboxes.selected"
+                                        v-for="check in checkboxes.cubAge" @set="setCheck"
+                                        :key="check.name" :data-tag="check.tag || check.name.toLowerCase().replace(/ /g, '_')"></image-checkbox>
+                        </div>
+                      </div>
+                      <hr>
+                      <div class="flex-wrap hide-default">
+                        <image-checkbox :check="check" :checks="checkboxes.selected"
+                                        v-for="check in checkboxes.cubGender" @set="setCheck"
+                                        :key="check.name" :data-tag="check.tag || check.name.toLowerCase().replace(/ /g, '_')" :data-gender-tag="check.gender" data-is-cub="true"></image-checkbox>
+                      </div>
+                      <div class="flex-wrap hide-default">
+                        <image-checkbox :check="check" :checks="checkboxes.selected"
+                                        v-for="check in checkboxes.cubBodyType" @set="setCheck"
+                                        :key="check.name" :data-tag="check.tag || check.name.toLowerCase().replace(/ /g, '_')" :data-body-type-tag="check.body_type" data-is-cub="true"></image-checkbox>
+                      </div>
+                      <hr>
+                      <textarea class="tag-textarea" v-model="tagEntries.content" id="post_content" rows="2"
+                        data-autocomplete="tag-edit"
+                        placeholder="Ex: cub scatplay watersports diaper my_little_pony vore rape hyper etc."></textarea>
                     </div>
                 </div>
             </template>
@@ -287,7 +307,7 @@
     return unique;
   }
 
-  const pairing_checks = window.pc = removeDuplicates(genders.flatMap(tagA => genders.flatMap(tagB => ({ name: `${ucwords(tagA)}/${ucwords(tagB)}`, tagA, tagB }))))
+  const pairing_checks = removeDuplicates(genders.flatMap(tagA => genders.flatMap(tagB => ({ name: `${ucwords(tagA)}/${ucwords(tagB)}`, tagA, tagB }))))
 
   const mascfem_checks = [
     { name: "Masculine" },
@@ -317,8 +337,20 @@
     { name: "Taur" }
   ];
 
-  const forms = body_type_checks.map(b => b.tag || b.name.toLowerCase().replace(/ /g, "_"));
-  const body_type_pairing_checks = removeDuplicates(forms.flatMap(tagA => forms.flatMap(tagB => ({ name: `${ucwords(tagA)}/${ucwords(tagB)}`, tagA, tagB }))))
+  const cub_check = { name: "Cub" };
+  const cub_age_checks = [
+    { name: "Baby" },
+    { name: "Toddler" },
+    { name: "Child" },
+    { name: "Teenager" },
+  ]
+
+  const body_types = body_type_checks.map(b => b.tag || b.name.toLowerCase().replace(/ /g, "_"));
+  const body_type_pairing_checks = removeDuplicates(body_types.flatMap(tagA => body_types.flatMap(tagB => ({ name: `${ucwords(tagA)}/${ucwords(tagB)}`, tagA, tagB }))));
+  const cub_ages = cub_age_checks.map(a => a.tag || a.name.toLowerCase().replace(/ /g, "_"));
+
+  const cub_gender_checks = sex_checks.map(s => ({ name: `${s.name} Cub`, tag: `${(s.tag || s.name.toLowerCase().replace(/ /g, "_")).replace(/_gender/, "")}_cub`, gender: s.tag || s.name.toLowerCase().replace(/ /g, "_") }));
+  const cub_body_type_checks = body_type_checks.filter(bt => !/human.*/i.test(bt.name.replace(/ /g, "_"))).map(bt => ({ name: `${bt.name} Cub`, tag: `${bt.tag || bt.name.toLowerCase().replace(/ /g, "_")}_cub`, body_type: bt.tag || bt.name.toLowerCase().replace(/ /g, "_") }));
 
   function tagSorter(a, b) {
     return a.name > b.name ? 1 : -1;
@@ -356,6 +388,10 @@
       pairing_checks.forEach(addChecks);
       body_type_checks.forEach(addChecks);
       body_type_pairing_checks.forEach(addChecks);
+      cub_age_checks.forEach(addChecks);
+      cub_gender_checks.forEach(addChecks);
+      cub_body_type_checks.forEach(addChecks);
+      addChecks(cub_check);
 
 
       return {
@@ -384,6 +420,10 @@
           count: char_count_checks,
           body: body_type_checks,
           bodyTypePairing: body_type_pairing_checks,
+          cub: cub_check,
+          cubAge: cub_age_checks,
+          cubGender: cub_gender_checks,
+          cubBodyType: cub_body_type_checks,
           selected: {},
           all: allChecks
         },
@@ -759,45 +799,72 @@
       },
       toggleTag(tag, checked) {
         if (genders.includes(tag)) {
-          this.updateGenderTags(tag, checked);
+          this.updateGenderTag(tag, checked);
         }
 
-        if (forms.includes(tag)) {
-          this.updateFormTags(tag, checked);
+        if (body_types.includes(tag)) {
+          this.updateBodyTypeTag(tag, checked);
+        }
+
+        if (tag === "cub") {
+          this.updateCubTags(checked);
         }
       },
-      updateGenderTags(tag, checked) {
-        this.updateBehaviorTags();
-        const selected = genders.filter(g => this.checkboxes.selected[g] === true);
+      updateGenderTag(tag, checked) {
         if (!checked) {
-          $(`[data-tag-a=${tag}], [data-tag-b=${tag}]`).hide();
-          // I feel like there should be a better way to do this but I can't find one (I hate vue)
-          $(`[data-tag-a=${tag}].active, [data-tag-b=${tag}].active`).click();
+          $(`[data-tag-a=${tag}], [data-tag-b=${tag}], [data-gender-tag=${tag}]`).hide();
+          // I feel like there should be a better way to do this, but I can't find one (I hate vue)
+          $(`[data-tag-a=${tag}].active, [data-tag-b=${tag}].active, [data-gender-tag=${tag}].active`).click();
           return;
         }
+        this.updateGenderTags();
+      },
+      updateGenderTags() {
+        this.updateBehaviorTags();
+        const selected = genders.filter(g => this.checkboxes.selected[g] === true);
         for (const gender of genders) {
           if (!selected.includes(gender)) continue;
+          const filter = this.checkboxes.selected.cub ? "" : ":not([data-is-cub=true])"
+          $(`[data-gender-tag=${gender}]${filter}`).show();
           for (const gender2 of genders) {
             if (!selected.includes(gender2)) continue;
             $(`[data-tag-a=${gender}][data-tag-b=${gender2}]`).show();
           }
         }
       },
-      updateFormTags(tag, checked) {
-        const selected = forms.filter(g => this.checkboxes.selected[g] === true);
+      updateBodyTypeTag(tag, checked) {
         if (!checked) {
-          $(`[data-tag-a=${tag}], [data-tag-b=${tag}]`).hide();
-          // I feel like there should be a better way to do this but I can't find one (I hate vue)
-          $(`[data-tag-a=${tag}].active, [data-tag-b=${tag}].active`).click();
+          $(`[data-tag-a=${tag}], [data-tag-b=${tag}], [data-body-type-tag=${tag}]`).hide();
+          // I feel like there should be a better way to do this, but I can't find one (I hate vue)
+          $(`[data-tag-a=${tag}].active, [data-tag-b=${tag}].active, [data-body-type-tag=${tag}].active`).click();
           return;
         }
-        for (const form of forms) {
-          if (!selected.includes(form)) continue;
-          for (const form2 of forms) {
-            if (!selected.includes(form2)) continue;
-            $(`[data-tag-a=${form}][data-tag-b=${form2}]`).show();
+        this.updateBodyTypeTags();
+      },
+      updateBodyTypeTags() {
+        const selected = body_types.filter(g => this.checkboxes.selected[g] === true);
+        for (const body_type of body_types) {
+          if (!selected.includes(body_type)) continue;
+          const filter = this.checkboxes.selected.cub ? "" : ":not([data-is-cub=true])"
+          $(`[data-body-type-tag=${body_type}]${filter}`).show();
+          for (const body_type2 of body_types) {
+            if (!selected.includes(body_type2)) continue;
+            $(`[data-tag-a=${body_type}][data-tag-b=${body_type2}]`).show();
           }
         }
+      },
+      updateCubTags(checked) {
+        for (const age of cub_ages) {
+          if (!checked) {
+            $(`[data-tag=${age}], [data-is-cub=true]`).hide();
+            // I feel like there should be a better way to do this, but I can't find one (I hate vue)
+            $(`[data-tag=${age}].active, [data-is-cub=true].active`).click();
+          } else {
+            $(`[data-tag=${age}]`).show();
+          }
+        }
+        this.updateGenderTags();
+        this.updateBodyTypeTags();
       },
       updateBehaviorTags() {
         const selected = genders.filter(g => this.checkboxes.selected[g] === true);
