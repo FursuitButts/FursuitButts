@@ -108,7 +108,7 @@ class ArtistsControllerTest < ActionDispatch::IntegrationTest
         assert_search_param(:creator_name, -> { @user.name }, -> { [@artist] }, include: %i[urls])
         assert_search_param(:linked_user_id, -> { @linked.id }, -> { [@artist] }, include: %i[urls])
         assert_search_param(:linked_user_name, -> { @linked.name }, -> { [@artist] }, include: %i[urls])
-        assert_shared_search_params(-> { [@artist] }, %w[id created_at], include: %i[urls])
+        assert_shared_search_params(-> { [@artist] }, nil, %w[id created_at], include: %i[urls])
       end
     end
 
