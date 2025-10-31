@@ -116,7 +116,7 @@ module StorageManager
           callers = caller_locations.reject do |loc|
             path = loc.absolute_path || loc.path
             # path.include?("/storage_manager/") ||
-            !Rails.backtrace_cleaner.clean_frame("#{path}:#{loc.lineno}")
+            (path.include?("/storage_manager/") && loc.label == "log") || !Rails.backtrace_cleaner.clean_frame("#{path}:#{loc.lineno}")
           end.first(LOG_LINES)
           Rails.logger.debug(format(format, self.class, message, "#{duration.round(2)}ms"))
           callers.each { |c| Rails.logger.debug("↳ #{c.path.gsub(%r{^/app/}, '')}:#{c.lineno} in `#{c.label}`") }
