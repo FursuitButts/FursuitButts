@@ -106,21 +106,22 @@ module StorageManager
       cond = binding.local_variable_get(:if)
       format = "\e[34m[\e[36m%s\e[0m\e[34m]\e[0m %s \e[34m- \e[35m%s\e[0m"
       start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC, :nanosecond)
-      result = yield
-      end_time = Process.clock_gettime(Process::CLOCK_MONOTONIC, :nanosecond)
-      duration = ((end_time - start_time) / 1000 / 1000).round(2)
-      if cond
-        callers = caller_locations.reject do |loc|
-          path = loc.absolute_path || loc.path
-          path.include?("/storage_manager/") || !Rails.backtrace_cleaner.clean_frame("#{path}:#{loc.lineno}")
-        end.first(3)
-        Rails.logger.debug(format(format, self.class, message, "#{duration.round(2)}ms"))
-        callers.each { |c| Rails.logger.debug("↳ #{c.path.gsub(%r{^/app/}, '')}:#{c.lineno} in `#{c.label}`") }
+      begin
+        yield
+      ensure
+        end_time = Process.clock_gettime(Process::CLOCK_MONOTONIC, :nanosecond)
+        duration = ((end_time - start_time) / 1000 / 1000).round(2)
+        if cond
+          callers = caller_locations.reject do |loc|
+            path = loc.absolute_path || loc.path
+            path.include?("/storage_manager/") || !Rails.backtrace_cleaner.clean_frame("#{path}:#{loc.lineno}")
+          end.first(3)
+          Rails.logger.debug(format(format, self.class, message, "#{duration.round(2)}ms"))
+          callers.each { |c| Rails.logger.debug("↳ #{c.path.gsub(%r{^/app/}, '')}:#{c.lineno} in `#{c.label}`") }
+        end
+        # caller_locations.select { |loc| !Rails.backtrace_cleaner.clean_frame("#{path}:#{loc.lineno}")}
+        #                 .each { |c| Rails.logger.debug("↳ #{c.path.gsub(%r{^/app/}, "")}:#{c.lineno} in `#{c.label}`") }
       end
-      # caller_locations.select { |loc| !Rails.backtrace_cleaner.clean_frame("#{path}:#{loc.lineno}")}
-      #                 .each { |c| Rails.logger.debug("↳ #{c.path.gsub(%r{^/app/}, "")}:#{c.lineno} in `#{c.label}`") }
-
-      result
     end
 
     def variant_location(...)
