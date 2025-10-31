@@ -40,7 +40,7 @@ module BulkUpdateRequestCommands
       ensure_valid!
 
       tag = Tag.find_or_create_by_name(tag_name, user: approver)
-      tag.update!(category: TagCategory.value_for(category))
+      tag.update_with!(approver, category: TagCategory.value_for(category))
     end
   end
 end
