@@ -254,11 +254,7 @@ module SearchMethods
     end
 
     def default_order
-      if attribute_names.include?("created_at")
-        order(created_at: :desc)
-      else
-        order(id: :desc)
-      end
+      order(id: :desc)
     end
 
     def query_dsl
