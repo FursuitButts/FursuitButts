@@ -244,7 +244,7 @@ class User < ApplicationRecord
 
   scope(:has_blacklisted_tag, ->(name) { where.regex(blacklisted_tags: "(^| )[~-]?#{Regexp.escape(name)}( |$)", flags: "ni") })
   scope(:email_verified, -> { where.has_bits(bit_prefs: Preferences::EMAIL_VERIFIED) })
-  scope(:not_email_verified, -> { where.not_has_bits(bit_prefs: Preferences::EMAIL_VERIFIED) })
+  scope(:email_not_verified, -> { where.not_has_bits(bit_prefs: Preferences::EMAIL_VERIFIED) })
 
   belongs_to(:avatar, class_name: "Post", optional: true)
   accepts_nested_attributes_for(:dmail_filter)

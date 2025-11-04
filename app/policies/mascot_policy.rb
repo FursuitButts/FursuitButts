@@ -18,6 +18,6 @@ class MascotPolicy < ApplicationPolicy
   end
 
   def api_attributes
-    super + %i[file_url md5 file_ext file_size image_width image_height] - %i[mascot_media_asset_id]
+    super + %i[apionly_file_url md5 file_ext file_size image_width image_height] - %i[mascot_media_asset_id]
   end
 end

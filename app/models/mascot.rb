@@ -91,6 +91,10 @@ class Mascot < ApplicationRecord
   include(FileMethods)
   include(LogMethods)
 
+  def apionly_file_url
+    file_url(user: CurrentUser.user)
+  end
+
   def self.available_includes
     %i[creator]
   end
