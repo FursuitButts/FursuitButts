@@ -207,7 +207,7 @@ services:
       - iqdb_data:/iqdb
 
   recommender:
-    image: ghcr.io/femboyfans/recommender:b29409d748333c99beb1faf2dc7b902cefdf26cf
+    image: ghcr.io/femboyfans/recommender:077270aa9703a45de32b840422e5110915fea3f3
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://127.0.0.1:5000/metrics || exit 1
       interval: 30s
